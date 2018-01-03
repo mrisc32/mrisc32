@@ -402,135 +402,161 @@ def translate_operation(operation, mnemonic, descr, addr, line_no, labels):
     return instr
 
 
+def read_file(file_name):
+    with open(file_name, "r") as f:
+        lines = f.readlines()
+    return lines
+
+
+def preprocess(lines, file_dir):
+    result = []
+    for line in lines:
+        l = line.strip()
+        if l.startswith('.include'):
+            include_file_name = os.path.join(file_dir, l[8:].strip().replace('"', ''))
+            include_lines = read_file(include_file_name)
+            include_dir = os.path.dirname(include_file_name)
+            result.extend(preprocess(include_lines, include_dir))
+        else:
+            result.append(l)
+
+    return result
+
+
 def compile_file(file_name, out_name):
     print "Compiling %s..." % (file_name)
     success = True
     labels = {}
     code = ''
     try:
+        # Read the file, and preprocess-it.
+        file_dir = os.path.dirname(file_name)
+        lines = read_file(file_name)
+        lines = preprocess(lines, file_dir)
+
         for compilation_pass in [1, 2]:
             print 'Pass %d' % (compilation_pass)
-            with open(file_name, "r") as f:
-                # Set the default start address.
-                addr = 49152
 
-                # Emit start address.
-                # TODO(m): Allow for dynamic address definitions (e.g. .addr).
-                if compilation_pass == 2:
-                    code += struct.pack('<L', addr)
+            # Set the default start address.
+            addr = 49152
 
-                for line_no, raw_line in enumerate(f, 1):
-                    line = raw_line
+            # Emit start address.
+            # TODO(m): Allow for dynamic address definitions (e.g. .addr).
+            if compilation_pass == 2:
+                code += struct.pack('<L', addr)
 
-                    # Remove comment.
-                    comment_pos = line.find(';')
-                    comment_pos2 = line.find('#')
-                    if comment_pos2 >= 0 and (comment_pos2 < comment_pos or comment_pos < 0):
-                        comment_pos = comment_pos2
-                    comment_pos2 = line.find('//')
-                    if comment_pos2 >= 0 and (comment_pos2 < comment_pos or comment_pos < 0):
-                        comment_pos = comment_pos2
-                    if comment_pos >= 0:
-                        line = line[:comment_pos]
+            for line_no, raw_line in enumerate(lines, 1):
+                line = raw_line
 
-                    # Strip head and tail whitespaces.
-                    line = line.strip()
+                # Remove comment.
+                comment_pos = line.find(';')
+                comment_pos2 = line.find('#')
+                if comment_pos2 >= 0 and (comment_pos2 < comment_pos or comment_pos < 0):
+                    comment_pos = comment_pos2
+                comment_pos2 = line.find('//')
+                if comment_pos2 >= 0 and (comment_pos2 < comment_pos or comment_pos < 0):
+                    comment_pos = comment_pos2
+                if comment_pos >= 0:
+                    line = line[:comment_pos]
 
-                    if len(line) == 0:
-                        # This is an empty line.
-                        pass
+                # Strip head and tail whitespaces.
+                line = line.strip()
 
-                    elif line.endswith(':'):
-                        # This is a label.
-                        if compilation_pass == 1:
-                            label = line[:-1]
-                            if ' ' in label:
-                                raise AsmError(line_no, 'Bad label "%s"' % label)
-                            if label in labels:
-                                raise AsmError(line_no, 'Re-definition of label "%s"' % label)
-                            labels[label] = addr
-                            print ' Label: "%s": %d' % (label, addr)
+                if len(line) == 0:
+                    # This is an empty line.
+                    pass
 
-                    elif line.startswith('.'):
-                        # This is a data directive.
-                        directive = extract_parts(line)
+                elif line.endswith(':'):
+                    # This is a label.
+                    if compilation_pass == 1:
+                        label = line[:-1]
+                        if ' ' in label:
+                            raise AsmError(line_no, 'Bad label "%s"' % label)
+                        if label in labels:
+                            raise AsmError(line_no, 'Re-definition of label "%s"' % label)
+                        labels[label] = addr
+                        print ' Label: "%s": %d' % (label, addr)
 
-                        if directive[0] == '.align':
+                elif line.startswith('.'):
+                    # This is a data directive.
+                    directive = extract_parts(line)
+
+                    if directive[0] == '.align':
+                        try:
+                            value = parse_integer(directive[1])
+                        except ValueError:
+                            raise AsmError(line_no, 'Invalid alignment: {}'.format(directive[1]))
+                        if not value in [1, 2, 4, 8, 16]:
+                            raise AsmError(line_no, 'Invalid alignment: {} (must be 1, 2, 4, 8 or 16)'.format(value))
+                        addr_adjust = addr % value
+                        if addr_adjust > 0:
+                            num_pad_bytes = value - addr_adjust
+                            if compilation_pass == 2:
+                                for k in range(num_pad_bytes):
+                                    code += struct.pack('B', 0)
+                            addr += num_pad_bytes
+                            print 'Aligned pc to: {} (padded by {} bytes)'.format(addr, num_pad_bytes)
+
+                    elif directive[0] in ['.i8', '.u8', '.i16', '.u16', '.i32', '.u32']:
+                        for k in range(1, len(directive)):
                             try:
-                                value = parse_integer(directive[1])
+                                value = parse_integer(directive[k])
                             except ValueError:
-                                raise AsmError(line_no, 'Invalid alignment: {}'.format(directive[1]))
-                            if not value in [1, 2, 4, 8, 16]:
-                                raise AsmError(line_no, 'Invalid alignment: {} (must be 1, 2, 4, 8 or 16)'.format(value))
-                            addr_adjust = addr % value
-                            if addr_adjust > 0:
-                                num_pad_bytes = value - addr_adjust
-                                if compilation_pass == 2:
-                                    for k in range(num_pad_bytes):
-                                        code += struct.pack('B', 0)
-                                addr += num_pad_bytes
-                                print 'Aligned pc to: {} (padded by {} bytes)'.format(addr, num_pad_bytes)
-
-                        elif directive[0] in ['.i8', '.u8', '.i16', '.u16', '.i32', '.u32']:
-                            for k in range(1, len(directive)):
-                                try:
-                                    value = parse_integer(directive[k])
-                                except ValueError:
-                                    raise AsmError(line_no, 'Invalid integer: {}'.format(directive[k]))
-                                if directive[0] == '.i8':
-                                    val_min = -128
-                                    val_max = 128
-                                    val_type = 'b'
-                                    val_size = 1
-                                elif directive[0] == '.u8':
-                                    val_min = 0
-                                    val_max = 255
-                                    val_type = 'B'
-                                    val_size = 1
-                                elif directive[0] == '.i16':
-                                    val_min = -32768
-                                    val_max = 32767
-                                    val_type = '<h'
-                                    val_size = 2
-                                elif directive[0] == '.u16':
-                                    val_min = 0
-                                    val_max = 65535
-                                    val_type = '<H'
-                                    val_size = 2
-                                elif directive[0] == '.i32':
-                                    val_min = -2147483648
-                                    val_max = 2147483647
-                                    val_type = '<l'
-                                    val_size = 4
-                                elif directive[0] == '.u32':
-                                    val_min = 0
-                                    val_max = 4294967295
-                                    val_type = '<L'
-                                    val_size = 4
-                                if not addr & (val_size - 1) == 0:
-                                    raise AsmError(line_no, 'Data not aligned to a {} byte boundary'.format(val_size))
-                                if value < val_min or value > val_max:
-                                    raise AsmError(line_no, 'Value out of range: {}'.format(value))
-                                addr += val_size
-                                if compilation_pass == 2:
-                                    code += struct.pack(val_type, value)
-
-                        else:
-                            raise AsmError(line_no, 'Unknown directive: {}'.format(directive[0]))
+                                raise AsmError(line_no, 'Invalid integer: {}'.format(directive[k]))
+                            if directive[0] == '.i8':
+                                val_min = -128
+                                val_max = 128
+                                val_type = 'b'
+                                val_size = 1
+                            elif directive[0] == '.u8':
+                                val_min = 0
+                                val_max = 255
+                                val_type = 'B'
+                                val_size = 1
+                            elif directive[0] == '.i16':
+                                val_min = -32768
+                                val_max = 32767
+                                val_type = '<h'
+                                val_size = 2
+                            elif directive[0] == '.u16':
+                                val_min = 0
+                                val_max = 65535
+                                val_type = '<H'
+                                val_size = 2
+                            elif directive[0] == '.i32':
+                                val_min = -2147483648
+                                val_max = 2147483647
+                                val_type = '<l'
+                                val_size = 4
+                            elif directive[0] == '.u32':
+                                val_min = 0
+                                val_max = 4294967295
+                                val_type = '<L'
+                                val_size = 4
+                            if not addr & (val_size - 1) == 0:
+                                raise AsmError(line_no, 'Data not aligned to a {} byte boundary'.format(val_size))
+                            if value < val_min or value > val_max:
+                                raise AsmError(line_no, 'Value out of range: {}'.format(value))
+                            addr += val_size
+                            if compilation_pass == 2:
+                                code += struct.pack(val_type, value)
 
                     else:
-                        # This is a machine code instruction.
-                        operation = extract_parts(line)
-                        mnemonic = operation[0].lower()
-                        try:
-                            descr = _OPCODES[mnemonic]
-                        except KeyError as e:
-                            raise AsmError(line_no, 'Bad mnemonic: {}'.format(mnemonic))
-                        if compilation_pass == 2:
-                            instr = translate_operation(operation, mnemonic, descr, addr, line_no, labels)
-                            print format(instr, '08x') + ' <= ' + '{}'.format(operation)
-                            code += struct.pack('<L', instr)
-                        addr += 4
+                        raise AsmError(line_no, 'Unknown directive: {}'.format(directive[0]))
+
+                else:
+                    # This is a machine code instruction.
+                    operation = extract_parts(line)
+                    mnemonic = operation[0].lower()
+                    try:
+                        descr = _OPCODES[mnemonic]
+                    except KeyError as e:
+                        raise AsmError(line_no, 'Bad mnemonic: {}'.format(mnemonic))
+                    if compilation_pass == 2:
+                        instr = translate_operation(operation, mnemonic, descr, addr, line_no, labels)
+                        print format(instr, '08x') + ' <= ' + '{}'.format(operation)
+                        code += struct.pack('<L', instr)
+                    addr += 4
 
         with open(out_name, 'w') as f:
             f.write(code)
