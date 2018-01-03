@@ -10,6 +10,8 @@ add_executable(sim
                cache.hpp
                cpu.cpp
                cpu.hpp
+               cpu_simple.cpp
+               cpu_simple.hpp
                ram.cpp
                ram.hpp)
 target_include_directories(sim PRIVATE .)

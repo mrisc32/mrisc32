@@ -1,4 +1,4 @@
-#include "cpu.hpp"
+#include "cpu_simple.hpp"
 #include "ram.hpp"
 
 #include <exception>
@@ -89,7 +89,7 @@ int main(const int argc, const char** argv) {
     start_addr = read_bin_file(bin_file, ram);
 
     // Initialize the CPU.
-    cpu_t cpu(ram);
+    cpu_simple_t cpu(ram);
 
     // Run until the program returns.
     int exit_code = static_cast<int>(cpu.run(start_addr));

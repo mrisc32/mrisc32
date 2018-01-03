@@ -10,14 +10,15 @@
 class cpu_t {
 public:
   cpu_t(ram_t& ram);
+  virtual ~cpu_t();
 
   void reset();
 
   void dump_stats();
 
-  uint32_t run(const uint32_t addr);
+  virtual uint32_t run(const uint32_t addr) = 0;
 
-private:
+protected:
   void call_sim_routine(const uint32_t routine_no);
 
   // Memory interface.
