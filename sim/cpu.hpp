@@ -67,7 +67,7 @@ protected:
   static const uint32_t ALU_OP_LSR = 0x0bu;
   static const uint32_t ALU_OP_EXTB = 0x0cu;
   static const uint32_t ALU_OP_EXTH = 0x0du;
-  static const uint32_t ALU_OP_MIXH = 0x10u;
+  static const uint32_t ALU_OP_ORHI = 0x10u;  // arg1 | (arg2 << 13)
 
   // Memory operations.
   static const uint32_t MEM_OP_NONE = 0x00u;

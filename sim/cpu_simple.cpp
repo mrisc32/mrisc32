@@ -169,10 +169,9 @@ uint32_t cpu_simple_t::run(const uint32_t addr) {
       const bool is_stx = ((id_in.instr & 0xff0001fcu) == 0x00000014u);
       const bool is_st = ((id_in.instr & 0xfc000000u) == 0x14000000u);
       const bool is_mem_store = is_stx || is_st;
-      const bool is_ldihi = ((id_in.instr & 0xff000000u) == 0x29000000u);  // ldihi
 
       // Should we use reg1 as a source?
-      const bool reg1_is_src = is_mem_store || is_jmp_jsr || is_ldihi;
+      const bool reg1_is_src = is_mem_store || is_jmp_jsr;
 
       // Should we use reg2 as a source?
       const bool reg2_is_src = op_class_A || op_class_B;
@@ -181,11 +180,10 @@ uint32_t cpu_simple_t::run(const uint32_t addr) {
       const bool reg3_is_src = op_class_A;
 
       // Should we use reg1 as a destination?
-      const bool reg1_is_dst = (is_ldihi || !reg1_is_src) && !is_branch;
+      const bool reg1_is_dst = !reg1_is_src && !is_branch;
 
       // Determine the source & destination register numbers (zero of none).
-      const uint32_t src_reg_a =
-          is_ldihi ? reg1 : (is_subroutine_branch ? REG_PC : (reg2_is_src ? reg2 : REG_Z));
+      const uint32_t src_reg_a = is_subroutine_branch ? REG_PC : (reg2_is_src ? reg2 : REG_Z);
       const uint32_t src_reg_b = reg3_is_src ? reg3 : REG_Z;
       const uint32_t src_reg_c = is_mem_store ? reg1 : REG_Z;
       const uint32_t dst_reg = is_subroutine_branch ? REG_LR : (reg1_is_dst ? reg1 : REG_Z);
@@ -204,7 +202,7 @@ uint32_t cpu_simple_t::run(const uint32_t addr) {
             alu_op = ALU_OP_OR;
             break;
           case 0x29000000u:  // ldihi
-            alu_op = ALU_OP_MIXH;
+            alu_op = ALU_OP_ORHI;
             break;
         }
       }
@@ -276,8 +274,8 @@ uint32_t cpu_simple_t::run(const uint32_t addr) {
           alu_result =
               (ex_in.src_a & 0x0000ffffu) | ((ex_in.src_a & 0x00008000u) ? 0xffff0000u : 0u);
           break;
-        case ALU_OP_MIXH:
-          alu_result = (ex_in.src_a & 0x0000ffffu) | (ex_in.src_b << 16u);
+        case ALU_OP_ORHI:
+          alu_result = ex_in.src_a | (ex_in.src_b << 13u);
           break;
       }
 

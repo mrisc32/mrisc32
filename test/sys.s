@@ -6,8 +6,9 @@
 ; exit(int exit_code)
 ; -----------------------------------------------------------------------------
 _exit:
-  ldi    r16, 0x0000
-  ldihi  r16, 0xffff
+  ; exit routine: 0xffff0000
+  ldihi  r16, -8       ; Upper 19 bits = 0b1111111111111111000
+  ori    r16, r16, 0   ; Lower 14 bits = 0b00000000000000
   jmp    r16
 
 
@@ -15,8 +16,9 @@ _exit:
 ; putc(int c)
 ; -----------------------------------------------------------------------------
 _putc:
-  ldi    r16, 0x0004
-  ldihi  r16, 0xffff
+  ; putc routine: 0xffff0004
+  ldihi  r16, -8       ; Upper 19 bits = 0b1111111111111111000
+  ori    r16, r16, 4   ; Lower 14 bits = 0b00000000000100
   jmp    r16
 
 
