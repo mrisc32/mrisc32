@@ -1,3 +1,22 @@
+//--------------------------------------------------------------------------------------------------
+// Copyright (c) 2018 Marcus Geelnard
+//
+// This software is provided 'as-is', without any express or implied warranty. In no event will the
+// authors be held liable for any damages arising from the use of this software.
+//
+// Permission is granted to anyone to use this software for any purpose, including commercial
+// applications, and to alter it and redistribute it freely, subject to the following restrictions:
+//
+//  1. The origin of this software must not be misrepresented; you must not claim that you wrote
+//     the original software. If you use this software in a product, an acknowledgment in the
+//     product documentation would be appreciated but is not required.
+//
+//  2. Altered source versions must be plainly marked as such, and must not be misrepresented as
+//     being the original software.
+//
+//  3. This notice may not be removed or altered from any source distribution.
+//--------------------------------------------------------------------------------------------------
+
 #ifndef SIM_CACHE_HPP_
 #define SIM_CACHE_HPP_
 
@@ -8,15 +27,31 @@
 #include <exception>
 #include <cstdint>
 
+/// @brief A memory cache.
+///
+/// This is a simple, direct-mapped, write-back cache. The size of the cache is controlled by the
+/// template arguments.
+///
+/// @param LINE_SIZE The number of bytes in a cache line (e.g. 32).
+/// @param NUM_LINES Number of cache lines.
 template <uint32_t LINE_SIZE, uint32_t NUM_LINES>
 class cache_t {
 public:
   cache_t(ram_t& ram) : m_ram(ram), m_accesses(0), m_misses(0) {
-    invalidate();
+    std::fill(m_tags.begin(), m_tags.end(), 0x00000000u);
   }
 
+  /// @brief Invalidate all lines in the cache.
+  ///
+  /// Any lines that have not yet been written to RAM are flushed.
   void invalidate() {
+    flush();
     std::fill(m_tags.begin(), m_tags.end(), 0x00000000u);
+  }
+
+  /// @brief Flush all lines in the cache.
+  void flush() {
+    // TODO(m): Implement me!
   }
 
   void write8(const uint32_t addr, const uint8_t value) {

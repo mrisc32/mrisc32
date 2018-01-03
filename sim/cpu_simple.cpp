@@ -1,38 +1,25 @@
+//--------------------------------------------------------------------------------------------------
+// Copyright (c) 2018 Marcus Geelnard
+//
+// This software is provided 'as-is', without any express or implied warranty. In no event will the
+// authors be held liable for any damages arising from the use of this software.
+//
+// Permission is granted to anyone to use this software for any purpose, including commercial
+// applications, and to alter it and redistribute it freely, subject to the following restrictions:
+//
+//  1. The origin of this software must not be misrepresented; you must not claim that you wrote
+//     the original software. If you use this software in a product, an acknowledgment in the
+//     product documentation would be appreciated but is not required.
+//
+//  2. Altered source versions must be plainly marked as such, and must not be misrepresented as
+//     being the original software.
+//
+//  3. This notice may not be removed or altered from any source distribution.
+//--------------------------------------------------------------------------------------------------
+
 #include "cpu_simple.hpp"
 
 namespace {
-// Named registers.
-const uint32_t REG_Z = 0u;
-const uint32_t REG_PC = 1u;
-const uint32_t REG_SP = 2u;
-const uint32_t REG_LR = 3u;
-
-// ALU operations.
-const uint32_t ALU_OP_NONE = 0x00u;
-const uint32_t ALU_OP_OR = 0x01u;
-const uint32_t ALU_OP_NOR = 0x02u;
-const uint32_t ALU_OP_AND = 0x03u;
-const uint32_t ALU_OP_XOR = 0x04u;
-const uint32_t ALU_OP_ADD = 0x05u;
-const uint32_t ALU_OP_SUB = 0x06u;
-const uint32_t ALU_OP_ADDC = 0x07u;
-const uint32_t ALU_OP_SUBC = 0x08u;
-const uint32_t ALU_OP_SHL = 0x09u;
-const uint32_t ALU_OP_ASR = 0x0au;
-const uint32_t ALU_OP_LSR = 0x0bu;
-const uint32_t ALU_OP_EXTB = 0x0cu;
-const uint32_t ALU_OP_EXTH = 0x0du;
-const uint32_t ALU_OP_MIXH = 0x10u;
-
-// Memory operations.
-const uint32_t MEM_OP_NONE = 0x00u;
-const uint32_t MEM_OP_LOAD8 = 0x10u;
-const uint32_t MEM_OP_LOAD16 = 0x11u;
-const uint32_t MEM_OP_LOAD32 = 0x12u;
-const uint32_t MEM_OP_STORE8 = 0x14u;
-const uint32_t MEM_OP_STORE16 = 0x15u;
-const uint32_t MEM_OP_STORE32 = 0x16u;
-
 struct id_in_t {
   uint32_t pc;      // PC for the current instruction.
   uint32_t instr;   // Instruction.

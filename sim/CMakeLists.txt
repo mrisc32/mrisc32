@@ -15,4 +15,3 @@ add_executable(sim
                ram.cpp
                ram.hpp)
 target_include_directories(sim PRIVATE .)
-
