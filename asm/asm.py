@@ -283,10 +283,13 @@ _OPCODES = {
 
         # === ALIASES ===
 
-        # Alias for meq _REG1, Z, _REG3
+        # Alias for: meq _REG1, z, _REG3
         'mov':    [0x00000020, _REG1, _REG3],
 
-        # Load/store pc-relative (alias for reg + offset).
+        # Alias for: addi _REG1, pc, offset
+        'lea':    [0x05004000, _REG1, _PCREL14],
+
+        # Load/store pc-relative (alias for: ld.?/st.? _REG1, pc, offset).
         'ldpc.b': [0x10004000, _REG1, _PCREL14],
         'ldpc.h': [0x11004000, _REG1, _PCREL14],
         'ldpc.w': [0x12004000, _REG1, _PCREL14],

@@ -26,7 +26,8 @@ _putc:
 ; puts(char* s)
 ; -----------------------------------------------------------------------------
 _puts:
-  mov    r14, lr
+  st.w   lr, sp, -4
+  subi   sp, sp, 4
 
   mov    r12, r4
   ldi    r13, 0
@@ -42,6 +43,7 @@ __puts_eos:
   ldi    r4, 10
   bsr    _putc
 
-  mov    lr, r14
+  ld.w   lr, sp, 0
+  addi   sp, sp, 4
   rts
 
