@@ -7,9 +7,9 @@
 ; -----------------------------------------------------------------------------
 _exit:
   ; exit routine: 0xffff0000
-  ldihi  r16, -8       ; Upper 19 bits = 0b1111111111111111000
-  ori    r16, r16, 0   ; Lower 14 bits = 0b00000000000000
-  jmp    r16
+  ldihi  r12, -8       ; Upper 19 bits = 0b1111111111111111000
+  ori    r12, r12, 0   ; Lower 14 bits = 0b00000000000000
+  jmp    r12
 
 
 ; -----------------------------------------------------------------------------
@@ -17,24 +17,26 @@ _exit:
 ; -----------------------------------------------------------------------------
 _putc:
   ; putc routine: 0xffff0004
-  ldihi  r16, -8       ; Upper 19 bits = 0b1111111111111111000
-  ori    r16, r16, 4   ; Lower 14 bits = 0b00000000000100
-  jmp    r16
+  ldihi  r12, -8       ; Upper 19 bits = 0b1111111111111111000
+  ori    r12, r12, 4   ; Lower 14 bits = 0b00000000000100
+  jmp    r12
 
 
 ; -----------------------------------------------------------------------------
 ; puts(char* s)
 ; -----------------------------------------------------------------------------
 _puts:
-  st.w   lr, sp, -4
-  subi   sp, sp, 4
+  st.w   lr, sp, -12
+  st.w   r20, sp, -8
+  st.w   r21, sp, -4
+  subi   sp, sp, 12
 
-  mov    r12, r4
-  ldi    r13, 0
+  mov    r20, r4
+  ldi    r21, 0
 __puts_loop:
-  ldx.b  r4, r12, r13
+  ldx.b  r4, r20, r21
   andi   r4, r4, 255
-  addi   r13, r13, 1
+  addi   r21, r21, 1
   beq    r4, __puts_eos
   bsr    _putc
   bra    __puts_loop
@@ -44,6 +46,9 @@ __puts_eos:
   bsr    _putc
 
   ld.w   lr, sp, 0
-  addi   sp, sp, 4
+  ld.w   r20, sp, 4
+  ld.w   r21, sp, 8
+  addi   sp, sp, 12
+  ldi    r4, 1        ; Return a non-negative number
   rts
 

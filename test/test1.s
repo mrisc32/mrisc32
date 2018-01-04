@@ -1,28 +1,28 @@
 // This is a test program.
 
 main:
-  ldi    r10, 0         ; r10 is the return code (0 = success, 1 = fail)
+  ldi    r20, 0         ; r20 is the return code (0 = success, 1 = fail)
 
   bsr    test_1
-  or     r10, r10, r4
+  or     r20, r20, r4
   beq    r4, test1_passed
   bsr    test_failed
 test1_passed:
 
   bsr    test_2
-  or     r10, r10, r4
+  or     r20, r20, r4
   beq    r4, test2_passed
   bsr    test_failed
 test2_passed:
 
   bsr    test_3
-  or     r10, r10, r4
+  or     r20, r10, r4
   beq    r4, test3_passed
   bsr    test_failed
 test3_passed:
 
-  ; exit(r10)
-  mov    r4, r10
+  ; exit(r20)
+  mov    r4, r20
   bra    _exit
 
 
@@ -40,13 +40,13 @@ test_failed_msg:
 ; A loop with a decrementing conunter.
 
 test_1:
-  ldi    r4, 0x20
-  ldi    r5, 12
+  ldi    r12, 0x20
+  ldi    r13, 12
 
 loop:
-  add    r4, r4, r5
-  addi   r5, r5, -1
-  bne    r5, loop
+  add    r12, r12, r13
+  subi   r13, r13, 1
+  bne    r13, loop
   
   ldi    r4, 0
   rts
@@ -55,12 +55,14 @@ loop:
 ; ----------------------------------------------------------------------------
 
 test_2:
-  addi   sp, sp, -8
-  st.w   r4, sp, 0
-  st.w   r5, sp, 4
+  st.w   r4, sp, -8
+  st.w   r5, sp, -4
+  subi   sp, sp, 8
+
   ldpc.w r4, data
   add    r4, r4, r5
   addi   r5, pc, 15
+
   ld.w   r4, sp, 0
   ld.w   r5, sp, 4
   addi   sp, sp, 8
