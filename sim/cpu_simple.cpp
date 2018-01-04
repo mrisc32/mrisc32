@@ -104,7 +104,7 @@ uint32_t cpu_simple_t::run(const uint32_t addr) {
           (id_in.instr & 0x00ffffffu) | ((id_in.instr & 0x00800000u) ? 0xff000000u : 0u);
 
 
-      // == BRANCH ==
+      // == BRANCH & CONDITIONAL MOVES ==
 
       const bool is_bcc = ((id_in.instr & 0xf8000000u) == 0x20000000u);
       const bool is_jmp_jsr = ((id_in.instr & 0xff0001f0u) == 0x00000080u);
@@ -113,35 +113,45 @@ uint32_t cpu_simple_t::run(const uint32_t addr) {
       const bool is_subroutine_branch = ((id_in.instr & 0xff0001ffu) == 0x00000081u) ||  // jsr
                                         ((id_in.instr & 0xff000000u) == 0x31000000u);    // bsr
 
-      // Branch source register is reg1 (for b[cc] and jmp/jsr).
-      const uint32_t branch_reg = (is_bcc || is_jmp_jsr) ? reg1 : REG_Z;
-      const uint32_t branch_value = m_regs[branch_reg];
+      const bool is_cond_move = ((id_in.instr & 0x000001f0u) == 0x00000020u);
+
+      // Branch source register is reg1 (for b[cc] and jmp/jsr), and reg2 for m[cc].
+      const uint32_t branch_cond_reg =
+          is_cond_move ? reg2 : ((is_bcc || is_jmp_jsr) ? reg1 : REG_Z);
+      const uint32_t branch_cond_value = m_regs[branch_cond_reg];
+
+      // Evaluate condition (for b[cc] and m[cc]).
+      const uint32_t condition = is_cond_move ? (id_in.instr & 0x000001ffu) : (id_in.instr >> 24u);
+      bool condition_satisfied = false;
+      switch (condition) {
+        case 0x20u:  // beq/meq
+          condition_satisfied = (branch_cond_value == 0u);
+          break;
+        case 0x21u:  // bne/mne
+          condition_satisfied = (branch_cond_value != 0u);
+          break;
+        case 0x22u:  // bge/mge
+          condition_satisfied = ((branch_cond_value & 0x80000000u) == 0u);
+          break;
+        case 0x23u:  // bgt/mgt
+          condition_satisfied =
+              ((branch_cond_value & 0x80000000u) == 0u) && (branch_cond_value != 0u);
+          break;
+        case 0x24u:  // ble/mle
+          condition_satisfied =
+              ((branch_cond_value & 0x80000000u) != 0u) || (branch_cond_value == 0u);
+          break;
+        case 0x25u:  // blt/mlt
+          condition_satisfied = ((branch_cond_value & 0x80000000u) != 0u);
+          break;
+      }
 
       bool branch_taken = false;
       uint32_t branch_target = 0u;
 
       // b[cc]?
       if (is_bcc) {
-        switch (id_in.instr >> 24u) {
-          case 0x20u:  // beq
-            branch_taken = (branch_value == 0u);
-            break;
-          case 0x21u:  // bne
-            branch_taken = (branch_value != 0u);
-            break;
-          case 0x22u:  // bge
-            branch_taken = ((branch_value & 0x80000000u) == 0u);
-            break;
-          case 0x23u:  // bgt
-            branch_taken = ((branch_value & 0x80000000u) == 0u) && (branch_value != 0u);
-            break;
-          case 0x24u:  // ble
-            branch_taken = ((branch_value & 0x80000000u) != 0u) || (branch_value == 0u);
-            break;
-          case 0x25u:  // blt
-            branch_taken = ((branch_value & 0x80000000u) != 0u);
-            break;
-        }
+        branch_taken = condition_satisfied;
         branch_target = id_in.pc + (imm19 << 2u);
       }
 
@@ -154,7 +164,7 @@ uint32_t cpu_simple_t::run(const uint32_t addr) {
       // jmp/jsr?
       if (is_jmp_jsr) {
         branch_taken = true;
-        branch_target = branch_value;
+        branch_target = branch_cond_value;
       }
 
       next_pc = branch_taken ? branch_target : (id_in.pc + 4u);
@@ -174,13 +184,14 @@ uint32_t cpu_simple_t::run(const uint32_t addr) {
       const bool reg1_is_src = is_mem_store || is_jmp_jsr;
 
       // Should we use reg2 as a source?
-      const bool reg2_is_src = op_class_A || op_class_B;
+      const bool reg2_is_src = (op_class_A || op_class_B) && !is_cond_move;
 
       // Should we use reg3 as a source?
       const bool reg3_is_src = op_class_A;
 
       // Should we use reg1 as a destination?
-      const bool reg1_is_dst = !reg1_is_src && !is_branch;
+      const bool reg1_is_dst =
+          !reg1_is_src && !is_branch && !(is_cond_move && !condition_satisfied);
 
       // Determine the source & destination register numbers (zero of none).
       const uint32_t src_reg_a = is_subroutine_branch ? REG_PC : (reg2_is_src ? reg2 : REG_Z);
@@ -205,6 +216,8 @@ uint32_t cpu_simple_t::run(const uint32_t addr) {
             alu_op = ALU_OP_ORHI;
             break;
         }
+      } else if (is_cond_move && condition_satisfied) {
+        alu_op = ALU_OP_OR;
       }
       // ...and then some.
 

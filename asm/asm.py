@@ -197,9 +197,6 @@ _OPCODES = {
         'asri':   [0x0a000000, _REG1, _REG2, _IMM14],
         'lsri':   [0x0b000000, _REG1, _REG2, _IMM14],
 
-        # Alias for ori _REG1, _REG2, 0
-        'mov':    [0x01000000, _REG1, _REG2],
-
         # Load/store reg + offset.
         'ld.b':   [0x10000000, _REG1, _REG2, _IMM14],
         'ld.h':   [0x11000000, _REG1, _REG2, _IMM14],
@@ -207,14 +204,6 @@ _OPCODES = {
         'st.b':   [0x14000000, _REG1, _REG2, _IMM14],
         'st.h':   [0x15000000, _REG1, _REG2, _IMM14],
         'st.w':   [0x16000000, _REG1, _REG2, _IMM14],
-
-        # Load/store pc-relative (alias for reg + offset).
-        'ldpc.b': [0x10004000, _REG1, _PCREL14],
-        'ldpc.h': [0x11004000, _REG1, _PCREL14],
-        'ldpc.w': [0x12004000, _REG1, _PCREL14],
-        'stpc.b': [0x14004000, _REG1, _PCREL14],
-        'stpc.h': [0x15004000, _REG1, _PCREL14],
-        'stpc.w': [0x16004000, _REG1, _PCREL14],
 
         # TODO(m): Load Linked (ll) and Store Conditional (sc) for atomic ops.
         # 'll':    [(47 << 24), _REG2, _REG1],
@@ -280,10 +269,6 @@ _OPCODES = {
         'fld':    [0x90000000, _FREG1, _REG2, _IMM14],
         'fst':    [0x91000000, _FREG1, _REG2, _IMM14],
 
-        # Load/store pc-relative (alias for reg + offset).
-        'fldpc':  [0x90004000, _FREG1, _PCREL14],
-        'fstpc':  [0x91004000, _FREG1, _PCREL14],
-
 
         # == C: Floaring point ==
 
@@ -294,6 +279,24 @@ _OPCODES = {
         'fbgt':   [0xa3000000, _FREG1, _PCREL19x4],
         'fble':   [0xa4000000, _FREG1, _PCREL19x4],
         'fblt':   [0xa5000000, _FREG1, _PCREL19x4],
+
+
+        # === ALIASES ===
+
+        # Alias for meq _REG1, Z, _REG3
+        'mov':    [0x00000020, _REG1, _REG3],
+
+        # Load/store pc-relative (alias for reg + offset).
+        'ldpc.b': [0x10004000, _REG1, _PCREL14],
+        'ldpc.h': [0x11004000, _REG1, _PCREL14],
+        'ldpc.w': [0x12004000, _REG1, _PCREL14],
+        'stpc.b': [0x14004000, _REG1, _PCREL14],
+        'stpc.h': [0x15004000, _REG1, _PCREL14],
+        'stpc.w': [0x16004000, _REG1, _PCREL14],
+
+        # Load/store pc-relative (alias for reg + offset).
+        'fldpc':  [0x90004000, _FREG1, _PCREL14],
+        'fstpc':  [0x91004000, _FREG1, _PCREL14],
     }
 
 
