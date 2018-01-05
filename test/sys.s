@@ -26,10 +26,10 @@ _putc:
 ; puts(char* s)
 ; -----------------------------------------------------------------------------
 _puts:
-  st.w   lr, sp, -12
-  st.w   r20, sp, -8
-  st.w   r21, sp, -4
   subi   sp, sp, 12
+  st.w   lr, sp, 0
+  st.w   r20, sp, 4
+  st.w   r21, sp, 8
 
   mov    r20, r4
   ldi    r21, 0

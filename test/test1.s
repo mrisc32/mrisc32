@@ -55,9 +55,9 @@ loop:
 ; ----------------------------------------------------------------------------
 
 test_2:
-  st.w   r4, sp, -8
-  st.w   r5, sp, -4
   subi   sp, sp, 8
+  st.w   r4, sp, 0
+  st.w   r5, sp, 4
 
   ldpc.w r4, data
   add    r4, r4, r5
@@ -82,8 +82,8 @@ data:
 ; ----------------------------------------------------------------------------
 
 test_3:
-  st.w   lr, sp, -4
   subi   sp, sp, 4
+  st.w   lr, sp, 0
 
   lea    r4, hello_world
   bsr    _puts
