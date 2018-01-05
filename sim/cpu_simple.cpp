@@ -51,8 +51,9 @@ struct wb_in_t {
 };
 }  // namespace
 
-uint32_t cpu_simple_t::run(const uint32_t addr) {
+uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
   m_regs[REG_PC] = addr;
+  m_regs[REG_SP] = sp;
   m_terminate = false;
   m_exit_code = 0u;
 

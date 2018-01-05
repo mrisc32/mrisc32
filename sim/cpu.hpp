@@ -36,8 +36,9 @@ public:
 
   /// @brief Start running code at a given memory address.
   /// @param addr Start of the program.
+  /// @param sp Stack pointer.
   /// @returns The program return code (the argument to exit()).
-  virtual uint32_t run(const uint32_t addr) = 0;
+  virtual uint32_t run(const uint32_t addr, const uint32_t sp) = 0;
 
   /// @brief Dump CPU stats from the last run.
   void dump_stats();

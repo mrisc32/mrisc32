@@ -33,7 +33,7 @@ public:
   cpu_simple_t(ram_t& ram) : cpu_t(ram) {
   }
 
-  uint32_t run(const uint32_t addr) override;
+  uint32_t run(const uint32_t addr, const uint32_t sp) override;
 };
 
 #endif // SIM_CPU_SIMPLE_HPP_

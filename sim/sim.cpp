@@ -104,14 +104,23 @@ int main(const int argc, const char** argv) {
     ram_t ram;
 
     // Load the program file into RAM.
-    uint32_t start_addr;
-    start_addr = read_bin_file(bin_file, ram);
+    const uint32_t start_addr = read_bin_file(bin_file, ram);
+
+    // Define the stack area.
+    const uint32_t stack_bottom = 0x10000000u;
+    const uint32_t stack_size = 0x00020000u;
+    std::cout << "Stack: " << stack_size << " bytes @ 0x" << std::hex << std::setw(8)
+              << std::setfill('0') << stack_bottom << "-0x" << (stack_bottom + stack_size) << "\n";
+    std::cout << std::resetiosflags(std::ios::hex);
 
     // Initialize the CPU.
     cpu_simple_t cpu(ram);
 
     // Run until the program returns.
-    int exit_code = static_cast<int>(cpu.run(start_addr));
+    const uint32_t stack_pointer = stack_bottom + stack_size;
+    std::cout << "--------------------------------------------------------------------------\n";
+    const int exit_code = static_cast<int>(cpu.run(start_addr, stack_pointer));
+    std::cout << "--------------------------------------------------------------------------\n";
 
     // Show some stats.
     cpu.dump_stats();
