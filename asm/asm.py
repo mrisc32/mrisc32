@@ -504,41 +504,24 @@ def compile_file(file_name, out_name):
                             print 'Aligned pc to: {} (padded by {} bytes)'.format(addr, num_pad_bytes)
 
                     elif directive[0] in ['.i8', '.u8', '.i16', '.u16', '.i32', '.u32']:
+                        num_bits = parse_integer(directive[0][2:])
+                        is_unsigned = (directive[0][1] == 'u')
+                        val_min = 0 if is_unsigned else -(1 << (num_bits - 1))
+                        val_max = ((1 << num_bits) - 1) if is_unsigned else ((1 << (num_bits - 1)) - 1)
+                        val_size = num_bits >> 3
+                        val_type = {
+                          '.i8': 'b',
+                          '.u8': 'B',
+                          '.i16': '<h',
+                          '.u16': '<H',
+                          '.i32': '<l',
+                          '.u32': '<L'
+                        }[directive[0]];
                         for k in range(1, len(directive)):
                             try:
                                 value = parse_integer(directive[k])
                             except ValueError:
                                 raise AsmError(line_no, 'Invalid integer: {}'.format(directive[k]))
-                            if directive[0] == '.i8':
-                                val_min = -128
-                                val_max = 128
-                                val_type = 'b'
-                                val_size = 1
-                            elif directive[0] == '.u8':
-                                val_min = 0
-                                val_max = 255
-                                val_type = 'B'
-                                val_size = 1
-                            elif directive[0] == '.i16':
-                                val_min = -32768
-                                val_max = 32767
-                                val_type = '<h'
-                                val_size = 2
-                            elif directive[0] == '.u16':
-                                val_min = 0
-                                val_max = 65535
-                                val_type = '<H'
-                                val_size = 2
-                            elif directive[0] == '.i32':
-                                val_min = -2147483648
-                                val_max = 2147483647
-                                val_type = '<l'
-                                val_size = 4
-                            elif directive[0] == '.u32':
-                                val_min = 0
-                                val_max = 4294967295
-                                val_type = '<L'
-                                val_size = 4
                             if not addr & (val_size - 1) == 0:
                                 raise AsmError(line_no, 'Data not aligned to a {} byte boundary'.format(val_size))
                             if value < val_min or value > val_max:
@@ -546,6 +529,37 @@ def compile_file(file_name, out_name):
                             addr += val_size
                             if compilation_pass == 2:
                                 code += struct.pack(val_type, value)
+
+                    elif directive[0] == '.text':
+                        raw_text = line[5:].strip()
+                        first_quote = raw_text.find('"')
+                        last_quote = raw_text.rfind('"')
+                        if (first_quote < 0) or (last_quote != (len(raw_text) - 1)) or (last_quote == first_quote):
+                            raise AsmError(line_no, 'Invalid string: {}'.format(raw_text))
+                        text = raw_text[(first_quote + 1):last_quote]
+                        k = 0
+                        while k < len(text):
+                            char = text[k]
+                            k += 1
+                            if char == '\\':
+                                if k == len(text):
+                                    raise AsmError(line_no, 'Premature end of string: {}'.format(raw_text))
+                                control_char = text[k]
+                                k += 1
+                                if control_char.isdigit():
+                                    char_code = parse_integer(control_char)
+                                else:
+                                    char_code = {
+                                        't': 9,
+                                        'n': 10,
+                                        'r': 13,
+                                        '\\': 92
+                                    }[control_char]
+                            else:
+                                char_code = ord(char)
+                            addr += 1
+                            if compilation_pass == 2:
+                                code += struct.pack('B', char_code)
 
                     else:
                         raise AsmError(line_no, 'Unknown directive: {}'.format(directive[0]))
