@@ -223,7 +223,7 @@ _OPCODES = {
 
         # Load immediate.
         'ldi':    [0x28000000, _REG1, _IMM19],
-        'ldihi':  [0x29000000, _REG1, _IMM19],
+        'ldhi':   [0x29000000, _REG1, _IMM19],
 
 
         # == D ==

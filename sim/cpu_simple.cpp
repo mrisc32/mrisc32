@@ -213,7 +213,7 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
           case 0x28000000u:  // ldi
             alu_op = ALU_OP_OR;
             break;
-          case 0x29000000u:  // ldihi
+          case 0x29000000u:  // ldhi
             alu_op = ALU_OP_ORHI;
             break;
         }
