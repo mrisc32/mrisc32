@@ -92,6 +92,7 @@ protected:
   static const uint32_t NUM_REGS = 32u;
   std::array<uint32_t, NUM_REGS> m_regs;
   std::array<float, NUM_REGS> m_fregs;
+  uint32_t m_carry;
 
   // Run state.
   bool m_terminate;

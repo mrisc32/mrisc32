@@ -21,6 +21,12 @@ main:
   bsr    .test_failed
 .test3_passed:
 
+  bsr    test_4
+  or     r20, r10, r4
+  beq    r4, .test4_passed
+  bsr    .test_failed
+.test4_passed:
+
   ; exit(r20)
   mov    r4, r20
   bra    _exit
@@ -53,6 +59,7 @@ test_1:
 
 
 ; ----------------------------------------------------------------------------
+; Sum elements in a data array.
 
 test_2:
   subi   sp, sp, 12
@@ -91,6 +98,7 @@ test_2:
 
 
 ; ----------------------------------------------------------------------------
+; Call a subroutine that prints hello world.
 
 test_3:
   subi   sp, sp, 4
@@ -108,6 +116,45 @@ test_3:
 .hello_world:
   .asciz "Hello world!"
   .align 4
+
+
+; ----------------------------------------------------------------------------
+; 64-bit arithmetic.
+
+test_4:
+  subi   sp, sp, 8
+  st.w   lr, sp, 0
+  st.w   r20, sp, 4
+
+  ; Load two 64-bit numbers into r14:r13 and r16:r15
+  lea    r12, .dword1
+  ld.w   r13, r12, 0  ; r13 = low bits
+  ld.w   r14, r12, 4  ; r14 = high bits
+  lea    r12, .dword2
+  ld.w   r15, r12, 0  ; r15 = low bits
+  ld.w   r16, r12, 4  ; r16 = high bits
+
+  ; Add the numbers into r4:r20
+  add    r20, r13, r15  ; r20 = low bits
+  addc   r4, r14, r16   ; r4 = high bits
+
+  bsr    _printhex      ; Print high word
+  mov    r4, r20
+  bsr    _printhex      ; Print low word
+  ldi    r4, 10
+  bsr    _putc
+
+  ld.w   lr, sp, 0
+  ld.w   r20, sp, 4
+  addi   sp, sp, 8
+
+  ldi    r4, 0
+  rts
+
+.dword1:
+  .u32   0x89abcdef, 0x01234567
+.dword2:
+  .u32   0xaaaaaaaa, 0x00010000
 
 
 ; ----------------------------------------------------------------------------

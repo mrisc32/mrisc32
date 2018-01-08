@@ -49,6 +49,13 @@ struct wb_in_t {
   uint32_t dst_data;    // Data to be written in the WB step.
   uint32_t dst_reg;     // Target register for the instruction (0 = none).
 };
+
+uint32_t add32(const uint32_t a, const uint32_t b, const uint32_t carry_in, uint32_t& carry_out) {
+  uint64_t result =
+      static_cast<uint64_t>(a) + static_cast<uint64_t>(b) + static_cast<uint64_t>(carry_in);
+  carry_out = static_cast<uint32_t>((result >> 32u) & 1u);
+  return static_cast<uint32_t>(result);
+}
 }  // namespace
 
 uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
@@ -231,7 +238,7 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       }
 
       // Output of the ID step.
-      ex_in.carry_in = 0u;  // TODO(m): Implement me!
+      ex_in.carry_in = m_carry;
       ex_in.src_a = m_regs[src_reg_a];
       ex_in.src_b = is_subroutine_branch
                         ? 4
@@ -246,6 +253,7 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
     mem_in_t mem_in;
     {
       uint32_t alu_result = 0u;
+      uint32_t carry_out = ex_in.carry_in;
       switch (ex_in.alu_op) {
         case ALU_OP_OR:
           alu_result = ex_in.src_a | ex_in.src_b;
@@ -260,16 +268,16 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
           alu_result = ex_in.src_a ^ ex_in.src_b;
           break;
         case ALU_OP_ADD:
-          alu_result = ex_in.src_a + ex_in.src_b;
+          alu_result = add32(ex_in.src_a, ex_in.src_b, 0u, carry_out);
           break;
         case ALU_OP_SUB:
-          alu_result = ex_in.src_a - ex_in.src_b;
+          alu_result = add32(ex_in.src_a, ~ex_in.src_b, 1u, carry_out);
           break;
         case ALU_OP_ADDC:
-          alu_result = ex_in.src_a + ex_in.src_b + ex_in.carry_in;
+          alu_result = add32(ex_in.src_a, ex_in.src_b, ex_in.carry_in, carry_out);
           break;
         case ALU_OP_SUBC:
-          alu_result = ex_in.src_a - ex_in.src_b + ex_in.carry_in;
+          alu_result = add32(ex_in.src_a, ~ex_in.src_b, ex_in.carry_in, carry_out);
           break;
         case ALU_OP_SHL:
           alu_result = ex_in.src_a << ex_in.src_b;
@@ -292,6 +300,8 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
           alu_result = ex_in.src_a | (ex_in.src_b << 13u);
           break;
       }
+
+      m_carry = carry_out;
 
       mem_in.mem_addr = alu_result;
       mem_in.dst_data = alu_result;

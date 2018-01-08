@@ -41,6 +41,7 @@ cpu_t::~cpu_t() {
 void cpu_t::reset() {
   std::fill(m_regs.begin(), m_regs.end(), 0u);
   std::fill(m_fregs.begin(), m_fregs.end(), 0.0f);
+  m_carry = 0u;
   m_terminate = false;
   m_exit_code = 0u;
 }
