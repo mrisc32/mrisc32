@@ -33,15 +33,15 @@ _puts:
 
   mov    r20, r4
   ldi    r21, 0
-__puts_loop:
+.loop:
   ldx.b  r4, r20, r21
   andi   r4, r4, 255
   addi   r21, r21, 1
-  beq    r4, __puts_eos
+  beq    r4, .eos
   bsr    _putc
-  bra    __puts_loop
+  bra    .loop
 
-__puts_eos:
+.eos:
   ldi    r4, 10
   bsr    _putc
 
@@ -63,18 +63,18 @@ _printhex:
   st.w   r21, sp, 8
   st.w   r22, sp, 12
 
-  lea    r20, __printhex_chars
+  lea    r20, .hex_chars
   mov    r21, r4
   ldi    r22, 7
-__printhex_loop:
+.loop:
   add    r12, r22, r22
   add    r12, r12, r12  ; r12 = r22 * 4
   lsr    r12, r21, r12  ; r12 = x >> (r22 * 4)
   andi   r12, r12, 15   ; r12 = (x >> (r22 * 4)) & 15
-  ldx.b  r4, r20, r12   ; r4 = __printhex_chars[(x >> (r22 * 4)) & 15]
+  ldx.b  r4, r20, r12   ; r4 = hex_chars[(x >> (r22 * 4)) & 15]
   subi   r22, r22, 1
   bsr    _putc
-  bge    r22, __printhex_loop
+  bge    r22, .loop
 
   ld.w   lr, sp, 0
   ld.w   r20, sp, 4
@@ -83,6 +83,6 @@ __printhex_loop:
   addi   sp, sp, 16
   rts
 
-__printhex_chars:
+.hex_chars:
   .ascii "0123456789abcdef"
 

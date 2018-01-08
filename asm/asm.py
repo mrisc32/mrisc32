@@ -367,9 +367,17 @@ def translate_imm(operand, operand_type, line_no):
     return value & (value_max * 2 - 1)
 
 
-def translate_pcrel(operand, operand_type, pc, labels, line_no):
+def mangle_local_label(label, scope_label):
+    return '{}@{}'.format(scope_label, label[1:])
+
+
+def translate_pcrel(operand, operand_type, pc, labels, scope_label, line_no):
     # TODO(m): Add support for numerical offsets and relative +/- deltas.
     try:
+        if operand.startswith('.'):
+            if not scope_label:
+                raise AsmError(line_no, 'No scope for local label: {}'.format(operand))
+            operand = mangle_local_label(operand, scope_label)
         target_address = labels[operand]
     except KeyError as e:
         raise AsmError(line_no, 'Bad label: {}'.format(operand))
@@ -392,7 +400,7 @@ def translate_pcrel(operand, operand_type, pc, labels, line_no):
     return offset & (offset_max * 2 - 1)
 
 
-def translate_operation(operation, mnemonic, descr, addr, line_no, labels):
+def translate_operation(operation, mnemonic, descr, addr, line_no, labels, scope_label):
     if len(operation) != len(descr):
         raise AsmError(line_no, 'Expected {} arguments for {}'.format(len(descr) - 1, mnemonic))
     instr = descr[0]
@@ -404,7 +412,7 @@ def translate_operation(operation, mnemonic, descr, addr, line_no, labels):
         elif operand_type in [_IMM14, _IMM19]:
             instr = instr | translate_imm(operand, operand_type, line_no)
         elif operand_type in [_PCREL14, _PCREL19x4, _PCREL24x4]:
-            instr = instr | translate_pcrel(operand, operand_type, addr, labels, line_no)
+            instr = instr | translate_pcrel(operand, operand_type, addr, labels, scope_label, line_no)
 
     return instr
 
@@ -449,6 +457,9 @@ def compile_file(file_name, out_name, verbosity_level):
             # Set the default start address.
             addr = 49152
 
+            # Clear the scope for local labels.
+            scope_label = ''
+
             # Emit start address.
             # TODO(m): Allow for dynamic address definitions (e.g. .addr).
             if compilation_pass == 2:
@@ -477,12 +488,20 @@ def compile_file(file_name, out_name, verbosity_level):
 
                 elif line.endswith(':'):
                     # This is a label.
+                    label = line[:-1]
+                    if ' ' in label or '@' in label:
+                        raise AsmError(line_no, 'Bad label "%s"' % label)
+                    if label.startswith('.'):
+                        # This is a local label - make it global.
+                        if not scope_label:
+                            raise AsmError(line_no, 'No scope for local label: {}'.format(label))
+                        label = mangle_local_label(label, scope_label)
+                    else:
+                        # This is a global label - use it as the scope label.
+                        scope_label = label
                     if compilation_pass == 1:
-                        label = line[:-1]
-                        if ' ' in label:
-                            raise AsmError(line_no, 'Bad label "%s"' % label)
                         if label in labels:
-                            raise AsmError(line_no, 'Re-definition of label "%s"' % label)
+                            raise AsmError(line_no, 'Re-definition of label: {}'.format(label))
                         labels[label] = addr
                         if verbosity_level >= 2:
                             print ' Label: "%s": %d' % (label, addr)
@@ -588,7 +607,7 @@ def compile_file(file_name, out_name, verbosity_level):
                     except KeyError as e:
                         raise AsmError(line_no, 'Bad mnemonic: {}'.format(mnemonic))
                     if compilation_pass == 2:
-                        instr = translate_operation(operation, mnemonic, descr, addr, line_no, labels)
+                        instr = translate_operation(operation, mnemonic, descr, addr, line_no, labels, scope_label)
                         if verbosity_level >= 2:
                             print format(instr, '08x') + ' <= ' + '{}'.format(operation)
                         code += struct.pack('<L', instr)
