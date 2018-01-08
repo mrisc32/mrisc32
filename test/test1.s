@@ -55,27 +55,38 @@ loop:
 ; ----------------------------------------------------------------------------
 
 test_2:
-  subi   sp, sp, 8
-  st.w   r4, sp, 0
-  st.w   r5, sp, 4
+  subi   sp, sp, 12
+  st.w   lr, sp, 0
+  st.w   r20, sp, 4
+  st.w   r21, sp, 8
 
-  ldpc.w r4, data
-  add    r4, r4, r5
-  addi   r5, pc, 15
+  lea    r20, __test_2_data
+  ld.w   r4, r20, 0     ; r4 = data[0]
+  ld.w   r21, r20, 4
+  add    r4, r4, r21    ; r4 += data[1]
+  ld.w   r21, r20, 8
+  add    r4, r4, r21    ; r4 += data[2]
+  mov    r20, r4        ; Save the result for the comparison later
+  bsr    _printhex
+  ldi    r4, 10
+  bsr    _putc
 
-  ld.w   r4, sp, 0
-  ld.w   r5, sp, 4
-  addi   sp, sp, 8
+  ldi    r4, 1
+  ldi    r12, 0
+  ldhi   r13, 0x5f778
+  ori    r13, r13, 0x42 ; r13 = 0xbeef0042
+  sub    r13, r20, r13
+  meq    r4, r13, r12   ; return (r20 == 0xbeef0042) ? 0 : 1
 
-  ldi    r4, 0
+  ld.w   lr, sp, 0
+  ld.w   r20, sp, 4
+  ld.w   r21, sp, 8
+  addi   sp, sp, 12
+
   rts
 
-  .align 4
-data:
-  .i32   9, 6, 5
-  .u32   134987124
-  .u8    0xFF,  2
-  .i16   1240
+__test_2_data:
+  .u32   0x40, 1, 0xbeef0001
   .align 4
 
 

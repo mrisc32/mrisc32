@@ -52,3 +52,37 @@ __puts_eos:
   ldi    r4, 1        ; Return a non-negative number
   rts
 
+
+; -----------------------------------------------------------------------------
+; printhex(unsigned x)
+; -----------------------------------------------------------------------------
+_printhex:
+  subi   sp, sp, 16
+  st.w   lr, sp, 0
+  st.w   r20, sp, 4
+  st.w   r21, sp, 8
+  st.w   r22, sp, 12
+
+  lea    r20, __printhex_chars
+  mov    r21, r4
+  ldi    r22, 7
+__printhex_loop:
+  add    r12, r22, r22
+  add    r12, r12, r12  ; r12 = r22 * 4
+  lsr    r12, r21, r12  ; r12 = x >> (r22 * 4)
+  andi   r12, r12, 15   ; r12 = (x >> (r22 * 4)) & 15
+  ldx.b  r4, r20, r12   ; r4 = __printhex_chars[(x >> (r22 * 4)) & 15]
+  subi   r22, r22, 1
+  bsr    _putc
+  bge    r22, __printhex_loop
+
+  ld.w   lr, sp, 0
+  ld.w   r20, sp, 4
+  ld.w   r21, sp, 8
+  ld.w   r22, sp, 12
+  addi   sp, sp, 16
+  rts
+
+__printhex_chars:
+  .text  "0123456789abcdef"
+
