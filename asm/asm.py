@@ -22,6 +22,7 @@
 import argparse
 import struct
 import os
+import sys
 
 # Instruction formats:
 #
@@ -429,8 +430,9 @@ def preprocess(lines, file_dir):
     return result
 
 
-def compile_file(file_name, out_name):
-    print "Compiling %s..." % (file_name)
+def compile_file(file_name, out_name, verbosity_level):
+    if verbosity_level >= 1:
+        print "Compiling %s..." % (file_name)
     success = True
     labels = {}
     code = ''
@@ -441,7 +443,8 @@ def compile_file(file_name, out_name):
         lines = preprocess(lines, file_dir)
 
         for compilation_pass in [1, 2]:
-            print 'Pass %d' % (compilation_pass)
+            if verbosity_level >= 1:
+                print 'Pass %d' % (compilation_pass)
 
             # Set the default start address.
             addr = 49152
@@ -481,7 +484,8 @@ def compile_file(file_name, out_name):
                         if label in labels:
                             raise AsmError(line_no, 'Re-definition of label "%s"' % label)
                         labels[label] = addr
-                        print ' Label: "%s": %d' % (label, addr)
+                        if verbosity_level >= 2:
+                            print ' Label: "%s": %d' % (label, addr)
 
                 elif line.startswith('.'):
                     # This is a data directive.
@@ -501,7 +505,8 @@ def compile_file(file_name, out_name):
                                 for k in range(num_pad_bytes):
                                     code += struct.pack('B', 0)
                             addr += num_pad_bytes
-                            print 'Aligned pc to: {} (padded by {} bytes)'.format(addr, num_pad_bytes)
+                            if verbosity_level >= 2:
+                                print 'Aligned pc to: {} (padded by {} bytes)'.format(addr, num_pad_bytes)
 
                     elif directive[0] in ['.i8', '.u8', '.i16', '.u16', '.i32', '.u32']:
                         num_bits = parse_integer(directive[0][2:])
@@ -574,7 +579,8 @@ def compile_file(file_name, out_name):
                         raise AsmError(line_no, 'Bad mnemonic: {}'.format(mnemonic))
                     if compilation_pass == 2:
                         instr = translate_operation(operation, mnemonic, descr, addr, line_no, labels)
-                        print format(instr, '08x') + ' <= ' + '{}'.format(operation)
+                        if verbosity_level >= 2:
+                            print format(instr, '08x') + ' <= ' + '{}'.format(operation)
                         code += struct.pack('<L', instr)
                     addr += 4
 
@@ -593,11 +599,23 @@ def main():
     parser = argparse.ArgumentParser(description='A simple assembler for misc16')
     parser.add_argument('files', metavar='FILE', nargs='+',
                         help='the file(s) to process')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='be verbose')
+    parser.add_argument('-vv', '--extra-verbose', action='store_true',
+                        help='be extra verbose')
     args = parser.parse_args()
+
+    # Select verbosity level.
+    verbosity_level = 0
+    if args.verbose:
+        verbosity_level = 1
+    elif args.extra_verbose:
+        verbosity_level = 2
 
     for file_name in args.files:
         out_name = base = os.path.splitext(file_name)[0] + '.bin'
-        compile_file(file_name, out_name)
+        if not compile_file(file_name, out_name, verbosity_level):
+            sys.exit(1)
 
 
 if __name__ == "__main__":
