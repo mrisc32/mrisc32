@@ -32,7 +32,7 @@ test_failed:
 
 
 test_failed_msg:
-  .text  "*** Failed!\0"
+  .asciz "*** Failed!"
   .align 4
 
 
@@ -106,7 +106,7 @@ test_3:
 
 
 hello_world:
-  .text  "Hello world!\0"
+  .asciz "Hello world!"
   .align 4
 
 

@@ -84,5 +84,5 @@ __printhex_loop:
   rts
 
 __printhex_chars:
-  .text  "0123456789abcdef"
+  .ascii "0123456789abcdef"
 

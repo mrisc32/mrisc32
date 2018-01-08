@@ -535,8 +535,8 @@ def compile_file(file_name, out_name, verbosity_level):
                             if compilation_pass == 2:
                                 code += struct.pack(val_type, value)
 
-                    elif directive[0] == '.text':
-                        raw_text = line[5:].strip()
+                    elif directive[0] in ['.ascii', '.asciz']:
+                        raw_text = line[6:].strip()
                         first_quote = raw_text.find('"')
                         last_quote = raw_text.rfind('"')
                         if (first_quote < 0) or (last_quote != (len(raw_text) - 1)) or (last_quote == first_quote):
@@ -554,17 +554,27 @@ def compile_file(file_name, out_name, verbosity_level):
                                 if control_char.isdigit():
                                     char_code = parse_integer(control_char)
                                 else:
-                                    char_code = {
-                                        't': 9,
-                                        'n': 10,
-                                        'r': 13,
-                                        '\\': 92
-                                    }[control_char]
+                                    try:
+                                        char_code = {
+                                            't': 9,
+                                            'n': 10,
+                                            'r': 13,
+                                            '\\': 92,
+                                            '"': 34
+                                        }[control_char]
+                                    except KeyError as e:
+                                        raise AsmError(line_no, 'Bad control character: \\{}'.format(control_char))
                             else:
                                 char_code = ord(char)
                             addr += 1
                             if compilation_pass == 2:
                                 code += struct.pack('B', char_code)
+
+                        if directive[0] == '.asciz':
+                            # .asciz => zero terminated string.
+                            addr += 1
+                            if compilation_pass == 2:
+                                code += struct.pack('B', 0)
 
                     else:
                         raise AsmError(line_no, 'Unknown directive: {}'.format(directive[0]))
