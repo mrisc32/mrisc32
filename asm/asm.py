@@ -361,7 +361,7 @@ def translate_imm(operand, operand_type, line_no):
             _IMM14:   1 << 13,
             _IMM19:   1 << 18,
         }[operand_type]
-    if (value < -value_max or value >= value_max):
+    if (value < -value_max or value >= (value_max * 2)):
         raise AsmError(line_no, 'Too large immediate value: {}'.format(operand))
 
     return value & (value_max * 2 - 1)
