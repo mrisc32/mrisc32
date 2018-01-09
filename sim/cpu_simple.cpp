@@ -142,7 +142,7 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       const bool is_subroutine_branch = ((id_in.instr & 0xff0001ffu) == 0x00000081u) ||  // jsr
                                         ((id_in.instr & 0xff000000u) == 0x31000000u);    // bsr
 
-      const bool is_cond_move = ((id_in.instr & 0x000001f0u) == 0x00000020u);
+      const bool is_cond_move = ((id_in.instr & 0xff0001f0u) == 0x00000020u);
 
       // Branch source register is reg1 (for b[cc] and jmp/jsr), and reg2 for m[cc].
       const uint32_t branch_cond_reg =
