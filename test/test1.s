@@ -53,7 +53,7 @@ test_1:
   add    r12, r12, r13
   subi   r13, r13, 1
   bne    r13, .loop
-  
+
   ldi    r4, 0
   rts
 

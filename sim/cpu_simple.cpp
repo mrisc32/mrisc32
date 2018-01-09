@@ -50,11 +50,32 @@ struct wb_in_t {
   uint32_t dst_reg;     // Target register for the instruction (0 = none).
 };
 
-uint32_t add32(const uint32_t a, const uint32_t b, const uint32_t carry_in, uint32_t& carry_out) {
+inline uint32_t add32(const uint32_t a,
+                      const uint32_t b,
+                      const uint32_t carry_in,
+                      uint32_t& carry_out) {
   uint64_t result =
       static_cast<uint64_t>(a) + static_cast<uint64_t>(b) + static_cast<uint64_t>(carry_in);
   carry_out = static_cast<uint32_t>((result >> 32u) & 1u);
   return static_cast<uint32_t>(result);
+}
+
+inline uint32_t clz32(const uint32_t x) {
+  return static_cast<uint32_t>(__builtin_clz(x));
+}
+
+inline uint32_t rev32(const uint32_t x) {
+  return ((x >> 31u) & 0x00000001u) | ((x >> 29u) & 0x00000002u) | ((x >> 27u) & 0x00000004u) |
+         ((x >> 25u) & 0x00000008u) | ((x >> 23u) & 0x00000010u) | ((x >> 21u) & 0x00000020u) |
+         ((x >> 19u) & 0x00000040u) | ((x >> 17u) & 0x00000080u) | ((x >> 15u) & 0x00000100u) |
+         ((x >> 13u) & 0x00000200u) | ((x >> 11u) & 0x00000400u) | ((x >> 9u) & 0x00000800u) |
+         ((x >> 7u) & 0x00001000u) | ((x >> 5u) & 0x00002000u) | ((x >> 3u) & 0x00004000u) |
+         ((x >> 1u) & 0x00008000u) | ((x << 1u) & 0x00010000u) | ((x << 3u) & 0x00020000u) |
+         ((x << 5u) & 0x00040000u) | ((x << 7u) & 0x00080000u) | ((x << 9u) & 0x00100000u) |
+         ((x << 11u) & 0x00200000u) | ((x << 13u) & 0x00400000u) | ((x << 15u) & 0x00800000u) |
+         ((x << 17u) & 0x01000000u) | ((x << 19u) & 0x02000000u) | ((x << 21u) & 0x04000000u) |
+         ((x << 23u) & 0x08000000u) | ((x << 25u) & 0x10000000u) | ((x << 27u) & 0x20000000u) |
+         ((x << 29u) & 0x40000000u) | ((x << 31u) & 0x80000000u);
 }
 }  // namespace
 
@@ -211,7 +232,7 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       uint32_t alu_op = ALU_OP_NONE;
       if (is_subroutine_branch || is_mem_load || is_mem_store) {
         alu_op = ALU_OP_ADD;
-      } else if (op_class_A && (id_in.instr & 0x000001ffu) <= 0x0000000du) {
+      } else if (op_class_A && (id_in.instr & 0x000001ffu) <= 0x0000000fu) {
         alu_op = id_in.instr & 0x000001ff;
       } else if (op_class_B && (id_in.instr & 0xff000000u) <= 0x0b000000u) {
         alu_op = id_in.instr >> 24u;
@@ -288,6 +309,12 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
           break;
         case ALU_OP_LSR:
           alu_result = ex_in.src_a >> ex_in.src_b;
+          break;
+        case ALU_OP_CLZ:
+          alu_result = clz32(ex_in.src_a);
+          break;
+        case ALU_OP_REV:
+          alu_result = rev32(ex_in.src_a);
           break;
         case ALU_OP_EXTB:
           alu_result = (ex_in.src_a & 0x000000ffu) | ((ex_in.src_a & 0x00000080u) ? 0xffffff00u : 0u);

@@ -147,8 +147,10 @@ _OPCODES = {
         'lsl':    [0x00000009, _REG1, _REG2, _REG3],
         'asr':    [0x0000000a, _REG1, _REG2, _REG3],
         'lsr':    [0x0000000b, _REG1, _REG2, _REG3],
-        'ext.b':  [0x0000000c, _REG1, _REG2],         # 3rd reg is always z
-        'ext.h':  [0x0000000d, _REG1, _REG2],         # 3rd reg is always z
+        'clz':    [0x0000000c, _REG1, _REG2],         # 3rd reg is always z
+        'rev':    [0x0000000d, _REG1, _REG2],         # 3rd reg is always z
+        'ext.b':  [0x0000000e, _REG1, _REG2],         # 3rd reg is always z
+        'ext.h':  [0x0000000f, _REG1, _REG2],         # 3rd reg is always z
 
         # Load/store reg + reg.
         'ldx.b':  [0x00000010, _REG1, _REG2, _REG3],
