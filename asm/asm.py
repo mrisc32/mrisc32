@@ -144,7 +144,7 @@ _OPCODES = {
         'sub':    [0x00000006, _REG1, _REG2, _REG3],
         'addc':   [0x00000007, _REG1, _REG2, _REG3],
         'subc':   [0x00000008, _REG1, _REG2, _REG3],
-        'shl':    [0x00000009, _REG1, _REG2, _REG3],
+        'lsl':    [0x00000009, _REG1, _REG2, _REG3],
         'asr':    [0x0000000a, _REG1, _REG2, _REG3],
         'lsr':    [0x0000000b, _REG1, _REG2, _REG3],
         'ext.b':  [0x0000000c, _REG1, _REG2],         # 3rd reg is always z
@@ -194,7 +194,7 @@ _OPCODES = {
         'subi':   [0x06000000, _REG1, _REG2, _IMM14],
         'addci':  [0x07000000, _REG1, _REG2, _IMM14],
         'subci':  [0x08000000, _REG1, _REG2, _IMM14],
-        'shli':   [0x09000000, _REG1, _REG2, _IMM14],
+        'lsli':   [0x09000000, _REG1, _REG2, _IMM14],
         'asri':   [0x0a000000, _REG1, _REG2, _IMM14],
         'lsri':   [0x0b000000, _REG1, _REG2, _IMM14],
 

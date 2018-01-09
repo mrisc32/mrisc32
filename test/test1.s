@@ -16,13 +16,13 @@ main:
 .test2_passed:
 
   bsr    test_3
-  or     r20, r10, r4
+  or     r20, r20, r4
   beq    r4, .test3_passed
   bsr    .test_failed
 .test3_passed:
 
   bsr    test_4
-  or     r20, r10, r4
+  or     r20, r20, r4
   beq    r4, .test4_passed
   bsr    .test_failed
 .test4_passed:

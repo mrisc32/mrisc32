@@ -279,7 +279,7 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
         case ALU_OP_SUBC:
           alu_result = add32(ex_in.src_a, ~ex_in.src_b, ex_in.carry_in, carry_out);
           break;
-        case ALU_OP_SHL:
+        case ALU_OP_LSL:
           alu_result = ex_in.src_a << ex_in.src_b;
           break;
         case ALU_OP_ASR:

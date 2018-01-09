@@ -63,7 +63,7 @@ protected:
   static const uint32_t ALU_OP_SUB = 0x06u;
   static const uint32_t ALU_OP_ADDC = 0x07u;
   static const uint32_t ALU_OP_SUBC = 0x08u;
-  static const uint32_t ALU_OP_SHL = 0x09u;
+  static const uint32_t ALU_OP_LSL = 0x09u;
   static const uint32_t ALU_OP_ASR = 0x0au;
   static const uint32_t ALU_OP_LSR = 0x0bu;
   static const uint32_t ALU_OP_EXTB = 0x0cu;
