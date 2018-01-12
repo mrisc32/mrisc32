@@ -72,6 +72,26 @@ protected:
   static const uint32_t ALU_OP_EXTH = 0x0fu;
   static const uint32_t ALU_OP_ORHI = 0x10u;  // arg1 | (arg2 << 13)
 
+  // Mul/Div operations.
+  static const uint32_t MD_OP_NONE = 0x00u;
+  static const uint32_t MD_OP_MUL = 0x30u;
+  static const uint32_t MD_OP_MULU = 0x31u;
+  static const uint32_t MD_OP_MULL = 0x32u;
+  static const uint32_t MD_OP_MULLU = 0x33u;
+  static const uint32_t MD_OP_DIV = 0x34u;
+  static const uint32_t MD_OP_DIVU = 0x35u;
+  static const uint32_t MD_OP_DIVL = 0x36u;
+  static const uint32_t MD_OP_DIVLU = 0x37u;
+
+  // FPU operations.
+  static const uint32_t FPU_OP_NONE = 0x00u;
+  static const uint32_t FPU_OP_ITOF = 0x40u;
+  static const uint32_t FPU_OP_FTOI = 0x41u;
+  static const uint32_t FPU_OP_ADD = 0x42u;
+  static const uint32_t FPU_OP_SUB = 0x43u;
+  static const uint32_t FPU_OP_MUL = 0x44u;
+  static const uint32_t FPU_OP_DIV = 0x45u;
+
   // Memory operations.
   static const uint32_t MEM_OP_NONE = 0x00u;
   static const uint32_t MEM_OP_LOAD8 = 0x10u;

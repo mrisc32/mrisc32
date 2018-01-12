@@ -24,6 +24,7 @@ import struct
 import os
 import sys
 
+
 # Instruction formats:
 #
 # A: |op8    |ra5 |rb5 |rc5 |op9     |
@@ -35,18 +36,15 @@ import sys
 _REG1 = 1
 _REG2 = 2
 _REG3 = 3
-_FREG1 = 4
-_FREG2 = 5
-_FREG3 = 6
-_XREG1 = 7
-_XREG2 = 8
-_IMM14 = 9       # -8192..8191
-_IMM19 = 12      # -262144..262143
-_PCREL14 = 13    # -8192..8191
-_PCREL19x4 = 16  # -1048576..1048572 (in steps of 4)
-_PCREL24x4 = 17  # -33554432..33554428 (in steps of 4)
+_XREG1 = 4
+_XREG2 = 5
+_IMM14 = 6       # -8192..8191
+_IMM19 = 7       # -262144..262143
+_PCREL14 = 8     # -8192..8191
+_PCREL19x4 = 9   # -1048576..1048572 (in steps of 4)
+_PCREL24x4 = 10  # -33554432..33554428 (in steps of 4)
 
-# Names of integer registers.
+# Names of general purpose registers.
 _REGS = {
         'z':  0,  # Read-only: Zero
         'pc': 1,  # Read-only: Program counter
@@ -87,43 +85,6 @@ _REGS = {
         'r31': 31,
     }
 
-# Names of floating point registers.
-_FREGS = {
-        'fz': 0,  # Read-only: Zero (0.0f)
-
-        'f0': 0,  # Alias for fz
-        'f1': 1,
-        'f2': 2,
-        'f3': 3,
-        'f4': 4,
-        'f5': 5,
-        'f6': 6,
-        'f7': 7,
-        'f8': 8,
-        'f9': 9,
-        'f10': 10,
-        'f11': 11,
-        'f12': 12,
-        'f13': 13,
-        'f14': 14,
-        'f15': 15,
-        'f16': 16,
-        'f17': 17,
-        'f18': 18,
-        'f19': 19,
-        'f20': 20,
-        'f21': 21,
-        'f22': 22,
-        'f23': 23,
-        'f24': 24,
-        'f25': 25,
-        'f26': 26,
-        'f27': 27,
-        'f28': 28,
-        'f29': 29,
-        'f30': 30,
-        'f31': 31,
-    }
 
 # Names of constrol/status/auxiliary registers.
 _XREGS = {
@@ -178,12 +139,22 @@ _OPCODES = {
         'divl':   [0x00000036, _REG1, _REG2, _REG3],  # dest = REG1:REG(1+1)
         'divlu':  [0x00000037, _REG1, _REG2, _REG3],  # dest = REG1:REG(1+1)
 
+        # FP arithmetic.
+        'itof':   [0x00000040, _REG1, _REG2],    # Cast int->float (reg3 = z)
+        'ftoi':   [0x00000041, _REG1, _REG2],    # Cast float->int (reg3 = z)
+        'fadd':   [0x00000042, _REG1, _REG2, _REG3],
+        'fsub':   [0x00000043, _REG1, _REG2, _REG3],
+        'fmul':   [0x00000044, _REG1, _REG2, _REG3],
+        'fdiv':   [0x00000045, _REG1, _REG2, _REG3],
+
+        # Move to/from auxiliary registers.
+        'mrx':    [0x00000070, _XREG1, _REG2],   # Move gpr->auxiliary (reg3 = z)
+        'mxr':    [0x00000071, _REG1, _XREG2],   # Move auxiliary->gpr (reg3 = z)
+
         # Jump to register address.
         'jmp':    [0x00000080, _REG1],                # 1st & 3rd regs are always z
         'jsr':    [0x00000081, _REG1],                # 1st & 3rd regs are always z
 
-        # Alias for jmp lr
-        'rts':    [0x00180080],
 
         # == B ==
 
@@ -235,59 +206,13 @@ _OPCODES = {
         'bsr':    [0x31000000, _PCREL24x4],
 
 
-        # == A: Floating point ==
-
-        # FP arithmetic.
-        'fadd':   [0x80000000, _FREG1, _FREG2, _FREG3],
-        'fsub':   [0x80000001, _FREG1, _FREG2, _FREG3],
-        'fmul':   [0x80000002, _FREG1, _FREG2, _FREG3],
-        'fdiv':   [0x80000003, _FREG1, _FREG2, _FREG3],
-
-        # FP Load/store reg + reg.
-        'fldx':   [0x80000010, _FREG1, _REG2, _REG3],
-        'fstx':   [0x80000011, _FREG1, _REG2, _REG3],
-
-        # FP conditional moves.
-        'fmeq':   [0x80000020, _FREG1, _FREG2, _FREG3],
-        'fmne':   [0x80000021, _FREG1, _FREG2, _FREG3],
-        'fmlt':   [0x80000022, _FREG1, _FREG2, _FREG3],
-        'fmle':   [0x80000023, _FREG1, _FREG2, _FREG3],
-        'fmgt':   [0x80000024, _FREG1, _FREG2, _FREG3],
-        'fmge':   [0x80000025, _FREG1, _FREG2, _FREG3],
-
-        # Floating point <-> integer transfer.
-        'mif':    [0x80000030, _FREG1, _REG2],   # Move int->float (reg3 = z)
-        'mfi':    [0x80000031, _REG1, _FREG2],   # Move float->int (reg3 = z)
-        'cif':    [0x80000032, _FREG1, _REG2],   # Cast int->float (reg3 = z)
-        'cfi':    [0x80000033, _REG1, _FREG2],   # Cast float->int (reg3 = z)
-
-        # Move to/from auxiliary registers.
-        'mix':    [0x80000040, _XREG1, _REG2],   # Move int->auxiliary (reg3 = z)
-        'mxi':    [0x80000041, _REG1, _XREG2],   # Move auxiliary->int (reg3 = z)
-
-
-        # == B: Floating point ==
-
-        # Load/store reg + offset.
-        'fld':    [0x90000000, _FREG1, _REG2, _IMM14],
-        'fst':    [0x91000000, _FREG1, _REG2, _IMM14],
-
-
-        # == C: Floaring point ==
-
-        # Branch ops.
-        'fbeq':   [0xa0000000, _FREG1, _PCREL19x4],
-        'fbne':   [0xa1000000, _FREG1, _PCREL19x4],
-        'fbge':   [0xa2000000, _FREG1, _PCREL19x4],
-        'fbgt':   [0xa3000000, _FREG1, _PCREL19x4],
-        'fble':   [0xa4000000, _FREG1, _PCREL19x4],
-        'fblt':   [0xa5000000, _FREG1, _PCREL19x4],
-
-
         # === ALIASES ===
 
         # Alias for: meq _REG1, z, _REG3
         'mov':    [0x00000020, _REG1, _REG3],
+
+        # Alias for: jmp lr
+        'rts':    [0x00180080],
 
         # Alias for: addi _REG1, pc, offset
         'lea':    [0x05004000, _REG1, _PCREL14],
@@ -299,10 +224,6 @@ _OPCODES = {
         'stpc.b': [0x14004000, _REG1, _PCREL14],
         'stpc.h': [0x15004000, _REG1, _PCREL14],
         'stpc.w': [0x16004000, _REG1, _PCREL14],
-
-        # Load/store pc-relative (alias for reg + offset).
-        'fldpc':  [0x90004000, _FREG1, _PCREL14],
-        'fstpc':  [0x91004000, _FREG1, _PCREL14],
     }
 
 
@@ -333,13 +254,6 @@ def translate_reg(operand, operand_type, line_no):
         except KeyError as e:
             raise AsmError(line_no, 'Bad register: {}'.format(operand))
         shift = 19 if operand_type == _REG1 else (14 if operand_type == _REG2 else 9)
-        return reg_no << shift
-    elif operand_type in [_FREG1, _FREG2, _FREG3]:
-        try:
-            reg_no = _FREGS[operand.lower()]
-        except KeyError as e:
-            raise AsmError(line_no, 'Bad register: {}'.format(operand))
-        shift = 19 if operand_type == _FREG1 else (14 if operand_type == _FREG2 else 9)
         return reg_no << shift
     elif operand_type in [_XREG1, _XREG2]:
         try:
@@ -409,7 +323,7 @@ def translate_operation(operation, mnemonic, descr, addr, line_no, labels, scope
     for k in range(1, len(descr)):
         operand = operation[k]
         operand_type = descr[k]
-        if operand_type in [_REG1, _REG2, _REG3, _FREG1, _FREG2, _FREG3, _XREG1, _XREG2]:
+        if operand_type in [_REG1, _REG2, _REG3, _XREG1, _XREG2]:
             instr = instr | translate_reg(operand, operand_type, line_no)
         elif operand_type in [_IMM14, _IMM19]:
             instr = instr | translate_imm(operand, operand_type, line_no)

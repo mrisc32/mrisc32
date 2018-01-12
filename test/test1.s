@@ -158,11 +158,22 @@ test_4:
 
 
 ; ----------------------------------------------------------------------------
+; Floating point arithmetic.
 
-float:
-  fldpc  f0, .pi
-  fldpc  f1, .two
-  fmul   f0, f0, f1
+test_5:
+  subi   sp, sp, 4
+  st.w   lr, sp, 0
+
+  ldpc.w r12, .pi
+  ldpc.w r13, .two
+  fmul   r12, r12, r13
+  mov    r4, r12
+  bsr    _printhex
+  ldi    r4, 10
+  bsr    _putc
+
+  ld.w   lr, sp, 0
+  addi   sp, sp, 4
 
   ldi    r4, 0
   rts
