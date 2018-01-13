@@ -208,8 +208,8 @@ _OPCODES = {
 
         # === ALIASES ===
 
-        # Alias for: meq _REG1, z, _REG3
-        'mov':    [0x00000020, _REG1, _REG3],
+        # Alias for: or _REG1, _REG3, z
+        'mov':    [0x00000001, _REG1, _REG2],
 
         # Alias for: jmp lr
         'rts':    [0x00180080],
