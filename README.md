@@ -44,6 +44,8 @@ The registers are allocated as follows:
 
 ## Instructions
 
+*Still under construction*
+
 ### Legend
 
 | Name | Description |
@@ -57,9 +59,7 @@ The registers are allocated as follows:
 | i24 | 24-bit immediate value |
 | c | Carry bit (ALU) |
 
-### Supported instructions
-
-*Still under construction*
+### Integer instructions
 
 | Mnemonic | Operands | Operation | Description |
 |---|---|---|---|
@@ -121,11 +121,21 @@ The registers are allocated as follows:
 |bra | i24 | pc <= pc+signextend(i24)*4 | Branch unconditionally |
 |bsr | i24 | lr <= pc+4, pc <= pc+signextend(i24)*4 | Branch unconditionally and link |
 
+### Floating point instructions
+
+| Mnemonic | Operands | Operation | Description |
+|---|---|---|---|
+|itof| rd, ra | rd <= (float)ra | Cast integer to float |
+|ftoi| rd, ra | rd <= (int)ra | Cast float to integer |
+|fadd| rd, ra, rb | rd <= ra + rb | Floating point addition |
+|fsub| rd, ra, rb | rd <= ra - rb | Floating point difference |
+|fmul| rd, ra, rb | rd <= ra * rb | Floating point multiplication |
+|fdiv| rd, ra, rb | rd <= ra / rb | Floating point division |
+
 ### Planned instructions
 
 * Improved support for unsigned comparisons (sgtu, sltu, ...).
 * Integer multiplication and division (32-bit operands and 64-bit results).
-* Basic floating point operations (fadd, fsub, fmul, fdiv, ftoi, itof, etc).
 * Control instructions/registers (cache control, interrupt masks, status flags, ...).
 * Load Linked (ll) and Store Conditional (sc) for atomic operations.
 
@@ -136,8 +146,12 @@ The registers are allocated as follows:
 | Load 32-bit immediate | ldhi + ori |
 | Move register | or rd,ra,z |
 | Negate value | sub rd,z,ra |
+| Invert all bits | nor rd,ra,ra |
 | Compare and branch | sub + b[cc] |
 | Return from subroutine | jmp lr |
 | Push to stack | subi sp,sp,N + st.w ra,pc,0 + ... |
 | Pop from stack | ld.w rd,pc,0 + ... + addi sp,sp,N |
+| Floating point negation | ldhi + xor |
+| Floating point absolute value | ldhi + nor + and |
+| Floating point compare and branch | fsub + b[cc] |
 

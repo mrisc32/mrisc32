@@ -27,6 +27,12 @@ main:
   bsr    .test_failed
 .test4_passed:
 
+  bsr    test_5
+  or     r20, r20, r4
+  beq    r4, .test5_passed
+  bsr    .test_failed
+.test5_passed:
+
   ; exit(r20)
   mov    r4, r20
   bra    _exit
@@ -161,21 +167,31 @@ test_4:
 ; Floating point arithmetic.
 
 test_5:
-  subi   sp, sp, 4
+  subi   sp, sp, 8
   st.w   lr, sp, 0
+  st.w   r20, sp, 4
 
+  ; Calculate 2 * PI
   ldpc.w r12, .pi
   ldpc.w r13, .two
-  fmul   r12, r12, r13
-  mov    r4, r12
+  fmul   r20, r12, r13  ; r20 = 2 * PI
+
+  mov    r4, r20
   bsr    _printhex
   ldi    r4, 10
   bsr    _putc
 
-  ld.w   lr, sp, 0
-  addi   sp, sp, 4
+  ; Was the result 2 * PI?
+  ldpc.w r12, .twopi
+  fsub   r12, r20, r12  ; r12 = (2 * PI) - .twopi
 
-  ldi    r4, 0
+  ld.w   lr, sp, 0
+  ld.w   r20, sp, 4
+  addi   sp, sp, 8
+
+  ldi    r4, 1
+  ldi    r13, 0
+  meq    r4, r12, r13   ; r4 = (result == 2*PI) ? 0 : 1
   rts
 
 
@@ -185,7 +201,8 @@ test_5:
   .u32   0x40000000
 .pi:
   .u32   0x40490fdb
-
+.twopi:
+  .u32   0x40c90fdb
 
 ; ----------------------------------------------------------------------------
 

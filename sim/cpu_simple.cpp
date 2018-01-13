@@ -19,6 +19,8 @@
 
 #include "cpu_simple.hpp"
 
+#include <cstring>
+
 namespace {
 struct id_in_t {
   uint32_t pc;      // PC for the current instruction.
@@ -27,9 +29,11 @@ struct id_in_t {
 
 struct ex_in_t {
   uint32_t carry_in;
-  uint32_t src_a;       // ALU source operand A.
-  uint32_t src_b;       // ALU source operand B.
+  uint32_t src_a;       // Source operand A.
+  uint32_t src_b;       // Source operand B.
   uint32_t alu_op;      // ALU operation.
+  uint32_t md_op;       // Mul/Div operation.
+  uint32_t fpu_op;      // FPU operation.
 
   uint32_t mem_op;      // MEM operation.
   uint32_t store_data;  // Data to be stored in the mem step.
@@ -76,6 +80,18 @@ inline uint32_t rev32(const uint32_t x) {
          ((x << 17u) & 0x01000000u) | ((x << 19u) & 0x02000000u) | ((x << 21u) & 0x04000000u) |
          ((x << 23u) & 0x08000000u) | ((x << 25u) & 0x10000000u) | ((x << 27u) & 0x20000000u) |
          ((x << 29u) & 0x40000000u) | ((x << 31u) & 0x80000000u);
+}
+
+float as_f32(const uint32_t x) {
+  float result;
+  std::memcpy(&result, &x, sizeof(float));
+  return result;
+}
+
+uint32_t as_u32(const float x) {
+  uint32_t result;
+  std::memcpy(&result, &x, sizeof(uint32_t));
+  return result;
 }
 }  // namespace
 
@@ -248,7 +264,18 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       } else if (is_cond_move && condition_satisfied) {
         alu_op = ALU_OP_OR;
       }
-      // ...and then some.
+
+      // Determine MD operation.
+      uint32_t md_op = MD_OP_NONE;
+      if (op_class_A && (id_in.instr & 0x000001f0u) == 0x00000030u) {
+        md_op = id_in.instr & 0x000001ff;
+      }
+
+      // Determine FPU operation.
+      uint32_t fpu_op = FPU_OP_NONE;
+      if (op_class_A && (id_in.instr & 0x000001f0u) == 0x00000040u) {
+        fpu_op = id_in.instr & 0x000001ff;
+      }
 
       // Determine MEM operation.
       uint32_t mem_op = MEM_OP_NONE;
@@ -267,71 +294,127 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       ex_in.store_data = m_regs[src_reg_c];
       ex_in.dst_reg = dst_reg;
       ex_in.alu_op = alu_op;
+      ex_in.md_op = md_op;
+      ex_in.fpu_op = fpu_op;
       ex_in.mem_op = mem_op;
     }
 
     // EX
     mem_in_t mem_in;
     {
-      uint32_t alu_result = 0u;
+      uint32_t ex_result = 0u;
+
+      // ALU (single-cycle integer operations).
       uint32_t carry_out = ex_in.carry_in;
       switch (ex_in.alu_op) {
         case ALU_OP_OR:
-          alu_result = ex_in.src_a | ex_in.src_b;
+          ex_result = ex_in.src_a | ex_in.src_b;
           break;
         case ALU_OP_NOR:
-          alu_result = ~(ex_in.src_a | ex_in.src_b);
+          ex_result = ~(ex_in.src_a | ex_in.src_b);
           break;
         case ALU_OP_AND:
-          alu_result = ex_in.src_a & ex_in.src_b;
+          ex_result = ex_in.src_a & ex_in.src_b;
           break;
         case ALU_OP_XOR:
-          alu_result = ex_in.src_a ^ ex_in.src_b;
+          ex_result = ex_in.src_a ^ ex_in.src_b;
           break;
         case ALU_OP_ADD:
-          alu_result = add32(ex_in.src_a, ex_in.src_b, 0u, carry_out);
+          ex_result = add32(ex_in.src_a, ex_in.src_b, 0u, carry_out);
           break;
         case ALU_OP_SUB:
-          alu_result = add32(ex_in.src_a, ~ex_in.src_b, 1u, carry_out);
+          ex_result = add32(ex_in.src_a, ~ex_in.src_b, 1u, carry_out);
           break;
         case ALU_OP_ADDC:
-          alu_result = add32(ex_in.src_a, ex_in.src_b, ex_in.carry_in, carry_out);
+          ex_result = add32(ex_in.src_a, ex_in.src_b, ex_in.carry_in, carry_out);
           break;
         case ALU_OP_SUBC:
-          alu_result = add32(ex_in.src_a, ~ex_in.src_b, ex_in.carry_in, carry_out);
+          ex_result = add32(ex_in.src_a, ~ex_in.src_b, ex_in.carry_in, carry_out);
           break;
         case ALU_OP_LSL:
-          alu_result = ex_in.src_a << ex_in.src_b;
+          ex_result = ex_in.src_a << ex_in.src_b;
           break;
         case ALU_OP_ASR:
-          alu_result = static_cast<uint32_t>(static_cast<int32_t>(ex_in.src_a) >>
+          ex_result = static_cast<uint32_t>(static_cast<int32_t>(ex_in.src_a) >>
                                              static_cast<int32_t>(ex_in.src_b));
           break;
         case ALU_OP_LSR:
-          alu_result = ex_in.src_a >> ex_in.src_b;
+          ex_result = ex_in.src_a >> ex_in.src_b;
           break;
         case ALU_OP_CLZ:
-          alu_result = clz32(ex_in.src_a);
+          ex_result = clz32(ex_in.src_a);
           break;
         case ALU_OP_REV:
-          alu_result = rev32(ex_in.src_a);
+          ex_result = rev32(ex_in.src_a);
           break;
         case ALU_OP_EXTB:
-          alu_result = (ex_in.src_a & 0x000000ffu) | ((ex_in.src_a & 0x00000080u) ? 0xffffff00u : 0u);
+          ex_result = (ex_in.src_a & 0x000000ffu) | ((ex_in.src_a & 0x00000080u) ? 0xffffff00u : 0u);
           break;
         case ALU_OP_EXTH:
-          alu_result =
+          ex_result =
               (ex_in.src_a & 0x0000ffffu) | ((ex_in.src_a & 0x00008000u) ? 0xffff0000u : 0u);
           break;
         case ALU_OP_ORHI:
-          alu_result = ex_in.src_a | (ex_in.src_b << 13u);
+          ex_result = ex_in.src_a | (ex_in.src_b << 13u);
+          break;
+      }
+
+      // Mul/Div (multi-cycle integer operations).
+      switch (ex_in.md_op) {
+        case MD_OP_MUL:
+          ex_result = static_cast<uint32_t>(static_cast<int32_t>(ex_in.src_a) *
+                                            static_cast<int32_t>(ex_in.src_b));
+          break;
+        case MD_OP_MULU:
+          ex_result = ex_in.src_a * ex_in.src_b;
+          break;
+        case MD_OP_MULL:
+          // TODO(m): Implement me!
+          break;
+        case MD_OP_MULLU:
+          // TODO(m): Implement me!
+          break;
+        case MD_OP_DIV:
+          ex_result = static_cast<uint32_t>(static_cast<int32_t>(ex_in.src_a) /
+                                            static_cast<int32_t>(ex_in.src_b));
+          break;
+        case MD_OP_DIVU:
+          ex_result = ex_in.src_a / ex_in.src_b;
+          break;
+        case MD_OP_DIVL:
+          // TODO(m): Implement me!
+          break;
+        case MD_OP_DIVLU:
+          // TODO(m): Implement me!
+          break;
+      }
+
+      // FPU (multi-cycle floating point operations).
+      switch (ex_in.fpu_op) {
+        case FPU_OP_ITOF:
+          ex_result = as_u32(static_cast<float>(static_cast<int32_t>(ex_in.src_a)));
+          break;
+        case FPU_OP_FTOI:
+          ex_result = static_cast<uint32_t>((static_cast<int32_t>(as_f32(ex_in.src_a))));
+          break;
+        case FPU_OP_ADD:
+          ex_result = static_cast<uint32_t>(as_u32(as_f32(ex_in.src_a) + as_f32(ex_in.src_b)));
+          break;
+        case FPU_OP_SUB:
+          ex_result = static_cast<uint32_t>(as_u32(as_f32(ex_in.src_a) - as_f32(ex_in.src_b)));
+          break;
+        case FPU_OP_MUL:
+          ex_result = static_cast<uint32_t>(as_u32(as_f32(ex_in.src_a) * as_f32(ex_in.src_b)));
+          break;
+        case FPU_OP_DIV:
+          ex_result = static_cast<uint32_t>(as_u32(as_f32(ex_in.src_a) / as_f32(ex_in.src_b)));
           break;
       }
 
       m_carry = carry_out;
 
-      mem_in.mem_addr = alu_result;
-      mem_in.dst_data = alu_result;
+      mem_in.mem_addr = ex_result;
+      mem_in.dst_data = ex_result;
       mem_in.dst_reg = ex_in.dst_reg;
       mem_in.mem_op = ex_in.mem_op;
       mem_in.store_data = ex_in.store_data;
