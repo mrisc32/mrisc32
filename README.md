@@ -1,4 +1,5 @@
 # MRISC32
+*Mostly harmless, Reduced Instruction Set Computer, 32-bit edition*
 
 This is an experimental, custom 32-bit RISC CPU.
 
@@ -6,11 +7,24 @@ This is an experimental, custom 32-bit RISC CPU.
 
 Currently there is a simple assembler (written in python) and a CPU simulator (written in C++).
 
-## General design
+# Design
 
-The MRISC32 ISA is designed to map well to a [classic 5-stage RISC pipeline](https://en.wikipedia.org/wiki/Classic_RISC_pipeline).
+## Goals
 
-Some features are:
+* Experiment and learn the pros and cons of various design decisions.
+* Keep things simple - both the ISA and the architecture.
+* The ISA should map well to a [classic 5-stage RISC pipeline](https://en.wikipedia.org/wiki/Classic_RISC_pipeline).
+* The CPU should be easy to implement in an FPGA.
+
+
+## Non-goals
+
+* Don't support multiple word sizes or running modes. If a 64-bit CPU is required, create a new ISA and recompile your software.
+* Don't be fast and optimal for everything.
+* Don't be extensible at the cost of more complicated IF/ID stages.
+
+
+## Features
 
 * All instructions are 32 bits wide and easy to decode.
 * There is a single 32-entry, 32-bit register file.
@@ -18,14 +32,25 @@ Some features are:
   - 28 registers are general purpose.
   - All GPRs can be used for all types (integers, pointers and floating point).
   - PC is user-visible (for arithmetic and addressing) but read-only (to simplify branching logic).
-* Branches are executed in the ID (instruction decode) step, which gives a branch misprediction penalty of only one cycle.
+* Branches are executed in the ID (instruction decode) step, which gives a low branch misprediction penalty.
 * Conditional moves further reduce the cost of branch mispredictions.
+* Conditionals (branches, moves) are based on register content (there are *no* condition codes).
 * Unlike early RISC architectures, there are *no* delay slots.
 * Many traditional floating point operations are handled by integer operations, reducing the number of necessary instructions:
   - Load/store.
   - Compare/branch.
   - Conditional moves.
   - Sign and bit manipulation (e.g. neg, abs).
+* There is currently no HW support for 64-bit floating point operations (that is left for a 64-bit version of the ISA).
+
+
+## Possible extensions
+
+* If SIMD instructions are ever added, use a Cray-like vector model.
+  - Much more natural software model than SSE/NEON, for instance.
+  - Relatively easy for the compiler to auto-vectorize.
+  - Scales to large vector sizes, independent on the number of underlying HW units (Cray-1 had 4096-bit vector registers and a single 64-bit FPU).
+
 
 ## Register model and conventions
 
@@ -138,6 +163,7 @@ The registers are allocated as follows:
 * Integer multiplication and division (32-bit operands and 64-bit results).
 * Control instructions/registers (cache control, interrupt masks, status flags, ...).
 * Load Linked (ll) and Store Conditional (sc) for atomic operations.
+* Single-instruction load of common constants (mostly floating point: 1.0, PI, ...).
 
 ### Common constructs
 
