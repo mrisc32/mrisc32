@@ -450,7 +450,7 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
     }
 
     // WB
-    if (wb_in.dst_reg > REG_PC) {
+    if ((wb_in.dst_reg != REG_Z) && (wb_in.dst_reg != REG_PC)) {
       m_regs[wb_in.dst_reg] = wb_in.dst_data;
     }
 

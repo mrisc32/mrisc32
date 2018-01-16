@@ -1,45 +1,45 @@
 // This is a test program.
 
 main:
-  ldi    r20, 0         ; r20 is the return code (0 = success, 1 = fail)
+  ldi    r16, 0         ; r16 is the return code (0 = success, 1 = fail)
 
   bsr    test_1
-  or     r20, r20, r4
-  beq    r4, .test1_passed
+  or     r16, r16, r1
+  beq    r1, .test1_passed
   bsr    .test_failed
 .test1_passed:
 
   bsr    test_2
-  or     r20, r20, r4
-  beq    r4, .test2_passed
+  or     r16, r16, r1
+  beq    r1, .test2_passed
   bsr    .test_failed
 .test2_passed:
 
   bsr    test_3
-  or     r20, r20, r4
-  beq    r4, .test3_passed
+  or     r16, r16, r1
+  beq    r1, .test3_passed
   bsr    .test_failed
 .test3_passed:
 
   bsr    test_4
-  or     r20, r20, r4
-  beq    r4, .test4_passed
+  or     r16, r16, r1
+  beq    r1, .test4_passed
   bsr    .test_failed
 .test4_passed:
 
   bsr    test_5
-  or     r20, r20, r4
-  beq    r4, .test5_passed
+  or     r16, r16, r1
+  beq    r1, .test5_passed
   bsr    .test_failed
 .test5_passed:
 
-  ; exit(r20)
-  mov    r4, r20
+  ; exit(r16)
+  mov    r1, r16
   bra    _exit
 
 
 .test_failed:
-  lea    r4, .fail_msg
+  lea    r1, .fail_msg
   bra    _puts
 
 
@@ -52,15 +52,15 @@ main:
 ; A loop with a decrementing conunter.
 
 test_1:
-  ldi    r12, 0x20
-  ldi    r13, 12
+  ldi    r9, 0x20
+  ldi    r10, 12
 
 .loop:
-  add    r12, r12, r13
-  subi   r13, r13, 1
-  bne    r13, .loop
+  add    r9, r9, r10
+  subi   r10, r10, 1
+  bne    r10, .loop
 
-  ldi    r4, 0
+  ldi    r1, 0
   rts
 
 
@@ -70,30 +70,30 @@ test_1:
 test_2:
   subi   sp, sp, 12
   st.w   lr, sp, 0
-  st.w   r20, sp, 4
-  st.w   r21, sp, 8
+  st.w   r16, sp, 4
+  st.w   r17, sp, 8
 
-  lea    r20, .data
-  ld.w   r4, r20, 0     ; r4 = data[0]
-  ld.w   r21, r20, 4
-  add    r4, r4, r21    ; r4 += data[1]
-  ld.w   r21, r20, 8
-  add    r4, r4, r21    ; r4 += data[2]
-  mov    r20, r4        ; Save the result for the comparison later
+  lea    r16, .data
+  ld.w   r1, r16, 0     ; r1 = data[0]
+  ld.w   r17, r16, 4
+  add    r1, r1, r17    ; r1 += data[1]
+  ld.w   r17, r16, 8
+  add    r1, r1, r17    ; r1 += data[2]
+  mov    r16, r1        ; Save the result for the comparison later
   bsr    _printhex
-  ldi    r4, 10
+  ldi    r1, 10
   bsr    _putc
 
-  ldi    r4, 1
-  ldi    r12, 0
-  ldhi   r13, 0x5f778
-  ori    r13, r13, 0x42 ; r13 = 0xbeef0042
-  sub    r13, r20, r13
-  meq    r4, r13, r12   ; return (r20 == 0xbeef0042) ? 0 : 1
+  ldi    r1, 1
+  ldi    r9, 0
+  ldhi   r10, 0x5f778
+  ori    r10, r10, 0x42 ; r10 = 0xbeef0042
+  sub    r10, r16, r10
+  meq    r1, r10, r9   ; return (r16 == 0xbeef0042) ? 0 : 1
 
   ld.w   lr, sp, 0
-  ld.w   r20, sp, 4
-  ld.w   r21, sp, 8
+  ld.w   r16, sp, 4
+  ld.w   r17, sp, 8
   addi   sp, sp, 12
 
   rts
@@ -110,12 +110,12 @@ test_3:
   subi   sp, sp, 4
   st.w   lr, sp, 0
 
-  lea    r4, .hello_world
+  lea    r1, .hello_world
   bsr    _puts
 
   ld.w   lr, sp, 0
   addi   sp, sp, 4
-  ldi    r4, 0
+  ldi    r1, 0
   rts
 
 
@@ -130,31 +130,31 @@ test_3:
 test_4:
   subi   sp, sp, 8
   st.w   lr, sp, 0
-  st.w   r20, sp, 4
+  st.w   r16, sp, 4
 
-  ; Load two 64-bit numbers into r14:r13 and r16:r15
-  lea    r12, .dword1
-  ld.w   r13, r12, 0  ; r13 = low bits
-  ld.w   r14, r12, 4  ; r14 = high bits
-  lea    r12, .dword2
-  ld.w   r15, r12, 0  ; r15 = low bits
-  ld.w   r16, r12, 4  ; r16 = high bits
+  ; Load two 64-bit numbers into r11:r10 and r13:r12
+  lea    r9, .dword1
+  ld.w   r10, r9, 0  ; r10 = low bits
+  ld.w   r11, r9, 4  ; r11 = high bits
+  lea    r9, .dword2
+  ld.w   r12, r9, 0  ; r12 = low bits
+  ld.w   r13, r9, 4  ; r13 = high bits
 
-  ; Add the numbers into r4:r20
-  add    r20, r13, r15  ; r20 = low bits
-  addc   r4, r14, r16   ; r4 = high bits
+  ; Add the numbers into r1:r16
+  add    r16, r10, r12  ; r16 = low bits
+  addc   r1, r11, r13   ; r1 = high bits
 
   bsr    _printhex      ; Print high word
-  mov    r4, r20
+  mov    r1, r16
   bsr    _printhex      ; Print low word
-  ldi    r4, 10
+  ldi    r1, 10
   bsr    _putc
 
   ld.w   lr, sp, 0
-  ld.w   r20, sp, 4
+  ld.w   r16, sp, 4
   addi   sp, sp, 8
 
-  ldi    r4, 0
+  ldi    r1, 0
   rts
 
 .dword1:
@@ -169,29 +169,29 @@ test_4:
 test_5:
   subi   sp, sp, 8
   st.w   lr, sp, 0
-  st.w   r20, sp, 4
+  st.w   r16, sp, 4
 
   ; Calculate 2 * PI
-  ldpc.w r12, .pi
-  ldpc.w r13, .two
-  fmul   r20, r12, r13  ; r20 = 2 * PI
+  ldpc.w r9, .pi
+  ldpc.w r10, .two
+  fmul   r16, r9, r10  ; r16 = 2 * PI
 
-  mov    r4, r20
+  mov    r1, r16
   bsr    _printhex
-  ldi    r4, 10
+  ldi    r1, 10
   bsr    _putc
 
   ; Was the result 2 * PI?
-  ldpc.w r12, .twopi
-  fsub   r12, r20, r12  ; r12 = (2 * PI) - .twopi
+  ldpc.w r9, .twopi
+  fsub   r9, r16, r9  ; r9 = (2 * PI) - .twopi
 
   ld.w   lr, sp, 0
-  ld.w   r20, sp, 4
+  ld.w   r16, sp, 4
   addi   sp, sp, 8
 
-  ldi    r4, 1
-  ldi    r13, 0
-  meq    r4, r12, r13   ; r4 = (result == 2*PI) ? 0 : 1
+  ldi    r1, 1
+  ldi    r10, 0
+  meq    r1, r9, r10   ; r1 = (result == 2*PI) ? 0 : 1
   rts
 
 

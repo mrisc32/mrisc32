@@ -49,9 +49,10 @@ protected:
 
   // Named registers.
   static const uint32_t REG_Z = 0u;
-  static const uint32_t REG_PC = 1u;
-  static const uint32_t REG_SP = 2u;
-  static const uint32_t REG_LR = 3u;
+  static const uint32_t REG_VC = 28u;
+  static const uint32_t REG_LR = 29u;
+  static const uint32_t REG_SP = 30u;
+  static const uint32_t REG_PC = 31u;
 
   // ALU operations.
   static const uint32_t ALU_OP_NONE = 0x00u;

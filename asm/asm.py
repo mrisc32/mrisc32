@@ -50,14 +50,15 @@ _PCREL24x4 = 13  # -33554432..33554428 (in steps of 4)
 # Names of general purpose registers.
 _REGS = {
         'z':  0,  # Read-only: Zero
-        'pc': 1,  # Read-only: Program counter
-        'sp': 2,  # Stack pointer
-        'lr': 3,  # Link register (branch return address)
+        'vc': 28, # Vector count register
+        'lr': 29, # Link register (branch return address)
+        'sp': 30, # Stack pointer
+        'pc': 31, # Read-only: Program counter
 
         'r0': 0,  # Alias for z
-        'r1': 1,  # Alias for pc
-        'r2': 2,  # Alias for sp
-        'r3': 3,  # Alias for lr
+        'r1': 1,
+        'r2': 2,
+        'r3': 3,
         'r4': 4,
         'r5': 5,
         'r6': 6,
@@ -82,10 +83,10 @@ _REGS = {
         'r25': 25,
         'r26': 26,
         'r27': 27,
-        'r28': 28,
-        'r29': 29,
-        'r30': 30,
-        'r31': 31,
+        'r28': 28,  # Alias for vc
+        'r29': 29,  # Alias for lr
+        'r30': 30,  # Alias for sp
+        'r31': 31,  # Alias for pc
     }
 
 # Names of vector registers.
@@ -322,18 +323,18 @@ _OPCODES = {
         'mov':    [0x00000001, _REG1, _REG2],
 
         # Alias for: jmp lr
-        'rts':    [0x00180080],
+        'rts':    [0x00e80080],
 
         # Alias for: addi _REG1, pc, offset
-        'lea':    [0x05004000, _REG1, _PCREL14],
+        'lea':    [0x0507c000, _REG1, _PCREL14],
 
         # Load/store pc-relative (alias for: ld.?/st.? _REG1, pc, offset).
-        'ldpc.b': [0x10004000, _REG1, _PCREL14],
-        'ldpc.h': [0x11004000, _REG1, _PCREL14],
-        'ldpc.w': [0x12004000, _REG1, _PCREL14],
-        'stpc.b': [0x14004000, _REG1, _PCREL14],
-        'stpc.h': [0x15004000, _REG1, _PCREL14],
-        'stpc.w': [0x16004000, _REG1, _PCREL14],
+        'ldpc.b': [0x1007c000, _REG1, _PCREL14],
+        'ldpc.h': [0x1107c000, _REG1, _PCREL14],
+        'ldpc.w': [0x1207c000, _REG1, _PCREL14],
+        'stpc.b': [0x1407c000, _REG1, _PCREL14],
+        'stpc.h': [0x1507c000, _REG1, _PCREL14],
+        'stpc.w': [0x1607c000, _REG1, _PCREL14],
     }
 
 

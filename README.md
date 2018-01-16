@@ -28,9 +28,9 @@ Currently there is a simple assembler (written in python) and a CPU simulator (w
 ## Features
 
 * All instructions are 32 bits wide and easy to decode.
-* There is a single 32-entry, 32-bit register file.
-  - Four registers are special (Z, PC, SP, LR).
-  - 28 registers are general purpose.
+* There is one 32-entry, 32-bit scalar register file, R0-R31.
+  - Five registers are special (Z, PC, SP, LR, VC).
+  - 27 registers are general purpose.
   - All GPRs can be used for all types (integers, pointers and floating point).
   - PC is user-visible (for arithmetic and addressing) but read-only (to simplify branching logic).
 * Branches are executed in the ID (instruction decode) step, which gives a low branch misprediction penalty.
@@ -48,7 +48,7 @@ Currently there is a simple assembler (written in python) and a CPU simulator (w
 ## SIMD extensions (WIP)
 
 * SIMD instructions use a Cray-like vector model:
-  - 32 vector registers, with TBD (32?) 32-bit entries in each register.
+  - 32 vector registers, V0-V31, with 32 (TBD) entries in each register.
   - All vector entries are the same size (32 bits), regardless if they represent bytes, half-words, words or floats.
   - The same execution units can be used for both vector operations and scalar operations.
   - There are vector,vector and vector,scalar versions of most integer and floating point operations.
@@ -72,18 +72,29 @@ In comparison, the proposed SIMD model has the following advantages:
 
 ## Register model and conventions
 
-The registers are allocated as follows:
+The scalar registers are allocated as follows:
 
 | Register | Alias | Purpose | Saved by callee |
 |---|---|---|---|
 | r0  | z | Always zero (read-only) | - |
-| r1  | pc | Program counter (read-only, always 4-byte aligned) | - |
-| r2  | sp | Stack pointer (must be 4-byte aligned on subroutine entry) | yes |
-| r3  | lr | Link register (return address, must be 4-byte aligned) | yes |
-| r4-r11  | | Subroutine arguments / return values | no |
-| r12-r19  | | Temporaries (scratch) | no |
-| r20-r30  | | Saved registers | yes |
-| r31  | | Frame pointer (optional) | yes |
+| r1-r8   | | Subroutine arguments / return values | no |
+| r9-r15  | | Temporaries (scratch) | no |
+| r16-r26 | | Saved registers | yes |
+| r27 | fp | Frame pointer (optional) | yes |
+| r28 | vc | Vector count register (holds the length for vector operations, 1-32) | yes |
+| r29 | lr | Link register (return address, must be 4-byte aligned) | yes |
+| r30 | sp | Stack pointer (must be 4-byte aligned on subroutine entry) | yes |
+| r31 | pc | Program counter (read-only, always 4-byte aligned) | - |
+
+The vector registers are allocated as follows:
+
+| Register | Alias | Purpose | Saved by callee |
+|---|---|---|---|
+| v0  | vz | Always zero (read-only) | - |
+| v1-v8   | | Subroutine arguments / return values | no |
+| v9-v15  | | Temporaries (scratch) | no |
+| v16-v31 | | Saved registers | yes |
+
 
 ## Instructions
 

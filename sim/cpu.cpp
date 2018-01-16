@@ -56,10 +56,10 @@ void cpu_t::call_sim_routine(const uint32_t routine_no) {
   switch (routine_no) {
     case SIM_ROUTINE_EXIT:
       m_terminate = true;
-      m_exit_code = m_regs[4];
+      m_exit_code = m_regs[1];
       break;
     case SIM_ROUTINE_PUTC:
-      const int c = static_cast<int>(m_regs[4]);
+      const int c = static_cast<int>(m_regs[1]);
       std::putc(c, stdout);
       break;
   }
