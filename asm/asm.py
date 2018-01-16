@@ -36,13 +36,16 @@ import sys
 _REG1 = 1
 _REG2 = 2
 _REG3 = 3
-_XREG1 = 4
-_XREG2 = 5
-_IMM14 = 6       # -8192..8191
-_IMM19 = 7       # -262144..262143
-_PCREL14 = 8     # -8192..8191
-_PCREL19x4 = 9   # -1048576..1048572 (in steps of 4)
-_PCREL24x4 = 10  # -33554432..33554428 (in steps of 4)
+_VREG1 = 4
+_VREG2 = 5
+_VREG3 = 6
+_XREG1 = 7
+_XREG2 = 8
+_IMM14 = 9       # -8192..8191
+_IMM19 = 10      # -262144..262143
+_PCREL14 = 11    # -8192..8191
+_PCREL19x4 = 12  # -1048576..1048572 (in steps of 4)
+_PCREL24x4 = 13  # -33554432..33554428 (in steps of 4)
 
 # Names of general purpose registers.
 _REGS = {
@@ -85,6 +88,44 @@ _REGS = {
         'r31': 31,
     }
 
+# Names of vector registers.
+_VREGS = {
+        'vz': 0,    # Read only: Zero
+
+        'v0': 0,    # Alias for vz
+        'v1': 1,
+        'v2': 2,
+        'v3': 3,
+        'v4': 4,
+        'v5': 5,
+        'v6': 6,
+        'v7': 7,
+        'v8': 8,
+        'v9': 9,
+        'v10': 10,
+        'v11': 11,
+        'v12': 12,
+        'v13': 13,
+        'v14': 14,
+        'v15': 15,
+        'v16': 16,
+        'v17': 17,
+        'v18': 18,
+        'v19': 19,
+        'v20': 20,
+        'v21': 21,
+        'v22': 22,
+        'v23': 23,
+        'v24': 24,
+        'v25': 25,
+        'v26': 26,
+        'v27': 27,
+        'v28': 28,
+        'v29': 29,
+        'v30': 30,
+        'v31': 31,
+    }
+
 
 # Names of constrol/status/auxiliary registers.
 _XREGS = {
@@ -93,6 +134,10 @@ _XREGS = {
 
 # Supported opcodes.
 _OPCODES = {
+        # ---------------------------------------------------------------------
+        # SCALAR OPERATIONS
+        # ---------------------------------------------------------------------
+
         # == A ==
 
         # Integer ALU ops.
@@ -206,6 +251,71 @@ _OPCODES = {
         'bsr':    [0x31000000, _PCREL24x4],
 
 
+        # ---------------------------------------------------------------------
+        # VECTOR OPERATIONS
+        # ---------------------------------------------------------------------
+
+        # == A: V <= V, V ==
+
+        'vvor':   [0x80000001, _VREG1, _VREG2, _VREG3],
+        'vvnor':  [0x80000002, _VREG1, _VREG2, _VREG3],
+        'vvand':  [0x80000003, _VREG1, _VREG2, _VREG3],
+        'vvxor':  [0x80000004, _VREG1, _VREG2, _VREG3],
+        'vvadd':  [0x80000005, _VREG1, _VREG2, _VREG3],
+        'vvsub':  [0x80000006, _VREG1, _VREG2, _VREG3],
+        'vvlsl':  [0x80000009, _VREG1, _VREG2, _VREG3],
+        'vvasr':  [0x8000000a, _VREG1, _VREG2, _VREG3],
+        'vvlsr':  [0x8000000b, _VREG1, _VREG2, _VREG3],
+
+        'vvmul':  [0x80000030, _VREG1, _VREG2, _VREG3],
+        'vvmulu': [0x80000031, _VREG1, _VREG2, _VREG3],
+        'vvdiv':  [0x80000034, _VREG1, _VREG2, _VREG3],
+        'vvdivu': [0x80000035, _VREG1, _VREG2, _VREG3],
+
+        'vvfadd': [0x80000042, _VREG1, _VREG2, _VREG3],
+        'vvfsub': [0x80000043, _VREG1, _VREG2, _VREG3],
+        'vvfmul': [0x80000044, _VREG1, _VREG2, _VREG3],
+        'vvfdiv': [0x80000045, _VREG1, _VREG2, _VREG3],
+
+        # == A: V <= V, S ==
+
+        'vsor':   [0xc0000001, _VREG1, _VREG2, _REG3],
+        'vsnor':  [0xc0000002, _VREG1, _VREG2, _REG3],
+        'vsand':  [0xc0000003, _VREG1, _VREG2, _REG3],
+        'vsxor':  [0xc0000004, _VREG1, _VREG2, _REG3],
+        'vsadd':  [0xc0000005, _VREG1, _VREG2, _REG3],
+        'vssub':  [0xc0000006, _VREG1, _VREG2, _REG3],
+        'vslsl':  [0xc0000009, _VREG1, _VREG2, _REG3],
+        'vsasr':  [0xc000000a, _VREG1, _VREG2, _REG3],
+        'vslsr':  [0xc000000b, _VREG1, _VREG2, _REG3],
+        'vclz':   [0xc000000c, _VREG1, _VREG2],         # 3rd reg is always z
+        'vrev':   [0xc000000d, _VREG1, _VREG2],         # 3rd reg is always z
+        'vext.b': [0xc000000e, _VREG1, _VREG2],         # 3rd reg is always z
+        'vext.h': [0xc000000f, _VREG1, _VREG2],         # 3rd reg is always z
+
+        'vsmul':  [0xc0000030, _VREG1, _VREG2, _REG3],
+        'vsmulu': [0xc0000031, _VREG1, _VREG2, _REG3],
+        'vsdiv':  [0xc0000034, _VREG1, _VREG2, _REG3],
+        'vsdivu': [0xc0000035, _VREG1, _VREG2, _REG3],
+
+        'vitof':  [0xc0000040, _VREG1, _VREG2],    # Cast int->float (reg3 = z)
+        'vftoi':  [0xc0000041, _VREG1, _VREG2],    # Cast float->int (reg3 = z)
+        'vsfadd': [0xc0000042, _VREG1, _VREG2, _REG3],
+        'vsfsub': [0xc0000043, _VREG1, _VREG2, _REG3],
+        'vsfmul': [0xc0000044, _VREG1, _VREG2, _REG3],
+        'vsfdiv': [0xc0000045, _VREG1, _VREG2, _REG3],
+
+        # == B ==
+
+        # Load/store reg, stride.
+        'vld.b':  [0x90000000, _REG1, _REG2, _IMM14],
+        'vld.h':  [0x91000000, _REG1, _REG2, _IMM14],
+        'vld.w':  [0x92000000, _REG1, _REG2, _IMM14],
+        'vst.b':  [0x94000000, _REG1, _REG2, _IMM14],
+        'vst.h':  [0x95000000, _REG1, _REG2, _IMM14],
+        'vst.w':  [0x96000000, _REG1, _REG2, _IMM14],
+
+
         # === ALIASES ===
 
         # Alias for: or _REG1, _REG3, z
@@ -255,12 +365,19 @@ def translate_reg(operand, operand_type, line_no):
             raise AsmError(line_no, 'Bad register: {}'.format(operand))
         shift = 19 if operand_type == _REG1 else (14 if operand_type == _REG2 else 9)
         return reg_no << shift
+    elif operand_type in [_VREG1, _VREG2, _VREG3]:
+        try:
+            reg_no = _VREGS[operand.lower()]
+        except KeyError as e:
+            raise AsmError(line_no, 'Bad vector register: {}'.format(operand))
+        shift = 19 if operand_type == _XFREG1 else 14
+        return reg_no << shift
     elif operand_type in [_XREG1, _XREG2]:
         try:
             reg_no = _XREGS[operand.lower()]
         except KeyError as e:
-            raise AsmError(line_no, 'Bad register: {}'.format(operand))
-        shift = 19 if operand_type == _XFREG1 else 14
+            raise AsmError(line_no, 'Bad control register: {}'.format(operand))
+        shift = 19 if operand_type == _XREG1 else 14
         return reg_no << shift
     else:
         # Internal error.
@@ -323,7 +440,7 @@ def translate_operation(operation, mnemonic, descr, addr, line_no, labels, scope
     for k in range(1, len(descr)):
         operand = operation[k]
         operand_type = descr[k]
-        if operand_type in [_REG1, _REG2, _REG3, _XREG1, _XREG2]:
+        if operand_type in [_REG1, _REG2, _REG3, _VREG1, _VREG2, _VREG3, _XREG1, _XREG2]:
             instr = instr | translate_reg(operand, operand_type, line_no)
         elif operand_type in [_IMM14, _IMM19]:
             instr = instr | translate_imm(operand, operand_type, line_no)

@@ -44,9 +44,11 @@ Currently there is a simple assembler (written in python) and a CPU simulator (w
 * There is currently no HW support for 64-bit floating point operations (that is left for a 64-bit version of the ISA).
 
 
-## Possible extensions
+## Extensions
 
-* If SIMD instructions are ever added, use a Cray-like vector model.
+* SIMD instructions (WIP) use a Cray-like vector model.
+  - 32 vector registers, with 32 (TBD) 32-bit entries in each register.
+  - There are vector,vector and vector,scalar versions of most integer and floating point operations.
   - Much more natural software model than SSE/NEON, for instance.
   - Relatively easy for the compiler to auto-vectorize.
   - Scales to large vector sizes, independent on the number of underlying HW units (Cray-1 had 4096-bit vector registers and a single 64-bit FPU).
