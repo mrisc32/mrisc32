@@ -49,25 +49,13 @@ Currently there is a simple assembler (written in python) and a CPU simulator (w
 
 * SIMD instructions use a Cray-like vector model:
   - 32 vector registers, V0-V31, with 32 (TBD) entries in each register.
+  - A Vector Count (VC) register controls the length of the vector operation (1-32 elements), which essentially eliminates the need for complicated main+tail-loop constructs.
   - All vector entries are the same size (32 bits), regardless if they represent bytes, half-words, words or floats.
   - The same execution units can be used for both vector operations and scalar operations.
   - There are vector,vector and vector,scalar versions of most integer and floating point operations.
   - Vector loads and stores have a stride parameter.
 
-### Motivation
-
-The dominating SIMD solution today (SSE, AVX, NEON) is:
-* Fixed width, relatively small SIMD registers (e.g. 128 bits wide).
-* Split each register into different number of elements depending on the type (e.g. byte vs float).
-* Use a completely separate instruction set and separate execution units for operating on the SIMD registers.
-
-In comparison, the proposed SIMD model has the following advantages:
-* Much more natural software model, and easier to apply to a wide range of problems.
-* Much easier to mix different types (e.g. doing 32-bit integer arithmetic on bytes).
-* Relatively easy for the compiler to auto-vectorize.
-* Scales to large vector sizes (e.g. the Cray-1 had 4096-bit vector registers).
-  - Independent on the number of underlying HW units (e.g. the Cray-1 only had a single 64-bit FPU).
-  - No need to update the ISA when more HW parallelism is added.
+See: [SIMDDesign.md](doc/SIMDDesign.md).
 
 
 ## Register model and conventions
