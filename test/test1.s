@@ -224,7 +224,7 @@ test_6:
 
   ; Prepare scalars
   lea    r9, .in
-  ldi    r10, 12345
+  ldi    r10, 0x1234
   ldi    r11, 8
   lea    r16, .result
 

@@ -258,53 +258,53 @@ _OPCODES = {
 
         # == A: V <= V, V ==
 
-        'vvor':   [0x80000001, _VREG1, _VREG2, _VREG3],
-        'vvnor':  [0x80000002, _VREG1, _VREG2, _VREG3],
-        'vvand':  [0x80000003, _VREG1, _VREG2, _VREG3],
-        'vvxor':  [0x80000004, _VREG1, _VREG2, _VREG3],
-        'vvadd':  [0x80000005, _VREG1, _VREG2, _VREG3],
-        'vvsub':  [0x80000006, _VREG1, _VREG2, _VREG3],
-        'vvlsl':  [0x80000009, _VREG1, _VREG2, _VREG3],
-        'vvasr':  [0x8000000a, _VREG1, _VREG2, _VREG3],
-        'vvlsr':  [0x8000000b, _VREG1, _VREG2, _VREG3],
+        'vvor':   [0xc0000001, _VREG1, _VREG2, _VREG3],
+        'vvnor':  [0xc0000002, _VREG1, _VREG2, _VREG3],
+        'vvand':  [0xc0000003, _VREG1, _VREG2, _VREG3],
+        'vvxor':  [0xc0000004, _VREG1, _VREG2, _VREG3],
+        'vvadd':  [0xc0000005, _VREG1, _VREG2, _VREG3],
+        'vvsub':  [0xc0000006, _VREG1, _VREG2, _VREG3],
+        'vvlsl':  [0xc0000009, _VREG1, _VREG2, _VREG3],
+        'vvasr':  [0xc000000a, _VREG1, _VREG2, _VREG3],
+        'vvlsr':  [0xc000000b, _VREG1, _VREG2, _VREG3],
 
-        'vvmul':  [0x80000030, _VREG1, _VREG2, _VREG3],
-        'vvmulu': [0x80000031, _VREG1, _VREG2, _VREG3],
-        'vvdiv':  [0x80000034, _VREG1, _VREG2, _VREG3],
-        'vvdivu': [0x80000035, _VREG1, _VREG2, _VREG3],
+        'vvmul':  [0xc0000030, _VREG1, _VREG2, _VREG3],
+        'vvmulu': [0xc0000031, _VREG1, _VREG2, _VREG3],
+        'vvdiv':  [0xc0000034, _VREG1, _VREG2, _VREG3],
+        'vvdivu': [0xc0000035, _VREG1, _VREG2, _VREG3],
 
-        'vvfadd': [0x80000042, _VREG1, _VREG2, _VREG3],
-        'vvfsub': [0x80000043, _VREG1, _VREG2, _VREG3],
-        'vvfmul': [0x80000044, _VREG1, _VREG2, _VREG3],
-        'vvfdiv': [0x80000045, _VREG1, _VREG2, _VREG3],
+        'vvfadd': [0xc0000042, _VREG1, _VREG2, _VREG3],
+        'vvfsub': [0xc0000043, _VREG1, _VREG2, _VREG3],
+        'vvfmul': [0xc0000044, _VREG1, _VREG2, _VREG3],
+        'vvfdiv': [0xc0000045, _VREG1, _VREG2, _VREG3],
 
         # == A: V <= V, S ==
 
-        'vsor':   [0xc0000001, _VREG1, _VREG2, _REG3],
-        'vsnor':  [0xc0000002, _VREG1, _VREG2, _REG3],
-        'vsand':  [0xc0000003, _VREG1, _VREG2, _REG3],
-        'vsxor':  [0xc0000004, _VREG1, _VREG2, _REG3],
-        'vsadd':  [0xc0000005, _VREG1, _VREG2, _REG3],
-        'vssub':  [0xc0000006, _VREG1, _VREG2, _REG3],
-        'vslsl':  [0xc0000009, _VREG1, _VREG2, _REG3],
-        'vsasr':  [0xc000000a, _VREG1, _VREG2, _REG3],
-        'vslsr':  [0xc000000b, _VREG1, _VREG2, _REG3],
-        'vclz':   [0xc000000c, _VREG1, _VREG2],         # 3rd reg is always z
-        'vrev':   [0xc000000d, _VREG1, _VREG2],         # 3rd reg is always z
-        'vext.b': [0xc000000e, _VREG1, _VREG2],         # 3rd reg is always z
-        'vext.h': [0xc000000f, _VREG1, _VREG2],         # 3rd reg is always z
+        'vsor':   [0x80000001, _VREG1, _VREG2, _REG3],
+        'vsnor':  [0x80000002, _VREG1, _VREG2, _REG3],
+        'vsand':  [0x80000003, _VREG1, _VREG2, _REG3],
+        'vsxor':  [0x80000004, _VREG1, _VREG2, _REG3],
+        'vsadd':  [0x80000005, _VREG1, _VREG2, _REG3],
+        'vssub':  [0x80000006, _VREG1, _VREG2, _REG3],
+        'vslsl':  [0x80000009, _VREG1, _VREG2, _REG3],
+        'vsasr':  [0x8000000a, _VREG1, _VREG2, _REG3],
+        'vslsr':  [0x8000000b, _VREG1, _VREG2, _REG3],
+        'vclz':   [0x8000000c, _VREG1, _VREG2],         # 3rd reg is always z
+        'vrev':   [0x8000000d, _VREG1, _VREG2],         # 3rd reg is always z
+        'vext.b': [0x8000000e, _VREG1, _VREG2],         # 3rd reg is always z
+        'vext.h': [0x8000000f, _VREG1, _VREG2],         # 3rd reg is always z
 
-        'vsmul':  [0xc0000030, _VREG1, _VREG2, _REG3],
-        'vsmulu': [0xc0000031, _VREG1, _VREG2, _REG3],
-        'vsdiv':  [0xc0000034, _VREG1, _VREG2, _REG3],
-        'vsdivu': [0xc0000035, _VREG1, _VREG2, _REG3],
+        'vsmul':  [0x80000030, _VREG1, _VREG2, _REG3],
+        'vsmulu': [0x800000031, _VREG1, _VREG2, _REG3],
+        'vsdiv':  [0x80000034, _VREG1, _VREG2, _REG3],
+        'vsdivu': [0x80000035, _VREG1, _VREG2, _REG3],
 
-        'vitof':  [0xc0000040, _VREG1, _VREG2],    # Cast int->float (reg3 = z)
-        'vftoi':  [0xc0000041, _VREG1, _VREG2],    # Cast float->int (reg3 = z)
-        'vsfadd': [0xc0000042, _VREG1, _VREG2, _REG3],
-        'vsfsub': [0xc0000043, _VREG1, _VREG2, _REG3],
-        'vsfmul': [0xc0000044, _VREG1, _VREG2, _REG3],
-        'vsfdiv': [0xc0000045, _VREG1, _VREG2, _REG3],
+        'vitof':  [0x80000040, _VREG1, _VREG2],    # Cast int->float (reg3 = z)
+        'vftoi':  [0x80000041, _VREG1, _VREG2],    # Cast float->int (reg3 = z)
+        'vsfadd': [0x80000042, _VREG1, _VREG2, _REG3],
+        'vsfsub': [0x80000043, _VREG1, _VREG2, _REG3],
+        'vsfmul': [0x80000044, _VREG1, _VREG2, _REG3],
+        'vsfdiv': [0x80000045, _VREG1, _VREG2, _REG3],
 
         # == B ==
 
