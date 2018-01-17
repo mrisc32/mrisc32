@@ -54,6 +54,12 @@ struct wb_in_t {
   uint32_t dst_reg;     // Target register for the instruction (0 = none).
 };
 
+struct vector_state_t {
+  uint32_t idx;         // Current vector index.
+  uint32_t addr_offset; // The current address offset (incremented by load/store stride).
+  bool active;          // True if a vector operation is currently active.
+};
+
 inline uint32_t add32(const uint32_t a,
                       const uint32_t b,
                       const uint32_t carry_in,
@@ -101,34 +107,42 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
   m_terminate = false;
   m_exit_code = 0u;
 
+  // Initialize the pipeline state.
+  vector_state_t vector = vector_state_t();
+  id_in_t id_in = id_in_t();
+  ex_in_t ex_in = ex_in_t();
+  mem_in_t mem_in = mem_in_t();
+  wb_in_t wb_in = wb_in_t();
+
   int32_t cycles = 0;
   while (!m_terminate) {
-    // Simulator routine call handling.
-    // Simulator routines start at PC = 0xffff0000.
-    if ((m_regs[REG_PC] & 0xffff0000u) == 0xffff0000u) {
-      // Call the routine.
-      const uint32_t routine_no = (m_regs[REG_PC] - 0xffff0000u) >> 2u;
-      call_sim_routine(routine_no);
-
-      // Simulate jmp lr.
-      m_regs[REG_PC] = m_regs[REG_LR];
-    }
-
     int32_t instr_cycles = 1;
     uint32_t next_pc;
 
-    // IF
-    id_in_t id_in;
-    {
-      const uint32_t instr_pc = m_regs[REG_PC];
+    // We stall the IF stage when a vector operation is active.
+    if (!vector.active) {
+      // Simulator routine call handling.
+      // Simulator routines start at PC = 0xffff0000.
+      if ((m_regs[REG_PC] & 0xffff0000u) == 0xffff0000u) {
+        // Call the routine.
+        const uint32_t routine_no = (m_regs[REG_PC] - 0xffff0000u) >> 2u;
+        call_sim_routine(routine_no);
 
-      // Read the instruction from the current (predicted) PC.
-      id_in.pc = instr_pc;
-      id_in.instr = m_icache.read32(instr_pc);
+        // Simulate jmp lr.
+        m_regs[REG_PC] = m_regs[REG_LR];
+      }
+
+      // IF
+      {
+        const uint32_t instr_pc = m_regs[REG_PC];
+
+        // Read the instruction from the current (predicted) PC.
+        id_in.pc = instr_pc;
+        id_in.instr = m_icache.read32(instr_pc);
+      }
     }
 
     // ID
-    ex_in_t ex_in;
     {
       // Detect encoding class (A, B, C or D).
       const bool op_class_A = ((id_in.instr & 0xff000000u) == 0x00000000u);
@@ -300,7 +314,6 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
     }
 
     // EX
-    mem_in_t mem_in;
     {
       uint32_t ex_result = 0u;
 
@@ -421,7 +434,6 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
     }
 
     // MEM
-    wb_in_t wb_in;
     {
       uint32_t mem_result = 0u;
       switch (mem_in.mem_op) {
@@ -454,7 +466,11 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       m_regs[wb_in.dst_reg] = wb_in.dst_data;
     }
 
-    m_regs[REG_PC] = next_pc;
+    // Only update the PC if no vector operation is active.
+    if (!vector.active) {
+      m_regs[REG_PC] = next_pc;
+    }
+
     cycles += instr_cycles;
   }
 

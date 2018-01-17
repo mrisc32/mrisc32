@@ -47,6 +47,11 @@ protected:
   // This constructor is called from derived classes.
   cpu_t(ram_t& ram);
 
+  // Register configuration.
+  static const uint32_t NUM_REGS = 32u;
+  static const uint32_t NUM_VECTOR_ENTRIES = 32u;
+  static const uint32_t NUM_VECTOR_REGS = 32u;
+
   // Named registers.
   static const uint32_t REG_Z = 0u;
   static const uint32_t REG_VC = 28u;
@@ -102,6 +107,9 @@ protected:
   static const uint32_t MEM_OP_STORE16 = 0x15u;
   static const uint32_t MEM_OP_STORE32 = 0x16u;
 
+  // One vector register.
+  using vreg_t = std::array<uint32_t, NUM_VECTOR_ENTRIES>;
+
   /// @brief Call a simulator routine.
   /// @param routine_no The routine to call (0, 1, ...).
   void call_sim_routine(const uint32_t routine_no);
@@ -111,10 +119,12 @@ protected:
   cache_t<32, 256> m_icache;
   cache_t<32, 256> m_dcache;
 
-  // Registers.
-  static const uint32_t NUM_REGS = 32u;
+  // Scalar registers.
   std::array<uint32_t, NUM_REGS> m_regs;
-  std::array<float, NUM_REGS> m_fregs;
+
+  // Vector registers.
+  std::array<vreg_t, NUM_VECTOR_REGS> m_vregs;
+
   uint32_t m_carry;
 
   // Run state.
