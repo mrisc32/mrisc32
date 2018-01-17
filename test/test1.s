@@ -33,6 +33,12 @@ main:
   bsr    .test_failed
 .test5_passed:
 
+  bsr    test_6
+  or     r16, r16, r1
+  beq    r1, .test6_passed
+  bsr    .test_failed
+.test6_passed:
+
   ; exit(r16)
   mov    r1, r16
   bra    _exit
@@ -203,6 +209,73 @@ test_5:
   .u32   0x40490fdb
 .twopi:
   .u32   0x40c90fdb
+
+
+; ----------------------------------------------------------------------------
+; Vector operations.
+
+test_6:
+  subi   sp, sp, 20
+  st.w   lr, sp, 0
+  st.w   vl, sp, 4
+  st.w   r16, sp, 8
+  st.w   r17, sp, 12
+  st.w   r18, sp, 16
+
+  ; Prepare scalars
+  lea    r9, .in
+  ldi    r10, 12345
+  ldi    r11, 8
+  lea    r16, .result
+
+  ; The vector length is 32
+  ldi    vl, 31  ; vl = len - 1 = 31
+
+  ; Load v9 from memory
+  vld.w  v9, r9, 4
+
+  ; Initialize v10 to a constant value
+  vsmov  v10, r10
+
+  ; Add vectors v9 and v10
+  vvadd  v9, v9, v10
+
+  ; Subtract a scalar from v9
+  vssub  v9, v9, r11
+
+  ; Store the result to memory
+  vst.w  v9, r16, 4
+
+  ; Print the result
+  ldi    r17, 0
+.print:
+  lsli   r9, r17, 2
+  ldx.w  r1, r16, r9
+  bsr    _printhex
+  ldi    r1, 0x2c
+  ldi    r9, 10
+  addi   r18, r17, -31
+  addi   r17, r17, 1
+  meq    r1, r18, r9    ; Print comma or newline depending on if this is the last element
+  bsr    _putc
+  bne    r18, .print
+
+  ld.w   lr, sp, 0
+  ld.w   vl, sp, 4
+  ld.w   r16, sp, 8
+  ld.w   r17, sp, 12
+  ld.w   r18, sp, 16
+  addi   sp, sp, 20
+
+  ldi    r1, 0
+  rts
+
+.in:
+  .i32   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
+  .i32   17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32
+
+.result:
+  .space 128
 
 ; ----------------------------------------------------------------------------
 

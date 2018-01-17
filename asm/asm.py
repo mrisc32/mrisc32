@@ -50,7 +50,7 @@ _PCREL24x4 = 13  # -33554432..33554428 (in steps of 4)
 # Names of general purpose registers.
 _REGS = {
         'z':  0,  # Read-only: Zero
-        'vc': 28, # Vector count register
+        'vl': 28, # Vector length register
         'lr': 29, # Link register (branch return address)
         'sp': 30, # Stack pointer
         'pc': 31, # Read-only: Program counter
@@ -83,7 +83,7 @@ _REGS = {
         'r25': 25,
         'r26': 26,
         'r27': 27,
-        'r28': 28,  # Alias for vc
+        'r28': 28,  # Alias for vl
         'r29': 29,  # Alias for lr
         'r30': 30,  # Alias for sp
         'r31': 31,  # Alias for pc
@@ -308,19 +308,25 @@ _OPCODES = {
 
         # == B ==
 
-        # Load/store reg, stride.
-        'vld.b':  [0x90000000, _REG1, _REG2, _IMM14],
-        'vld.h':  [0x91000000, _REG1, _REG2, _IMM14],
-        'vld.w':  [0x92000000, _REG1, _REG2, _IMM14],
-        'vst.b':  [0x94000000, _REG1, _REG2, _IMM14],
-        'vst.h':  [0x95000000, _REG1, _REG2, _IMM14],
-        'vst.w':  [0x96000000, _REG1, _REG2, _IMM14],
+        # Vector load/store from reg with stride.
+        'vld.b':  [0x90000000, _VREG1, _REG2, _IMM14],
+        'vld.h':  [0x91000000, _VREG1, _REG2, _IMM14],
+        'vld.w':  [0x92000000, _VREG1, _REG2, _IMM14],
+        'vst.b':  [0x94000000, _VREG1, _REG2, _IMM14],
+        'vst.h':  [0x95000000, _VREG1, _REG2, _IMM14],
+        'vst.w':  [0x96000000, _VREG1, _REG2, _IMM14],
 
 
         # === ALIASES ===
 
-        # Alias for: or _REG1, _REG3, z
-        'mov':    [0x00000001, _REG1, _REG2],
+        # Alias for: or _REG1, z, _REG3
+        'mov':    [0x00000001, _REG1, _REG3],
+
+        # Alias for: vvor _VREG1, vz, _VREG3
+        'vvmov':  [0x80000001, _VREG1, _VREG3],
+
+        # Alias for: vsor _VREG1, vz, _REG3
+        'vsmov':  [0xc0000001, _VREG1, _REG3],
 
         # Alias for: jmp lr
         'rts':    [0x00e80080],
@@ -371,7 +377,7 @@ def translate_reg(operand, operand_type, line_no):
             reg_no = _VREGS[operand.lower()]
         except KeyError as e:
             raise AsmError(line_no, 'Bad vector register: {}'.format(operand))
-        shift = 19 if operand_type == _XFREG1 else 14
+        shift = 19 if operand_type == _VREG1 else (14 if operand_type == _VREG2 else 9)
         return reg_no << shift
     elif operand_type in [_XREG1, _XREG2]:
         try:
