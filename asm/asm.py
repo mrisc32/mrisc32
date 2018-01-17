@@ -588,6 +588,18 @@ def compile_file(file_name, out_name, verbosity_level):
                             if compilation_pass == 2:
                                 code += struct.pack(val_type, value)
 
+                    elif directive[0] in ['.space', '.zero']:
+                        if len(directive) != 2:
+                            raise AsmError(line_no, 'Invalid usage of {}'.format(directive[0]))
+                        try:
+                            size = parse_integer(directive[1])
+                        except ValueError:
+                            raise AsmError(line_no, 'Invalid size: {}'.format(directive[1]))
+                        addr += size
+                        if compilation_pass == 2:
+                            for k in range(0, size):
+                                code += struct.pack('b', 0)
+
                     elif directive[0] in ['.ascii', '.asciz']:
                         raw_text = line[6:].strip()
                         first_quote = raw_text.find('"')
