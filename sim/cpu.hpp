@@ -130,6 +130,11 @@ protected:
   // Run state.
   bool m_terminate;
   uint32_t m_exit_code;
+
+  // Run stats.
+  uint32_t m_fetched_instr_count;
+  uint32_t m_vector_loop_count;
+  uint32_t m_total_cycle_count;
 };
 
 #endif  // SIM_CPU_HPP_

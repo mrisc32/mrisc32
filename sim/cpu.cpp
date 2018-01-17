@@ -49,6 +49,14 @@ void cpu_t::reset() {
 }
 
 void cpu_t::dump_stats() {
+  const double cpo = static_cast<double>(m_total_cycle_count) /
+                     static_cast<double>(m_fetched_instr_count + m_vector_loop_count);
+  std::cout << "CPU instructions:\n";
+  std::cout << " Fetched instructions: " << m_fetched_instr_count << "\n";
+  std::cout << " Vector loops:         " << m_vector_loop_count << "\n";
+  std::cout << " Total CPU cycles:     " << m_total_cycle_count << "\n";
+  std::cout << " Cycles/Operation:     " << cpo << "\n";
+
   std::cout << "Cache stats:\n";
   std::cout << " ICACHE: " << m_icache.accesses() << " accesses " << m_icache.hits() << " hits\n";
   std::cout << " DCACHE: " << m_dcache.accesses() << " accesses " << m_dcache.hits() << " hits\n";

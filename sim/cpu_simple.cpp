@@ -118,6 +118,9 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
   m_regs[REG_SP] = sp;
   m_terminate = false;
   m_exit_code = 0u;
+  m_fetched_instr_count = 0u;
+  m_vector_loop_count = 0u;
+  m_total_cycle_count = 0u;
 
   // Initialize the pipeline state.
   vector_state_t vector = vector_state_t();
@@ -126,9 +129,8 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
   mem_in_t mem_in = mem_in_t();
   wb_in_t wb_in = wb_in_t();
 
-  int32_t cycles = 0;
   while (!m_terminate) {
-    int32_t instr_cycles = 1;
+    uint32_t instr_cycles = 1u;
     uint32_t next_pc;
     bool next_cycle_continues_a_vector_loop;
 
@@ -151,8 +153,14 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
 
         // Read the instruction from the current (predicted) PC.
         id_in.pc = instr_pc;
-        id_in.instr = m_icache.read32(instr_pc);
+        uint32_t cache_cycles;
+        id_in.instr = m_icache.read32(instr_pc, cache_cycles);
+        instr_cycles += cache_cycles;
+
+        ++m_fetched_instr_count;
       }
+    } else {
+      ++m_vector_loop_count;
     }
 
     // ID
@@ -493,26 +501,28 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
     // MEM
     {
       uint32_t mem_result = 0u;
+      uint32_t cache_cycles = 0u;
       switch (mem_in.mem_op) {
         case MEM_OP_LOAD8:
-          mem_result = m_dcache.read8(mem_in.mem_addr);
+          mem_result = m_dcache.read8(mem_in.mem_addr, cache_cycles);
           break;
         case MEM_OP_LOAD16:
-          mem_result = m_dcache.read16(mem_in.mem_addr);
+          mem_result = m_dcache.read16(mem_in.mem_addr, cache_cycles);
           break;
         case MEM_OP_LOAD32:
-          mem_result = m_dcache.read32(mem_in.mem_addr);
+          mem_result = m_dcache.read32(mem_in.mem_addr, cache_cycles);
           break;
         case MEM_OP_STORE8:
-          m_dcache.write8(mem_in.mem_addr, static_cast<uint8_t>(mem_in.store_data));
+          m_dcache.write8(mem_in.mem_addr, static_cast<uint8_t>(mem_in.store_data), cache_cycles);
           break;
         case MEM_OP_STORE16:
-          m_dcache.write16(mem_in.mem_addr, static_cast<uint16_t>(mem_in.store_data));
+          m_dcache.write16(mem_in.mem_addr, static_cast<uint16_t>(mem_in.store_data), cache_cycles);
           break;
         case MEM_OP_STORE32:
-          m_dcache.write32(mem_in.mem_addr, mem_in.store_data);
+          m_dcache.write32(mem_in.mem_addr, mem_in.store_data, cache_cycles);
           break;
       }
+      instr_cycles += cache_cycles;
 
       wb_in.dst_data = (mem_in.mem_op != MEM_OP_NONE) ? mem_result : mem_in.dst_data;
       wb_in.dst_reg = mem_in.dst_reg;
@@ -537,7 +547,7 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       m_regs[REG_PC] = next_pc;
     }
 
-    cycles += instr_cycles;
+    m_total_cycle_count += instr_cycles;
   }
 
   return m_exit_code;

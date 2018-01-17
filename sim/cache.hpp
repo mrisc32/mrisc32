@@ -54,50 +54,56 @@ public:
     // TODO(m): Implement me!
   }
 
-  void write8(const uint32_t addr, const uint8_t value) {
-    line_t& line = get_line(addr, true);
+  void write8(const uint32_t addr, const uint8_t value, uint32_t& extra_cycles) {
+    extra_cycles = 0u;
+    line_t& line = get_line(addr, true, extra_cycles);
     const uint32_t line_offset = addr % LINE_SIZE;
     line[line_offset] = value;
   }
 
-  void write16(const uint32_t addr, const uint16_t value) {
+  void write16(const uint32_t addr, const uint16_t value, uint32_t& extra_cycles) {
     if ((addr % 2u) != 0u) {
       throw std::runtime_error("Unaligned 16-bit write access.");
     }
-    line_t& line = get_line(addr, true);
+    extra_cycles = 0u;
+    line_t& line = get_line(addr, true, extra_cycles);
     const uint32_t line_offset = addr % LINE_SIZE;
     *reinterpret_cast<uint16_t*>(&line[line_offset]) = value;
   }
 
-  void write32(const uint32_t addr, const uint32_t value) {
+  void write32(const uint32_t addr, const uint32_t value, uint32_t& extra_cycles) {
     if ((addr % 4u) != 0u) {
       throw std::runtime_error("Unaligned 32-bit write access.");
     }
-    line_t& line = get_line(addr, true);
+    extra_cycles = 0u;
+    line_t& line = get_line(addr, true, extra_cycles);
     const uint32_t line_offset = addr % LINE_SIZE;
     *reinterpret_cast<uint32_t*>(&line[line_offset]) = value;
   }
 
-  uint8_t read8(const uint32_t addr) {
-    line_t& line = get_line(addr, false);
+  uint8_t read8(const uint32_t addr, uint32_t& extra_cycles) {
+    extra_cycles = 0u;
+    line_t& line = get_line(addr, false, extra_cycles);
     const uint32_t line_offset = addr % LINE_SIZE;
     return line[line_offset];
   }
 
-  uint16_t read16(const uint32_t addr) {
+  uint16_t read16(const uint32_t addr, uint32_t& extra_cycles) {
     if ((addr % 2u) != 0u) {
       throw std::runtime_error("Unaligned 16-bit read access.");
     }
-    line_t& line = get_line(addr, false);
+    extra_cycles = 0u;
+    line_t& line = get_line(addr, false, extra_cycles);
     const uint32_t line_offset = addr % LINE_SIZE;
     return *reinterpret_cast<uint16_t*>(&line[line_offset]);
   }
 
-  uint32_t read32(const uint32_t addr) {
+  uint32_t read32(const uint32_t addr, uint32_t& extra_cycles) {
     if ((addr % 4u) != 0u) {
       throw std::runtime_error("Unaligned 32-bit read access.");
     }
-    line_t& line = get_line(addr, false);
+    extra_cycles = 0u;
+    line_t& line = get_line(addr, false, extra_cycles);
     const uint32_t line_offset = addr % LINE_SIZE;
     return *reinterpret_cast<uint32_t*>(&line[line_offset]);
   }
@@ -124,9 +130,12 @@ private:
   static const uint32_t TAG_BIT_MODIFIED = 2u;
   static const uint32_t NUM_TAG_STATUS_BITS = 2u;
 
+  // TODO(m): Make this more intelligent, and let it be controlled by tbe mem_t class instead.
+  static const uint32_t MEM_LATENCY = 8u;
+
   using line_t = std::array<uint8_t, LINE_SIZE>;
 
-  line_t& get_line(const uint32_t byte_addr, const bool write) {
+  line_t& get_line(const uint32_t byte_addr, const bool write, uint32_t& extra_cycles) {
     ++m_accesses;
 
     // Find the relevant cache bin.
@@ -139,6 +148,7 @@ private:
     // Did we have a cache miss?
     if ((m_tags[bin_no] & ~TAG_BIT_MODIFIED) != tag) {
       ++m_misses;
+      extra_cycles = 0u;
 
       const uint32_t line_addr = line_no * LINE_SIZE;
 
@@ -147,13 +157,17 @@ private:
         const uint32_t old_addr = ((old_tag >> NUM_TAG_STATUS_BITS) * NUM_LINES * LINE_SIZE) +
                                   (byte_addr & (LINE_SIZE - 1));
         cache_to_ram(old_addr, line);
+        extra_cycles += MEM_LATENCY;
       }
 
       // Read new data from RAM.
       ram_to_cache(line_addr, line);
+      extra_cycles += MEM_LATENCY;
 
       // Update the tag.
       m_tags[bin_no] = tag;
+    } else {
+      extra_cycles = 0u;
     }
 
     if (write) {
