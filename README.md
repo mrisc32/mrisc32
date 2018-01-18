@@ -33,10 +33,10 @@ Currently there is a simple assembler (written in python) and a CPU simulator (w
   - 27 registers are general purpose.
   - All GPRs can be used for all types (integers, pointers and floating point).
   - PC is user-visible (for arithmetic and addressing) but read-only (to simplify branching logic).
-* There are *no* condition code flags (carry, overflow, ...).
 * Branches are executed in the ID (instruction decode) step, which gives a low branch misprediction penalty.
 * Conditional moves further reduce the cost of branch mispredictions.
-* Conditionals (branches, moves) are based on register content (there are *no* condition codes).
+* Conditionals (branches, moves) are based on register content.
+* There are *no* condition code flags (carry, overflow, ...).
 * Unlike early RISC architectures, there are *no* delay slots.
 * Many traditional floating point operations are handled by integer operations, reducing the number of necessary instructions:
   - Load/store.
@@ -50,13 +50,13 @@ Currently there is a simple assembler (written in python) and a CPU simulator (w
 
 * SIMD instructions use a Cray-like vector model:
   - 32 vector registers, V0-V31, with 32 (TBD) entries in each register.
-  - A Vector Length (VL) register controls the length of the vector operation (1-32 elements), which essentially eliminates the need for complicated main+tail-loop constructs.
   - All vector entries are the same size (32 bits), regardless if they represent bytes, half-words, words or floats.
+  - A Vector Length (VL) register controls the length of the vector operation (1-32 elements), which essentially eliminates the need for complicated main+tail-loop constructs.
   - The same execution units can be used for both vector operations and scalar operations.
   - There are vector,vector and vector,scalar versions of most integer and floating point operations.
   - Vector loads and stores have a stride parameter.
 
-See: [SIMDDesign.md](doc/SIMDDesign.md).
+See: [VecotDesign.md](doc/VecotDesign.md).
 
 
 ## Register model and conventions
