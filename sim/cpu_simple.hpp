@@ -36,4 +36,4 @@ public:
   uint32_t run(const uint32_t addr, const uint32_t sp) override;
 };
 
-#endif // SIM_CPU_SIMPLE_HPP_
+#endif  // SIM_CPU_SIMPLE_HPP_

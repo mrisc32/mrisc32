@@ -23,24 +23,24 @@
 
 namespace {
 struct id_in_t {
-  uint32_t pc;      // PC for the current instruction.
-  uint32_t instr;   // Instruction.
+  uint32_t pc;     // PC for the current instruction.
+  uint32_t instr;  // Instruction.
 };
 
 struct ex_in_t {
   uint32_t carry_in;
-  uint32_t src_a;       // Source operand A.
-  uint32_t src_b;       // Source operand B.
-  uint32_t alu_op;      // ALU operation.
-  uint32_t md_op;       // Mul/Div operation.
-  uint32_t fpu_op;      // FPU operation.
+  uint32_t src_a;   // Source operand A.
+  uint32_t src_b;   // Source operand B.
+  uint32_t alu_op;  // ALU operation.
+  uint32_t md_op;   // Mul/Div operation.
+  uint32_t fpu_op;  // FPU operation.
 
   uint32_t mem_op;      // MEM operation.
   uint32_t store_data;  // Data to be stored in the mem step.
 
-  uint32_t dst_reg;     // Target register for the instruction (0 = none).
-  uint32_t dst_idx;     // Target register index (for vector registers).
-  bool dst_is_vector;   // Target register is a vector register.
+  uint32_t dst_reg;    // Target register for the instruction (0 = none).
+  uint32_t dst_idx;    // Target register index (for vector registers).
+  bool dst_is_vector;  // Target register is a vector register.
 };
 
 struct mem_in_t {
@@ -54,16 +54,16 @@ struct mem_in_t {
 };
 
 struct wb_in_t {
-  uint32_t dst_data;    // Data to be written in the WB step.
-  uint32_t dst_reg;     // Target register for the instruction (0 = none).
-  uint32_t dst_idx;     // Target register index (for vector registers).
-  bool dst_is_vector;   // Target register is a vector register.
+  uint32_t dst_data;   // Data to be written in the WB step.
+  uint32_t dst_reg;    // Target register for the instruction (0 = none).
+  uint32_t dst_idx;    // Target register index (for vector registers).
+  bool dst_is_vector;  // Target register is a vector register.
 };
 
 struct vector_state_t {
-  uint32_t idx;         // Current vector index.
-  uint32_t addr_offset; // Current address offset (incremented by load/store stride).
-  bool active;          // True if a vector operation is currently active.
+  uint32_t idx;          // Current vector index.
+  uint32_t addr_offset;  // Current address offset (incremented by load/store stride).
+  bool active;           // True if a vector operation is currently active.
 };
 
 inline uint32_t add32(const uint32_t a,
@@ -81,7 +81,8 @@ inline uint32_t clz32(const uint32_t x) {
   return static_cast<uint32_t>(__builtin_clz(x));
 #else
   uint32_t count = 0u;
-  for (; (count != 32u) && ((x & (0x80000000u >> count)) == 0u); ++count);
+  for (; (count != 32u) && ((x & (0x80000000u >> count)) == 0u); ++count)
+    ;
   return count;
 #endif
 }
@@ -189,7 +190,6 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       const uint32_t imm24 =
           (sclar_instr & 0x00ffffffu) | ((sclar_instr & 0x00800000u) ? 0xff000000u : 0u);
 
-
       // == VECTOR STATE HANDLING ==
 
       if (is_vector_op) {
@@ -208,7 +208,6 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       // Check if the next cycle will continue a vector loop (i.e. we should stall the IF stage).
       next_cycle_continues_a_vector_loop =
           is_vector_op && (vector.idx < (m_regs[REG_VC] & (NUM_VECTOR_ENTRIES - 1)));
-
 
       // == BRANCH & CONDITIONAL MOVES ==
 
@@ -277,7 +276,6 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       }
 
       next_pc = branch_taken ? branch_target : (id_in.pc + 4u);
-
 
       // == DECODE ==
 
@@ -366,9 +364,9 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       // Output of the ID step.
       ex_in.carry_in = m_carry;
       ex_in.src_a = reg_a_data;
-      ex_in.src_b = is_subroutine_branch ? 4
-                                         : (op_class_B ? (is_vector_op ? vector.addr_offset : imm14)
-                                                       : (op_class_C ? imm19 : reg_b_data));
+      ex_in.src_b =
+          is_subroutine_branch ? 4 : (op_class_B ? (is_vector_op ? vector.addr_offset : imm14)
+                                                 : (op_class_C ? imm19 : reg_b_data));
       ex_in.store_data = reg_c_data;
       ex_in.dst_reg = dst_reg;
       ex_in.dst_idx = vector.idx;
@@ -415,7 +413,7 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
           break;
         case ALU_OP_ASR:
           ex_result = static_cast<uint32_t>(static_cast<int32_t>(ex_in.src_a) >>
-                                             static_cast<int32_t>(ex_in.src_b));
+                                            static_cast<int32_t>(ex_in.src_b));
           break;
         case ALU_OP_LSR:
           ex_result = ex_in.src_a >> ex_in.src_b;
@@ -427,7 +425,8 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
           ex_result = rev32(ex_in.src_a);
           break;
         case ALU_OP_EXTB:
-          ex_result = (ex_in.src_a & 0x000000ffu) | ((ex_in.src_a & 0x00000080u) ? 0xffffff00u : 0u);
+          ex_result =
+              (ex_in.src_a & 0x000000ffu) | ((ex_in.src_a & 0x00000080u) ? 0xffffff00u : 0u);
           break;
         case ALU_OP_EXTH:
           ex_result =
