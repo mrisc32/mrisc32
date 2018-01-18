@@ -161,11 +161,13 @@ _OPCODES = {
 
         # Load/store reg + reg.
         'ldx.b':  [0x00000010, _REG1, _REG2, _REG3],
-        'ldx.h':  [0x00000011, _REG1, _REG2, _REG3],
-        'ldx.w':  [0x00000012, _REG1, _REG2, _REG3],
-        'stx.b':  [0x00000014, _REG1, _REG2, _REG3],
-        'stx.h':  [0x00000015, _REG1, _REG2, _REG3],
-        'stx.w':  [0x00000016, _REG1, _REG2, _REG3],
+        'ldxu.b': [0x00000011, _REG1, _REG2, _REG3],
+        'ldx.h':  [0x00000012, _REG1, _REG2, _REG3],
+        'ldxu.h': [0x00000013, _REG1, _REG2, _REG3],
+        'ldx.w':  [0x00000014, _REG1, _REG2, _REG3],
+        'stx.b':  [0x00000018, _REG1, _REG2, _REG3],
+        'stx.h':  [0x00000019, _REG1, _REG2, _REG3],
+        'stx.w':  [0x0000001a, _REG1, _REG2, _REG3],
 
         # Conditional moves.
         'meq':    [0x00000020, _REG1, _REG2, _REG3],
@@ -219,11 +221,13 @@ _OPCODES = {
 
         # Load/store reg + offset.
         'ld.b':   [0x10000000, _REG1, _REG2, _IMM14],
-        'ld.h':   [0x11000000, _REG1, _REG2, _IMM14],
-        'ld.w':   [0x12000000, _REG1, _REG2, _IMM14],
-        'st.b':   [0x14000000, _REG1, _REG2, _IMM14],
-        'st.h':   [0x15000000, _REG1, _REG2, _IMM14],
-        'st.w':   [0x16000000, _REG1, _REG2, _IMM14],
+        'ldu.b':  [0x11000000, _REG1, _REG2, _IMM14],
+        'ld.h':   [0x12000000, _REG1, _REG2, _IMM14],
+        'ldu.h':  [0x13000000, _REG1, _REG2, _IMM14],
+        'ld.w':   [0x14000000, _REG1, _REG2, _IMM14],
+        'st.b':   [0x18000000, _REG1, _REG2, _IMM14],
+        'st.h':   [0x19000000, _REG1, _REG2, _IMM14],
+        'st.w':   [0x1a000000, _REG1, _REG2, _IMM14],
 
         # TODO(m): Load Linked (ll) and Store Conditional (sc) for atomic ops.
         # 'll':    [(47 << 24), _REG2, _REG1],
@@ -321,11 +325,13 @@ _OPCODES = {
 
         # Vector load/store from reg with stride.
         'vld.b':  [0x90000000, _VREG1, _REG2, _IMM14],
-        'vld.h':  [0x91000000, _VREG1, _REG2, _IMM14],
-        'vld.w':  [0x92000000, _VREG1, _REG2, _IMM14],
-        'vst.b':  [0x94000000, _VREG1, _REG2, _IMM14],
-        'vst.h':  [0x95000000, _VREG1, _REG2, _IMM14],
-        'vst.w':  [0x96000000, _VREG1, _REG2, _IMM14],
+        'vldu.b': [0x91000000, _VREG1, _REG2, _IMM14],
+        'vld.h':  [0x92000000, _VREG1, _REG2, _IMM14],
+        'vldu.h': [0x93000000, _VREG1, _REG2, _IMM14],
+        'vld.w':  [0x94000000, _VREG1, _REG2, _IMM14],
+        'vst.b':  [0x98000000, _VREG1, _REG2, _IMM14],
+        'vst.h':  [0x99000000, _VREG1, _REG2, _IMM14],
+        'vst.w':  [0x9a000000, _VREG1, _REG2, _IMM14],
 
 
         # === ALIASES ===
@@ -349,12 +355,14 @@ _OPCODES = {
         'lea':    [0x0507c000, _REG1, _PCREL14],
 
         # Load/store pc-relative (alias for: ld.?/st.? _REG1, pc, offset).
-        'ldpc.b': [0x1007c000, _REG1, _PCREL14],
-        'ldpc.h': [0x1107c000, _REG1, _PCREL14],
-        'ldpc.w': [0x1207c000, _REG1, _PCREL14],
-        'stpc.b': [0x1407c000, _REG1, _PCREL14],
-        'stpc.h': [0x1507c000, _REG1, _PCREL14],
-        'stpc.w': [0x1607c000, _REG1, _PCREL14],
+        'ldpc.b':  [0x1007c000, _REG1, _PCREL14],
+        'ldupc.b': [0x1107c000, _REG1, _PCREL14],
+        'ldpc.h':  [0x1207c000, _REG1, _PCREL14],
+        'ldupc.h': [0x1307c000, _REG1, _PCREL14],
+        'ldpc.w':  [0x1407c000, _REG1, _PCREL14],
+        'stpc.b':  [0x1807c000, _REG1, _PCREL14],
+        'stpc.h':  [0x1907c000, _REG1, _PCREL14],
+        'stpc.w':  [0x1a07c000, _REG1, _PCREL14],
     }
 
 

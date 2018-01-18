@@ -112,6 +112,23 @@ uint32_t as_u32(const float x) {
   std::memcpy(&result, &x, sizeof(uint32_t));
   return result;
 }
+
+uint32_t s8_as_u32(const int8_t x) {
+  return static_cast<uint32_t>(static_cast<int32_t>(x));
+}
+
+uint32_t u8_as_u32(const uint8_t x) {
+  return static_cast<uint32_t>(x);
+}
+
+uint32_t s16_as_u32(const int16_t x) {
+  return static_cast<uint32_t>(static_cast<int32_t>(x));
+}
+
+uint32_t u16_as_u32(const uint16_t x) {
+  return static_cast<uint32_t>(x);
+}
+
 }  // namespace
 
 uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
@@ -280,11 +297,11 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       // == DECODE ==
 
       // Is this a mem load/store operation?
-      const bool is_ldx = (sclar_instr & 0xff0001fcu) == 0x00000010u;
-      const bool is_ld = (sclar_instr & 0xfc000000u) == 0x10000000u;
+      const bool is_ldx = (sclar_instr & 0xff0001f8u) == 0x00000010u;
+      const bool is_ld = (sclar_instr & 0xf8000000u) == 0x10000000u;
       const bool is_mem_load = is_ldx || is_ld;
-      const bool is_stx = ((sclar_instr & 0xff0001fcu) == 0x00000014u);
-      const bool is_st = ((sclar_instr & 0xfc000000u) == 0x14000000u);
+      const bool is_stx = ((sclar_instr & 0xff0001f8u) == 0x00000018u);
+      const bool is_st = ((sclar_instr & 0xf8000000u) == 0x18000000u);
       const bool is_mem_store = is_stx || is_st;
       const bool is_mem_op = (is_mem_load || is_mem_store);
 
@@ -426,12 +443,10 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
           ex_result = rev32(ex_in.src_a);
           break;
         case ALU_OP_EXTB:
-          ex_result =
-              (ex_in.src_a & 0x000000ffu) | ((ex_in.src_a & 0x00000080u) ? 0xffffff00u : 0u);
+          ex_result = s8_as_u32(static_cast<int8_t>(ex_in.src_a));
           break;
         case ALU_OP_EXTH:
-          ex_result =
-              (ex_in.src_a & 0x0000ffffu) | ((ex_in.src_a & 0x00008000u) ? 0xffff0000u : 0u);
+          ex_result = s16_as_u32(static_cast<int16_t>(ex_in.src_a));
           break;
         case ALU_OP_ORHI:
           ex_result = ex_in.src_a | (ex_in.src_b << 13u);
@@ -507,10 +522,18 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       uint32_t cache_cycles = 0u;
       switch (mem_in.mem_op) {
         case MEM_OP_LOAD8:
-          mem_result = m_dcache.read8(mem_in.mem_addr, cache_cycles);
+          mem_result =
+              s8_as_u32(static_cast<int8_t>(m_dcache.read8(mem_in.mem_addr, cache_cycles)));
+          break;
+        case MEM_OP_LOADU8:
+          mem_result = u8_as_u32(m_dcache.read8(mem_in.mem_addr, cache_cycles));
           break;
         case MEM_OP_LOAD16:
-          mem_result = m_dcache.read16(mem_in.mem_addr, cache_cycles);
+          mem_result =
+              s16_as_u32(static_cast<int16_t>(m_dcache.read16(mem_in.mem_addr, cache_cycles)));
+          break;
+        case MEM_OP_LOADU16:
+          mem_result = u16_as_u32(m_dcache.read16(mem_in.mem_addr, cache_cycles));
           break;
         case MEM_OP_LOAD32:
           mem_result = m_dcache.read32(mem_in.mem_addr, cache_cycles);

@@ -123,8 +123,10 @@ The vector registers are allocated as follows:
 |rev| x |   | rd, ra | rd <= rev(ra) | Reverse bit order |
 |ext.b| x |   | rd, ra | rd <= signextend(ra[7:0]) | Sign-extend byte to word |
 |ext.h| x |   | rd, ra | rd <= signextend(ra[15:0]) | Sign-extend halfword to word |
-|ldx.b|   |   | rd, ra, rb | rd <= [ra + rb] (byte) | Load unsigned byte, indexed |
-|ldx.h|   |   | rd, ra, rb | rd <= [ra + rb] (halfword) | Load unsigned halfword, indexed |
+|ldx.b|   |   | rd, ra, rb | rd <= [ra + rb] (byte) | Load signed byte, indexed |
+|ldxu.b|   |   | rd, ra, rb | rd <= [ra + rb] (byte) | Load unsigned byte, indexed |
+|ldx.h|   |   | rd, ra, rb | rd <= [ra + rb] (halfword) | Load signed halfword, indexed |
+|ldxu.h|   |   | rd, ra, rb | rd <= [ra + rb] (halfword) | Load unsigned halfword, indexed |
 |ldx.w|   |   | rd, ra, rb | rd <= [ra + rb] (word) | Load word, indexed |
 |stx.b|   |   | rc, ra, rb | [ra + rb] <= rc (byte) | Store byte, indexed |
 |stx.h|   |   | rc, ra, rb | [ra + rb] <= rc (halfword) | Store halfowrd, indexed |
@@ -148,8 +150,10 @@ The vector registers are allocated as follows:
 |lsli|   | x | rd, ra, i14 | rd <= ra << signextend(i14) | Logic shift left |
 |asri|   | x | rd, ra, i14 | rd <= ra >> signextend(i14) (signed) | Arithmetic shift right |
 |lsri|   | x | rd, ra, i14 | rd <= ra >> signextend(i14) (unsigned) | Logic shift right |
-|ld.b|   |   | rd, ra, i14 | rd <= [ra + signextend(i14)] (byte) | Load unsigned byte |
-|ld.h|   |   | rd, ra, i14 | rd <= [ra + signextend(i14)] (halfword) | Load unsigned halfword |
+|ld.b|   |   | rd, ra, i14 | rd <= [ra + signextend(i14)] (byte) | Load signed byte |
+|ldu.b|   |   | rd, ra, i14 | rd <= [ra + signextend(i14)] (byte) | Load unsigned byte |
+|ld.h|   |   | rd, ra, i14 | rd <= [ra + signextend(i14)] (halfword) | Load signed halfword |
+|ldu.h|   |   | rd, ra, i14 | rd <= [ra + signextend(i14)] (halfword) | Load unsigned halfword |
 |ld.w|   |   | rd, ra, i14 | rd <= [ra + signextend(i14)] (word) | Load word |
 |st.b|   |   | rc, ra, i14 | [ra + signextend(i14)] <= rc (byte) | Store byte |
 |st.h|   |   | rc, ra, i14 | [ra + signextend(i14)] <= rc (halfword) | Store halfowrd |
@@ -180,8 +184,10 @@ The vector registers are allocated as follows:
 
 | Mnemonic | Operands | Operation | Description |
 |---|---|---|---|
-|vld.b| rd, ra, i14 | rd[k] <= [ra + k * signextend(i14)] (byte) | Load unsigned bytes with stride |
-|vld.h| rd, ra, i14 | rd[k] <= [ra + k * signextend(i14)] (halfword) | Load unsigned halfwords with stride |
+|vld.b| rd, ra, i14 | rd[k] <= [ra + k * signextend(i14)] (byte) | Load signed bytes with stride |
+|vldu.b| rd, ra, i14 | rd[k] <= [ra + k * signextend(i14)] (byte) | Load unsigned bytes with stride |
+|vld.h| rd, ra, i14 | rd[k] <= [ra + k * signextend(i14)] (halfword) | Load signed halfwords with stride |
+|vldu.h| rd, ra, i14 | rd[k] <= [ra + k * signextend(i14)] (halfword) | Load unsigned halfwords with stride |
 |vld.w| rd, ra, i14 | rd[k] <= [ra + k * signextend(i14)] (word) | Load words with stride |
 |vst.b| rc, ra, i14 | [ra + k * signextend(i14)] <= rc[k] (byte) | Store bytes with stride |
 |vst.h| rc, ra, i14 | [ra + k * signextend(i14)] <= rc[k] (halfword) | Store halfowrds with stride |

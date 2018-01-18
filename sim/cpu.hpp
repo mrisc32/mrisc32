@@ -101,11 +101,13 @@ protected:
   // Memory operations.
   static const uint32_t MEM_OP_NONE = 0x00u;
   static const uint32_t MEM_OP_LOAD8 = 0x10u;
-  static const uint32_t MEM_OP_LOAD16 = 0x11u;
-  static const uint32_t MEM_OP_LOAD32 = 0x12u;
-  static const uint32_t MEM_OP_STORE8 = 0x14u;
-  static const uint32_t MEM_OP_STORE16 = 0x15u;
-  static const uint32_t MEM_OP_STORE32 = 0x16u;
+  static const uint32_t MEM_OP_LOADU8 = 0x11u;
+  static const uint32_t MEM_OP_LOAD16 = 0x12u;
+  static const uint32_t MEM_OP_LOADU16 = 0x13u;
+  static const uint32_t MEM_OP_LOAD32 = 0x14u;
+  static const uint32_t MEM_OP_STORE8 = 0x18u;
+  static const uint32_t MEM_OP_STORE16 = 0x19u;
+  static const uint32_t MEM_OP_STORE32 = 0x1au;
 
   // One vector register.
   using vreg_t = std::array<uint32_t, NUM_VECTOR_ENTRIES>;
