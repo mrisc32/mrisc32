@@ -168,11 +168,8 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       // Get the scalar instruction (mask off vector control bits).
       const uint32_t sclar_instr = id_in.instr & 0x3fffffffu;
 
-      // Check what type of registers should be used (vector or scalar).
+      // Is this a vector operation?
       const bool is_vector_op = ((id_in.instr & 0xc0000000u) != 0u);
-      const bool reg1_is_vector = is_vector_op;
-      const bool reg2_is_vector = ((id_in.instr & 0xf0000000u) == 0x80000000u);
-      const bool reg3_is_vector = ((id_in.instr & 0x40000000u) != 0u);
 
       // Detect encoding class (A, B, C or D).
       const bool op_class_A = ((sclar_instr & 0xff000000u) == 0x00000000u);
@@ -351,6 +348,12 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       } else if (is_mem_store) {
         mem_op = (is_stx ? (sclar_instr & 0x000001ffu) : (sclar_instr >> 24u));
       }
+
+      // Check what type of registers should be used (vector or scalar).
+      const bool reg1_is_vector = is_vector_op;
+      const bool reg2_is_vector =
+          ((id_in.instr & 0x80000000u) != 0u) && !(is_mem_store || is_mem_load);
+      const bool reg3_is_vector = ((id_in.instr & 0x40000000u) != 0u);
 
       // Read from the register files.
       const uint32_t reg_a_data =

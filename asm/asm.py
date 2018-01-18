@@ -323,10 +323,10 @@ _OPCODES = {
         'mov':    [0x00000001, _REG1, _REG3],
 
         # Alias for: vvor _VREG1, vz, _VREG3
-        'vvmov':  [0x80000001, _VREG1, _VREG3],
+        'vvmov':  [0xc0000001, _VREG1, _VREG3],
 
         # Alias for: vsor _VREG1, vz, _REG3
-        'vsmov':  [0xc0000001, _VREG1, _REG3],
+        'vsmov':  [0x80000001, _VREG1, _REG3],
 
         # Alias for: jmp lr
         'rts':    [0x00e80080],
