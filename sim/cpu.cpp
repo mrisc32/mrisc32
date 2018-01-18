@@ -43,7 +43,6 @@ void cpu_t::reset() {
   for (auto reg = m_vregs.begin(); reg != m_vregs.end(); ++reg) {
     std::fill(reg->begin(), reg->end(), 0.0f);
   }
-  m_carry = 0u;
   m_terminate = false;
   m_exit_code = 0u;
 }

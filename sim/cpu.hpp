@@ -67,8 +67,8 @@ protected:
   static const uint32_t ALU_OP_XOR = 0x04u;
   static const uint32_t ALU_OP_ADD = 0x05u;
   static const uint32_t ALU_OP_SUB = 0x06u;
-  static const uint32_t ALU_OP_ADDC = 0x07u;
-  static const uint32_t ALU_OP_SUBC = 0x08u;
+  static const uint32_t ALU_OP_SLT = 0x07u;
+  static const uint32_t ALU_OP_SLTU = 0x08u;
   static const uint32_t ALU_OP_LSL = 0x09u;
   static const uint32_t ALU_OP_ASR = 0x0au;
   static const uint32_t ALU_OP_LSR = 0x0bu;
@@ -126,8 +126,6 @@ protected:
 
   // Vector registers.
   std::array<vreg_t, NUM_VECTOR_REGS> m_vregs;
-
-  uint32_t m_carry;
 
   // Run state.
   bool m_terminate;

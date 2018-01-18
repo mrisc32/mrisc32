@@ -33,6 +33,7 @@ Currently there is a simple assembler (written in python) and a CPU simulator (w
   - 27 registers are general purpose.
   - All GPRs can be used for all types (integers, pointers and floating point).
   - PC is user-visible (for arithmetic and addressing) but read-only (to simplify branching logic).
+* There are *no* condition code flags (carry, overflow, ...).
 * Branches are executed in the ID (instruction decode) step, which gives a low branch misprediction penalty.
 * Conditional moves further reduce the cost of branch mispredictions.
 * Conditionals (branches, moves) are based on register content (there are *no* condition codes).
@@ -45,7 +46,7 @@ Currently there is a simple assembler (written in python) and a CPU simulator (w
 * There is currently no HW support for 64-bit floating point operations (that is left for a 64-bit version of the ISA).
 
 
-## SIMD extensions (WIP)
+## Vector operarations (SIMD)
 
 * SIMD instructions use a Cray-like vector model:
   - 32 vector registers, V0-V31, with 32 (TBD) entries in each register.
@@ -99,7 +100,6 @@ The vector registers are allocated as follows:
 | i14 | 14-bit immediate value |
 | i19 | 19-bit immediate value |
 | i24 | 24-bit immediate value |
-| c | Carry bit (ALU) |
 | VV | Supports vector,vector operation |
 | VS | Supports vector,scalar operation |
 
@@ -112,10 +112,10 @@ The vector registers are allocated as follows:
 |nor| x | x | rd, ra, rb | rd <= ~(ra \| rb)  | Bitwise nor |
 |and| x | x | rd, ra, rb | rd <= ra & rb | Bitwise and |
 |xor| x | x | rd, ra, rb | rd <= ra ^ rb | Bitwise exclusive or |
-|add| x | x | rd, ra, rb | c:rd <= ra + rb | Addition |
-|sub| x | x | rd, ra, rb | c:rd <= ra - rb | Subtraction |
-|addc|   |   | rd, ra, rb | c:rd <= ra + rb + c | Addition with carry |
-|subc|   |   | rd, ra, rb | c:rd <= ra - rb + c | Subtraction with carry |
+|add| x | x | rd, ra, rb | rd <= ra + rb | Addition |
+|sub| x | x | rd, ra, rb | rd <= ra - rb | Subtraction |
+|slt| x | x | rd, ra, rb | rd <= (ra < rb) ? 1 : 0 | Set if less than (signed) |
+|sltu| x | x | rd, ra, rb | rd <= (ra < rb) ? 1 : 0 | Set if less than (unsigned) |
 |lsl| x | x | rd, ra, rb | rd <= ra << rb | Logic shift left |
 |asr| x | x | rd, ra, rb | rd <= ra >> rb (signed) | Arithmetic shift right |
 |lsr| x | x | rd, ra, rb | rd <= ra >> rb (unsigned) | Logic shift right |
@@ -145,8 +145,8 @@ The vector registers are allocated as follows:
 |xori|   | x | rd, ra, i14 | rd <= ra ^ signextend(i14) | Bitwise exclusive or |
 |addi|   | x | rd, ra, i14 | c:rd <= ra + signextend(i14) | Addition |
 |subi|   | x | rd, ra, i14 | c:rd <= ra - signextend(i14) | Subtraction |
-|addci|   |   | rd, ra, i14 | c:rd <= ra + signextend(i14) + c | Addition with carry |
-|subci|   |   | rd, ra, i14 | c:rd <= ra - signextend(i14) + c | Subtraction with carry |
+|slti|   | x | rd, ra, i14 | rd <= (ra < signextend(i14)) ? 1 : 0 | Set if less than (signed) |
+|sltui|   | x | rd, ra, i14 | rd <= (ra < signextend(i14)) ? 1 : 0 | Set if less than (unsigned) |
 |lsli|   | x | rd, ra, i14 | rd <= ra << signextend(i14) | Logic shift left |
 |asri|   | x | rd, ra, i14 | rd <= ra >> signextend(i14) (signed) | Arithmetic shift right |
 |lsri|   | x | rd, ra, i14 | rd <= ra >> signextend(i14) (unsigned) | Logic shift right |
@@ -195,7 +195,6 @@ The vector registers are allocated as follows:
 
 ### Planned instructions
 
-* Improved support for unsigned comparisons (sgtu, sltu, ...).
 * Integer multiplication and division (32-bit operands and 64-bit results).
 * Control instructions/registers (cache control, interrupt masks, status flags, ...).
 * Load Linked (ll) and Store Conditional (sc) for atomic operations.
@@ -212,8 +211,9 @@ The vector registers are allocated as follows:
 | Invert all bits | nor rd,ra,ra |
 | Compare and branch | sub + b[cc] |
 | Return from subroutine | jmp lr |
-| Push to stack | subi sp,sp,N + st.w ra,pc,0 + ... |
-| Pop from stack | ld.w rd,pc,0 + ... + addi sp,sp,N |
+| Push to stack | subi sp,sp,N<br>st.w ra,pc,0<br>... |
+| Pop from stack | ld.w rd,pc,0<br>...<br>addi sp,sp,N |
+| 64-bit integer addition: c2:c1 = a2:a1 + b2:b1 | add c1,a1,b1<br>add c2,a2,b2<br>sltu carry,c1,a1<br>add c2,c2,carry|
 | Floating point negation | ldhi + xor |
 | Floating point absolute value | ldhi + nor + and |
 | Floating point compare and branch | fsub + b[cc] |

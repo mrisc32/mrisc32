@@ -28,7 +28,6 @@ struct id_in_t {
 };
 
 struct ex_in_t {
-  uint32_t carry_in;
   uint32_t src_a;   // Source operand A.
   uint32_t src_b;   // Source operand B.
   uint32_t alu_op;  // ALU operation.
@@ -67,13 +66,8 @@ struct vector_state_t {
 };
 
 inline uint32_t add32(const uint32_t a,
-                      const uint32_t b,
-                      const uint32_t carry_in,
-                      uint32_t& carry_out) {
-  uint64_t result =
-      static_cast<uint64_t>(a) + static_cast<uint64_t>(b) + static_cast<uint64_t>(carry_in);
-  carry_out = static_cast<uint32_t>((result >> 32u) & 1u);
-  return static_cast<uint32_t>(result);
+                      const uint32_t b) {
+  return a + b;
 }
 
 inline uint32_t clz32(const uint32_t x) {
@@ -379,7 +373,6 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
           reg1_is_vector ? m_vregs[src_reg_c][vector.idx] : m_regs[src_reg_c];
 
       // Output of the ID step.
-      ex_in.carry_in = m_carry;
       ex_in.src_a = reg_a_data;
       ex_in.src_b = is_subroutine_branch
                         ? 4
@@ -400,7 +393,6 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       uint32_t ex_result = 0u;
 
       // ALU (single-cycle integer operations).
-      uint32_t carry_out = ex_in.carry_in;
       switch (ex_in.alu_op) {
         case ALU_OP_OR:
           ex_result = ex_in.src_a | ex_in.src_b;
@@ -415,16 +407,17 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
           ex_result = ex_in.src_a ^ ex_in.src_b;
           break;
         case ALU_OP_ADD:
-          ex_result = add32(ex_in.src_a, ex_in.src_b, 0u, carry_out);
+          ex_result = add32(ex_in.src_a, ex_in.src_b);
           break;
         case ALU_OP_SUB:
-          ex_result = add32(ex_in.src_a, ~ex_in.src_b, 1u, carry_out);
+          ex_result = add32(ex_in.src_a, (~ex_in.src_b) + 1u);
           break;
-        case ALU_OP_ADDC:
-          ex_result = add32(ex_in.src_a, ex_in.src_b, ex_in.carry_in, carry_out);
+        case ALU_OP_SLT:
+          ex_result =
+              (static_cast<int32_t>(ex_in.src_a) < static_cast<int32_t>(ex_in.src_b)) ? 1u : 0u;
           break;
-        case ALU_OP_SUBC:
-          ex_result = add32(ex_in.src_a, ~ex_in.src_b, ex_in.carry_in, carry_out);
+        case ALU_OP_SLTU:
+          ex_result = (ex_in.src_a < ex_in.src_b) ? 1u : 0u;
           break;
         case ALU_OP_LSL:
           ex_result = ex_in.src_a << ex_in.src_b;
@@ -504,8 +497,6 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
           ex_result = static_cast<uint32_t>(as_u32(as_f32(ex_in.src_a) / as_f32(ex_in.src_b)));
           break;
       }
-
-      m_carry = carry_out;
 
       mem_in.mem_addr = ex_result;
       mem_in.dst_data = ex_result;

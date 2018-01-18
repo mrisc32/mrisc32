@@ -148,7 +148,9 @@ test_4:
 
   ; Add the numbers into r1:r16
   add    r16, r10, r12  ; r16 = low bits
-  addc   r1, r11, r13   ; r1 = high bits
+  add    r1, r11, r13   ; r1 = high bits
+  sltu   r14, r16, r10  ; r14 = carry (0 or 1)
+  add    r1, r1, r14    ; Add carry to the high word
 
   bsr    _printhex      ; Print high word
   mov    r1, r16
