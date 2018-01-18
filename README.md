@@ -169,8 +169,8 @@ The vector registers are allocated as follows:
 
 | Mnemonic | VV | VS | Operands | Operation | Description |
 |---|---|---|---|---|---|
-|itof| x | x | rd, ra | rd <= (float)ra | Cast integer to float |
-|ftoi| x | x | rd, ra | rd <= (int)ra | Cast float to integer |
+|itof| x |   | rd, ra | rd <= (float)ra | Cast integer to float |
+|ftoi| x |   | rd, ra | rd <= (int)ra | Cast float to integer |
 |fadd| x | x | rd, ra, rb | rd <= ra + rb | Floating point addition |
 |fsub| x | x | rd, ra, rb | rd <= ra - rb | Floating point difference |
 |fmul| x | x | rd, ra, rb | rd <= ra * rb | Floating point multiplication |
@@ -193,7 +193,8 @@ The vector registers are allocated as follows:
 * Integer multiplication and division (32-bit operands and 64-bit results).
 * Control instructions/registers (cache control, interrupt masks, status flags, ...).
 * Load Linked (ll) and Store Conditional (sc) for atomic operations.
-* Single-instruction load of common constants (mostly floating point: 1.0, PI, ...).
+* Single-instruction load of common constants (mostly floating point: PI, sqrt(2), ...).
+* More DSP-type manipulation (saturate, swizzle, ...).
 
 ### Common constructs
 
@@ -210,4 +211,5 @@ The vector registers are allocated as follows:
 | Floating point negation | ldhi + xor |
 | Floating point absolute value | ldhi + nor + and |
 | Floating point compare and branch | fsub + b[cc] |
+| Load simple floating point immediate (19 most significant bits) | ldhi |
 
