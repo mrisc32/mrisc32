@@ -57,9 +57,15 @@ void cpu_t::dump_stats() {
   std::cout << " Total CPU cycles:     " << m_total_cycle_count << "\n";
   std::cout << " Cycles/Operation:     " << cpo << "\n";
 
+  const double ihit_ratio =
+      100.0 * static_cast<double>(m_icache.hits()) / static_cast<double>(m_icache.accesses());
+  const double dhit_ratio =
+      100.0 * static_cast<double>(m_dcache.hits()) / static_cast<double>(m_dcache.accesses());
   std::cout << "Cache stats:\n";
-  std::cout << " ICACHE: " << m_icache.accesses() << " accesses " << m_icache.hits() << " hits\n";
-  std::cout << " DCACHE: " << m_dcache.accesses() << " accesses " << m_dcache.hits() << " hits\n";
+  std::cout << " ICACHE: " << m_icache.accesses() << " accesses " << m_icache.hits() << " hits ("
+            << ihit_ratio << "%)\n";
+  std::cout << " DCACHE: " << m_dcache.accesses() << " accesses " << m_dcache.hits() << " hits ("
+            << dhit_ratio << "%)\n";
 }
 
 void cpu_t::call_sim_routine(const uint32_t routine_no) {
