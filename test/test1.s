@@ -224,8 +224,6 @@ test_6:
 
   ; Prepare scalars
   lea    r9, .in
-  ldi    r10, 0x1234
-  ldi    r11, 8
   lea    r16, .result
 
   ; The vector length is 32
@@ -235,13 +233,13 @@ test_6:
   vld.w  v9, r9, 4
 
   ; Initialize v10 to a constant value
-  vsmov  v10, r10
+  vsldi  v10, 0x1234
 
   ; Add vectors v9 and v10
   vvadd  v9, v9, v10
 
   ; Subtract a scalar from v9
-  vssub  v9, v9, r11
+  vssubi v9, v9, 8
 
   ; Store the result to memory
   vst.w  v9, r16, 4

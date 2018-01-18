@@ -100,8 +100,8 @@ The vector registers are allocated as follows:
 | i19 | 19-bit immediate value |
 | i24 | 24-bit immediate value |
 | c | Carry bit (ALU) |
-| VV | Supported vector,vector operation: vv[op] |
-| VS | Supported vector,scalar operation: vs[op] |
+| VV | Supports vector,vector operation |
+| VS | Supports vector,scalar operation |
 
 ### Integer instructions
 
@@ -137,17 +137,17 @@ The vector registers are allocated as follows:
 |mge |   |   | rd, ra, rb | rd <= rb if ra >= 0 | Conditionally move if greater than or equal to zero |
 |jmp |   |   | ra | pc <= ra | Jump to register address |
 |jsr |   |   | ra | lr <= pc+4, pc <= ra | Jump to register address and link |
-|ori |   |   | rd, ra, i14 | rd <= ra \| signextend(i14) | Bitwise or |
-|nori|   |   | rd, ra, i14 | rd <= ~(ra \| signextend(i14)) | Bitwise nor |
-|andi|   |   | rd, ra, i14 | rd <= ra & signextend(i14) | Bitwise and |
-|xori|   |   | rd, ra, i14 | rd <= ra ^ signextend(i14) | Bitwise exclusive or |
-|addi|   |   | rd, ra, i14 | c:rd <= ra + signextend(i14) | Addition |
-|subi|   |   | rd, ra, i14 | c:rd <= ra - signextend(i14) | Subtraction |
+|ori |   | x | rd, ra, i14 | rd <= ra \| signextend(i14) | Bitwise or |
+|nori|   | x | rd, ra, i14 | rd <= ~(ra \| signextend(i14)) | Bitwise nor |
+|andi|   | x | rd, ra, i14 | rd <= ra & signextend(i14) | Bitwise and |
+|xori|   | x | rd, ra, i14 | rd <= ra ^ signextend(i14) | Bitwise exclusive or |
+|addi|   | x | rd, ra, i14 | c:rd <= ra + signextend(i14) | Addition |
+|subi|   | x | rd, ra, i14 | c:rd <= ra - signextend(i14) | Subtraction |
 |addci|   |   | rd, ra, i14 | c:rd <= ra + signextend(i14) + c | Addition with carry |
 |subci|   |   | rd, ra, i14 | c:rd <= ra - signextend(i14) + c | Subtraction with carry |
-|lsli|   |   | rd, ra, i14 | rd <= ra << signextend(i14) | Logic shift left |
-|asri|   |   | rd, ra, i14 | rd <= ra >> signextend(i14) (signed) | Arithmetic shift right |
-|lsri|   |   | rd, ra, i14 | rd <= ra >> signextend(i14) (unsigned) | Logic shift right |
+|lsli|   | x | rd, ra, i14 | rd <= ra << signextend(i14) | Logic shift left |
+|asri|   | x | rd, ra, i14 | rd <= ra >> signextend(i14) (signed) | Arithmetic shift right |
+|lsri|   | x | rd, ra, i14 | rd <= ra >> signextend(i14) (unsigned) | Logic shift right |
 |ld.b|   |   | rd, ra, i14 | rd <= [ra + signextend(i14)] (byte) | Load unsigned byte |
 |ld.h|   |   | rd, ra, i14 | rd <= [ra + signextend(i14)] (halfword) | Load unsigned halfword |
 |ld.w|   |   | rd, ra, i14 | rd <= [ra + signextend(i14)] (word) | Load word |

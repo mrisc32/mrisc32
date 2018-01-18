@@ -308,6 +308,17 @@ _OPCODES = {
 
         # == B ==
 
+        # V <= V, imm14
+        'vsori':   [0x81000000, _VREG1, _VREG2, _IMM14],
+        'vsnori':  [0x82000000, _VREG1, _VREG2, _IMM14],
+        'vsandi':  [0x83000000, _VREG1, _VREG2, _IMM14],
+        'vsxori':  [0x84000000, _VREG1, _VREG2, _IMM14],
+        'vsaddi':  [0x85000000, _VREG1, _VREG2, _IMM14],
+        'vssubi':  [0x86000000, _VREG1, _VREG2, _IMM14],
+        'vslsli':  [0x89000000, _VREG1, _VREG2, _IMM14],
+        'vsasri':  [0x8a000000, _VREG1, _VREG2, _IMM14],
+        'vslsri':  [0x8b000000, _VREG1, _VREG2, _IMM14],
+
         # Vector load/store from reg with stride.
         'vld.b':  [0x90000000, _VREG1, _REG2, _IMM14],
         'vld.h':  [0x91000000, _VREG1, _REG2, _IMM14],
@@ -327,6 +338,9 @@ _OPCODES = {
 
         # Alias for: vsor _VREG1, vz, _REG3
         'vsmov':  [0x80000001, _VREG1, _REG3],
+
+        # Alias for: vsori _VREG1, vz, _IMM14
+        'vsldi':  [0x81000000, _VREG1, _IMM14],
 
         # Alias for: jmp lr
         'rts':    [0x00e80080],

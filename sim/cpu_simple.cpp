@@ -286,6 +286,7 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       const bool is_stx = ((sclar_instr & 0xff0001fcu) == 0x00000014u);
       const bool is_st = ((sclar_instr & 0xfc000000u) == 0x14000000u);
       const bool is_mem_store = is_stx || is_st;
+      const bool is_mem_op = (is_mem_load || is_mem_store);
 
       // Should we use reg1 as a source?
       const bool reg1_is_src = is_mem_store || is_jmp_jsr;
@@ -308,7 +309,7 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
 
       // Determine ALU operation.
       uint32_t alu_op = ALU_OP_NONE;
-      if (is_subroutine_branch || is_mem_load || is_mem_store) {
+      if (is_subroutine_branch || is_mem_op) {
         alu_op = ALU_OP_ADD;
       } else if (op_class_A && (sclar_instr & 0x000001ffu) <= 0x0000000fu) {
         alu_op = sclar_instr & 0x000001ff;
@@ -349,8 +350,7 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
 
       // Check what type of registers should be used (vector or scalar).
       const bool reg1_is_vector = is_vector_op;
-      const bool reg2_is_vector =
-          ((id_in.instr & 0x80000000u) != 0u) && !(is_mem_store || is_mem_load);
+      const bool reg2_is_vector = ((id_in.instr & 0x80000000u) != 0u) && !is_mem_op;
       const bool reg3_is_vector = ((id_in.instr & 0x40000000u) != 0u);
 
       // Read from the register files.
@@ -364,9 +364,10 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       // Output of the ID step.
       ex_in.carry_in = m_carry;
       ex_in.src_a = reg_a_data;
-      ex_in.src_b =
-          is_subroutine_branch ? 4 : (op_class_B ? (is_vector_op ? vector.addr_offset : imm14)
-                                                 : (op_class_C ? imm19 : reg_b_data));
+      ex_in.src_b = is_subroutine_branch
+                        ? 4
+                        : (op_class_B ? ((is_vector_op && is_mem_op) ? vector.addr_offset : imm14)
+                                      : (op_class_C ? imm19 : reg_b_data));
       ex_in.store_data = reg_c_data;
       ex_in.dst_reg = dst_reg;
       ex_in.dst_idx = vector.idx;
