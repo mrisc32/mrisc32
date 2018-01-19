@@ -48,15 +48,11 @@ Currently there is a simple assembler (written in python) and a CPU simulator (w
 
 ## Vector operarations (SIMD)
 
-* SIMD instructions use a Cray-like vector model:
-  - 32 vector registers, V0-V31, with 32 (TBD) entries in each register.
-  - All vector entries are the same size (32 bits), regardless if they represent bytes, half-words, words or floats.
-  - A Vector Length (VL) register controls the length of the vector operation (1-32 elements), which essentially eliminates the need for complicated main+tail-loop constructs.
-  - The same execution units can be used for both vector operations and scalar operations.
-  - There are vector,vector and vector,scalar versions of most integer and floating point operations.
-  - Vector loads and stores have a stride parameter.
+Vector operations use a Cray-like model, with 32 vector registers (V0-V31), each containing 32 32-bit elements.
 
-See: [VecotDesign.md](doc/VecotDesign.md).
+Vector operations are variable length (1-32 elements), and most integer and floating point instructions can be executed as vector operations. This makes it very easy to convert traditional loop-based software constructs to vector operations.
+
+See: [VectorDesign.md](doc/VectorDesign.md).
 
 
 ## Register model and conventions
@@ -195,7 +191,7 @@ The vector registers are allocated as follows:
 
 ### Planned instructions
 
-* Integer multiplication and division (32-bit operands and 64-bit results).
+* Integer multiplication and division.
 * Control instructions/registers (cache control, interrupt masks, status flags, ...).
 * Load Linked (ll) and Store Conditional (sc) for atomic operations.
 * Single-instruction load of common constants (mostly floating point: PI, sqrt(2), ...).
@@ -211,8 +207,8 @@ The vector registers are allocated as follows:
 | Invert all bits | nor rd,ra,ra |
 | Compare and branch | sub + b[cc] |
 | Return from subroutine | jmp lr |
-| Push to stack | subi sp,sp,N<br>st.w ra,pc,0<br>... |
-| Pop from stack | ld.w rd,pc,0<br>...<br>addi sp,sp,N |
+| Push to stack | subi sp,sp,N<br>st.w ra,sp,0<br>... |
+| Pop from stack | ld.w rd,sp,0<br>...<br>addi sp,sp,N |
 | 64-bit integer addition: c2:c1 = a2:a1 + b2:b1 | add c1,a1,b1<br>add c2,a2,b2<br>sltu carry,c1,a1<br>add c2,c2,carry|
 | Floating point negation | ldhi + xor |
 | Floating point absolute value | ldhi + nor + and |
