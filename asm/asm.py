@@ -172,10 +172,10 @@ _OPCODES = {
         # Conditional moves.
         'meq':    [0x00000020, _REG1, _REG2, _REG3],
         'mne':    [0x00000021, _REG1, _REG2, _REG3],
-        'mlt':    [0x00000022, _REG1, _REG2, _REG3],
-        'mle':    [0x00000023, _REG1, _REG2, _REG3],
-        'mgt':    [0x00000024, _REG1, _REG2, _REG3],
-        'mge':    [0x00000025, _REG1, _REG2, _REG3],
+        'mge':    [0x00000022, _REG1, _REG2, _REG3],
+        'mgt':    [0x00000023, _REG1, _REG2, _REG3],
+        'mle':    [0x00000024, _REG1, _REG2, _REG3],
+        'mlt':    [0x00000025, _REG1, _REG2, _REG3],
 
         # Integer mul/div.
         'mul':    [0x00000030, _REG1, _REG2, _REG3],
