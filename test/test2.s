@@ -46,7 +46,7 @@ abs_diff_vectors:
 
   vld.w   v9, r2, 4
   vld.w   v10, r3, 4
-  vvfsub  v9, v9, v10   ; a - b
+  vvfsub  v9, v10, v9   ; a - b
   vsand   v9, v9, r10   ; Clear the sign bit
   vst.w   v9, r1, 4
 
@@ -78,7 +78,7 @@ abs_diff_vectors_scalar:
 .loop:
   ldx.w   r9, r2, r11
   ldx.w   r10, r3, r11
-  fsub    r9, r9, r10   ; a - b
+  fsub    r9, r10, r9   ; a - b
   and     r9, r9, r12   ; Clear the sign bit
   stx.w   r9, r1, r11
 

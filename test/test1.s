@@ -63,7 +63,7 @@ test_1:
 
 .loop:
   add    r9, r9, r10
-  subi   r10, r10, 1
+  addi   r10, r10, -1
   bne    r10, .loop
 
   ldi    r1, 0
@@ -74,7 +74,7 @@ test_1:
 ; Sum elements in a data array.
 
 test_2:
-  subi   sp, sp, 12
+  addi   sp, sp, -12
   st.w   lr, sp, 0
   st.w   r16, sp, 4
   st.w   r17, sp, 8
@@ -94,8 +94,8 @@ test_2:
   ldi    r9, 0
   ldhi   r10, 0x5f778
   ori    r10, r10, 0x42 ; r10 = 0xbeef0042
-  sub    r10, r16, r10
-  meq    r1, r10, r9   ; return (r16 == 0xbeef0042) ? 0 : 1
+  sub    r10, r10, r16  ; r10 = r16 - r10
+  meq    r1, r10, r9    ; return (r16 == 0xbeef0042) ? 0 : 1
 
   ld.w   lr, sp, 0
   ld.w   r16, sp, 4
@@ -113,7 +113,7 @@ test_2:
 ; Call a subroutine that prints hello world.
 
 test_3:
-  subi   sp, sp, 4
+  addi   sp, sp, -4
   st.w   lr, sp, 0
 
   lea    r1, .hello_world
@@ -134,7 +134,7 @@ test_3:
 ; 64-bit arithmetic.
 
 test_4:
-  subi   sp, sp, 8
+  addi   sp, sp, -8
   st.w   lr, sp, 0
   st.w   r16, sp, 4
 
@@ -175,7 +175,7 @@ test_4:
 ; Floating point arithmetic.
 
 test_5:
-  subi   sp, sp, 8
+  addi   sp, sp, -8
   st.w   lr, sp, 0
   st.w   r16, sp, 4
 
@@ -191,7 +191,7 @@ test_5:
 
   ; Was the result 2 * PI?
   ldpc.w r9, .twopi
-  fsub   r9, r16, r9  ; r9 = (2 * PI) - .twopi
+  fsub   r9, r9, r16  ; r9 = (2 * PI) - .twopi
 
   ld.w   lr, sp, 0
   ld.w   r16, sp, 4
@@ -217,7 +217,7 @@ test_5:
 ; Vector operations.
 
 test_6:
-  subi   sp, sp, 20
+  addi   sp, sp, -20
   st.w   lr, sp, 0
   st.w   vl, sp, 4
   st.w   r16, sp, 8
@@ -241,7 +241,7 @@ test_6:
   vvadd  v9, v9, v10
 
   ; Subtract a scalar from v9
-  vssubi v9, v9, 8
+  vsaddi v9, v9, -8
 
   ; Store the result to memory
   vst.w  v9, r16, 4

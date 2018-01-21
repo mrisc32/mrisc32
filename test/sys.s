@@ -26,7 +26,7 @@ _putc:
 ; puts(char* s)
 ; -----------------------------------------------------------------------------
 _puts:
-  subi   sp, sp, 12
+  addi   sp, sp, -12
   st.w   lr, sp, 0
   st.w   r16, sp, 4
   st.w   r17, sp, 8
@@ -57,7 +57,7 @@ _puts:
 ; printhex(unsigned x)
 ; -----------------------------------------------------------------------------
 _printhex:
-  subi   sp, sp, 16
+  addi   sp, sp, -16
   st.w   lr, sp, 0
   st.w   r16, sp, 4
   st.w   r17, sp, 8
@@ -72,7 +72,7 @@ _printhex:
   lsr    r9, r17, r9  ; r9 = x >> (r18 * 4)
   andi   r9, r9, 15   ; r9 = (x >> (r18 * 4)) & 15
   ldx.b  r1, r16, r9  ; r1 = hex_chars[(x >> (r18 * 4)) & 15]
-  subi   r18, r18, 1
+  addi   r18, r18, -1
   bsr    _putc
   bge    r18, .loop
 

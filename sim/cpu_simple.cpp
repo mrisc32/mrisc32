@@ -410,7 +410,7 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
           ex_result = add32(ex_in.src_a, ex_in.src_b);
           break;
         case ALU_OP_SUB:
-          ex_result = add32(ex_in.src_a, (~ex_in.src_b) + 1u);
+          ex_result = add32((~ex_in.src_a) + 1u, ex_in.src_b);
           break;
         case ALU_OP_SLT:
           ex_result =

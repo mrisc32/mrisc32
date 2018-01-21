@@ -109,7 +109,7 @@ The vector registers are allocated as follows:
 |and| x | x | rd, ra, rb | rd <= ra & rb | Bitwise and |
 |xor| x | x | rd, ra, rb | rd <= ra ^ rb | Bitwise exclusive or |
 |add| x | x | rd, ra, rb | rd <= ra + rb | Addition |
-|sub| x | x | rd, ra, rb | rd <= ra - rb | Subtraction |
+|sub| x | x | rd, ra, rb | rd <= rb - ra | Subtraction (note: argument order) |
 |slt| x | x | rd, ra, rb | rd <= (ra < rb) ? 1 : 0 | Set if less than (signed) |
 |sltu| x | x | rd, ra, rb | rd <= (ra < rb) ? 1 : 0 | Set if less than (unsigned) |
 |lsl| x | x | rd, ra, rb | rd <= ra << rb | Logic shift left |
@@ -139,8 +139,8 @@ The vector registers are allocated as follows:
 |nori|   | x | rd, ra, i14 | rd <= ~(ra \| signextend(i14)) | Bitwise nor |
 |andi|   | x | rd, ra, i14 | rd <= ra & signextend(i14) | Bitwise and |
 |xori|   | x | rd, ra, i14 | rd <= ra ^ signextend(i14) | Bitwise exclusive or |
-|addi|   | x | rd, ra, i14 | c:rd <= ra + signextend(i14) | Addition |
-|subi|   | x | rd, ra, i14 | c:rd <= ra - signextend(i14) | Subtraction |
+|addi|   | x | rd, ra, i14 | rd <= ra + signextend(i14) | Addition |
+|subi|   | x | rd, ra, i14 | rd <= signextend(i14) - ra | Subtraction (note: argument order) |
 |slti|   | x | rd, ra, i14 | rd <= (ra < signextend(i14)) ? 1 : 0 | Set if less than (signed) |
 |sltui|   | x | rd, ra, i14 | rd <= (ra < signextend(i14)) ? 1 : 0 | Set if less than (unsigned) |
 |lsli|   | x | rd, ra, i14 | rd <= ra << signextend(i14) | Logic shift left |
@@ -172,7 +172,7 @@ The vector registers are allocated as follows:
 |itof| x |   | rd, ra | rd <= (float)ra | Cast integer to float |
 |ftoi| x |   | rd, ra | rd <= (int)ra | Cast float to integer |
 |fadd| x | x | rd, ra, rb | rd <= ra + rb | Floating point addition |
-|fsub| x | x | rd, ra, rb | rd <= ra - rb | Floating point difference |
+|fsub| x | x | rd, ra, rb | rd <= rb - ra | Floating point subtraction (note: argument order) |
 |fmul| x | x | rd, ra, rb | rd <= ra * rb | Floating point multiplication |
 |fdiv| x | x | rd, ra, rb | rd <= ra / rb | Floating point division |
 
@@ -203,11 +203,12 @@ The vector registers are allocated as follows:
 |---|---|
 | Load 32-bit immediate | ldhi + ori |
 | Move register | or rd,ra,z |
-| Negate value | sub rd,z,ra |
+| Negate value | sub rd,ra,z |
+| Subtract immediate from register | addi rd,ra,-i14 |
 | Invert all bits | nor rd,ra,ra |
 | Compare and branch | sub + b[cc] |
 | Return from subroutine | jmp lr |
-| Push to stack | subi sp,sp,N<br>st.w ra,sp,0<br>... |
+| Push to stack | addi sp,sp,-N<br>st.w ra,sp,0<br>... |
 | Pop from stack | ld.w rd,sp,0<br>...<br>addi sp,sp,N |
 | 64-bit integer addition: c2:c1 = a2:a1 + b2:b1 | add c1,a1,b1<br>add c2,a2,b2<br>sltu carry,c1,a1<br>add c2,c2,carry|
 | Floating point negation | ldhi + xor |
