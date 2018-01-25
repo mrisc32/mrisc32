@@ -31,7 +31,7 @@ abs_diff_vectors:
   ; r4 = n
 
   addi    sp, sp, -4
-  st.w    vl, sp, 0
+  stw     vl, sp, 0
 
   addi    r4, r4, -1
   ldi     vl, 31
@@ -44,11 +44,11 @@ abs_diff_vectors:
   addi    r9, r4, -32
   mlt     vl, r9, r4    ; vl = min(32, number of elements left) - 1
 
-  vld.w   v9, r2, 4
-  vld.w   v10, r3, 4
+  vldw    v9, r2, 4
+  vldw    v10, r3, 4
   vvfsub  v9, v10, v9   ; a - b
   vsand   v9, v9, r10   ; Clear the sign bit
-  vst.w   v9, r1, 4
+  vstw    v9, r1, 4
 
   ori     r4, r9, 0
   addi    r1, r1, 128
@@ -57,7 +57,7 @@ abs_diff_vectors:
   bge     r4, .loop
 
 .done:
-  ld.w    vl, sp, 0
+  ldw     vl, sp, 0
   addi    sp, sp, 4
   jmp     lr
 
@@ -76,11 +76,11 @@ abs_diff_vectors_scalar:
 
   ldi     r11, 0
 .loop:
-  ldx.w   r9, r2, r11
-  ldx.w   r10, r3, r11
+  ldxw    r9, r2, r11
+  ldxw    r10, r3, r11
   fsub    r9, r10, r9   ; a - b
   and     r9, r9, r12   ; Clear the sign bit
-  stx.w   r9, r1, r11
+  stxw    r9, r1, r11
 
   addi    r4, r4, -1
   addi    r11, r11, 4

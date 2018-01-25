@@ -75,15 +75,15 @@ test_1:
 
 test_2:
   addi   sp, sp, -12
-  st.w   lr, sp, 0
-  st.w   r16, sp, 4
-  st.w   r17, sp, 8
+  stw    lr, sp, 0
+  stw    r16, sp, 4
+  stw    r17, sp, 8
 
   lea    r16, .data
-  ld.w   r1, r16, 0     ; r1 = data[0]
-  ld.w   r17, r16, 4
+  ldw    r1, r16, 0     ; r1 = data[0]
+  ldw    r17, r16, 4
   add    r1, r1, r17    ; r1 += data[1]
-  ld.w   r17, r16, 8
+  ldw    r17, r16, 8
   add    r1, r1, r17    ; r1 += data[2]
   mov    r16, r1        ; Save the result for the comparison later
   bl     _printhex
@@ -97,9 +97,9 @@ test_2:
   sub    r10, r10, r16  ; r10 = r16 - r10
   meq    r1, r10, r9    ; return (r16 == 0xbeef0042) ? 0 : 1
 
-  ld.w   lr, sp, 0
-  ld.w   r16, sp, 4
-  ld.w   r17, sp, 8
+  ldw    lr, sp, 0
+  ldw    r16, sp, 4
+  ldw    r17, sp, 8
   addi   sp, sp, 12
 
   rts
@@ -114,12 +114,12 @@ test_2:
 
 test_3:
   addi   sp, sp, -4
-  st.w   lr, sp, 0
+  stw    lr, sp, 0
 
   lea    r1, .hello_world
   bl     _puts
 
-  ld.w   lr, sp, 0
+  ldw    lr, sp, 0
   addi   sp, sp, 4
   ldi    r1, 0
   rts
@@ -135,16 +135,16 @@ test_3:
 
 test_4:
   addi   sp, sp, -8
-  st.w   lr, sp, 0
-  st.w   r16, sp, 4
+  stw    lr, sp, 0
+  stw    r16, sp, 4
 
   ; Load two 64-bit numbers into r11:r10 and r13:r12
   lea    r9, .dword1
-  ld.w   r10, r9, 0  ; r10 = low bits
-  ld.w   r11, r9, 4  ; r11 = high bits
+  ldw    r10, r9, 0  ; r10 = low bits
+  ldw    r11, r9, 4  ; r11 = high bits
   lea    r9, .dword2
-  ld.w   r12, r9, 0  ; r12 = low bits
-  ld.w   r13, r9, 4  ; r13 = high bits
+  ldw    r12, r9, 0  ; r12 = low bits
+  ldw    r13, r9, 4  ; r13 = high bits
 
   ; Add the numbers into r1:r16
   add    r16, r10, r12  ; r16 = low bits
@@ -158,8 +158,8 @@ test_4:
   ldi    r1, 10
   bl     _putc
 
-  ld.w   lr, sp, 0
-  ld.w   r16, sp, 4
+  ldw    lr, sp, 0
+  ldw    r16, sp, 4
   addi   sp, sp, 8
 
   ldi    r1, 0
@@ -176,12 +176,12 @@ test_4:
 
 test_5:
   addi   sp, sp, -8
-  st.w   lr, sp, 0
-  st.w   r16, sp, 4
+  stw    lr, sp, 0
+  stw    r16, sp, 4
 
   ; Calculate 2 * PI
-  ldpc.w r9, .pi
-  ldpc.w r10, .two
+  ldpcw  r9, .pi
+  ldpcw  r10, .two
   fmul   r16, r9, r10  ; r16 = 2 * PI
 
   mov    r1, r16
@@ -190,11 +190,11 @@ test_5:
   bl     _putc
 
   ; Was the result 2 * PI?
-  ldpc.w r9, .twopi
+  ldpcw  r9, .twopi
   fsub   r9, r9, r16  ; r9 = (2 * PI) - .twopi
 
-  ld.w   lr, sp, 0
-  ld.w   r16, sp, 4
+  ldw    lr, sp, 0
+  ldw    r16, sp, 4
   addi   sp, sp, 8
 
   ldi    r1, 1
@@ -218,11 +218,11 @@ test_5:
 
 test_6:
   addi   sp, sp, -20
-  st.w   lr, sp, 0
-  st.w   vl, sp, 4
-  st.w   r16, sp, 8
-  st.w   r17, sp, 12
-  st.w   r18, sp, 16
+  stw    lr, sp, 0
+  stw    vl, sp, 4
+  stw    r16, sp, 8
+  stw    r17, sp, 12
+  stw    r18, sp, 16
 
   ; Prepare scalars
   lea    r9, .in
@@ -232,7 +232,7 @@ test_6:
   ldi    vl, 31  ; vl = len - 1 = 31
 
   ; Load v9 from memory
-  vld.w  v9, r9, 4
+  vldw   v9, r9, 4
 
   ; Initialize v10 to a constant value
   vsldi  v10, 0x1234
@@ -244,13 +244,13 @@ test_6:
   vsaddi v9, v9, -8
 
   ; Store the result to memory
-  vst.w  v9, r16, 4
+  vstw   v9, r16, 4
 
   ; Print the result
   ldi    r17, 0
 .print:
   lsli   r9, r17, 2
-  ldx.w  r1, r16, r9
+  ldxw   r1, r16, r9
   bl     _printhex
   ldi    r1, 0x2c
   ldi    r9, 10
@@ -260,11 +260,11 @@ test_6:
   bl     _putc
   bne    r18, .print
 
-  ld.w   lr, sp, 0
-  ld.w   vl, sp, 4
-  ld.w   r16, sp, 8
-  ld.w   r17, sp, 12
-  ld.w   r18, sp, 16
+  ldw    lr, sp, 0
+  ldw    vl, sp, 4
+  ldw    r16, sp, 8
+  ldw    r17, sp, 12
+  ldw    r18, sp, 16
   addi   sp, sp, 20
 
   ldi    r1, 0

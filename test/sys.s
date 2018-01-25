@@ -27,14 +27,14 @@ _putc:
 ; -----------------------------------------------------------------------------
 _puts:
   addi   sp, sp, -12
-  st.w   lr, sp, 0
-  st.w   r16, sp, 4
-  st.w   r17, sp, 8
+  stw    lr, sp, 0
+  stw    r16, sp, 4
+  stw    r17, sp, 8
 
   mov    r16, r1
   ldi    r17, 0
 .loop:
-  ldx.b  r1, r16, r17
+  ldxb   r1, r16, r17
   andi   r1, r1, 255
   addi   r17, r17, 1
   beq    r1, .eos
@@ -45,9 +45,9 @@ _puts:
   ldi    r1, 10
   bl     _putc
 
-  ld.w   lr, sp, 0
-  ld.w   r16, sp, 4
-  ld.w   r17, sp, 8
+  ldw    lr, sp, 0
+  ldw    r16, sp, 4
+  ldw    r17, sp, 8
   addi   sp, sp, 12
   ldi    r1, 1        ; Return a non-negative number
   rts
@@ -58,10 +58,10 @@ _puts:
 ; -----------------------------------------------------------------------------
 _printhex:
   addi   sp, sp, -16
-  st.w   lr, sp, 0
-  st.w   r16, sp, 4
-  st.w   r17, sp, 8
-  st.w   r18, sp, 12
+  stw    lr, sp, 0
+  stw    r16, sp, 4
+  stw    r17, sp, 8
+  stw    r18, sp, 12
 
   lea    r16, .hex_chars
   mov    r17, r1
@@ -71,15 +71,15 @@ _printhex:
   add    r9, r9, r9   ; r9 = r18 * 4
   lsr    r9, r17, r9  ; r9 = x >> (r18 * 4)
   andi   r9, r9, 15   ; r9 = (x >> (r18 * 4)) & 15
-  ldx.b  r1, r16, r9  ; r1 = hex_chars[(x >> (r18 * 4)) & 15]
+  ldxb   r1, r16, r9  ; r1 = hex_chars[(x >> (r18 * 4)) & 15]
   addi   r18, r18, -1
   bl     _putc
   bge    r18, .loop
 
-  ld.w   lr, sp, 0
-  ld.w   r16, sp, 4
-  ld.w   r17, sp, 8
-  ld.w   r18, sp, 12
+  ldw    lr, sp, 0
+  ldw    r16, sp, 4
+  ldw    r17, sp, 8
+  ldw    r18, sp, 12
   addi   sp, sp, 16
   rts
 

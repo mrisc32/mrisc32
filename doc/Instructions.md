@@ -31,16 +31,16 @@
 |LSR| x | x | rd, ra, rb | rd <= ra >> rb (unsigned) | Logic shift right |
 |CLZ| x |   | rd, ra | rd <= clz(ra) | Count leading zeros |
 |REV| x |   | rd, ra | rd <= rev(ra) | Reverse bit order |
-|EXT.B| x |   | rd, ra | rd <= signextend(ra[7:0]) | Sign-extend byte to word |
-|EXT.H| x |   | rd, ra | rd <= signextend(ra[15:0]) | Sign-extend halfword to word |
-|LDX.B|   |   | rd, ra, rb | rd <= [ra + rb] (byte) | Load signed byte, indexed |
-|LDXU.B|   |   | rd, ra, rb | rd <= [ra + rb] (byte) | Load unsigned byte, indexed |
-|LDX.H|   |   | rd, ra, rb | rd <= [ra + rb] (halfword) | Load signed halfword, indexed |
-|LDXU.H|   |   | rd, ra, rb | rd <= [ra + rb] (halfword) | Load unsigned halfword, indexed |
-|LDX.W|   |   | rd, ra, rb | rd <= [ra + rb] (word) | Load word, indexed |
-|STX.B|   |   | rc, ra, rb | [ra + rb] <= rc (byte) | Store byte, indexed |
-|STX.H|   |   | rc, ra, rb | [ra + rb] <= rc (halfword) | Store halfowrd, indexed |
-|STX.W|   |   | rc, ra, rb | [ra + rb] <= rc (word) | Store word, indexed |
+|EXTB| x |   | rd, ra | rd <= signextend(ra[7:0]) | Sign-extend byte to word |
+|EXTH| x |   | rd, ra | rd <= signextend(ra[15:0]) | Sign-extend halfword to word |
+|LDXB|   |   | rd, ra, rb | rd <= [ra + rb] (byte) | Load signed byte, indexed |
+|LDXUB|   |   | rd, ra, rb | rd <= [ra + rb] (byte) | Load unsigned byte, indexed |
+|LDXH|   |   | rd, ra, rb | rd <= [ra + rb] (halfword) | Load signed halfword, indexed |
+|LDXUH|   |   | rd, ra, rb | rd <= [ra + rb] (halfword) | Load unsigned halfword, indexed |
+|LDXW|   |   | rd, ra, rb | rd <= [ra + rb] (word) | Load word, indexed |
+|STXB|   |   | rc, ra, rb | [ra + rb] <= rc (byte) | Store byte, indexed |
+|STXH|   |   | rc, ra, rb | [ra + rb] <= rc (halfword) | Store halfowrd, indexed |
+|STXW|   |   | rc, ra, rb | [ra + rb] <= rc (word) | Store word, indexed |
 |MEQ|   |   | rd, ra, rb | rd <= rb if ra == 0 | Conditionally move if equal to zero |
 |MNE|   |   | rd, ra, rb | rd <= rb if ra != 0 | Conditionally move if not equal to zero |
 |MLT|   |   | rd, ra, rb | rd <= rb if ra < 0 | Conditionally move if less than zero |
@@ -60,14 +60,14 @@
 |LSLI|   | x | rd, ra, i14 | rd <= ra << signextend(i14) | Logic shift left |
 |ASRI|   | x | rd, ra, i14 | rd <= ra >> signextend(i14) (signed) | Arithmetic shift right |
 |LSRI|   | x | rd, ra, i14 | rd <= ra >> signextend(i14) (unsigned) | Logic shift right |
-|LD.B|   |   | rd, ra, i14 | rd <= [ra + signextend(i14)] (byte) | Load signed byte |
-|LDU.B|   |   | rd, ra, i14 | rd <= [ra + signextend(i14)] (byte) | Load unsigned byte |
-|LD.H|   |   | rd, ra, i14 | rd <= [ra + signextend(i14)] (halfword) | Load signed halfword |
-|LDU.H|   |   | rd, ra, i14 | rd <= [ra + signextend(i14)] (halfword) | Load unsigned halfword |
-|LD.W|   |   | rd, ra, i14 | rd <= [ra + signextend(i14)] (word) | Load word |
-|ST.B|   |   | rc, ra, i14 | [ra + signextend(i14)] <= rc (byte) | Store byte |
-|ST.H|   |   | rc, ra, i14 | [ra + signextend(i14)] <= rc (halfword) | Store halfowrd |
-|ST.W|   |   | rc, ra, i14 | [ra + signextend(i14)] <= rc (word) | Store word |
+|LDB|   |   | rd, ra, i14 | rd <= [ra + signextend(i14)] (byte) | Load signed byte |
+|LDUB|   |   | rd, ra, i14 | rd <= [ra + signextend(i14)] (byte) | Load unsigned byte |
+|LDH|   |   | rd, ra, i14 | rd <= [ra + signextend(i14)] (halfword) | Load signed halfword |
+|LDUH|   |   | rd, ra, i14 | rd <= [ra + signextend(i14)] (halfword) | Load unsigned halfword |
+|LDW|   |   | rd, ra, i14 | rd <= [ra + signextend(i14)] (word) | Load word |
+|STB|   |   | rc, ra, i14 | [ra + signextend(i14)] <= rc (byte) | Store byte |
+|STH|   |   | rc, ra, i14 | [ra + signextend(i14)] <= rc (halfword) | Store halfowrd |
+|STW|   |   | rc, ra, i14 | [ra + signextend(i14)] <= rc (word) | Store word |
 |BEQ|   |   | ra, i19 | pc <= pc+signextend(i19)*4 if ra == 0 | Conditionally branch if equal to zero |
 |BNE|   |   | ra, i19 | pc <= pc+signextend(i19)*4 if ra != 0 | Conditionally branch if not equal to zero |
 |BGE|   |   | ra, i19 | pc <= pc+signextend(i19)*4 if ra >= 0 | Conditionally branch if greater than or equal to zero |
@@ -106,14 +106,14 @@ Additionally, there are eight special vector load and store operations:
 
 | Mnemonic | Operands | Operation | Description |
 |---|---|---|---|
-|VLD.B| rd, ra, i14 | rd[k] <= [ra + k * signextend(i14)] (byte) | Load signed bytes with stride |
-|VLDU.B| rd, ra, i14 | rd[k] <= [ra + k * signextend(i14)] (byte) | Load unsigned bytes with stride |
-|VLD.H| rd, ra, i14 | rd[k] <= [ra + k * signextend(i14)] (halfword) | Load signed halfwords with stride |
-|VLDU.H| rd, ra, i14 | rd[k] <= [ra + k * signextend(i14)] (halfword) | Load unsigned halfwords with stride |
-|VLD.W| rd, ra, i14 | rd[k] <= [ra + k * signextend(i14)] (word) | Load words with stride |
-|VST.B| rc, ra, i14 | [ra + k * signextend(i14)] <= rc[k] (byte) | Store bytes with stride |
-|VST.H| rc, ra, i14 | [ra + k * signextend(i14)] <= rc[k] (halfword) | Store halfowrds with stride |
-|VST.W| rc, ra, i14 | [ra + k * signextend(i14)] <= rc[k] (word) | Store words with stride |
+|VLDB| rd, ra, i14 | rd[k] <= [ra + k * signextend(i14)] (byte) | Load signed bytes with stride |
+|VLDUB| rd, ra, i14 | rd[k] <= [ra + k * signextend(i14)] (byte) | Load unsigned bytes with stride |
+|VLDH| rd, ra, i14 | rd[k] <= [ra + k * signextend(i14)] (halfword) | Load signed halfwords with stride |
+|VLDUH| rd, ra, i14 | rd[k] <= [ra + k * signextend(i14)] (halfword) | Load unsigned halfwords with stride |
+|VLDW| rd, ra, i14 | rd[k] <= [ra + k * signextend(i14)] (word) | Load words with stride |
+|VSTB| rc, ra, i14 | [ra + k * signextend(i14)] <= rc[k] (byte) | Store bytes with stride |
+|VSTH| rc, ra, i14 | [ra + k * signextend(i14)] <= rc[k] (halfword) | Store halfowrds with stride |
+|VSTW| rc, ra, i14 | [ra + k * signextend(i14)] <= rc[k] (word) | Store words with stride |
 
 ## Planned instructions
 
