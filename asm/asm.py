@@ -26,10 +26,9 @@ import sys
 
 
 # Instruction formats:
-#
-# A: |op8    |ra5 |rb5 |rc5 |op9     |
-# B: |op8    |ra5 |rb5 |imm14        |
-# C: |op8    |ra5 |imm19             |
+# A: |v|0    |ra5 |rb5 |rc5 |op9     |
+# B: |v|op6  |ra5 |rb5 |imm14        |
+# C: |v|op6  |ra5 |imm19             |
 
 # Supported operand types.
 _REG1 = 1

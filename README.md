@@ -56,6 +56,7 @@ Vector operations are variable length (1-32 elements), and most integer and floa
 # Documentation
 
 * [Registers](doc/Registers.md).
+* [Instruction encoding](doc/InstructionEncoding.md).
 * [Instructions](doc/Instructions.md).
 * [Vector design](doc/VectorDesign.md).
 * [Common constructs](doc/CommonConstructs.md).
