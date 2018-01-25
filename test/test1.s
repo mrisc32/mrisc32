@@ -3,50 +3,50 @@
 main:
   ldi    r16, 0         ; r16 is the return code (0 = success, 1 = fail)
 
-  bsr    test_1
+  bl     test_1
   or     r16, r16, r1
   beq    r1, .test1_passed
-  bsr    .test_failed
+  bl     .test_failed
 .test1_passed:
 
-  bsr    test_2
+  bl     test_2
   or     r16, r16, r1
   beq    r1, .test2_passed
-  bsr    .test_failed
+  bl     .test_failed
 .test2_passed:
 
-  bsr    test_3
+  bl     test_3
   or     r16, r16, r1
   beq    r1, .test3_passed
-  bsr    .test_failed
+  bl     .test_failed
 .test3_passed:
 
-  bsr    test_4
+  bl     test_4
   or     r16, r16, r1
   beq    r1, .test4_passed
-  bsr    .test_failed
+  bl     .test_failed
 .test4_passed:
 
-  bsr    test_5
+  bl     test_5
   or     r16, r16, r1
   beq    r1, .test5_passed
-  bsr    .test_failed
+  bl     .test_failed
 .test5_passed:
 
-  bsr    test_6
+  bl     test_6
   or     r16, r16, r1
   beq    r1, .test6_passed
-  bsr    .test_failed
+  bl     .test_failed
 .test6_passed:
 
   ; exit(r16)
   mov    r1, r16
-  bra    _exit
+  b      _exit
 
 
 .test_failed:
   lea    r1, .fail_msg
-  bra    _puts
+  b      _puts
 
 
 .fail_msg:
@@ -86,9 +86,9 @@ test_2:
   ld.w   r17, r16, 8
   add    r1, r1, r17    ; r1 += data[2]
   mov    r16, r1        ; Save the result for the comparison later
-  bsr    _printhex
+  bl     _printhex
   ldi    r1, 10
-  bsr    _putc
+  bl     _putc
 
   ldi    r1, 1
   ldi    r9, 0
@@ -117,7 +117,7 @@ test_3:
   st.w   lr, sp, 0
 
   lea    r1, .hello_world
-  bsr    _puts
+  bl     _puts
 
   ld.w   lr, sp, 0
   addi   sp, sp, 4
@@ -152,11 +152,11 @@ test_4:
   sltu   r14, r16, r10  ; r14 = carry (0 or 1)
   add    r1, r1, r14    ; Add carry to the high word
 
-  bsr    _printhex      ; Print high word
+  bl     _printhex      ; Print high word
   mov    r1, r16
-  bsr    _printhex      ; Print low word
+  bl     _printhex      ; Print low word
   ldi    r1, 10
-  bsr    _putc
+  bl     _putc
 
   ld.w   lr, sp, 0
   ld.w   r16, sp, 4
@@ -185,9 +185,9 @@ test_5:
   fmul   r16, r9, r10  ; r16 = 2 * PI
 
   mov    r1, r16
-  bsr    _printhex
+  bl     _printhex
   ldi    r1, 10
-  bsr    _putc
+  bl     _putc
 
   ; Was the result 2 * PI?
   ldpc.w r9, .twopi
@@ -251,13 +251,13 @@ test_6:
 .print:
   lsli   r9, r17, 2
   ldx.w  r1, r16, r9
-  bsr    _printhex
+  bl     _printhex
   ldi    r1, 0x2c
   ldi    r9, 10
   addi   r18, r17, -31
   addi   r17, r17, 1
   meq    r1, r18, r9    ; Print comma or newline depending on if this is the last element
-  bsr    _putc
+  bl     _putc
   bne    r18, .print
 
   ld.w   lr, sp, 0

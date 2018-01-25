@@ -9,11 +9,11 @@ main:
   add     r2, r1, r9
   add     r3, r2, r9
 
-  bsr     abs_diff_vectors
-  ;bsr     abs_diff_vectors_scalar
+  bl      abs_diff_vectors
+  ;bl      abs_diff_vectors_scalar
 
   ldi     r1, 0
-  bra     _exit
+  b       _exit
 
 
 ;-------------------------------------------------------------------------------

@@ -184,10 +184,9 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       const bool is_vector_op = ((id_in.instr & 0xc0000000u) != 0u);
 
       // Detect encoding class (A, B, C or D).
-      const bool op_class_A = ((sclar_instr & 0xff000000u) == 0x00000000u);
-      const bool op_class_B = ((sclar_instr & 0xf0000000u) < 0x20000000u) && !op_class_A;
-      const bool op_class_C = ((sclar_instr & 0xf0000000u) == 0x20000000u);
-      const bool op_class_D = ((sclar_instr & 0xf0000000u) >= 0x30000000u);
+      const bool op_class_A = ((sclar_instr & 0x3f000000u) == 0x00000000u);
+      const bool op_class_B = ((sclar_instr & 0x30000000u) < 0x20000000u) && !op_class_A;
+      const bool op_class_C = ((sclar_instr & 0x20000000u) == 0x20000000u);
 
       // Extract parts of the instruction.
       // NOTE: These may or may not be valid, depending on the instruction type.
@@ -198,8 +197,6 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
           (sclar_instr & 0x00003fffu) | ((sclar_instr & 0x00002000u) ? 0xffffc000u : 0u);
       const uint32_t imm19 =
           (sclar_instr & 0x0007ffffu) | ((sclar_instr & 0x00040000u) ? 0xfff80000u : 0u);
-      const uint32_t imm24 =
-          (sclar_instr & 0x00ffffffu) | ((sclar_instr & 0x00800000u) ? 0xff000000u : 0u);
 
       // == VECTOR STATE HANDLING ==
 
@@ -222,12 +219,12 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
 
       // == BRANCH & CONDITIONAL MOVES ==
 
-      const bool is_bcc = ((sclar_instr & 0xf8000000u) == 0x20000000u);
+      const bool is_bcc = ((sclar_instr & 0xf0000000u) == 0x20000000u);
+      const bool is_bcc_and_link = ((sclar_instr & 0xf8000000u) == 0x28000000u);
       const bool is_jmp_jsr = ((sclar_instr & 0xff0001f0u) == 0x00000080u);
-      const bool is_bra_bsr = ((sclar_instr & 0xf8000000u) == 0x30000000u);
-      const bool is_branch = is_bcc || is_jmp_jsr || is_bra_bsr;
+      const bool is_branch = is_bcc || is_jmp_jsr;
       const bool is_subroutine_branch = ((sclar_instr & 0xff0001ffu) == 0x00000081u) ||  // jsr
-                                        ((sclar_instr & 0xff000000u) == 0x31000000u);    // bsr
+                                        is_bcc_and_link;
 
       const bool is_cond_move = ((sclar_instr & 0xff0001f0u) == 0x00000020u);
 
@@ -240,27 +237,27 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       const uint32_t branch_cond_value = m_regs[branch_cond_reg];
 
       // Evaluate condition (for b[cc] and m[cc]).
-      const uint32_t condition = is_cond_move ? (sclar_instr & 0x000001ffu) : (sclar_instr >> 24u);
+      const uint32_t condition = (is_cond_move ? sclar_instr : (sclar_instr >> 24u)) & 0x00000027u;
       bool condition_satisfied = false;
       switch (condition) {
-        case 0x20u:  // beq/meq
+        case 0x20u:  // beq/bleq/meq
           condition_satisfied = (branch_cond_value == 0u);
           break;
-        case 0x21u:  // bne/mne
+        case 0x21u:  // bne/blne/mne
           condition_satisfied = (branch_cond_value != 0u);
           break;
-        case 0x22u:  // bge/mge
+        case 0x22u:  // bge/blge/mge
           condition_satisfied = ((branch_cond_value & 0x80000000u) == 0u);
           break;
-        case 0x23u:  // bgt/mgt
+        case 0x23u:  // bgt/blgt/mgt
           condition_satisfied =
               ((branch_cond_value & 0x80000000u) == 0u) && (branch_cond_value != 0u);
           break;
-        case 0x24u:  // ble/mle
+        case 0x24u:  // ble/blle/mle
           condition_satisfied =
               ((branch_cond_value & 0x80000000u) != 0u) || (branch_cond_value == 0u);
           break;
-        case 0x25u:  // blt/mlt
+        case 0x25u:  // blt/bllt/mlt
           condition_satisfied = ((branch_cond_value & 0x80000000u) != 0u);
           break;
       }
@@ -268,16 +265,10 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       bool branch_taken = false;
       uint32_t branch_target = 0u;
 
-      // b[cc]?
+      // b[cc]/bl[cc]?
       if (is_bcc) {
         branch_taken = condition_satisfied;
         branch_target = id_in.pc + (imm19 << 2u);
-      }
-
-      // bra/bsr?
-      if (is_bra_bsr) {
-        branch_taken = true;
-        branch_target = id_in.pc + (imm24 << 2u);
       }
 
       // jmp/jsr?
@@ -316,7 +307,8 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       const uint32_t src_reg_a = is_subroutine_branch ? REG_PC : (reg2_is_src ? reg2 : REG_Z);
       const uint32_t src_reg_b = reg3_is_src ? reg3 : REG_Z;
       const uint32_t src_reg_c = is_mem_store ? reg1 : REG_Z;
-      const uint32_t dst_reg = is_subroutine_branch ? REG_LR : (reg1_is_dst ? reg1 : REG_Z);
+      const uint32_t dst_reg =
+          (is_subroutine_branch && branch_taken) ? REG_LR : (reg1_is_dst ? reg1 : REG_Z);
 
       // Determine ALU operation.
       uint32_t alu_op = ALU_OP_NONE;
@@ -328,10 +320,10 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
         alu_op = sclar_instr >> 24u;
       } else if (op_class_C) {
         switch (sclar_instr & 0xff000000u) {
-          case 0x28000000u:  // ldi
+          case 0x30000000u:  // ldi
             alu_op = ALU_OP_OR;
             break;
-          case 0x29000000u:  // ldhi
+          case 0x31000000u:  // ldhi
             alu_op = ALU_OP_ORHI;
             break;
         }

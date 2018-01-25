@@ -8,6 +8,8 @@
 | Subtract immediate from register | ADDI rd,ra,-i14 |
 | Invert all bits | NOR rd,ra,ra |
 | Compare and branch | SUB + B[cc] |
+| Unconditional branch | BEQ Z, offset |
+| Unconditional subroutine branch | BLEQ Z, offset |
 | Return from subroutine | JMP LR |
 | Push to stack | ADDI SP,SP,-N<br>ST.W ra,SP,0<br>... |
 | Pop from stack | LD.W rd,SP,0<br>...<br>ADDI SP,SP,N |

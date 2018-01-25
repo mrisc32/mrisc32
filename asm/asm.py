@@ -30,7 +30,6 @@ import sys
 # A: |op8    |ra5 |rb5 |rc5 |op9     |
 # B: |op8    |ra5 |rb5 |imm14        |
 # C: |op8    |ra5 |imm19             |
-# D: |op8    |imm24                  |
 
 # Supported operand types.
 _REG1 = 1
@@ -45,7 +44,6 @@ _IMM14 = 9       # -8192..8191
 _IMM19 = 10      # -262144..262143
 _PCREL14 = 11    # -8192..8191
 _PCREL19x4 = 12  # -1048576..1048572 (in steps of 4)
-_PCREL24x4 = 13  # -33554432..33554428 (in steps of 4)
 
 # Names of general purpose registers.
 _REGS = {
@@ -244,16 +242,16 @@ _OPCODES = {
         'BLE':    [0x24000000, _REG1, _PCREL19x4],
         'BLT':    [0x25000000, _REG1, _PCREL19x4],
 
+        'BLEQ':   [0x28000000, _REG1, _PCREL19x4],
+        'BLNE':   [0x29000000, _REG1, _PCREL19x4],
+        'BLGE':   [0x2a000000, _REG1, _PCREL19x4],
+        'BLGT':   [0x2b000000, _REG1, _PCREL19x4],
+        'BLLE':   [0x2c000000, _REG1, _PCREL19x4],
+        'BLLT':   [0x2d000000, _REG1, _PCREL19x4],
+
         # Load immediate.
-        'LDI':    [0x28000000, _REG1, _IMM19],
-        'LDHI':   [0x29000000, _REG1, _IMM19],
-
-
-        # == D ==
-
-        # Long range unconditional PC-relative branches.
-        'BRA':    [0x30000000, _PCREL24x4],
-        'BSR':    [0x31000000, _PCREL24x4],
+        'LDI':    [0x30000000, _REG1, _IMM19],
+        'LDHI':   [0x31000000, _REG1, _IMM19],
 
 
         # ---------------------------------------------------------------------
@@ -354,6 +352,12 @@ _OPCODES = {
         # Alias for: VSORI _VREG1, VZ, _IMM14
         'VSLDI':  [0x81000000, _VREG1, _IMM14],
 
+        # Alias for: BEQ Z, _PCREL19x4
+        'B':      [0x20000000, _PCREL19x4],
+
+        # Alias for: BLEQ Z, _PCREL19x4
+        'BL':     [0x28000000, _PCREL19x4],
+
         # Alias for: JMP LR
         'RTS':    [0x00e80080],
 
@@ -452,7 +456,7 @@ def translate_pcrel(operand, operand_type, pc, labels, scope_label, line_no):
 
     offset = target_address - pc
 
-    if operand_type in [_PCREL19x4, _PCREL24x4]:
+    if operand_type == _PCREL19x4:
         if (target_address & 3) != 0:
             raise AsmError(line_no, 'Targe address ({}) is not aligned to 4 bytes'.format(operand))
         offset = offset / 4
@@ -460,7 +464,6 @@ def translate_pcrel(operand, operand_type, pc, labels, scope_label, line_no):
     offset_max = {
             _PCREL14:   1 << 13,
             _PCREL19x4: 1 << 18,
-            _PCREL24x4: 1 << 23,
         }[operand_type]
     if (offset < -offset_max or offset >= offset_max):
         raise AsmError(line_no, 'Too large offset: {}'.format(offset))
@@ -479,7 +482,7 @@ def translate_operation(operation, mnemonic, descr, addr, line_no, labels, scope
             instr = instr | translate_reg(operand, operand_type, line_no)
         elif operand_type in [_IMM14, _IMM19]:
             instr = instr | translate_imm(operand, operand_type, line_no)
-        elif operand_type in [_PCREL14, _PCREL19x4, _PCREL24x4]:
+        elif operand_type in [_PCREL14, _PCREL19x4]:
             instr = instr | translate_pcrel(operand, operand_type, addr, labels, scope_label, line_no)
 
     return instr

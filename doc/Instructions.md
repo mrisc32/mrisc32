@@ -10,7 +10,6 @@
 | rc | Source register 3 |
 | i14 | 14-bit immediate value |
 | i19 | 19-bit immediate value |
-| i24 | 24-bit immediate value |
 | VV | Supports vector,vector operation |
 | VS | Supports vector,scalar operation |
 
@@ -75,10 +74,14 @@
 |BGT|   |   | ra, i19 | pc <= pc+signextend(i19)*4 if ra > 0 | Conditionally branch if greater than zero |
 |BLE|   |   | ra, i19 | pc <= pc+signextend(i19)*4 if ra <= 0 | Conditionally branch if less than or equal to zero |
 |BLT|   |   | ra, i19 | pc <= pc+signextend(i19)*4 if ra < 0 | Conditionally branch if less than zero |
+|BLEQ|   |   | ra, i19 | lr <= pc+4, pc <= pc+signextend(i19)*4 if ra == 0 | Conditionally branch and link if equal to zero |
+|BLNE|   |   | ra, i19 | lr <= pc+4, pc <= pc+signextend(i19)*4 if ra != 0 | Conditionally branch and link if not equal to zero |
+|BLGE|   |   | ra, i19 | lr <= pc+4, pc <= pc+signextend(i19)*4 if ra >= 0 | Conditionally branch and link if greater than or equal to zero |
+|BLGT|   |   | ra, i19 | lr <= pc+4, pc <= pc+signextend(i19)*4 if ra > 0 | Conditionally branch and link if greater than zero |
+|BLLE|   |   | ra, i19 | lr <= pc+4, pc <= pc+signextend(i19)*4 if ra <= 0 | Conditionally branch and link if less than or equal to zero |
+|BLLT|   |   | ra, i19 | lr <= pc+4, pc <= pc+signextend(i19)*4 if ra < 0 | Conditionally branch and link if less than zero |
 |LDI|   |   | rd, i19 | rd <= signextend(i19) | Load immediate (low 19 bits) |
 |LDHI|   |   | rd, i19 | rd <= i19 << 13 | Load immediate (high 19 bits) |
-|BRA|   |   | i24 | pc <= pc+signextend(i24)*4 | Branch unconditionally |
-|BSR|   |   | i24 | lr <= pc+4, pc <= pc+signextend(i24)*4 | Branch unconditionally and link |
 
 ## Floating point instructions
 

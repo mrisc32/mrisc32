@@ -38,12 +38,12 @@ _puts:
   andi   r1, r1, 255
   addi   r17, r17, 1
   beq    r1, .eos
-  bsr    _putc
-  bra    .loop
+  bl     _putc
+  b      .loop
 
 .eos:
   ldi    r1, 10
-  bsr    _putc
+  bl     _putc
 
   ld.w   lr, sp, 0
   ld.w   r16, sp, 4
@@ -73,7 +73,7 @@ _printhex:
   andi   r9, r9, 15   ; r9 = (x >> (r18 * 4)) & 15
   ldx.b  r1, r16, r9  ; r1 = hex_chars[(x >> (r18 * 4)) & 15]
   addi   r18, r18, -1
-  bsr    _putc
+  bl     _putc
   bge    r18, .loop
 
   ld.w   lr, sp, 0
