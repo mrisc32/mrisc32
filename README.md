@@ -1,11 +1,16 @@
 # MRISC32
 *Mostly harmless Reduced Instruction Set Computer, 32-bit edition*
 
-This is an experimental, custom 32-bit RISC CPU.
+This is an experimental, custom 32-bit RISC CPU with vector operations.
 
 ## Tools
 
 Currently there is a simple assembler (written in python) and a CPU simulator (written in C++).
+
+## Hardware/HDL
+
+Not yet...
+
 
 # Design
 
@@ -28,11 +33,14 @@ Currently there is a simple assembler (written in python) and a CPU simulator (w
 ## Features
 
 * All instructions are 32 bits wide and easy to decode.
-* There is one 32-entry, 32-bit scalar register file, R0-R31.
-  - Five registers are special (Z, PC, SP, LR, VL).
-  - 27 registers are general purpose.
-  - All GPRs can be used for all types (integers, pointers and floating point).
-  - PC is user-visible (for arithmetic and addressing) but read-only (to simplify branching logic).
+* There are two register files:
+  - There are 32 scalar registers, S0-S31, each 32 bits wide.
+    - Five registers are special (Z, PC, SP, LR, VL).
+    - 27 registers are general purpose.
+    - All registers can be used for all types (integers, pointers and floating point).
+    - PC is user-visible (for arithmetic and addressing) but read-only (to simplify branching logic).
+  - There are 32 vector registers, V0-V31, each with 32 32-bit elements.
+    - All registers can be used for all types (integers, pointers and floating point).
 * Branches are executed in the ID (instruction decode) step, which gives a low branch misprediction penalty.
 * Conditional moves further reduce the cost of branch mispredictions.
 * Conditionals (branches, moves) are based on register content.
@@ -43,6 +51,7 @@ Currently there is a simple assembler (written in python) and a CPU simulator (w
   - Compare/branch.
   - Conditional moves.
   - Sign and bit manipulation (e.g. neg, abs).
+* Many instructions come in both scalar and vector variants.
 * There is currently no HW support for 64-bit floating point operations (that is left for a 64-bit version of the ISA).
 
 

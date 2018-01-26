@@ -52,38 +52,38 @@ _REGS = {
         'SP': 30, # Stack pointer
         'PC': 31, # Read-only: Program counter
 
-        'R0': 0,  # Alias for Z
-        'R1': 1,
-        'R2': 2,
-        'R3': 3,
-        'R4': 4,
-        'R5': 5,
-        'R6': 6,
-        'R7': 7,
-        'R8': 8,
-        'R9': 9,
-        'R10': 10,
-        'R11': 11,
-        'R12': 12,
-        'R13': 13,
-        'R14': 14,
-        'R15': 15,
-        'R16': 16,
-        'R17': 17,
-        'R18': 18,
-        'R19': 19,
-        'R20': 20,
-        'R21': 21,
-        'R22': 22,
-        'R23': 23,
-        'R24': 24,
-        'R25': 25,
-        'R26': 26,
-        'R27': 27,
-        'R28': 28,  # Alias for VL
-        'R29': 29,  # Alias for LR
-        'R30': 30,  # Alias for SP
-        'R31': 31,  # Alias for PC
+        'S0': 0,  # Alias for Z
+        'S1': 1,
+        'S2': 2,
+        'S3': 3,
+        'S4': 4,
+        'S5': 5,
+        'S6': 6,
+        'S7': 7,
+        'S8': 8,
+        'S9': 9,
+        'S10': 10,
+        'S11': 11,
+        'S12': 12,
+        'S13': 13,
+        'S14': 14,
+        'S15': 15,
+        'S16': 16,
+        'S17': 17,
+        'S18': 18,
+        'S19': 19,
+        'S20': 20,
+        'S21': 21,
+        'S22': 22,
+        'S23': 23,
+        'S24': 24,
+        'S25': 25,
+        'S26': 26,
+        'S27': 27,
+        'S28': 28,  # Alias for VL
+        'S29': 29,  # Alias for LR
+        'S30': 30,  # Alias for SP
+        'S31': 31,  # Alias for PC
     }
 
 # Names of vector registers.
@@ -227,8 +227,8 @@ _OPCODES = {
         'STW':    [0x1a000000, _REG1, _REG2, _IMM14],
 
         # TODO(m): Load Linked (ll) and Store Conditional (sc) for atomic ops.
-        # 'LL':    [(47 << 24), _REG2, _REG1],
-        # 'SC':    [(47 << 24), _REG2, _REG1],
+        # 'LL':    [??, _REG2, _REG1],
+        # 'SC':    [??, _REG2, _REG1],
 
 
         # == C ==
@@ -707,7 +707,7 @@ def compile_file(file_name, out_name, verbosity_level):
 
 def main():
     # Parse command line arguments.
-    parser = argparse.ArgumentParser(description='A simple assembler for misc16')
+    parser = argparse.ArgumentParser(description='A simple assembler for MRISC32')
     parser.add_argument('files', metavar='FILE', nargs='+',
                         help='the file(s) to process')
     parser.add_argument('-v', '--verbose', action='store_true',

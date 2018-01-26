@@ -3,16 +3,16 @@
 ;-------------------------------------------------------------------------------
 
 main:
-  ldi     r4, 1000
-  lsli    r9, r4, 2
-  ldi     r1, 0
-  add     r2, r1, r9
-  add     r3, r2, r9
+  ldi     s4, 1000
+  lsli    s9, s4, 2
+  ldi     s1, 0
+  add     s2, s1, s9
+  add     s3, s2, s9
 
   bl      abs_diff_vectors
   ;bl      abs_diff_vectors_scalar
 
-  ldi     r1, 0
+  ldi     s1, 0
   b       _exit
 
 
@@ -25,36 +25,36 @@ main:
 ;-------------------------------------------------------------------------------
 
 abs_diff_vectors:
-  ; r1 = c
-  ; r2 = a
-  ; r3 = b
-  ; r4 = n
+  ; s1 = c
+  ; s2 = a
+  ; s3 = b
+  ; s4 = n
 
   addi    sp, sp, -4
   stw     vl, sp, 0
 
-  addi    r4, r4, -1
+  addi    s4, s4, -1
   ldi     vl, 31
-  blt     r4, .done     ; n == 0, nothing to do
+  blt     s4, .done     ; n == 0, nothing to do
 
-  ldi     r10, -1
-  lsri    r10, r10, 1   ; r10 = 0x7fffffff
+  ldi     s10, -1
+  lsri    s10, s10, 1   ; s10 = 0x7fffffff
 
 .loop:
-  addi    r9, r4, -32
-  mlt     vl, r9, r4    ; vl = min(32, number of elements left) - 1
+  addi    s9, s4, -32
+  mlt     vl, s9, s4    ; vl = min(32, number of elements left) - 1
 
-  vldw    v9, r2, 4
-  vldw    v10, r3, 4
+  vldw    v9, s2, 4
+  vldw    v10, s3, 4
   vvfsub  v9, v10, v9   ; a - b
-  vsand   v9, v9, r10   ; Clear the sign bit
-  vstw    v9, r1, 4
+  vsand   v9, v9, s10   ; Clear the sign bit
+  vstw    v9, s1, 4
 
-  ori     r4, r9, 0
-  addi    r1, r1, 128
-  addi    r2, r2, 128
-  addi    r3, r3, 128
-  bge     r4, .loop
+  ori     s4, s9, 0
+  addi    s1, s1, 128
+  addi    s2, s2, 128
+  addi    s3, s3, 128
+  bge     s4, .loop
 
 .done:
   ldw     vl, sp, 0
@@ -64,27 +64,27 @@ abs_diff_vectors:
 
 
 abs_diff_vectors_scalar:
-  ; r1 = c
-  ; r2 = a
-  ; r3 = b
-  ; r4 = n
+  ; s1 = c
+  ; s2 = a
+  ; s3 = b
+  ; s4 = n
 
-  beq     r4, .done     ; n == 0, nothing to do
+  beq     s4, .done     ; n == 0, nothing to do
 
-  ldi     r12, -1
-  lsri    r12, r10, 1   ; r12 = 0x7fffffff
+  ldi     s12, -1
+  lsri    s12, s10, 1   ; s12 = 0x7fffffff
 
-  ldi     r11, 0
+  ldi     s11, 0
 .loop:
-  ldxw    r9, r2, r11
-  ldxw    r10, r3, r11
-  fsub    r9, r10, r9   ; a - b
-  and     r9, r9, r12   ; Clear the sign bit
-  stxw    r9, r1, r11
+  ldxw    s9, s2, s11
+  ldxw    s10, s3, s11
+  fsub    s9, s10, s9   ; a - b
+  and     s9, s9, s12   ; Clear the sign bit
+  stxw    s9, s1, s11
 
-  addi    r4, r4, -1
-  addi    r11, r11, 4
-  bne     r4, .loop
+  addi    s4, s4, -1
+  addi    s11, s11, 4
+  bne     s4, .loop
 
 .done:
   jmp     lr

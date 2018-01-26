@@ -1,51 +1,51 @@
 // This is a test program.
 
 main:
-  ldi    r16, 0         ; r16 is the return code (0 = success, 1 = fail)
+  ldi    s16, 0         ; s16 is the return code (0 = success, 1 = fail)
 
   bl     test_1
-  or     r16, r16, r1
-  beq    r1, .test1_passed
+  or     s16, s16, s1
+  beq    s1, .test1_passed
   bl     .test_failed
 .test1_passed:
 
   bl     test_2
-  or     r16, r16, r1
-  beq    r1, .test2_passed
+  or     s16, s16, s1
+  beq    s1, .test2_passed
   bl     .test_failed
 .test2_passed:
 
   bl     test_3
-  or     r16, r16, r1
-  beq    r1, .test3_passed
+  or     s16, s16, s1
+  beq    s1, .test3_passed
   bl     .test_failed
 .test3_passed:
 
   bl     test_4
-  or     r16, r16, r1
-  beq    r1, .test4_passed
+  or     s16, s16, s1
+  beq    s1, .test4_passed
   bl     .test_failed
 .test4_passed:
 
   bl     test_5
-  or     r16, r16, r1
-  beq    r1, .test5_passed
+  or     s16, s16, s1
+  beq    s1, .test5_passed
   bl     .test_failed
 .test5_passed:
 
   bl     test_6
-  or     r16, r16, r1
-  beq    r1, .test6_passed
+  or     s16, s16, s1
+  beq    s1, .test6_passed
   bl     .test_failed
 .test6_passed:
 
-  ; exit(r16)
-  mov    r1, r16
+  ; exit(s16)
+  mov    s1, s16
   b      _exit
 
 
 .test_failed:
-  lea    r1, .fail_msg
+  lea    s1, .fail_msg
   b      _puts
 
 
@@ -58,15 +58,15 @@ main:
 ; A loop with a decrementing conunter.
 
 test_1:
-  ldi    r9, 0x20
-  ldi    r10, 12
+  ldi    s9, 0x20
+  ldi    s10, 12
 
 .loop:
-  add    r9, r9, r10
-  addi   r10, r10, -1
-  bne    r10, .loop
+  add    s9, s9, s10
+  addi   s10, s10, -1
+  bne    s10, .loop
 
-  ldi    r1, 0
+  ldi    s1, 0
   rts
 
 
@@ -76,30 +76,30 @@ test_1:
 test_2:
   addi   sp, sp, -12
   stw    lr, sp, 0
-  stw    r16, sp, 4
-  stw    r17, sp, 8
+  stw    s16, sp, 4
+  stw    s17, sp, 8
 
-  lea    r16, .data
-  ldw    r1, r16, 0     ; r1 = data[0]
-  ldw    r17, r16, 4
-  add    r1, r1, r17    ; r1 += data[1]
-  ldw    r17, r16, 8
-  add    r1, r1, r17    ; r1 += data[2]
-  mov    r16, r1        ; Save the result for the comparison later
+  lea    s16, .data
+  ldw    s1, s16, 0     ; s1 = data[0]
+  ldw    s17, s16, 4
+  add    s1, s1, s17    ; s1 += data[1]
+  ldw    s17, s16, 8
+  add    s1, s1, s17    ; s1 += data[2]
+  mov    s16, s1        ; Save the result for the comparison later
   bl     _printhex
-  ldi    r1, 10
+  ldi    s1, 10
   bl     _putc
 
-  ldi    r1, 1
-  ldi    r9, 0
-  ldhi   r10, 0x5f778
-  ori    r10, r10, 0x42 ; r10 = 0xbeef0042
-  sub    r10, r10, r16  ; r10 = r16 - r10
-  meq    r1, r10, r9    ; return (r16 == 0xbeef0042) ? 0 : 1
+  ldi    s1, 1
+  ldi    s9, 0
+  ldhi   s10, 0x5f778
+  ori    s10, s10, 0x42 ; s10 = 0xbeef0042
+  sub    s10, s10, s16  ; s10 = s16 - s10
+  meq    s1, s10, s9    ; return (s16 == 0xbeef0042) ? 0 : 1
 
   ldw    lr, sp, 0
-  ldw    r16, sp, 4
-  ldw    r17, sp, 8
+  ldw    s16, sp, 4
+  ldw    s17, sp, 8
   addi   sp, sp, 12
 
   rts
@@ -116,12 +116,12 @@ test_3:
   addi   sp, sp, -4
   stw    lr, sp, 0
 
-  lea    r1, .hello_world
+  lea    s1, .hello_world
   bl     _puts
 
   ldw    lr, sp, 0
   addi   sp, sp, 4
-  ldi    r1, 0
+  ldi    s1, 0
   rts
 
 
@@ -136,33 +136,33 @@ test_3:
 test_4:
   addi   sp, sp, -8
   stw    lr, sp, 0
-  stw    r16, sp, 4
+  stw    s16, sp, 4
 
-  ; Load two 64-bit numbers into r11:r10 and r13:r12
-  lea    r9, .dword1
-  ldw    r10, r9, 0  ; r10 = low bits
-  ldw    r11, r9, 4  ; r11 = high bits
-  lea    r9, .dword2
-  ldw    r12, r9, 0  ; r12 = low bits
-  ldw    r13, r9, 4  ; r13 = high bits
+  ; Load two 64-bit numbers into s11:s10 and s13:s12
+  lea    s9, .dword1
+  ldw    s10, s9, 0  ; s10 = low bits
+  ldw    s11, s9, 4  ; s11 = high bits
+  lea    s9, .dword2
+  ldw    s12, s9, 0  ; s12 = low bits
+  ldw    s13, s9, 4  ; s13 = high bits
 
-  ; Add the numbers into r1:r16
-  add    r16, r10, r12  ; r16 = low bits
-  add    r1, r11, r13   ; r1 = high bits
-  sltu   r14, r16, r10  ; r14 = carry (0 or 1)
-  add    r1, r1, r14    ; Add carry to the high word
+  ; Add the numbers into s1:s16
+  add    s16, s10, s12  ; s16 = low bits
+  add    s1, s11, s13   ; s1 = high bits
+  sltu   s14, s16, s10  ; s14 = carry (0 or 1)
+  add    s1, s1, s14    ; Add carry to the high word
 
   bl     _printhex      ; Print high word
-  mov    r1, r16
+  mov    s1, s16
   bl     _printhex      ; Print low word
-  ldi    r1, 10
+  ldi    s1, 10
   bl     _putc
 
   ldw    lr, sp, 0
-  ldw    r16, sp, 4
+  ldw    s16, sp, 4
   addi   sp, sp, 8
 
-  ldi    r1, 0
+  ldi    s1, 0
   rts
 
 .dword1:
@@ -177,29 +177,29 @@ test_4:
 test_5:
   addi   sp, sp, -8
   stw    lr, sp, 0
-  stw    r16, sp, 4
+  stw    s16, sp, 4
 
   ; Calculate 2 * PI
-  ldpcw  r9, .pi
-  ldpcw  r10, .two
-  fmul   r16, r9, r10  ; r16 = 2 * PI
+  ldpcw  s9, .pi
+  ldpcw  s10, .two
+  fmul   s16, s9, s10  ; s16 = 2 * PI
 
-  mov    r1, r16
+  mov    s1, s16
   bl     _printhex
-  ldi    r1, 10
+  ldi    s1, 10
   bl     _putc
 
   ; Was the result 2 * PI?
-  ldpcw  r9, .twopi
-  fsub   r9, r9, r16  ; r9 = (2 * PI) - .twopi
+  ldpcw  s9, .twopi
+  fsub   s9, s9, s16  ; s9 = (2 * PI) - .twopi
 
   ldw    lr, sp, 0
-  ldw    r16, sp, 4
+  ldw    s16, sp, 4
   addi   sp, sp, 8
 
-  ldi    r1, 1
-  ldi    r10, 0
-  meq    r1, r9, r10   ; r1 = (result == 2*PI) ? 0 : 1
+  ldi    s1, 1
+  ldi    s10, 0
+  meq    s1, s9, s10   ; s1 = (result == 2*PI) ? 0 : 1
   rts
 
 
@@ -220,19 +220,19 @@ test_6:
   addi   sp, sp, -20
   stw    lr, sp, 0
   stw    vl, sp, 4
-  stw    r16, sp, 8
-  stw    r17, sp, 12
-  stw    r18, sp, 16
+  stw    s16, sp, 8
+  stw    s17, sp, 12
+  stw    s18, sp, 16
 
   ; Prepare scalars
-  lea    r9, .in
-  lea    r16, .result
+  lea    s9, .in
+  lea    s16, .result
 
   ; The vector length is 32
   ldi    vl, 31  ; vl = len - 1 = 31
 
   ; Load v9 from memory
-  vldw   v9, r9, 4
+  vldw   v9, s9, 4
 
   ; Initialize v10 to a constant value
   vsldi  v10, 0x1234
@@ -244,30 +244,30 @@ test_6:
   vsaddi v9, v9, -8
 
   ; Store the result to memory
-  vstw   v9, r16, 4
+  vstw   v9, s16, 4
 
   ; Print the result
-  ldi    r17, 0
+  ldi    s17, 0
 .print:
-  lsli   r9, r17, 2
-  ldxw   r1, r16, r9
+  lsli   s9, s17, 2
+  ldxw   s1, s16, s9
   bl     _printhex
-  ldi    r1, 0x2c
-  ldi    r9, 10
-  addi   r18, r17, -31
-  addi   r17, r17, 1
-  meq    r1, r18, r9    ; Print comma or newline depending on if this is the last element
+  ldi    s1, 0x2c
+  ldi    s9, 10
+  addi   s18, s17, -31
+  addi   s17, s17, 1
+  meq    s1, s18, s9    ; Print comma or newline depending on if this is the last element
   bl     _putc
-  bne    r18, .print
+  bne    s18, .print
 
   ldw    lr, sp, 0
   ldw    vl, sp, 4
-  ldw    r16, sp, 8
-  ldw    r17, sp, 12
-  ldw    r18, sp, 16
+  ldw    s16, sp, 8
+  ldw    s17, sp, 12
+  ldw    s18, sp, 16
   addi   sp, sp, 20
 
-  ldi    r1, 0
+  ldi    s1, 0
   rts
 
 .in:
