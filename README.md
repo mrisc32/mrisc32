@@ -11,10 +11,7 @@ Currently there is a simple assembler (written in python) and a CPU simulator (w
 
 Not yet...
 
-
-# Design
-
-## Goals
+# Goals
 
 * Experiment and learn the pros and cons of various design decisions.
 * Keep things simple - both the ISA and the architecture.
@@ -22,15 +19,13 @@ Not yet...
 * The ISA should scale from small embedded to larger superscalar implementations.
 * The CPU should be easy to implement in an FPGA.
 
-
 ## Non-goals
 
 * Don't support multiple word sizes or running modes. If a 64-bit CPU is required, create a new ISA and recompile your software.
-* Don't be fast and optimal for everything.
 * Don't be extensible at the cost of more complicated IF/ID stages.
+* Don't be fast and optimal for everything.
 
-
-## Features
+# Features
 
 * All instructions are 32 bits wide and easy to decode.
 * There are two register files:
@@ -51,16 +46,10 @@ Not yet...
   - Compare/branch.
   - Conditional moves.
   - Sign and bit manipulation (e.g. neg, abs).
-* Many instructions come in both scalar and vector variants.
+* Vector operations use a Cray-like model:
+  - Vector operations are variable length (1-32 elements).
+  - Most integer and floating point instructions come in both scalar and vector variants.
 * There is currently no HW support for 64-bit floating point operations (that is left for a 64-bit version of the ISA).
-
-
-## Vector operarations (SIMD)
-
-Vector operations use a Cray-like model, with 32 vector registers (V0-V31), each containing 32 32-bit elements.
-
-Vector operations are variable length (1-32 elements), and most integer and floating point instructions can be executed as vector operations. This makes it very easy to convert traditional loop-based software constructs to vector operations.
-
 
 # Documentation
 
