@@ -72,7 +72,7 @@ abs_diff_vectors_scalar:
   beq     s4, .done     ; n == 0, nothing to do
 
   ldi     s12, -1
-  lsr     s12, s10, 1   ; s12 = 0x7fffffff
+  lsr     s12, s12, 1   ; s12 = 0x7fffffff
 
   ldi     s11, 0
 .loop:

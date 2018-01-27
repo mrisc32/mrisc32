@@ -29,6 +29,82 @@ In comparison, the MRISC32 vector model is easier to implement in hardware and e
 Furthermore the same ISA can be used for many different levels of hardware parallelism, as opposed to having to design a new ISA every time more hardware parallelism is to be added to a CPU architecture (e.g. MMX vs SSE vs AVX vs ...). In other words, the vector model scales well from very simple, scalar architectures, all the way up to highly parallel superscalar architectures.
 
 
+## Examples
+
+Consider the following C code:
+
+```C
+void abs_diff(float* c, const float* a, const float* b, const int n) {
+  for (int i = 0; i < n; ++i) {
+    c[i] = fabs(a[i] - b[i]);
+  }
+}
+```
+
+Assuming that the arguments (c, a, b, n) are in registers S1, S2, S3 and S4, this can be implemented using scalar operations as:
+
+```
+abs_diff:
+  BEQ     S4, .done     ; n == 0, nothing to do
+
+  LDI     S12, -1
+  LSR     S12, S12, 1   ; S12 = 0x7fffffff
+
+  LDI     S11, 0
+.loop:
+  LDW     S9, S2, S11
+  LDW     S10, S3, S11
+  FSUB    S9, S10, S9   ; S9 = a - b
+  AND     S9, S9, S12   ; S9 = abs(a - b) (i.e. clear the sign bit)
+  STW     S9, S1, S11
+
+  ADD     S4, S4, -1
+  ADD     S11, S11, 4
+  BNE     S4, .loop
+
+.done:
+  JMP     LR
+```
+
+...or using vector opertaions as:
+
+```
+abs_diff:
+  ADD     SP, SP, -4
+  STW     VL, SP, 0
+
+  ADD     S4, S4, -1
+  LDI     VL, 31
+  BLT     S4, .done     ; n == 0, nothing to do
+
+  LDI     S10, -1
+  LSR     S10, S10, 1   ; S10 = 0x7fffffff
+
+.loop:
+  ADD     S9, S4, -32
+  MLT     VL, S9, S4    ; VL = min(32, number of elements left) - 1
+
+  LDW     V9, S2, 4
+  LDW     V10, S3, 4
+  FSUB    V9, V10, V9   ; V9 = a - b
+  AND     V9, V9, S10   ; V9 = abs(a - b) (i.e. clear the sign bit)
+  STW     V9, S1, 4
+
+  OR      S4, S9, 0
+  ADD     S1, S1, 128
+  ADD     S2, S2, 128
+  ADD     S3, S3, 128
+  BGE     S4, .loop
+
+.done:
+  LDW     VL, SP, 0
+  ADD     SP, SP, 4
+  JMP     LR
+```
+
+Notice that the same instructions are used in both cases, only with vector operands for the vector version. Also notice that it is easy to mix scalar and vector operands for vector operations.
+
+
 ## Implementations
 
 It is possible to implement vector operations in various different ways, with different degrees of parallelism and different levels of operation throughput.
@@ -64,78 +140,4 @@ This is essentially the same principle as for SIMD ISAs such as SSE or NEON.
 The only extra hardware requirements for issuing multiple elements per vector operation are:
 * Sufficient number of execution units.
 * Wider read/write ports for the vector registers and the data cache(s).
-
-
-## Examples
-
-Consider the following C code:
-
-```C
-void abs_diff(float* c, const float* a, const float* b, const int n) {
-  for (int i = 0; i < n; ++i) {
-    c[i] = fabs(a[i] - b[i]);
-  }
-}
-```
-
-Assuming that the arguments (c, a, b, n) are in registers S1, S2, S3 and S4, this can be implemented using scalar operations as:
-
-```
-  beq     s4, .done     ; n == 0, nothing to do
-
-  ldi     s12, -1
-  lsri    s12, s10, 1   ; s12 = 0x7fffffff
-
-  ldi     s11, 0
-.loop:
-  ldxw    s9, s2, s11
-  ldxw    s10, s3, s11
-  fsub    s9, s10, s9   ; s9 = a - b
-  and     s9, s9, s12   ; s9 = abs(a - b) (i.e. clear the sign bit)
-  stxw    s9, s1, s11
-
-  addi    s4, s4, -1
-  addi    s11, s11, 4
-  bne     s4, .loop
-
-.done:
-  jmp     lr
-```
-
-...or by vector opertaions as:
-
-```
-  addi    sp, sp, -4
-  stw     vl, sp, 0
-
-  addi    s4, s4, -1
-  ldi     vl, 31
-  blt     s4, .done     ; n == 0, nothing to do
-
-  ldi     s10, -1
-  lsri    s10, s10, 1   ; s10 = 0x7fffffff
-
-.loop:
-  addi    s9, s4, -32
-  mlt     vl, s9, s4    ; vl = min(32, number of elements left) - 1
-
-  vldw    v9, s2, 4
-  vldw    v10, s3, 4
-  vvfsub  v9, v10, v9   ; v9 = a - b
-  vsand   v9, v9, s10   ; v9 = abs(a - b) (i.e. clear the sign bit)
-  vstw    v9, s1, 4
-
-  ori     s4, s9, 0
-  addi    s1, s1, 128
-  addi    s2, s2, 128
-  addi    s3, s3, 128
-  bge     s4, .loop
-
-.done:
-  ldw     vl, sp, 0
-  addi    sp, sp, 4
-  jmp     lr
-```
-
-Notice that the same instructions are used in both cases, only with vector mode prefixes for the vector version. Also notice that it is easy to mix scalar and vector operands for vector operations.
 
