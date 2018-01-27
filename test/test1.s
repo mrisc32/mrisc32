@@ -63,7 +63,7 @@ test_1:
 
 .loop:
   add    s9, s9, s10
-  addi   s10, s10, -1
+  add    s10, s10, -1
   bne    s10, .loop
 
   ldi    s1, 0
@@ -74,7 +74,7 @@ test_1:
 ; Sum elements in a data array.
 
 test_2:
-  addi   sp, sp, -12
+  add    sp, sp, -12
   stw    lr, sp, 0
   stw    s16, sp, 4
   stw    s17, sp, 8
@@ -93,14 +93,14 @@ test_2:
   ldi    s1, 1
   ldi    s9, 0
   ldhi   s10, 0x5f778
-  ori    s10, s10, 0x42 ; s10 = 0xbeef0042
+  or     s10, s10, 0x42 ; s10 = 0xbeef0042
   sub    s10, s10, s16  ; s10 = s16 - s10
   meq    s1, s10, s9    ; return (s16 == 0xbeef0042) ? 0 : 1
 
   ldw    lr, sp, 0
   ldw    s16, sp, 4
   ldw    s17, sp, 8
-  addi   sp, sp, 12
+  add    sp, sp, 12
 
   rts
 
@@ -113,14 +113,14 @@ test_2:
 ; Call a subroutine that prints hello world.
 
 test_3:
-  addi   sp, sp, -4
+  add    sp, sp, -4
   stw    lr, sp, 0
 
   lea    s1, .hello_world
   bl     _puts
 
   ldw    lr, sp, 0
-  addi   sp, sp, 4
+  add    sp, sp, 4
   ldi    s1, 0
   rts
 
@@ -134,7 +134,7 @@ test_3:
 ; 64-bit arithmetic.
 
 test_4:
-  addi   sp, sp, -8
+  add    sp, sp, -8
   stw    lr, sp, 0
   stw    s16, sp, 4
 
@@ -160,7 +160,7 @@ test_4:
 
   ldw    lr, sp, 0
   ldw    s16, sp, 4
-  addi   sp, sp, 8
+  add    sp, sp, 8
 
   ldi    s1, 0
   rts
@@ -175,7 +175,7 @@ test_4:
 ; Floating point arithmetic.
 
 test_5:
-  addi   sp, sp, -8
+  add    sp, sp, -8
   stw    lr, sp, 0
   stw    s16, sp, 4
 
@@ -195,7 +195,7 @@ test_5:
 
   ldw    lr, sp, 0
   ldw    s16, sp, 4
-  addi   sp, sp, 8
+  add    sp, sp, 8
 
   ldi    s1, 1
   ldi    s10, 0
@@ -217,7 +217,7 @@ test_5:
 ; Vector operations.
 
 test_6:
-  addi   sp, sp, -20
+  add    sp, sp, -20
   stw    lr, sp, 0
   stw    vl, sp, 4
   stw    s16, sp, 8
@@ -232,30 +232,30 @@ test_6:
   ldi    vl, 31  ; vl = len - 1 = 31
 
   ; Load v9 from memory
-  vldw   v9, s9, 4
+  ldw    v9, s9, 4
 
   ; Initialize v10 to a constant value
-  vsldi  v10, 0x1234
+  ldi    v10, 0x1234
 
   ; Add vectors v9 and v10
-  vvadd  v9, v9, v10
+  add    v9, v9, v10
 
   ; Subtract a scalar from v9
-  vsaddi v9, v9, -8
+  add    v9, v9, -8
 
   ; Store the result to memory
-  vstw   v9, s16, 4
+  stw    v9, s16, 4
 
   ; Print the result
   ldi    s17, 0
 .print:
-  lsli   s9, s17, 2
-  ldxw   s1, s16, s9
+  lsl    s9, s17, 2
+  ldw    s1, s16, s9
   bl     _printhex
   ldi    s1, 0x2c
   ldi    s9, 10
-  addi   s18, s17, -31
-  addi   s17, s17, 1
+  add    s18, s17, -31
+  add    s17, s17, 1
   meq    s1, s18, s9    ; Print comma or newline depending on if this is the last element
   bl     _putc
   bne    s18, .print
@@ -265,7 +265,7 @@ test_6:
   ldw    s16, sp, 8
   ldw    s17, sp, 12
   ldw    s18, sp, 16
-  addi   sp, sp, 20
+  add    sp, sp, 20
 
   ldi    s1, 0
   rts
