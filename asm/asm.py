@@ -136,95 +136,149 @@ _OPCODES = {
         # SCALAR OPERATIONS
         # ---------------------------------------------------------------------
 
-        # == A ==
+        # == A + B ==
+
+        'NOP':    [[0x00000000]],                     # nop z, z, z
 
         # Integer ALU ops.
-        'NOP':    [0x00000000],                       # nop z, z, z
-        'OR':     [0x00000001, _REG1, _REG2, _REG3],
-        'NOR':    [0x00000002, _REG1, _REG2, _REG3],
-        'AND':    [0x00000003, _REG1, _REG2, _REG3],
-        'XOR':    [0x00000004, _REG1, _REG2, _REG3],
-        'ADD':    [0x00000005, _REG1, _REG2, _REG3],
-        'SUB':    [0x00000006, _REG1, _REG2, _REG3],
-        'SLT':    [0x00000007, _REG1, _REG2, _REG3],
-        'SLTU':   [0x00000008, _REG1, _REG2, _REG3],
-        'LSL':    [0x00000009, _REG1, _REG2, _REG3],
-        'ASR':    [0x0000000a, _REG1, _REG2, _REG3],
-        'LSR':    [0x0000000b, _REG1, _REG2, _REG3],
-        'CLZ':    [0x0000000c, _REG1, _REG2],         # 3rd reg is always z
-        'REV':    [0x0000000d, _REG1, _REG2],         # 3rd reg is always z
-        'EXTB':   [0x0000000e, _REG1, _REG2],         # 3rd reg is always z
-        'EXTH':   [0x0000000f, _REG1, _REG2],         # 3rd reg is always z
+        'OR':     [[0x00000001, _REG1, _REG2, _REG3],
+                   [0x80000001, _VREG1, _VREG2, _REG3],
+                   [0xc0000001, _VREG1, _VREG2, _VREG3],
+                   [0x01000000, _REG1, _REG2, _IMM14],
+                   [0x81000000, _VREG1, _VREG2, _IMM14]],
+        'NOR':    [[0x00000002, _REG1, _REG2, _REG3],
+                   [0x80000002, _VREG1, _VREG2, _REG3],
+                   [0xc0000002, _VREG1, _VREG2, _VREG3],
+                   [0x02000000, _REG1, _REG2, _IMM14],
+                   [0x82000000, _VREG1, _VREG2, _IMM14]],
+        'AND':    [[0x00000003, _REG1, _REG2, _REG3],
+                   [0x80000003, _VREG1, _VREG2, _REG3],
+                   [0xc0000003, _VREG1, _VREG2, _VREG3],
+                   [0x03000000, _REG1, _REG2, _IMM14],
+                   [0x83000000, _VREG1, _VREG2, _IMM14]],
+        'XOR':    [[0x00000004, _REG1, _REG2, _REG3],
+                   [0x80000004, _VREG1, _VREG2, _REG3],
+                   [0xc0000004, _VREG1, _VREG2, _VREG3],
+                   [0x04000000, _REG1, _REG2, _IMM14],
+                   [0x84000000, _VREG1, _VREG2, _IMM14]],
+        'ADD':    [[0x00000005, _REG1, _REG2, _REG3],
+                   [0x80000005, _VREG1, _VREG2, _REG3],
+                   [0xc0000005, _VREG1, _VREG2, _VREG3],
+                   [0x05000000, _REG1, _REG2, _IMM14],
+                   [0x85000000, _VREG1, _VREG2, _IMM14]],
+        'SUB':    [[0x00000006, _REG1, _REG2, _REG3],
+                   [0x80000006, _VREG1, _VREG2, _REG3],
+                   [0xc0000006, _VREG1, _VREG2, _VREG3],
+                   [0x06000000, _REG1, _REG2, _IMM14],
+                   [0x86000000, _VREG1, _VREG2, _IMM14]],
+        'SLT':    [[0x00000007, _REG1, _REG2, _REG3],
+                   [0x80000007, _VREG1, _VREG2, _REG3],
+                   [0xc0000007, _VREG1, _VREG2, _VREG3],
+                   [0x07000000, _REG1, _REG2, _IMM14],
+                   [0x87000000, _VREG1, _VREG2, _IMM14]],
+        'SLTU':   [[0x00000008, _REG1, _REG2, _REG3],
+                   [0x80000008, _VREG1, _VREG2, _REG3],
+                   [0xc0000008, _VREG1, _VREG2, _VREG3],
+                   [0x08000000, _REG1, _REG2, _IMM14],
+                   [0x88000000, _VREG1, _VREG2, _IMM14]],
+        'LSL':    [[0x00000009, _REG1, _REG2, _REG3],
+                   [0x80000009, _VREG1, _VREG2, _REG3],
+                   [0xc0000009, _VREG1, _VREG2, _VREG3],
+                   [0x09000000, _REG1, _REG2, _IMM14],
+                   [0x89000000, _VREG1, _VREG2, _IMM14]],
+        'ASR':    [[0x0000000a, _REG1, _REG2, _REG3],
+                   [0x8000000a, _VREG1, _VREG2, _REG3],
+                   [0xc000000a, _VREG1, _VREG2, _VREG3],
+                   [0x0a000000, _REG1, _REG2, _IMM14],
+                   [0x8a000000, _VREG1, _VREG2, _IMM14]],
+        'LSR':    [[0x0000000b, _REG1, _REG2, _REG3],
+                   [0x8000000b, _VREG1, _VREG2, _REG3],
+                   [0xc000000b, _VREG1, _VREG2, _VREG3],
+                   [0x0b000000, _REG1, _REG2, _IMM14],
+                   [0x8b000000, _VREG1, _VREG2, _IMM14]],
+        'CLZ':    [[0x0000000c, _REG1, _REG2],          # 3rd reg is always z
+                   [0x8000000c, _VREG1, _VREG2]],
+        'REV':    [[0x0000000d, _REG1, _REG2],          # 3rd reg is always z
+                   [0x8000000d, _VREG1, _VREG2]],
+        'EXTB':   [[0x0000000e, _REG1, _REG2],          # 3rd reg is always z
+                   [0x8000000e, _VREG1, _VREG2]],
+        'EXTH':   [[0x0000000f, _REG1, _REG2],          # 3rd reg is always z
+                   [0x8000000f, _VREG1, _VREG2]],
 
-        # Load/store reg + reg.
-        'LDXB':   [0x00000010, _REG1, _REG2, _REG3],
-        'LDXUB':  [0x00000011, _REG1, _REG2, _REG3],
-        'LDXH':   [0x00000012, _REG1, _REG2, _REG3],
-        'LDXUH':  [0x00000013, _REG1, _REG2, _REG3],
-        'LDXW':   [0x00000014, _REG1, _REG2, _REG3],
-        'STXB':   [0x00000018, _REG1, _REG2, _REG3],
-        'STXH':   [0x00000019, _REG1, _REG2, _REG3],
-        'STXW':   [0x0000001a, _REG1, _REG2, _REG3],
+        # Load/store.
+        'LDB':    [[0x00000010, _REG1, _REG2, _REG3],
+                   [0x10000000, _REG1, _REG2, _IMM14],
+                   [0x90000000, _VREG1, _REG2, _IMM14]],
+        'LDUB':   [[0x00000011, _REG1, _REG2, _REG3],
+                   [0x11000000, _REG1, _REG2, _IMM14],
+                   [0x91000000, _VREG1, _REG2, _IMM14]],
+        'LDH':    [[0x00000012, _REG1, _REG2, _REG3],
+                   [0x12000000, _REG1, _REG2, _IMM14],
+                   [0x92000000, _VREG1, _REG2, _IMM14]],
+        'LDUH':   [[0x00000013, _REG1, _REG2, _REG3],
+                   [0x13000000, _REG1, _REG2, _IMM14],
+                   [0x93000000, _VREG1, _REG2, _IMM14]],
+        'LDW':    [[0x00000014, _REG1, _REG2, _REG3],
+                   [0x14000000, _REG1, _REG2, _IMM14],
+                   [0x94000000, _VREG1, _REG2, _IMM14]],
+        'STB':    [[0x00000018, _REG1, _REG2, _REG3],
+                   [0x18000000, _REG1, _REG2, _IMM14],
+                   [0x94000000, _VREG1, _REG2, _IMM14]],
+        'STH':    [[0x00000019, _REG1, _REG2, _REG3],
+                   [0x19000000, _REG1, _REG2, _IMM14],
+                   [0x99000000, _VREG1, _REG2, _IMM14]],
+        'STW':    [[0x0000001a, _REG1, _REG2, _REG3],
+                   [0x1a000000, _REG1, _REG2, _IMM14],
+                   [0x9a000000, _VREG1, _REG2, _IMM14]],
 
         # Conditional moves.
-        'MEQ':    [0x00000020, _REG1, _REG2, _REG3],
-        'MNE':    [0x00000021, _REG1, _REG2, _REG3],
-        'MGE':    [0x00000022, _REG1, _REG2, _REG3],
-        'MGT':    [0x00000023, _REG1, _REG2, _REG3],
-        'MLE':    [0x00000024, _REG1, _REG2, _REG3],
-        'MLT':    [0x00000025, _REG1, _REG2, _REG3],
+        'MEQ':    [[0x00000020, _REG1, _REG2, _REG3]],
+        'MNE':    [[0x00000021, _REG1, _REG2, _REG3]],
+        'MGE':    [[0x00000022, _REG1, _REG2, _REG3]],
+        'MGT':    [[0x00000023, _REG1, _REG2, _REG3]],
+        'MLE':    [[0x00000024, _REG1, _REG2, _REG3]],
+        'MLT':    [[0x00000025, _REG1, _REG2, _REG3]],
 
         # Integer mul/div.
-        'MUL':    [0x00000030, _REG1, _REG2, _REG3],
-        'MULU':   [0x00000031, _REG1, _REG2, _REG3],
-        'MULL':   [0x00000032, _REG1, _REG2, _REG3],  # dest = REG1:REG(1+1)
-        'MULLU':  [0x00000033, _REG1, _REG2, _REG3],  # dest = REG1:REG(1+1)
-        'DIV':    [0x00000034, _REG1, _REG2, _REG3],
-        'DIVU':   [0x00000035, _REG1, _REG2, _REG3],
-        'DIVL':   [0x00000036, _REG1, _REG2, _REG3],  # dest = REG1:REG(1+1)
-        'DIVLU':  [0x00000037, _REG1, _REG2, _REG3],  # dest = REG1:REG(1+1)
+        # TODO(m): Use RISC-V style handling of upper 32 bits.
+        'MUL':    [[0x00000030, _REG1, _REG2, _REG3],
+                   [0x80000030, _VREG1, _VREG2, _REG3],
+                   [0xc0000030, _VREG1, _VREG2, _VREG3]],
+        'MULU':   [[0x00000031, _REG1, _REG2, _REG3],
+                   [0x80000031, _VREG1, _VREG2, _REG3],
+                   [0xc0000031, _VREG1, _VREG2, _VREG3]],
+        'DIV':    [[0x00000034, _REG1, _REG2, _REG3],
+                   [0x80000034, _VREG1, _VREG2, _REG3],
+                   [0xc0000034, _VREG1, _VREG2, _VREG3]],
+        'DIVU':   [[0x00000035, _REG1, _REG2, _REG3],
+                   [0x80000035, _VREG1, _VREG2, _REG3],
+                   [0xc0000035, _VREG1, _VREG2, _VREG3]],
 
         # FP arithmetic.
-        'ITOF':   [0x00000040, _REG1, _REG2],    # Cast int->float (reg3 = z)
-        'FTOI':   [0x00000041, _REG1, _REG2],    # Cast float->int (reg3 = z)
-        'FADD':   [0x00000042, _REG1, _REG2, _REG3],
-        'FSUB':   [0x00000043, _REG1, _REG2, _REG3],
-        'FMUL':   [0x00000044, _REG1, _REG2, _REG3],
-        'FDIV':   [0x00000045, _REG1, _REG2, _REG3],
+        'ITOF':   [[0x00000040, _REG1, _REG2],     # Cast int->float (reg3 = z)
+                   [0x80000040, _VREG1, _VREG2]],
+        'FTOI':   [[0x00000041, _REG1, _REG2],     # Cast float->int (reg3 = z)
+                   [0x80000041, _VREG1, _VREG2]],
+        'FADD':   [[0x00000042, _REG1, _REG2, _REG3],
+                   [0x80000042, _VREG1, _VREG2, _REG3],
+                   [0xc0000042, _VREG1, _VREG2, _VREG3]],
+        'FSUB':   [[0x00000043, _REG1, _REG2, _REG3],
+                   [0x80000043, _VREG1, _VREG2, _REG3],
+                   [0xc0000043, _VREG1, _VREG2, _VREG3]],
+        'FMUL':   [[0x00000044, _REG1, _REG2, _REG3],
+                   [0x80000044, _VREG1, _VREG2, _REG3],
+                   [0xc0000044, _VREG1, _VREG2, _VREG3]],
+        'FDIV':   [[0x00000045, _REG1, _REG2, _REG3],
+                   [0x80000045, _VREG1, _VREG2, _REG3],
+                   [0xc0000045, _VREG1, _VREG2, _VREG3]],
 
         # Move to/from auxiliary registers.
-        'MRX':    [0x00000070, _XREG1, _REG2],   # Move gpr->auxiliary (reg3 = z)
-        'MXR':    [0x00000071, _REG1, _XREG2],   # Move auxiliary->gpr (reg3 = z)
+        'MRX':    [[0x00000070, _XREG1, _REG2]],   # Move gpr->auxiliary (reg3 = z)
+        'MXR':    [[0x00000071, _REG1, _XREG2]],   # Move auxiliary->gpr (reg3 = z)
 
         # Jump to register address.
-        'JMP':    [0x00000080, _REG1],                # 1st & 3rd regs are always z
-        'JSR':    [0x00000081, _REG1],                # 1st & 3rd regs are always z
-
-
-        # == B ==
-
-        # Immediate ALU ops.
-        'ORI':    [0x01000000, _REG1, _REG2, _IMM14],
-        'NORI':   [0x02000000, _REG1, _REG2, _IMM14],
-        'ANDI':   [0x03000000, _REG1, _REG2, _IMM14],
-        'XORI':   [0x04000000, _REG1, _REG2, _IMM14],
-        'ADDI':   [0x05000000, _REG1, _REG2, _IMM14],
-        'SUBI':   [0x06000000, _REG1, _REG2, _IMM14],
-        'SLTI':   [0x07000000, _REG1, _REG2, _IMM14],
-        'SLTUI':  [0x08000000, _REG1, _REG2, _IMM14],
-        'LSLI':   [0x09000000, _REG1, _REG2, _IMM14],
-        'ASRI':   [0x0a000000, _REG1, _REG2, _IMM14],
-        'LSRI':   [0x0b000000, _REG1, _REG2, _IMM14],
-
-        # Load/store reg + offset.
-        'LDB':    [0x10000000, _REG1, _REG2, _IMM14],
-        'LDUB':   [0x11000000, _REG1, _REG2, _IMM14],
-        'LDH':    [0x12000000, _REG1, _REG2, _IMM14],
-        'LDUH':   [0x13000000, _REG1, _REG2, _IMM14],
-        'LDW':    [0x14000000, _REG1, _REG2, _IMM14],
-        'STB':    [0x18000000, _REG1, _REG2, _IMM14],
-        'STH':    [0x19000000, _REG1, _REG2, _IMM14],
-        'STW':    [0x1a000000, _REG1, _REG2, _IMM14],
+        'JMP':    [[0x00000080, _REG1]],                # 1st & 3rd regs are always z
+        'JSR':    [[0x00000081, _REG1]],                # 1st & 3rd regs are always z
 
         # TODO(m): Load Linked (ll) and Store Conditional (sc) for atomic ops.
         # 'LL':    [??, _REG2, _REG1],
@@ -234,144 +288,56 @@ _OPCODES = {
         # == C ==
 
         # Branch ops.
-        'BEQ':    [0x20000000, _REG1, _PCREL19x4],
-        'BNE':    [0x21000000, _REG1, _PCREL19x4],
-        'BGE':    [0x22000000, _REG1, _PCREL19x4],
-        'BGT':    [0x23000000, _REG1, _PCREL19x4],
-        'BLE':    [0x24000000, _REG1, _PCREL19x4],
-        'BLT':    [0x25000000, _REG1, _PCREL19x4],
+        'BEQ':    [[0x20000000, _REG1, _PCREL19x4]],
+        'BNE':    [[0x21000000, _REG1, _PCREL19x4]],
+        'BGE':    [[0x22000000, _REG1, _PCREL19x4]],
+        'BGT':    [[0x23000000, _REG1, _PCREL19x4]],
+        'BLE':    [[0x24000000, _REG1, _PCREL19x4]],
+        'BLT':    [[0x25000000, _REG1, _PCREL19x4]],
 
-        'BLEQ':   [0x28000000, _REG1, _PCREL19x4],
-        'BLNE':   [0x29000000, _REG1, _PCREL19x4],
-        'BLGE':   [0x2a000000, _REG1, _PCREL19x4],
-        'BLGT':   [0x2b000000, _REG1, _PCREL19x4],
-        'BLLE':   [0x2c000000, _REG1, _PCREL19x4],
-        'BLLT':   [0x2d000000, _REG1, _PCREL19x4],
+        'BLEQ':   [[0x28000000, _REG1, _PCREL19x4]],
+        'BLNE':   [[0x29000000, _REG1, _PCREL19x4]],
+        'BLGE':   [[0x2a000000, _REG1, _PCREL19x4]],
+        'BLGT':   [[0x2b000000, _REG1, _PCREL19x4]],
+        'BLLE':   [[0x2c000000, _REG1, _PCREL19x4]],
+        'BLLT':   [[0x2d000000, _REG1, _PCREL19x4]],
 
         # Load immediate.
-        'LDI':    [0x30000000, _REG1, _IMM19],
-        'LDHI':   [0x31000000, _REG1, _IMM19],
+        'LDI':    [[0x30000000, _REG1, _IMM19],
+                   [0x81000000, _VREG1, _IMM14]],   # Alias for OR _VREG1, VZ, _IMM14
+        'LDHI':   [[0x31000000, _REG1, _IMM19]],
 
 
         # ---------------------------------------------------------------------
-        # VECTOR OPERATIONS
-        # ---------------------------------------------------------------------
-
-        # == A: V <= V, V ==
-
-        'VVOR':   [0xc0000001, _VREG1, _VREG2, _VREG3],
-        'VVNOR':  [0xc0000002, _VREG1, _VREG2, _VREG3],
-        'VVAND':  [0xc0000003, _VREG1, _VREG2, _VREG3],
-        'VVXOR':  [0xc0000004, _VREG1, _VREG2, _VREG3],
-        'VVADD':  [0xc0000005, _VREG1, _VREG2, _VREG3],
-        'VVSUB':  [0xc0000006, _VREG1, _VREG2, _VREG3],
-        'VVSLT':  [0xc0000007, _VREG1, _VREG2, _VREG3],
-        'VVSLTU': [0xc0000008, _VREG1, _VREG2, _VREG3],
-        'VVLSL':  [0xc0000009, _VREG1, _VREG2, _VREG3],
-        'VVASR':  [0xc000000a, _VREG1, _VREG2, _VREG3],
-        'VVLSR':  [0xc000000b, _VREG1, _VREG2, _VREG3],
-
-        'VVMUL':  [0xc0000030, _VREG1, _VREG2, _VREG3],
-        'VVMULU': [0xc0000031, _VREG1, _VREG2, _VREG3],
-        'VVDIV':  [0xc0000034, _VREG1, _VREG2, _VREG3],
-        'VVDIVU': [0xc0000035, _VREG1, _VREG2, _VREG3],
-
-        'VVFADD': [0xc0000042, _VREG1, _VREG2, _VREG3],
-        'VVFSUB': [0xc0000043, _VREG1, _VREG2, _VREG3],
-        'VVFMUL': [0xc0000044, _VREG1, _VREG2, _VREG3],
-        'VVFDIV': [0xc0000045, _VREG1, _VREG2, _VREG3],
-
-        # == A: V <= V, S ==
-
-        'VSOR':   [0x80000001, _VREG1, _VREG2, _REG3],
-        'VSNOR':  [0x80000002, _VREG1, _VREG2, _REG3],
-        'VSAND':  [0x80000003, _VREG1, _VREG2, _REG3],
-        'VSXOR':  [0x80000004, _VREG1, _VREG2, _REG3],
-        'VSADD':  [0x80000005, _VREG1, _VREG2, _REG3],
-        'VSSUB':  [0x80000006, _VREG1, _VREG2, _REG3],
-        'VSSLT':  [0x80000007, _VREG1, _VREG2, _REG3],
-        'VSSLTU': [0x80000008, _VREG1, _VREG2, _REG3],
-        'VSLSL':  [0x80000009, _VREG1, _VREG2, _REG3],
-        'VSASR':  [0x8000000a, _VREG1, _VREG2, _REG3],
-        'VSLSR':  [0x8000000b, _VREG1, _VREG2, _REG3],
-        'VCLZ':   [0x8000000c, _VREG1, _VREG2],         # 3rd reg is always z
-        'VREV':   [0x8000000d, _VREG1, _VREG2],         # 3rd reg is always z
-        'VEXTB':  [0x8000000e, _VREG1, _VREG2],         # 3rd reg is always z
-        'VEXTH':  [0x8000000f, _VREG1, _VREG2],         # 3rd reg is always z
-
-        'VSMUL':  [0x80000030, _VREG1, _VREG2, _REG3],
-        'VSMULU': [0x80000031, _VREG1, _VREG2, _REG3],
-        'VSDIV':  [0x80000034, _VREG1, _VREG2, _REG3],
-        'VSDIVU': [0x80000035, _VREG1, _VREG2, _REG3],
-
-        'VITOF':  [0x80000040, _VREG1, _VREG2],    # Cast int->float (reg3 = z)
-        'VFTOI':  [0x80000041, _VREG1, _VREG2],    # Cast float->int (reg3 = z)
-        'VSFADD': [0x80000042, _VREG1, _VREG2, _REG3],
-        'VSFSUB': [0x80000043, _VREG1, _VREG2, _REG3],
-        'VSFMUL': [0x80000044, _VREG1, _VREG2, _REG3],
-        'VSFDIV': [0x80000045, _VREG1, _VREG2, _REG3],
-
-        # == B ==
-
-        # V <= V, imm14
-        'VSORI':   [0x81000000, _VREG1, _VREG2, _IMM14],
-        'VSNORI':  [0x82000000, _VREG1, _VREG2, _IMM14],
-        'VSANDI':  [0x83000000, _VREG1, _VREG2, _IMM14],
-        'VSXORI':  [0x84000000, _VREG1, _VREG2, _IMM14],
-        'VSADDI':  [0x85000000, _VREG1, _VREG2, _IMM14],
-        'VSSUBI':  [0x86000000, _VREG1, _VREG2, _IMM14],
-        'VSSLTI':  [0x87000000, _VREG1, _VREG2, _IMM14],
-        'VSSLTUI': [0x88000000, _VREG1, _VREG2, _IMM14],
-        'VSLSLI':  [0x89000000, _VREG1, _VREG2, _IMM14],
-        'VSASRI':  [0x8a000000, _VREG1, _VREG2, _IMM14],
-        'VSLSRI':  [0x8b000000, _VREG1, _VREG2, _IMM14],
-
-        # Vector load/store from reg with stride.
-        'VLDB':  [0x90000000, _VREG1, _REG2, _IMM14],
-        'VLDUB': [0x91000000, _VREG1, _REG2, _IMM14],
-        'VLDH':  [0x92000000, _VREG1, _REG2, _IMM14],
-        'VLDUH': [0x93000000, _VREG1, _REG2, _IMM14],
-        'VLDW':  [0x94000000, _VREG1, _REG2, _IMM14],
-        'VSTB':  [0x98000000, _VREG1, _REG2, _IMM14],
-        'VSTH':  [0x99000000, _VREG1, _REG2, _IMM14],
-        'VSTW':  [0x9a000000, _VREG1, _REG2, _IMM14],
-
-
         # === ALIASES ===
+        # ---------------------------------------------------------------------
 
         # Alias for: OR _REG1, Z, _REG3
-        'MOV':    [0x00000001, _REG1, _REG3],
-
-        # Alias for: VVOR _VREG1, VZ, _VREG3
-        'VVMOV':  [0xc0000001, _VREG1, _VREG3],
-
-        # Alias for: VSOR _VREG1, VZ, _REG3
-        'VSMOV':  [0x80000001, _VREG1, _REG3],
-
-        # Alias for: VSORI _VREG1, VZ, _IMM14
-        'VSLDI':  [0x81000000, _VREG1, _IMM14],
+        'MOV':    [[0x00000001, _REG1, _REG3],
+                   [0x80000001, _VREG1, _REG3],
+                   [0xc0000001, _VREG1, _VREG3]],
 
         # Alias for: BEQ Z, _PCREL19x4
-        'B':      [0x20000000, _PCREL19x4],
+        'B':      [[0x20000000, _PCREL19x4]],
 
         # Alias for: BLEQ Z, _PCREL19x4
-        'BL':     [0x28000000, _PCREL19x4],
+        'BL':     [[0x28000000, _PCREL19x4]],
 
         # Alias for: JMP LR
-        'RTS':    [0x00e80080],
+        'RTS':    [[0x00e80080]],
 
         # Alias for: ADDI _REG1, PC, offset
-        'LEA':    [0x0507c000, _REG1, _PCREL14],
+        'LEA':    [[0x0507c000, _REG1, _PCREL14]],
 
         # Load/store pc-relative (alias for: ld.?/st.? _REG1, pc, offset).
-        'LDPCB':  [0x1007c000, _REG1, _PCREL14],
-        'LDUPCB': [0x1107c000, _REG1, _PCREL14],
-        'LDPCH':  [0x1207c000, _REG1, _PCREL14],
-        'LDUPCH': [0x1307c000, _REG1, _PCREL14],
-        'LDPCW':  [0x1407c000, _REG1, _PCREL14],
-        'STPCB':  [0x1807c000, _REG1, _PCREL14],
-        'STPCH':  [0x1907c000, _REG1, _PCREL14],
-        'STPCW':  [0x1a07c000, _REG1, _PCREL14],
+        'LDPCB':  [[0x1007c000, _REG1, _PCREL14]],
+        'LDUPCB': [[0x1107c000, _REG1, _PCREL14]],
+        'LDPCH':  [[0x1207c000, _REG1, _PCREL14]],
+        'LDUPCH': [[0x1307c000, _REG1, _PCREL14]],
+        'LDPCW':  [[0x1407c000, _REG1, _PCREL14]],
+        'STPCB':  [[0x1807c000, _REG1, _PCREL14]],
+        'STPCH':  [[0x1907c000, _REG1, _PCREL14]],
+        'STPCW':  [[0x1a07c000, _REG1, _PCREL14]],
     }
 
 
@@ -685,11 +651,23 @@ def compile_file(file_name, out_name, verbosity_level):
                     operation = extract_parts(line)
                     mnemonic = operation[0].upper()
                     try:
-                        descr = _OPCODES[mnemonic]
+                        descrs = _OPCODES[mnemonic]
                     except KeyError as e:
                         raise AsmError(line_no, 'Bad mnemonic: {}'.format(mnemonic))
                     if compilation_pass == 2:
-                        instr = translate_operation(operation, mnemonic, descr, addr, line_no, labels, scope_label)
+                        errors = []
+                        translation_successful = False
+                        for descr in descrs:
+                            try:
+                                instr = translate_operation(operation, mnemonic, descr, addr, line_no, labels, scope_label)
+                                translation_successful = True
+                                break
+                            except AsmError as e:
+                                errors.append(e.msg)
+                        if not translation_successful:
+                            # TODO(m): Show the individual errors (overload candidates).
+                            msg = 'Invalid operands for {}: {}'.format(mnemonic, ','.join(operation[1:]))
+                            raise AsmError(line_no, msg)
                         if verbosity_level >= 2:
                             print format(instr, '08x') + ' <= ' + '{}'.format(operation)
                         code += struct.pack('<L', instr)
