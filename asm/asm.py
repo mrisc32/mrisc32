@@ -252,19 +252,28 @@ _OPCODES = {
                    [0xc0000025, _VREG1, _VREG2, _VREG3]],
 
         # Integer mul/div.
-        # TODO(m): Use RISC-V style handling of upper 32 bits.
         'MUL':    [[0x00000030, _REG1, _REG2, _REG3],
                    [0x80000030, _VREG1, _VREG2, _REG3],
                    [0xc0000030, _VREG1, _VREG2, _VREG3]],
-        'MULU':   [[0x00000031, _REG1, _REG2, _REG3],
-                   [0x80000031, _VREG1, _VREG2, _REG3],
-                   [0xc0000031, _VREG1, _VREG2, _VREG3]],
+        # Note: MUL works for both signed and unsigned so no MULU is required.
+        'MULHI':  [[0x00000032, _REG1, _REG2, _REG3],
+                   [0x80000032, _VREG1, _VREG2, _REG3],
+                   [0xc0000032, _VREG1, _VREG2, _VREG3]],
+        'MULHIU': [[0x00000033, _REG1, _REG2, _REG3],
+                   [0x80000033, _VREG1, _VREG2, _REG3],
+                   [0xc0000033, _VREG1, _VREG2, _VREG3]],
         'DIV':    [[0x00000034, _REG1, _REG2, _REG3],
                    [0x80000034, _VREG1, _VREG2, _REG3],
                    [0xc0000034, _VREG1, _VREG2, _VREG3]],
         'DIVU':   [[0x00000035, _REG1, _REG2, _REG3],
                    [0x80000035, _VREG1, _VREG2, _REG3],
                    [0xc0000035, _VREG1, _VREG2, _VREG3]],
+        'REM':    [[0x00000036, _REG1, _REG2, _REG3],
+                   [0x80000036, _VREG1, _VREG2, _REG3],
+                   [0xc0000036, _VREG1, _VREG2, _VREG3]],
+        'REMU':   [[0x00000037, _REG1, _REG2, _REG3],
+                   [0x80000037, _VREG1, _VREG2, _REG3],
+                   [0xc0000037, _VREG1, _VREG2, _VREG3]],
 
         # FP arithmetic.
         'ITOF':   [[0x00000040, _REG1, _REG2],     # Cast int->float (reg3 = z)

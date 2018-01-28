@@ -81,13 +81,12 @@ protected:
   // Mul/Div operations.
   static const uint32_t MD_OP_NONE = 0x00u;
   static const uint32_t MD_OP_MUL = 0x30u;
-  static const uint32_t MD_OP_MULU = 0x31u;
-  static const uint32_t MD_OP_MULL = 0x32u;
-  static const uint32_t MD_OP_MULLU = 0x33u;
+  static const uint32_t MD_OP_MULHI = 0x32u;
+  static const uint32_t MD_OP_MULHIU = 0x33u;
   static const uint32_t MD_OP_DIV = 0x34u;
   static const uint32_t MD_OP_DIVU = 0x35u;
-  static const uint32_t MD_OP_DIVL = 0x36u;
-  static const uint32_t MD_OP_DIVLU = 0x37u;
+  static const uint32_t MD_OP_REM = 0x36u;
+  static const uint32_t MD_OP_REMU = 0x37u;
 
   // FPU operations.
   static const uint32_t FPU_OP_NONE = 0x00u;

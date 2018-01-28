@@ -71,6 +71,18 @@
 |BLLE|   | src1, i19 | lr <= pc+4, pc <= pc+signextend(i19)*4 if src1 <= 0 | Conditionally branch and link if less than or equal to zero |
 |BLLT|   | src1, i19 | lr <= pc+4, pc <= pc+signextend(i19)*4 if src1 < 0 | Conditionally branch and link if less than zero |
 
+## Multiply and divide instructions
+
+| Mnemonic | V | Operands | Operation | Description |
+|---|---|---|---|---|
+|MUL| x | dst, src1, src2 | dst <= src1 * src2 | Multiplication (signed or unsigned, low 32 bits) |
+|MULHI| x | dst, src1, src2 | dst <= (src1 * src2) >> 32 | Multiplication (signed, high 32 bits) |
+|MULHIU| x | dst, src1, src2 | dst <= (src1 * src2) >> 32 | Multiplication (unsigned, high 32 bits) |
+|DIV| x | dst, src1, src2 | dst <= src1 / src2 | Division (signed, integer part) |
+|DIVU| x | dst, src1, src2 | dst <= src1 / src2 | Division (unsigned, integer part) |
+|REM| x | dst, src1, src2 | dst <= src1 % src2 | Remainder (signed) |
+|REMU| x | dst, src1, src2 | dst <= src1 % src2 | Remainder (unsigned) |
+
 ## Floating point instructions
 
 | Mnemonic | V | Operands | Operation | Description |

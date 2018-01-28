@@ -20,6 +20,7 @@
 #include "cpu_simple.hpp"
 
 #include <cstring>
+#include <exception>
 
 namespace {
 struct id_in_t {
@@ -441,17 +442,17 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       // Mul/Div (multi-cycle integer operations).
       switch (ex_in.md_op) {
         case MD_OP_MUL:
-          ex_result = static_cast<uint32_t>(static_cast<int32_t>(ex_in.src_a) *
-                                            static_cast<int32_t>(ex_in.src_b));
-          break;
-        case MD_OP_MULU:
           ex_result = ex_in.src_a * ex_in.src_b;
           break;
-        case MD_OP_MULL:
-          // TODO(m): Implement me!
+        case MD_OP_MULHI:
+          ex_result =
+              static_cast<uint32_t>((static_cast<int64_t>(static_cast<int32_t>(ex_in.src_a)) *
+                                     static_cast<int64_t>(static_cast<int32_t>(ex_in.src_b))) >>
+                                    32u);
           break;
-        case MD_OP_MULLU:
-          // TODO(m): Implement me!
+        case MD_OP_MULHIU:
+          ex_result = static_cast<uint32_t>(
+              (static_cast<uint64_t>(ex_in.src_a) * static_cast<uint64_t>(ex_in.src_b)) >> 32u);
           break;
         case MD_OP_DIV:
           ex_result = static_cast<uint32_t>(static_cast<int32_t>(ex_in.src_a) /
@@ -460,12 +461,12 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
         case MD_OP_DIVU:
           ex_result = ex_in.src_a / ex_in.src_b;
           break;
-        case MD_OP_DIVL:
+        case MD_OP_REM:
           // TODO(m): Implement me!
-          break;
-        case MD_OP_DIVLU:
+          throw std::runtime_error("REM is not yet implemented.");
+        case MD_OP_REMU:
           // TODO(m): Implement me!
-          break;
+          throw std::runtime_error("REMU is not yet implemented.");
       }
 
       // FPU (multi-cycle floating point operations).
