@@ -10,7 +10,7 @@
 | Compare and branch | SUB + B[cc] |
 | Unconditional branch | BEQ Z, offset |
 | Unconditional subroutine branch | BLEQ Z, offset |
-| Return from subroutine | JMP LR |
+| Return from subroutine | J LR |
 | Push to stack | ADD SP,SP,-N<br>STW ra,SP,0<br>... |
 | Pop from stack | LDW rd,SP,0<br>...<br>ADD SP,SP,N |
 | 64-bit integer addition: c2:c1 = a2:a1 + b2:b1 | ADD c1,a1,b1<br>ADD c2,a2,b2<br>SLTU carry,c1,a1<br>ADD c2,c2,carry|

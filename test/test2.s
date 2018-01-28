@@ -59,7 +59,7 @@ abs_diff_vectors:
 .done:
   ldw     vl, sp, 0
   add     sp, sp, 4
-  jmp     lr
+  j       lr
 
 
 
@@ -87,7 +87,7 @@ abs_diff_vectors_scalar:
   bne     s4, .loop
 
 .done:
-  jmp     lr
+  j       lr
 
 
   .include "sys.s"

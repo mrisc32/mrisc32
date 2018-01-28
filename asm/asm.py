@@ -232,12 +232,24 @@ _OPCODES = {
                    [0x9a000000, _VREG1, _REG2, _IMM14]],
 
         # Conditional moves.
-        'MEQ':    [[0x00000020, _REG1, _REG2, _REG3]],
-        'MNE':    [[0x00000021, _REG1, _REG2, _REG3]],
-        'MGE':    [[0x00000022, _REG1, _REG2, _REG3]],
-        'MGT':    [[0x00000023, _REG1, _REG2, _REG3]],
-        'MLE':    [[0x00000024, _REG1, _REG2, _REG3]],
-        'MLT':    [[0x00000025, _REG1, _REG2, _REG3]],
+        'MEQ':    [[0x00000020, _REG1, _REG2, _REG3],
+                   [0x80000020, _VREG1, _VREG2, _REG3],
+                   [0xc0000020, _VREG1, _VREG2, _VREG3]],
+        'MNE':    [[0x00000021, _REG1, _REG2, _REG3],
+                   [0x80000021, _VREG1, _VREG2, _REG3],
+                   [0xc0000021, _VREG1, _VREG2, _VREG3]],
+        'MGE':    [[0x00000022, _REG1, _REG2, _REG3],
+                   [0x80000022, _VREG1, _VREG2, _REG3],
+                   [0xc0000022, _VREG1, _VREG2, _VREG3]],
+        'MGT':    [[0x00000023, _REG1, _REG2, _REG3],
+                   [0x80000023, _VREG1, _VREG2, _REG3],
+                   [0xc0000023, _VREG1, _VREG2, _VREG3]],
+        'MLE':    [[0x00000024, _REG1, _REG2, _REG3],
+                   [0x80000024, _VREG1, _VREG2, _REG3],
+                   [0xc0000024, _VREG1, _VREG2, _VREG3]],
+        'MLT':    [[0x00000025, _REG1, _REG2, _REG3],
+                   [0x80000025, _VREG1, _VREG2, _REG3],
+                   [0xc0000025, _VREG1, _VREG2, _VREG3]],
 
         # Integer mul/div.
         # TODO(m): Use RISC-V style handling of upper 32 bits.
@@ -277,8 +289,8 @@ _OPCODES = {
         'MXR':    [[0x00000071, _REG1, _XREG2]],   # Move auxiliary->gpr (reg3 = z)
 
         # Jump to register address.
-        'JMP':    [[0x00000080, _REG1]],                # 1st & 3rd regs are always z
-        'JSR':    [[0x00000081, _REG1]],                # 1st & 3rd regs are always z
+        'J':      [[0x00000080, _REG1]],           # 2nd & 3rd regs are always z
+        'JL':     [[0x00000081, _REG1]],           # 2nd & 3rd regs are always z
 
         # TODO(m): Load Linked (ll) and Store Conditional (sc) for atomic ops.
         # 'LL':    [??, _REG2, _REG1],
@@ -304,8 +316,9 @@ _OPCODES = {
 
         # Load immediate.
         'LDI':    [[0x30000000, _REG1, _IMM19],
-                   [0x81000000, _VREG1, _IMM14]],   # Alias for OR _VREG1, VZ, _IMM14
-        'LDHI':   [[0x31000000, _REG1, _IMM19]],
+                   [0xb0000000, _VREG1, _IMM19]],
+        'LDHI':   [[0x31000000, _REG1, _IMM19],
+                   [0xb1000000, _VREG1, _IMM19]],
 
 
         # ---------------------------------------------------------------------
@@ -331,9 +344,9 @@ _OPCODES = {
 
         # Load/store pc-relative (alias for: ld.?/st.? _REG1, pc, offset).
         'LDPCB':  [[0x1007c000, _REG1, _PCREL14]],
-        'LDUPCB': [[0x1107c000, _REG1, _PCREL14]],
+        'LDPCUB': [[0x1107c000, _REG1, _PCREL14]],
         'LDPCH':  [[0x1207c000, _REG1, _PCREL14]],
-        'LDUPCH': [[0x1307c000, _REG1, _PCREL14]],
+        'LDPCUH': [[0x1307c000, _REG1, _PCREL14]],
         'LDPCW':  [[0x1407c000, _REG1, _PCREL14]],
         'STPCB':  [[0x1807c000, _REG1, _PCREL14]],
         'STPCH':  [[0x1907c000, _REG1, _PCREL14]],
