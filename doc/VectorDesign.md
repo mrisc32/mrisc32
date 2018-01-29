@@ -1,4 +1,4 @@
-# Vector (SIMD) Design
+# Vector Design (SIMD)
 
 ## Description
 
@@ -14,19 +14,19 @@ The MRISC32 approach to Single Instruction Multiple Data (SIMD) operation is ver
 
 The dominating SIMD solution today (SSE, AVX, NEON) is based on an ISA that is largely separate from the scalar ISA of the CPU.
 * All SIMD instructions operate on fixed width registers (you have to use all elements or nothing).
-* Each register is split into different number of elements depending on the type (i.e. the data is packed in the registers).
 * A completely separate instruction set and separate execution units are used for operating on the SIMD registers.
+* Each register is split into different number of elements depending on the type (i.e. the data is packed in the registers).
 
-When used correctly, that model makes good use of the available CPU resources (e.g. with 128-bit registers, 16 byte-additions can be performed per clock cycle and execution unit). However it comes with relatively high costs for hardware and software:
+That model, however, comes with relatively high costs for hardware and software:
 * Specialized SIMD execution units must be included in the hardware, in addition to the regular scalar execution units.
 * It is hard to write software that utilizes the SIMD hardware efficiently, partially because compilers have a hard time to map traditional software constructs to the SIMD ISA, so you often have to hand-write code at a very low level.
 * Another problem is that it is hard to mix scalar and SIMD code, or mix different data types in SIMD code.
+* In order to exploit more parallelism in new hardware generations, new instruction sets and registers have to be added (e.g. MMX vs SSE vs AVX vs ...), leading to a very complex software model.
 
 In comparison, the MRISC32 vector model is easier to implement in hardware and easier to use in software. For instance:
 * The same execution units can be used for both vector operations and scalar operations, meaning less hardware.
 * The software model maps better to traditional software patterns, and it should be easier for compilers to auto-vectorize code.
-
-Furthermore the same ISA can be used for many different levels of hardware parallelism, as opposed to having to design a new ISA every time more hardware parallelism is to be added to a CPU architecture (e.g. MMX vs SSE vs AVX vs ...). In other words, the vector model scales well from very simple, scalar architectures, all the way up to highly parallel superscalar architectures.
+* The same ISA can be used for many different levels of hardware parallelism. In other words, the vector model scales well from very simple, scalar architectures, all the way up to highly parallel superscalar architectures.
 
 
 ## Examples
@@ -41,7 +41,7 @@ void abs_diff(float* c, const float* a, const float* b, const int n) {
 }
 ```
 
-Assuming that the arguments (c, a, b, n) are in registers S1, S2, S3 and S4, this can be implemented using scalar operations as:
+Assuming that the arguments (c, a, b, n) are in registers S1, S2, S3 and S4 (according to the [calling convention](Registers.md)), this can be implemented using scalar operations as:
 
 ```
 abs_diff:
