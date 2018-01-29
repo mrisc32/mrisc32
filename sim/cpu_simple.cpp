@@ -325,7 +325,10 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
             alu_op = ALU_OP_OR;
             break;
           case 0x31000000u:  // ldhi
-            alu_op = ALU_OP_ORHI;
+            alu_op = ALU_OP_LDHI;
+            break;
+          case 0x32000000u:  // ldhio
+            alu_op = ALU_OP_LDHIO;
             break;
         }
       } else if (is_cond_move && condition_satisfied) {
@@ -434,8 +437,11 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
         case ALU_OP_EXTH:
           ex_result = s16_as_u32(static_cast<int16_t>(ex_in.src_a));
           break;
-        case ALU_OP_ORHI:
-          ex_result = ex_in.src_a | (ex_in.src_b << 13u);
+        case ALU_OP_LDHI:
+          ex_result = ex_in.src_b << 13u;
+          break;
+        case ALU_OP_LDHIO:
+          ex_result = (ex_in.src_b << 13u) | 0x1fffu;
           break;
       }
 

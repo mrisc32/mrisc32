@@ -49,6 +49,7 @@
 |MGE| x | dst, src1, src2 | dst <= src2 if src1 >= 0 | Conditionally move if greater than or equal to zero |
 |LDI| x | dst, i19 | dst <= signextend(i19) | Load immediate (low 19 bits) |
 |LDHI| x | dst, i19 | dst <= i19 << 13 | Load immediate (high 19 bits) |
+|LDHIO| x | dst, i19 | dst <= (i19 << 13) \| 0x1fff | Load immediate with low ones (high 19 bits) |
 
 **(1)**: The third operand in vector loads/stores is used as a stride parameter rather than an offset.
 

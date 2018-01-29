@@ -76,7 +76,8 @@ protected:
   static const uint32_t ALU_OP_REV = 0x0du;
   static const uint32_t ALU_OP_EXTB = 0x0eu;
   static const uint32_t ALU_OP_EXTH = 0x0fu;
-  static const uint32_t ALU_OP_ORHI = 0x10u;  // arg1 | (arg2 << 13)
+  static const uint32_t ALU_OP_LDHI = 0x10u;  // arg2 << 13
+  static const uint32_t ALU_OP_LDHIO = 0x11u;  // (arg2 << 13) | 0x1fff
 
   // Mul/Div operations.
   static const uint32_t MD_OP_NONE = 0x00u;
