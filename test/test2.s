@@ -37,8 +37,7 @@ abs_diff_vectors:
   ldi     vl, 31
   blt     s4, .done     ; n == 0, nothing to do
 
-  ldi     s10, -1
-  lsr     s10, s10, 1   ; s10 = 0x7fffffff
+  ldhio   s10, 0x7fffffff
 
 .loop:
   add     s9, s4, -32
@@ -71,8 +70,7 @@ abs_diff_vectors_scalar:
 
   beq     s4, .done     ; n == 0, nothing to do
 
-  ldi     s12, -1
-  lsr     s12, s12, 1   ; s12 = 0x7fffffff
+  ldhio   s12, 0x7fffffff
 
   ldi     s11, 0
 .loop:

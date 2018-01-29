@@ -41,8 +41,10 @@ _XREG1 = 7
 _XREG2 = 8
 _IMM14 = 9       # -8192..8191
 _IMM19 = 10      # -262144..262143
-_PCREL14 = 11    # -8192..8191
-_PCREL19x4 = 12  # -1048576..1048572 (in steps of 4)
+_IMM19HI = 11    # 0x00000000..0xffffe000 (in steps of 0x00002000)
+_IMM19HIO = 12   # 0x0001ffff..0xffffffff (in steps of 0x00002000)
+_PCREL14 = 13    # -8192..8191
+_PCREL19x4 = 14  # -1048576..1048572 (in steps of 4)
 
 # Names of general purpose registers.
 _REGS = {
@@ -326,10 +328,10 @@ _OPCODES = {
         # Load immediate.
         'LDI':    [[0x30000000, _REG1, _IMM19],
                    [0xb0000000, _VREG1, _IMM19]],
-        'LDHI':   [[0x31000000, _REG1, _IMM19],
-                   [0xb1000000, _VREG1, _IMM19]],
-        'LDHIO':  [[0x32000000, _REG1, _IMM19],
-                   [0xb2000000, _VREG1, _IMM19]],
+        'LDHI':   [[0x31000000, _REG1, _IMM19HI],
+                   [0xb1000000, _VREG1, _IMM19HI]],
+        'LDHIO':  [[0x32000000, _REG1, _IMM19HIO],
+                   [0xb2000000, _VREG1, _IMM19HIO]],
 
 
         # ---------------------------------------------------------------------
@@ -418,14 +420,38 @@ def translate_imm(operand, operand_type, line_no):
     except ValueError:
         raise AsmError(line_no, 'Invalid integer value: {}'.format(operand))
 
-    value_max = {
-            _IMM14:   1 << 13,
-            _IMM19:   1 << 18,
+    value_bits = {
+            _IMM14:    14,
+            _IMM19:    19,
+            _IMM19HI:  19,
+            _IMM19HIO: 19,
         }[operand_type]
-    if (value < -value_max or value >= (value_max * 2)):
-        raise AsmError(line_no, 'Too large immediate value: {}'.format(operand))
+    value_shift = {
+            _IMM14:    0,
+            _IMM19:    0,
+            _IMM19HI:  13,
+            _IMM19HIO: 13,
+        }[operand_type]
+    value_min = {
+            _IMM14:    -(1 << 13),
+            _IMM19:    -(1 << 18),
+            _IMM19HI:  0x00000000,
+            _IMM19HIO: 0x00001fff,
+        }[operand_type]
+    value_max = {
+            _IMM14:    (1 << 13) - 1,
+            _IMM19:    (1 << 18) - 1,
+            _IMM19HI:  0xffffe000,
+            _IMM19HIO: 0xffffffff,
+        }[operand_type]
+    if value < value_min or value > value_max:
+        raise AsmError(line_no, 'Immediate value out of range ({}..{}): {}'.format(value_min, value_max, operand))
+    if operand_type == _IMM19HI and (value & 0x00001fff) != 0:
+        raise AsmError(line_no, 'Immediate value must have the lower 13 bits cleared: {}'.format(operand))
+    if operand_type == _IMM19HIO and (value & 0x00001fff) != 0x00001fff:
+        raise AsmError(line_no, 'Immediate value must have the lower 13 bits set: {}'.format(operand))
 
-    return value & (value_max * 2 - 1)
+    return (value >> value_shift) & ((1 << value_bits) - 1)
 
 
 def mangle_local_label(label, scope_label):
@@ -469,7 +495,7 @@ def translate_operation(operation, mnemonic, descr, addr, line_no, labels, scope
         operand_type = descr[k]
         if operand_type in [_REG1, _REG2, _REG3, _VREG1, _VREG2, _VREG3, _XREG1, _XREG2]:
             instr = instr | translate_reg(operand, operand_type, line_no)
-        elif operand_type in [_IMM14, _IMM19]:
+        elif operand_type in [_IMM14, _IMM19, _IMM19HI, _IMM19HIO]:
             instr = instr | translate_imm(operand, operand_type, line_no)
         elif operand_type in [_PCREL14, _PCREL19x4]:
             instr = instr | translate_pcrel(operand, operand_type, addr, labels, scope_label, line_no)
@@ -691,6 +717,8 @@ def compile_file(file_name, out_name, verbosity_level):
                         if not translation_successful:
                             # TODO(m): Show the individual errors (overload candidates).
                             msg = 'Invalid operands for {}: {}'.format(mnemonic, ','.join(operation[1:]))
+                            for e in errors:
+                                msg += '\n  Candidate: {}'.format(e)
                             raise AsmError(line_no, msg)
                         if verbosity_level >= 2:
                             print format(instr, '08x') + ' <= ' + '{}'.format(operation)

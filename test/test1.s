@@ -92,7 +92,7 @@ test_2:
 
   ldi    s1, 1
   ldi    s9, 0
-  ldhi   s10, 0x5f778
+  ldhi   s10, 0xbeef0000
   or     s10, s10, 0x42 ; s10 = 0xbeef0042
   sub    s10, s10, s16  ; s10 = s16 - s10
   meq    s1, s10, s9    ; return (s16 == 0xbeef0042) ? 0 : 1

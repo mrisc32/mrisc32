@@ -47,8 +47,7 @@ Assuming that the arguments (c, a, b, n) are in registers S1, S2, S3 and S4 (acc
 abs_diff:
   BEQ     S4, .done     ; n == 0, nothing to do
 
-  LDI     S12, -1
-  LSR     S12, S12, 1   ; S12 = 0x7fffffff
+  LDHIO   S12, 0x7fffffff
 
   LDI     S11, 0
 .loop:
@@ -77,8 +76,7 @@ abs_diff:
   LDI     VL, 31
   BLT     S4, .done     ; n == 0, nothing to do
 
-  LDI     S10, -1
-  LSR     S10, S10, 1   ; S10 = 0x7fffffff
+  LDHIO   S10, 0x7fffffff
 
 .loop:
   ADD     S9, S4, -32
