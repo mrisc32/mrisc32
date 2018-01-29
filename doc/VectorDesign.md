@@ -135,7 +135,8 @@ Instead of processing one element at a time, each vector loop can process multip
 
 This is essentially the same principle as for SIMD ISAs such as SSE or NEON.
 
-The only extra hardware requirements for issuing multiple elements per vector operation are:
-* Sufficient number of execution units.
+It puts some more requirements on the hardware logic to be able to issue multiple elements per vector operation. In particular the hardware needs:
+* A sufficient number of execution units.
 * Wider read/write ports for the vector registers and the data cache(s).
+* Masking logic for handling tail cases (e.g. if only three out of four parallel elements are to be processed).
 
