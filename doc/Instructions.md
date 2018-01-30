@@ -26,8 +26,7 @@
 |SUB| x | dst, src1, src2 | dst <= src2 - src1 | Subtraction (note: argument order) |
 |SLT| x | dst, src1, src2 | dst <= (src1 < src2) ? 1 : 0 | Set if less than (signed) |
 |SLTU| x | dst, src1, src2 | dst <= (src1 < src2) ? 1 : 0 | Set if less than (unsigned) |
-|ASL| x | dst, src1, src2 | dst <= src1 << src2 (signed) | Arithmetic shift left |
-|LSL| x | dst, src1, src2 | dst <= src1 << src2 (unsigned) | Logic shift left |
+|LSL| x | dst, src1, src2 | dst <= src1 << src2 | Logic shift left |
 |ASR| x | dst, src1, src2 | dst <= src1 >> src2 (signed) | Arithmetic shift right |
 |LSR| x | dst, src1, src2 | dst <= src1 >> src2 (unsigned) | Logic shift right |
 |SHUF| x | dst, src1, src2 | dst <= shuffle(src1, src2) | Shuffle bytes according to indices in src2 (2) |
