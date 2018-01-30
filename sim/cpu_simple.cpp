@@ -66,8 +66,7 @@ struct vector_state_t {
   bool active;           // True if a vector operation is currently active.
 };
 
-inline uint32_t add32(const uint32_t a,
-                      const uint32_t b) {
+inline uint32_t add32(const uint32_t a, const uint32_t b) {
   return a + b;
 }
 
@@ -425,6 +424,10 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
           break;
         case ALU_OP_SLTU:
           ex_result = (ex_in.src_a < ex_in.src_b) ? 1u : 0u;
+          break;
+        case ALU_OP_ASL:
+          ex_result = static_cast<uint32_t>(static_cast<int32_t>(ex_in.src_a)
+                                            << static_cast<int32_t>(ex_in.src_b));
           break;
         case ALU_OP_LSL:
           ex_result = ex_in.src_a << ex_in.src_b;
