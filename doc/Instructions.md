@@ -30,13 +30,11 @@
 |LSL| x | dst, src1, src2 | dst <= src1 << src2 (unsigned) | Logic shift left |
 |ASR| x | dst, src1, src2 | dst <= src1 >> src2 (signed) | Arithmetic shift right |
 |LSR| x | dst, src1, src2 | dst <= src1 >> src2 (unsigned) | Logic shift right |
+|SHUF| x | dst, src1, src2 | dst <= shuffle(src1, src2) | Shuffle bytes according to indices in src2 (2) |
 |CLZ| x | dst, src1 | dst <= clz(src1) | Count leading zeros |
 |REV| x | dst, src1 | dst <= rev(src1) | Reverse bit order |
-|REVB| x | dst, src1 | dst <= revb(src1) | Reverse byte order |
-|REVH| x | dst, src1 | dst <= revh(src1) | Reverse halfword order |
 |EXTB| x | dst, src1 | dst <= signextend(src1[7:0]) | Sign-extend byte to word |
 |EXTH| x | dst, src1 | dst <= signextend(src1[15:0]) | Sign-extend halfword to word |
-|EXTUH| x | dst, src1 | dst <= src1 & 0x0000ffff | Zero-extend halfword to word |
 |LDB| (1) | dst, src1, src2 | dst <= [src1 + src2] (byte) | Load signed byte |
 |LDUB| (1) | dst, src1, src2 | dst <= [src1 + src2] (byte) | Load unsigned byte |
 |LDH| (1) | dst, src1, src2 | dst <= [src1 + src2] (halfword) | Load signed halfword |
@@ -56,6 +54,8 @@
 |LDHIO| x | dst, i19 | dst <= (i19 << 13) \| 0x1fff | Load immediate with low ones (high 19 bits) |
 
 **(1)**: The third operand in vector loads/stores is used as a stride parameter rather than an offset.
+
+**(2)**: SHUF uses the four indices given in src2 to rearrange bytes from src1 into dst. The indcies are given in the lowest 12 bits of src2 (three bits per index, where the upper bit in each index can be set to 1 for clearing the corresponding byte in dst).
 
 ## Branch and jump instructions
 

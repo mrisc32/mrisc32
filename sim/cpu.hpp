@@ -73,13 +73,11 @@ protected:
   static const uint32_t ALU_OP_LSL = 0x0au;
   static const uint32_t ALU_OP_ASR = 0x0bu;
   static const uint32_t ALU_OP_LSR = 0x0cu;
+  static const uint32_t ALU_OP_SHUF = 0x0du;
   static const uint32_t ALU_OP_CLZ = 0x50u;
   static const uint32_t ALU_OP_REV = 0x51u;
-  static const uint32_t ALU_OP_REVB = 0x52u;
-  static const uint32_t ALU_OP_REVH = 0x53u;
-  static const uint32_t ALU_OP_EXTB = 0x54u;
-  static const uint32_t ALU_OP_EXTH = 0x55u;
-  static const uint32_t ALU_OP_EXTUH = 0x56u;
+  static const uint32_t ALU_OP_EXTB = 0x52u;
+  static const uint32_t ALU_OP_EXTH = 0x53u;
   static const uint32_t ALU_OP_LDHI = 0x10u;  // arg2 << 13
   static const uint32_t ALU_OP_LDHIO = 0x11u;  // (arg2 << 13) | 0x1fff
 

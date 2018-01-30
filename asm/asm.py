@@ -203,6 +203,11 @@ _OPCODES = {
                    [0xc000000c, _VREG1, _VREG2, _VREG3],
                    [0x0c000000, _REG1, _REG2, _IMM14],
                    [0x8c000000, _VREG1, _VREG2, _IMM14]],
+        'SHUF':   [[0x0000000d, _REG1, _REG2, _REG3],
+                   [0x8000000d, _VREG1, _VREG2, _REG3],
+                   [0xc000000d, _VREG1, _VREG2, _VREG3],
+                   [0x0d000000, _REG1, _REG2, _IMM14],
+                   [0x8d000000, _VREG1, _VREG2, _IMM14]],
 
         # Load/store.
         'LDB':    [[0x00000010, _REG1, _REG2, _REG3],
@@ -297,16 +302,10 @@ _OPCODES = {
                    [0x80000050, _VREG1, _VREG2]],
         'REV':    [[0x00000051, _REG1, _REG2],          # 3rd reg is always z
                    [0x80000051, _VREG1, _VREG2]],
-        'REVB':   [[0x00000052, _REG1, _REG2],          # 3rd reg is always z
+        'EXTB':   [[0x00000052, _REG1, _REG2],          # 3rd reg is always z
                    [0x80000052, _VREG1, _VREG2]],
-        'REVH':   [[0x00000053, _REG1, _REG2],          # 3rd reg is always z
+        'EXTH':   [[0x00000053, _REG1, _REG2],          # 3rd reg is always z
                    [0x80000053, _VREG1, _VREG2]],
-        'EXTB':   [[0x00000054, _REG1, _REG2],          # 3rd reg is always z
-                   [0x80000054, _VREG1, _VREG2]],
-        'EXTH':   [[0x00000055, _REG1, _REG2],          # 3rd reg is always z
-                   [0x80000055, _VREG1, _VREG2]],
-        'EXTUH':  [[0x00000056, _REG1, _REG2],          # 3rd reg is always z
-                   [0x80000056, _VREG1, _VREG2]],
 
         # Special move/load/store instructions.
         'MSX':    [[0x00000070, _XREG1, _REG2]],   # Move scalar->auxiliary (reg3 = z)

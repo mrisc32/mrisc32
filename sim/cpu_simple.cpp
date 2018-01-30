@@ -95,13 +95,26 @@ inline uint32_t rev32(const uint32_t x) {
          ((x << 29u) & 0x40000000u) | ((x << 31u) & 0x80000000u);
 }
 
-inline uint32_t revb32(const uint32_t x) {
-  return ((x >> 24u) & 0x000000ffu) | ((x >> 8u) & 0x0000ff00u) | ((x << 8u) & 0x00ff0000u) |
-         ((x << 24u) & 0xff000000u);
-}
+inline uint32_t shuf32(const uint32_t x, const uint32_t idx) {
+  uint8_t xv[4];
+  xv[0] = static_cast<uint8_t>(x);
+  xv[1] = static_cast<uint8_t>(x >> 8u);
+  xv[2] = static_cast<uint8_t>(x >> 16u);
+  xv[3] = static_cast<uint8_t>(x >> 24u);
+  uint8_t idxv[4];
+  idxv[0] = static_cast<uint8_t>(idx & 7u);
+  idxv[1] = static_cast<uint8_t>((idx >> 3u) & 7u);
+  idxv[2] = static_cast<uint8_t>((idx >> 6u) & 7u);
+  idxv[3] = static_cast<uint8_t>((idx >> 9u) & 7u);
 
-inline uint32_t revh32(const uint32_t x) {
-  return ((x >> 16u) & 0x0000ffffu) | ((x << 16u) & 0xffff0000u);
+  uint8_t yv[4];
+  yv[0] = (idxv[0] & 4u) ? 0u : xv[idxv[0]];
+  yv[1] = (idxv[1] & 4u) ? 0u : xv[idxv[1]];
+  yv[2] = (idxv[2] & 4u) ? 0u : xv[idxv[2]];
+  yv[3] = (idxv[3] & 4u) ? 0u : xv[idxv[3]];
+
+  return static_cast<uint32_t>(yv[0]) | (static_cast<uint32_t>(yv[1]) << 8u) |
+         (static_cast<uint32_t>(yv[2]) << 16u) | (static_cast<uint32_t>(yv[3]) << 24u);
 }
 
 inline float as_f32(const uint32_t x) {
@@ -439,26 +452,20 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
         case ALU_OP_LSR:
           ex_result = ex_in.src_a >> ex_in.src_b;
           break;
+        case ALU_OP_SHUF:
+          ex_result = shuf32(ex_in.src_a, ex_in.src_b);
+          break;
         case ALU_OP_CLZ:
           ex_result = clz32(ex_in.src_a);
           break;
         case ALU_OP_REV:
           ex_result = rev32(ex_in.src_a);
           break;
-        case ALU_OP_REVB:
-          ex_result = revb32(ex_in.src_a);
-          break;
-        case ALU_OP_REVH:
-          ex_result = revh32(ex_in.src_a);
-          break;
         case ALU_OP_EXTB:
           ex_result = s8_as_u32(static_cast<int8_t>(ex_in.src_a));
           break;
         case ALU_OP_EXTH:
           ex_result = s16_as_u32(static_cast<int16_t>(ex_in.src_a));
-          break;
-        case ALU_OP_EXTUH:
-          ex_result = ex_in.src_a & 0x0000ffffu;
           break;
         case ALU_OP_LDHI:
           ex_result = ex_in.src_b << 13u;
