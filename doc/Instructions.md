@@ -31,8 +31,11 @@
 |LSR| x | dst, src1, src2 | dst <= src1 >> src2 (unsigned) | Logic shift right |
 |CLZ| x | dst, src1 | dst <= clz(src1) | Count leading zeros |
 |REV| x | dst, src1 | dst <= rev(src1) | Reverse bit order |
+|REVB| x | dst, src1 | dst <= revb(src1) | Reverse byte order |
+|REVH| x | dst, src1 | dst <= revh(src1) | Reverse halfword order |
 |EXTB| x | dst, src1 | dst <= signextend(src1[7:0]) | Sign-extend byte to word |
 |EXTH| x | dst, src1 | dst <= signextend(src1[15:0]) | Sign-extend halfword to word |
+|EXTUH| x | dst, src1 | dst <= src1 & 0x0000ffff | Zero-extend halfword to word |
 |LDB| (1) | dst, src1, src2 | dst <= [src1 + src2] (byte) | Load signed byte |
 |LDUB| (1) | dst, src1, src2 | dst <= [src1 + src2] (byte) | Load unsigned byte |
 |LDH| (1) | dst, src1, src2 | dst <= [src1 + src2] (halfword) | Load signed halfword |
@@ -108,8 +111,10 @@ For instance the integer instruction `ADD` has the following operation modes:
 
 ## Planned instructions
 
+* Move scalar registers to/from vector register elements.
 * Control instructions/registers (cache control, interrupt masks, status flags, ...).
 * Load Linked (ll) and Store Conditional (sc) for atomic operations.
 * Single-instruction load of common constants (mostly floating point: PI, sqrt(2), ...).
-* More DSP-type operations (saturate, packed addition, swizzle, ...).
+* More floating point instructions (round, sqrt, ...?).
+* More DSP-type operations (saturate, packed addition, ...).
 

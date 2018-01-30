@@ -198,14 +198,6 @@ _OPCODES = {
                    [0xc000000b, _VREG1, _VREG2, _VREG3],
                    [0x0b000000, _REG1, _REG2, _IMM14],
                    [0x8b000000, _VREG1, _VREG2, _IMM14]],
-        'CLZ':    [[0x0000000c, _REG1, _REG2],          # 3rd reg is always z
-                   [0x8000000c, _VREG1, _VREG2]],
-        'REV':    [[0x0000000d, _REG1, _REG2],          # 3rd reg is always z
-                   [0x8000000d, _VREG1, _VREG2]],
-        'EXTB':   [[0x0000000e, _REG1, _REG2],          # 3rd reg is always z
-                   [0x8000000e, _VREG1, _VREG2]],
-        'EXTH':   [[0x0000000f, _REG1, _REG2],          # 3rd reg is always z
-                   [0x8000000f, _VREG1, _VREG2]],
 
         # Load/store.
         'LDB':    [[0x00000010, _REG1, _REG2, _REG3],
@@ -278,34 +270,50 @@ _OPCODES = {
                    [0xc0000037, _VREG1, _VREG2, _VREG3]],
 
         # FP arithmetic.
-        'ITOF':   [[0x00000040, _REG1, _REG2],     # Cast int->float (reg3 = z)
-                   [0x80000040, _VREG1, _VREG2]],
-        'FTOI':   [[0x00000041, _REG1, _REG2],     # Cast float->int (reg3 = z)
-                   [0x80000041, _VREG1, _VREG2]],
-        'FADD':   [[0x00000042, _REG1, _REG2, _REG3],
-                   [0x80000042, _VREG1, _VREG2, _REG3],
-                   [0xc0000042, _VREG1, _VREG2, _VREG3]],
-        'FSUB':   [[0x00000043, _REG1, _REG2, _REG3],
-                   [0x80000043, _VREG1, _VREG2, _REG3],
-                   [0xc0000043, _VREG1, _VREG2, _VREG3]],
-        'FMUL':   [[0x00000044, _REG1, _REG2, _REG3],
-                   [0x80000044, _VREG1, _VREG2, _REG3],
-                   [0xc0000044, _VREG1, _VREG2, _VREG3]],
-        'FDIV':   [[0x00000045, _REG1, _REG2, _REG3],
-                   [0x80000045, _VREG1, _VREG2, _REG3],
-                   [0xc0000045, _VREG1, _VREG2, _VREG3]],
+        'ITOF':   [[0x00000038, _REG1, _REG2],     # Cast int->float (reg3 = z)
+                   [0x80000038, _VREG1, _VREG2]],
+        'FTOI':   [[0x00000039, _REG1, _REG2],     # Cast float->int (reg3 = z)
+                   [0x80000039, _VREG1, _VREG2]],
+        'FADD':   [[0x0000003a, _REG1, _REG2, _REG3],
+                   [0x8000003a, _VREG1, _VREG2, _REG3],
+                   [0xc000003a, _VREG1, _VREG2, _VREG3]],
+        'FSUB':   [[0x0000003b, _REG1, _REG2, _REG3],
+                   [0x8000003b, _VREG1, _VREG2, _REG3],
+                   [0xc000003b, _VREG1, _VREG2, _VREG3]],
+        'FMUL':   [[0x0000003c, _REG1, _REG2, _REG3],
+                   [0x8000003c, _VREG1, _VREG2, _REG3],
+                   [0xc000003c, _VREG1, _VREG2, _VREG3]],
+        'FDIV':   [[0x0000003d, _REG1, _REG2, _REG3],
+                   [0x8000003d, _VREG1, _VREG2, _REG3],
+                   [0xc000003d, _VREG1, _VREG2, _VREG3]],
 
-        # Move to/from auxiliary registers.
-        'MRX':    [[0x00000070, _XREG1, _REG2]],   # Move gpr->auxiliary (reg3 = z)
-        'MXR':    [[0x00000071, _REG1, _XREG2]],   # Move auxiliary->gpr (reg3 = z)
+        # Bit handling and byte/halfword/word shuffling.
+        'CLZ':    [[0x00000050, _REG1, _REG2],          # 3rd reg is always z
+                   [0x80000050, _VREG1, _VREG2]],
+        'REV':    [[0x00000051, _REG1, _REG2],          # 3rd reg is always z
+                   [0x80000051, _VREG1, _VREG2]],
+        'REVB':   [[0x00000052, _REG1, _REG2],          # 3rd reg is always z
+                   [0x80000052, _VREG1, _VREG2]],
+        'REVH':   [[0x00000053, _REG1, _REG2],          # 3rd reg is always z
+                   [0x80000053, _VREG1, _VREG2]],
+        'EXTB':   [[0x00000054, _REG1, _REG2],          # 3rd reg is always z
+                   [0x80000054, _VREG1, _VREG2]],
+        'EXTH':   [[0x00000055, _REG1, _REG2],          # 3rd reg is always z
+                   [0x80000055, _VREG1, _VREG2]],
+        'EXTUH':  [[0x00000056, _REG1, _REG2],          # 3rd reg is always z
+                   [0x80000056, _VREG1, _VREG2]],
+
+        # Special move/load/store instructions.
+        'MSX':    [[0x00000070, _XREG1, _REG2]],   # Move scalar->auxiliary (reg3 = z)
+        'MXS':    [[0x00000071, _REG1, _XREG2]],   # Move auxiliary->scalar (reg3 = z)
+        'MSV':    [[0x00000072, _VREG1, _REG2, _REG3]],  # Move scalar->vector element
+        'MVS':    [[0x00000073, _REG1, _VREG2, _REG3]],   # Move vector element->scalar
+        'LL':     [[0x00000074, _REG1, _REG2]],    # Load linked
+        'SC':     [[0x00000075, _REG1, _REG2]],    # Store conditional
 
         # Jump to register address.
         'J':      [[0x00000080, _REG1]],           # 2nd & 3rd regs are always z
         'JL':     [[0x00000081, _REG1]],           # 2nd & 3rd regs are always z
-
-        # TODO(m): Load Linked (ll) and Store Conditional (sc) for atomic ops.
-        # 'LL':    [??, _REG2, _REG1],
-        # 'SC':    [??, _REG2, _REG1],
 
 
         # == C ==

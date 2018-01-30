@@ -96,31 +96,40 @@ inline uint32_t rev32(const uint32_t x) {
          ((x << 29u) & 0x40000000u) | ((x << 31u) & 0x80000000u);
 }
 
-float as_f32(const uint32_t x) {
+inline uint32_t revb32(const uint32_t x) {
+  return ((x >> 24u) & 0x000000ffu) | ((x >> 8u) & 0x0000ff00u) | ((x << 8u) & 0x00ff0000u) |
+         ((x << 24u) & 0xff000000u);
+}
+
+inline uint32_t revh32(const uint32_t x) {
+  return ((x >> 16u) & 0x0000ffffu) | ((x << 16u) & 0xffff0000u);
+}
+
+inline float as_f32(const uint32_t x) {
   float result;
   std::memcpy(&result, &x, sizeof(float));
   return result;
 }
 
-uint32_t as_u32(const float x) {
+inline uint32_t as_u32(const float x) {
   uint32_t result;
   std::memcpy(&result, &x, sizeof(uint32_t));
   return result;
 }
 
-uint32_t s8_as_u32(const int8_t x) {
+inline uint32_t s8_as_u32(const int8_t x) {
   return static_cast<uint32_t>(static_cast<int32_t>(x));
 }
 
-uint32_t u8_as_u32(const uint8_t x) {
+inline uint32_t u8_as_u32(const uint8_t x) {
   return static_cast<uint32_t>(x);
 }
 
-uint32_t s16_as_u32(const int16_t x) {
+inline uint32_t s16_as_u32(const int16_t x) {
   return static_cast<uint32_t>(static_cast<int32_t>(x));
 }
 
-uint32_t u16_as_u32(const uint16_t x) {
+inline uint32_t u16_as_u32(const uint16_t x) {
   return static_cast<uint32_t>(x);
 }
 
@@ -315,7 +324,9 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       uint32_t alu_op = ALU_OP_NONE;
       if (is_subroutine_branch || is_mem_op) {
         alu_op = ALU_OP_ADD;
-      } else if (op_class_A && (sclar_instr & 0x000001ffu) <= 0x0000000fu) {
+      } else if (op_class_A && (sclar_instr & 0x000001f0u) == 0x00000000u) {
+        alu_op = sclar_instr & 0x000001ff;
+      } else if (op_class_A && (sclar_instr & 0x000001f0u) == 0x00000050u) {
         alu_op = sclar_instr & 0x000001ff;
       } else if (op_class_B && (sclar_instr & 0xff000000u) <= 0x0b000000u) {
         alu_op = sclar_instr >> 24u;
@@ -337,13 +348,13 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
 
       // Determine MD operation.
       uint32_t md_op = MD_OP_NONE;
-      if (op_class_A && (sclar_instr & 0x000001f0u) == 0x00000030u) {
+      if (op_class_A && (sclar_instr & 0x000001f8u) == 0x00000030u) {
         md_op = sclar_instr & 0x000001ff;
       }
 
       // Determine FPU operation.
       uint32_t fpu_op = FPU_OP_NONE;
-      if (op_class_A && (sclar_instr & 0x000001f0u) == 0x00000040u) {
+      if (op_class_A && (sclar_instr & 0x000001f8u) == 0x00000038u) {
         fpu_op = sclar_instr & 0x000001ff;
       }
 
@@ -431,11 +442,20 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
         case ALU_OP_REV:
           ex_result = rev32(ex_in.src_a);
           break;
+        case ALU_OP_REVB:
+          ex_result = revb32(ex_in.src_a);
+          break;
+        case ALU_OP_REVH:
+          ex_result = revh32(ex_in.src_a);
+          break;
         case ALU_OP_EXTB:
           ex_result = s8_as_u32(static_cast<int8_t>(ex_in.src_a));
           break;
         case ALU_OP_EXTH:
           ex_result = s16_as_u32(static_cast<int16_t>(ex_in.src_a));
+          break;
+        case ALU_OP_EXTUH:
+          ex_result = ex_in.src_a & 0x0000ffffu;
           break;
         case ALU_OP_LDHI:
           ex_result = ex_in.src_b << 13u;

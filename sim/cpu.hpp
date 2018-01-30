@@ -72,10 +72,13 @@ protected:
   static const uint32_t ALU_OP_LSL = 0x09u;
   static const uint32_t ALU_OP_ASR = 0x0au;
   static const uint32_t ALU_OP_LSR = 0x0bu;
-  static const uint32_t ALU_OP_CLZ = 0x0cu;
-  static const uint32_t ALU_OP_REV = 0x0du;
-  static const uint32_t ALU_OP_EXTB = 0x0eu;
-  static const uint32_t ALU_OP_EXTH = 0x0fu;
+  static const uint32_t ALU_OP_CLZ = 0x50u;
+  static const uint32_t ALU_OP_REV = 0x51u;
+  static const uint32_t ALU_OP_REVB = 0x52u;
+  static const uint32_t ALU_OP_REVH = 0x53u;
+  static const uint32_t ALU_OP_EXTB = 0x54u;
+  static const uint32_t ALU_OP_EXTH = 0x55u;
+  static const uint32_t ALU_OP_EXTUH = 0x56u;
   static const uint32_t ALU_OP_LDHI = 0x10u;  // arg2 << 13
   static const uint32_t ALU_OP_LDHIO = 0x11u;  // (arg2 << 13) | 0x1fff
 
@@ -91,12 +94,12 @@ protected:
 
   // FPU operations.
   static const uint32_t FPU_OP_NONE = 0x00u;
-  static const uint32_t FPU_OP_ITOF = 0x40u;
-  static const uint32_t FPU_OP_FTOI = 0x41u;
-  static const uint32_t FPU_OP_ADD = 0x42u;
-  static const uint32_t FPU_OP_SUB = 0x43u;
-  static const uint32_t FPU_OP_MUL = 0x44u;
-  static const uint32_t FPU_OP_DIV = 0x45u;
+  static const uint32_t FPU_OP_ITOF = 0x38u;
+  static const uint32_t FPU_OP_FTOI = 0x39u;
+  static const uint32_t FPU_OP_ADD = 0x3au;
+  static const uint32_t FPU_OP_SUB = 0x3bu;
+  static const uint32_t FPU_OP_MUL = 0x3cu;
+  static const uint32_t FPU_OP_DIV = 0x3du;
 
   // Memory operations.
   static const uint32_t MEM_OP_NONE = 0x00u;
