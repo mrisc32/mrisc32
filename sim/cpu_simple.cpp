@@ -205,10 +205,10 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       // Is this a vector operation?
       const bool is_vector_op = ((id_in.instr & 0xc0000000u) != 0u);
 
-      // Detect encoding class (A, B, C or D).
+      // Detect encoding class (A, B or C).
       const bool op_class_A = ((sclar_instr & 0x3f000000u) == 0x00000000u);
-      const bool op_class_B = ((sclar_instr & 0x30000000u) < 0x20000000u) && !op_class_A;
       const bool op_class_C = ((sclar_instr & 0x20000000u) == 0x20000000u);
+      const bool op_class_B = !op_class_A && !op_class_C;
 
       // Extract parts of the instruction.
       // NOTE: These may or may not be valid, depending on the instruction type.

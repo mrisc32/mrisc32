@@ -26,9 +26,23 @@ import sys
 
 
 # Instruction formats:
-# A: |v|0    |ra5 |rb5 |rc5 |op9     |
-# B: |v|op6  |ra5 |rb5 |imm14        |
-# C: |v|op6  |ra5 |imm19             |
+#      3             2               1
+#     |1| | | | | | |4| | | | | | | |6| | | | | | | |8| | | | | | | |0|
+#     +---+-----------+---------+---------+---------+-----------------+
+# A:  |VM |0 0 0 0 0 0|REG1     |REG2     |REG3     |OP (9b)          |
+#     +---+-----------+---------+---------+---------+-----------------+
+# B:  |VM |0|OP (5b)  |REG1     |REG2     |IMM (14b)                  |
+#     +---+-+---------+---------+---------+---------------------------+
+# C:  |VM |1|OP (5b)  |REG1     |IMM (19b)                            |
+#     +---+-+---------+---------+-------------------------------------+
+#
+# VM:   Vector mode:
+#         00 = scalar
+#         10 = vector,scalar
+#         11 = vector,vector
+# OP:   Operation
+# REGn: Register (5 bit identifier)
+# IMM:  Immediate value
 
 # Supported operand types.
 _REG1 = 1
