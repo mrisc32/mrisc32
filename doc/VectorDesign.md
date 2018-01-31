@@ -80,7 +80,9 @@ abs_diff:
 
 .loop:
   ADD     S9, S4, -32
-  MLT     VL, S9, S4    ; VL = min(32, number of elements left) - 1
+  BGE     S9, .still_in_core_loop
+  OR      VL, S4, Z     ; VL = number of elements left - 1
+.still_in_core_loop:
 
   LDW     V9, S2, 4
   LDW     V10, S3, 4

@@ -42,12 +42,6 @@
 |STB| (1) | src1, src2, src3 | [src2 + src3] <= src1 (byte) | Store byte |
 |STH| (1) | src1, src2, src3 | [src2 + src3] <= src1 (halfword) | Store halfowrd |
 |STW| (1) | src1, src2, src3 | [src2 + src3] <= src1 (word) | Store word |
-|MEQ| x | dst, src1, src2 | dst <= src2 if src1 == 0 | Conditionally move if equal to zero |
-|MNE| x | dst, src1, src2 | dst <= src2 if src1 != 0 | Conditionally move if not equal to zero |
-|MLT| x | dst, src1, src2 | dst <= src2 if src1 < 0 | Conditionally move if less than zero |
-|MLE| x | dst, src1, src2 | dst <= src2 if src1 <= 0 | Conditionally move if less than or equal to zero |
-|MGT| x | dst, src1, src2 | dst <= src2 if src1 > 0 | Conditionally move if greater than zero |
-|MGE| x | dst, src1, src2 | dst <= src2 if src1 >= 0 | Conditionally move if greater than or equal to zero |
 |LDI| x | dst, i19 | dst <= signextend(i19) | Load immediate (low 19 bits) |
 |LDHI| x | dst, i19 | dst <= i19 << 13 | Load immediate (high 19 bits) |
 |LDHIO| x | dst, i19 | dst <= (i19 << 13) \| 0x1fff | Load immediate with low ones (high 19 bits) |

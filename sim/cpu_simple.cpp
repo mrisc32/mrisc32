@@ -239,47 +239,44 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       next_cycle_continues_a_vector_loop =
           is_vector_op && (vector.idx < (m_regs[REG_VC] & (NUM_VECTOR_ENTRIES - 1)));
 
-      // == BRANCH & CONDITIONAL MOVES ==
+      // == BRANCH ==
 
-      const bool is_bcc = ((sclar_instr & 0xf0000000u) == 0x20000000u);
-      const bool is_bcc_and_link = ((sclar_instr & 0xf8000000u) == 0x28000000u);
-      const bool is_jmp_jsr = ((sclar_instr & 0xff0001f0u) == 0x00000080u);
+      const bool is_bcc = ((sclar_instr & 0x30000000u) == 0x20000000u);
+      const bool is_bcc_and_link = ((sclar_instr & 0x38000000u) == 0x28000000u);
+      const bool is_jmp_jsr = ((sclar_instr & 0x3f0001f0u) == 0x00000080u);
       const bool is_branch = is_bcc || is_jmp_jsr;
-      const bool is_subroutine_branch = ((sclar_instr & 0xff0001ffu) == 0x00000081u) ||  // jsr
+      const bool is_subroutine_branch = ((sclar_instr & 0x3f0001ffu) == 0x00000081u) ||  // jsr
                                         is_bcc_and_link;
 
-      const bool is_cond_move = ((sclar_instr & 0xff0001f0u) == 0x00000020u);
-
-      // Branch source register is reg1 (for b[cc] and jmp/jsr), and reg2 for m[cc].
-      const uint32_t branch_cond_reg =
-          is_cond_move ? reg2 : ((is_bcc || is_jmp_jsr) ? reg1 : REG_Z);
+      // Branch source register is reg1 (for b[cc] and jmp/jsr).
+      const uint32_t branch_cond_reg = (is_bcc || is_jmp_jsr) ? reg1 : REG_Z;
 
       // Read the branch/condition register.
       // TODO(m): We should share a register read-port with the other register reads further down.
       const uint32_t branch_cond_value = m_regs[branch_cond_reg];
 
-      // Evaluate condition (for b[cc] and m[cc]).
-      const uint32_t condition = (is_cond_move ? sclar_instr : (sclar_instr >> 24u)) & 0x00000027u;
+      // Evaluate condition (for b[cc]/bl[cc]).
+      const uint32_t condition = (sclar_instr >> 24u) & 0x00000027u;
       bool condition_satisfied = false;
       switch (condition) {
-        case 0x20u:  // beq/bleq/meq
+        case 0x20u:  // beq/bleq
           condition_satisfied = (branch_cond_value == 0u);
           break;
-        case 0x21u:  // bne/blne/mne
+        case 0x21u:  // bne/blne
           condition_satisfied = (branch_cond_value != 0u);
           break;
-        case 0x22u:  // bge/blge/mge
+        case 0x22u:  // bge/blge
           condition_satisfied = ((branch_cond_value & 0x80000000u) == 0u);
           break;
-        case 0x23u:  // bgt/blgt/mgt
+        case 0x23u:  // bgt/blgt
           condition_satisfied =
               ((branch_cond_value & 0x80000000u) == 0u) && (branch_cond_value != 0u);
           break;
-        case 0x24u:  // ble/blle/mle
+        case 0x24u:  // ble/blle
           condition_satisfied =
               ((branch_cond_value & 0x80000000u) != 0u) || (branch_cond_value == 0u);
           break;
-        case 0x25u:  // blt/bllt/mlt
+        case 0x25u:  // blt/bllt
           condition_satisfied = ((branch_cond_value & 0x80000000u) != 0u);
           break;
       }
@@ -316,14 +313,13 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       const bool reg1_is_src = is_mem_store || is_jmp_jsr;
 
       // Should we use reg2 as a source?
-      const bool reg2_is_src = (op_class_A || op_class_B) && !is_cond_move;
+      const bool reg2_is_src = (op_class_A || op_class_B);
 
       // Should we use reg3 as a source?
       const bool reg3_is_src = op_class_A;
 
       // Should we use reg1 as a destination?
-      const bool reg1_is_dst =
-          !reg1_is_src && !is_branch && !(is_cond_move && !condition_satisfied);
+      const bool reg1_is_dst = !reg1_is_src && !is_branch;
 
       // Determine the source & destination register numbers (zero for none).
       const uint32_t src_reg_a = is_subroutine_branch ? REG_PC : (reg2_is_src ? reg2 : REG_Z);
@@ -354,8 +350,6 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
             alu_op = ALU_OP_LDHIO;
             break;
         }
-      } else if (is_cond_move && condition_satisfied) {
-        alu_op = ALU_OP_OR;
       }
 
       // Determine MD operation.

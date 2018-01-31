@@ -41,7 +41,9 @@ abs_diff_vectors:
 
 .loop:
   add     s9, s4, -32
-  mlt     vl, s9, s4    ; vl = min(32, number of elements left) - 1
+  bge     s9, .still_in_core_loop
+  or      vl, s4, z     ; vl = number of elements left - 1
+.still_in_core_loop:
 
   ldw     v9, s2, 4
   ldw     v10, s3, 4
@@ -49,7 +51,7 @@ abs_diff_vectors:
   and     v9, v9, s10   ; Clear the sign bit
   stw     v9, s1, 4
 
-  or      s4, s9, 0
+  or      s4, s9, z
   add     s1, s1, 128
   add     s2, s2, 128
   add     s3, s3, 128

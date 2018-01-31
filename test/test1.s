@@ -90,12 +90,15 @@ test_2:
   ldi    s1, 10
   bl     _putc
 
-  ldi    s1, 1
-  ldi    s9, 0
   ldhi   s10, 0xbeef0000
   or     s10, s10, 0x42 ; s10 = 0xbeef0042
   sub    s10, s10, s16  ; s10 = s16 - s10
-  meq    s1, s10, s9    ; return (s16 == 0xbeef0042) ? 0 : 1
+
+  ; return (s16 == 0xbeef0042) ? 0 : 1
+  ldi    s1, 0
+  beq    s10, .ok
+  ldi    s1, 1
+.ok:
 
   ldw    lr, sp, 0
   ldw    s16, sp, 4
@@ -197,9 +200,12 @@ test_5:
   ldw    s16, sp, 4
   add    sp, sp, 8
 
+  ; s1 = (result == 2*PI) ? 0 : 1
+  ldi    s1, 0
+  beq    s9, .ok
   ldi    s1, 1
-  ldi    s10, 0
-  meq    s1, s9, s10   ; s1 = (result == 2*PI) ? 0 : 1
+.ok:
+
   rts
 
 
@@ -253,10 +259,11 @@ test_6:
   ldw    s1, s16, s9
   bl     _printhex
   ldi    s1, 0x2c
-  ldi    s9, 10
-  add    s18, s17, -31
+  add    s18, s17, -31  ; s17 == 31 ?
   add    s17, s17, 1
-  meq    s1, s18, s9    ; Print comma or newline depending on if this is the last element
+  bne    s18, .not_last_element
+  ldi    s1, 10         ; Print comma or newline depending on if this is the last element
+.not_last_element:
   bl     _putc
   bne    s18, .print
 

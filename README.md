@@ -14,15 +14,13 @@ This is an experimental, custom 32-bit RISC CPU with vector operations.
     - PC is user-visible (for arithmetic and addressing) but read-only (to simplify branching logic).
   - There are 32 vector registers, V0-V31, each with 32 32-bit elements.
     - All registers can be used for all types (integers, pointers and floating point).
-* Branches are executed in the ID (instruction decode) step, which gives a low branch misprediction penalty.
-* Conditional moves further reduce the cost of branch mispredictions.
-* Conditionals (branches, moves) are based on register content.
+* Branches can be executed in the ID (instruction decode) step, which gives a low branch misprediction penalty.
+* Conditionals (branches) are based on register content (not condition code flags).
 * There are *no* condition code flags (carry, overflow, ...).
 * Unlike early RISC architectures, there are *no* delay slots.
 * Many traditional floating point operations are handled by integer operations, reducing the number of necessary instructions:
   - Load/store.
   - Compare/branch.
-  - Conditional moves.
   - Sign and bit manipulation (e.g. neg, abs).
 * Vector operations use a Cray-like model:
   - Vector operations are variable length (1-32 elements).

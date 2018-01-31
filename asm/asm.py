@@ -230,26 +230,6 @@ _OPCODES = {
                    [0x1a000000, _REG1, _REG2, _IMM14],
                    [0x9a000000, _VREG1, _REG2, _IMM14]],
 
-        # Conditional moves.
-        'MEQ':    [[0x00000020, _REG1, _REG2, _REG3],
-                   [0x80000020, _VREG1, _VREG2, _REG3],
-                   [0xc0000020, _VREG1, _VREG2, _VREG3]],
-        'MNE':    [[0x00000021, _REG1, _REG2, _REG3],
-                   [0x80000021, _VREG1, _VREG2, _REG3],
-                   [0xc0000021, _VREG1, _VREG2, _VREG3]],
-        'MGE':    [[0x00000022, _REG1, _REG2, _REG3],
-                   [0x80000022, _VREG1, _VREG2, _REG3],
-                   [0xc0000022, _VREG1, _VREG2, _VREG3]],
-        'MGT':    [[0x00000023, _REG1, _REG2, _REG3],
-                   [0x80000023, _VREG1, _VREG2, _REG3],
-                   [0xc0000023, _VREG1, _VREG2, _VREG3]],
-        'MLE':    [[0x00000024, _REG1, _REG2, _REG3],
-                   [0x80000024, _VREG1, _VREG2, _REG3],
-                   [0xc0000024, _VREG1, _VREG2, _VREG3]],
-        'MLT':    [[0x00000025, _REG1, _REG2, _REG3],
-                   [0x80000025, _VREG1, _VREG2, _REG3],
-                   [0xc0000025, _VREG1, _VREG2, _VREG3]],
-
         # Integer mul/div.
         'MUL':    [[0x00000030, _REG1, _REG2, _REG3],
                    [0x80000030, _VREG1, _VREG2, _REG3],
@@ -345,10 +325,10 @@ _OPCODES = {
         # === ALIASES ===
         # ---------------------------------------------------------------------
 
-        # Alias for: OR _REG1, Z, _REG3
-        'MOV':    [[0x00000001, _REG1, _REG3],
-                   [0x80000001, _VREG1, _REG3],
-                   [0xc0000001, _VREG1, _VREG3]],
+        # Alias for: OR _REG1, _REG2, Z
+        'MOV':    [[0x00000001, _REG1, _REG2],
+                   [0x80000001, _VREG1, _REG2],
+                   [0xc0000001, _VREG1, _VREG2]],
 
         # Alias for: BEQ Z, _PCREL19x4
         'B':      [[0x20000000, _PCREL19x4]],
@@ -359,10 +339,10 @@ _OPCODES = {
         # Alias for: JMP LR
         'RTS':    [[0x00e80080]],
 
-        # Alias for: ADDI _REG1, PC, offset
+        # Alias for: ADD _REG1, PC, offset
         'LEA':    [[0x0507c000, _REG1, _PCREL14]],
 
-        # Load/store pc-relative (alias for: ld.?/st.? _REG1, pc, offset).
+        # Load/store pc-relative (alias for: LD?/ST? _REG1, pc, offset).
         'LDPCB':  [[0x1007c000, _REG1, _PCREL14]],
         'LDPCUB': [[0x1107c000, _REG1, _PCREL14]],
         'LDPCH':  [[0x1207c000, _REG1, _PCREL14]],
