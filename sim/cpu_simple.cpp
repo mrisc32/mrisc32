@@ -242,14 +242,13 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       // == BRANCH ==
 
       const bool is_bcc = ((sclar_instr & 0x30000000u) == 0x20000000u);
-      const bool is_bcc_and_link = ((sclar_instr & 0x38000000u) == 0x28000000u);
       const bool is_jmp_jsr = ((sclar_instr & 0x3f0001f0u) == 0x00000080u);
       const bool is_branch = is_bcc || is_jmp_jsr;
       const bool is_subroutine_branch = ((sclar_instr & 0x3f0001ffu) == 0x00000081u) ||  // jsr
-                                        is_bcc_and_link;
+                                        ((sclar_instr & 0x38000000u) == 0x28000000u);    // bl[cc]
 
-      // Branch source register is reg1 (for b[cc] and jmp/jsr).
-      const uint32_t branch_cond_reg = (is_bcc || is_jmp_jsr) ? reg1 : REG_Z;
+      // Branch source register is reg1 (for b[cc]/bl[cc] and jmp/jsr).
+      const uint32_t branch_cond_reg = is_branch ? reg1 : REG_Z;
 
       // Read the branch/condition register.
       // TODO(m): We should share a register read-port with the other register reads further down.
@@ -309,22 +308,22 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       const bool is_mem_store = is_stx || is_st;
       const bool is_mem_op = (is_mem_load || is_mem_store);
 
-      // Should we use reg1 as a source?
-      const bool reg1_is_src = is_mem_store || is_jmp_jsr;
+      // Should we use reg1 as a source (special case)?
+      const bool reg1_is_src = is_mem_store || is_branch;
 
       // Should we use reg2 as a source?
-      const bool reg2_is_src = (op_class_A || op_class_B);
+      const bool reg2_is_src = op_class_A || op_class_B;
 
       // Should we use reg3 as a source?
       const bool reg3_is_src = op_class_A;
 
       // Should we use reg1 as a destination?
-      const bool reg1_is_dst = !reg1_is_src && !is_branch;
+      const bool reg1_is_dst = !reg1_is_src;
 
       // Determine the source & destination register numbers (zero for none).
       const uint32_t src_reg_a = is_subroutine_branch ? REG_PC : (reg2_is_src ? reg2 : REG_Z);
       const uint32_t src_reg_b = reg3_is_src ? reg3 : REG_Z;
-      const uint32_t src_reg_c = is_mem_store ? reg1 : REG_Z;
+      const uint32_t src_reg_c = reg1_is_src ? reg1 : REG_Z;
       const uint32_t dst_reg =
           (is_subroutine_branch && branch_taken) ? REG_LR : (reg1_is_dst ? reg1 : REG_Z);
 
