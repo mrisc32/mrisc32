@@ -59,56 +59,59 @@ protected:
   static const uint32_t REG_SP = 30u;
   static const uint32_t REG_PC = 31u;
 
-  // ALU operations.
-  static const uint32_t ALU_OP_NONE = 0x00u;
-  static const uint32_t ALU_OP_OR = 0x01u;
-  static const uint32_t ALU_OP_NOR = 0x02u;
-  static const uint32_t ALU_OP_AND = 0x03u;
-  static const uint32_t ALU_OP_XOR = 0x04u;
-  static const uint32_t ALU_OP_ADD = 0x05u;
-  static const uint32_t ALU_OP_SUB = 0x06u;
-  static const uint32_t ALU_OP_SLT = 0x07u;
-  static const uint32_t ALU_OP_SLTU = 0x08u;
-  static const uint32_t ALU_OP_LSL = 0x09u;
-  static const uint32_t ALU_OP_ASR = 0x0au;
-  static const uint32_t ALU_OP_LSR = 0x0bu;
-  static const uint32_t ALU_OP_SHUF = 0x0cu;
-  static const uint32_t ALU_OP_CLZ = 0x50u;
-  static const uint32_t ALU_OP_REV = 0x51u;
-  static const uint32_t ALU_OP_EXTB = 0x52u;
-  static const uint32_t ALU_OP_EXTH = 0x53u;
-  static const uint32_t ALU_OP_LDHI = 0x10u;  // arg2 << 13
-  static const uint32_t ALU_OP_LDHIO = 0x11u;  // (arg2 << 13) | 0x1fff
+  // EX operations.
+  static const uint32_t EX_OP_CPUID = 0x00u;
 
-  // Mul/Div operations.
-  static const uint32_t MD_OP_NONE = 0x00u;
-  static const uint32_t MD_OP_MUL = 0x30u;
-  static const uint32_t MD_OP_MULHI = 0x32u;
-  static const uint32_t MD_OP_MULHIU = 0x33u;
-  static const uint32_t MD_OP_DIV = 0x34u;
-  static const uint32_t MD_OP_DIVU = 0x35u;
-  static const uint32_t MD_OP_REM = 0x36u;
-  static const uint32_t MD_OP_REMU = 0x37u;
+  static const uint32_t EX_OP_LDHI = 0x01u;  // arg2 << 13
+  static const uint32_t EX_OP_LDHIO = 0x02u;  // (arg2 << 13) | 0x1fff
 
-  // FPU operations.
-  static const uint32_t FPU_OP_NONE = 0x00u;
-  static const uint32_t FPU_OP_ITOF = 0x38u;
-  static const uint32_t FPU_OP_FTOI = 0x39u;
-  static const uint32_t FPU_OP_ADD = 0x3au;
-  static const uint32_t FPU_OP_SUB = 0x3bu;
-  static const uint32_t FPU_OP_MUL = 0x3cu;
-  static const uint32_t FPU_OP_DIV = 0x3du;
+  static const uint32_t EX_OP_OR = 0x10u;
+  static const uint32_t EX_OP_NOR = 0x11u;
+  static const uint32_t EX_OP_AND = 0x12u;
+  static const uint32_t EX_OP_BIC = 0x13u;
+  static const uint32_t EX_OP_XOR = 0x14u;
+  static const uint32_t EX_OP_ADD = 0x15u;
+  static const uint32_t EX_OP_SUB = 0x16u;
+  static const uint32_t EX_OP_SEQ = 0x17u;
+  static const uint32_t EX_OP_SLT = 0x18u;
+  static const uint32_t EX_OP_SLTU = 0x19u;
+  static const uint32_t EX_OP_SLE = 0x1au;
+  static const uint32_t EX_OP_SLEU = 0x1bu;
+  static const uint32_t EX_OP_SHUF = 0x1cu;
+  static const uint32_t EX_OP_LSL = 0x1du;
+  static const uint32_t EX_OP_ASR = 0x1eu;
+  static const uint32_t EX_OP_LSR = 0x1fu;
+
+  static const uint32_t EX_OP_MUL = 0x30u;
+  static const uint32_t EX_OP_MULHI = 0x32u;
+  static const uint32_t EX_OP_MULHIU = 0x33u;
+  static const uint32_t EX_OP_DIV = 0x34u;
+  static const uint32_t EX_OP_DIVU = 0x35u;
+  static const uint32_t EX_OP_REM = 0x36u;
+  static const uint32_t EX_OP_REMU = 0x37u;
+
+  static const uint32_t EX_OP_ITOF = 0x38u;
+  static const uint32_t EX_OP_FTOI = 0x39u;
+  static const uint32_t EX_OP_FADD = 0x3au;
+  static const uint32_t EX_OP_FSUB = 0x3bu;
+  static const uint32_t EX_OP_FMUL = 0x3cu;
+  static const uint32_t EX_OP_FDIV = 0x3du;
+
+  static const uint32_t EX_OP_CLZ = 0x50u;
+  static const uint32_t EX_OP_REV = 0x51u;
+  static const uint32_t EX_OP_EXTB = 0x52u;
+  static const uint32_t EX_OP_EXTH = 0x53u;
 
   // Memory operations.
   static const uint32_t MEM_OP_NONE = 0x00u;
-  static const uint32_t MEM_OP_LOAD8 = 0x10u;
-  static const uint32_t MEM_OP_LOADU8 = 0x11u;
-  static const uint32_t MEM_OP_LOAD16 = 0x12u;
-  static const uint32_t MEM_OP_LOADU16 = 0x13u;
-  static const uint32_t MEM_OP_LOAD32 = 0x14u;
-  static const uint32_t MEM_OP_STORE8 = 0x18u;
-  static const uint32_t MEM_OP_STORE16 = 0x19u;
-  static const uint32_t MEM_OP_STORE32 = 0x1au;
+  static const uint32_t MEM_OP_LOAD8 = 0x01u;
+  static const uint32_t MEM_OP_LOADU8 = 0x02u;
+  static const uint32_t MEM_OP_LOAD16 = 0x03u;
+  static const uint32_t MEM_OP_LOADU16 = 0x04u;
+  static const uint32_t MEM_OP_LOAD32 = 0x05u;
+  static const uint32_t MEM_OP_STORE8 = 0x08u;
+  static const uint32_t MEM_OP_STORE16 = 0x09u;
+  static const uint32_t MEM_OP_STORE32 = 0x0au;
 
   // One vector register.
   using vreg_t = std::array<uint32_t, NUM_VECTOR_ENTRIES>;

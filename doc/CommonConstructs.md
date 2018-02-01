@@ -2,6 +2,7 @@
 
 | Problem | Solution |
 |---|---|
+| No operation | CPUID Z,Z |
 | Load full 32-bit immediate | LDHI rd,upper\_19\_bits<br>OR rd,rd,lower\_13\_bits |
 | Move register | OR rd,ra,Z |
 | Negate value | SUB rd,ra,Z |

@@ -17,15 +17,19 @@
 
 | Mnemonic | V | Operands | Operation | Description |
 |---|---|---|---|---|
-|NOP|   | - | - | No operation |
+|CPUID|   | dst, src1 | dst <= cpuid(src1) | Get CPU information based on src1 |
 |OR| x | dst, src1, src2 | dst <= src1 \| src2 | Bitwise or |
 |NOR| x | dst, src1, src2 | dst <= ~(src1 \| src2)  | Bitwise nor |
 |AND| x | dst, src1, src2 | dst <= src1 & src2 | Bitwise and |
+|BIC| x | dst, src1, src2 | dst <= src1 & ~src2 | Bitwise clear |
 |XOR| x | dst, src1, src2 | dst <= src1 ^ src2 | Bitwise exclusive or |
 |ADD| x | dst, src1, src2 | dst <= src1 + src2 | Addition |
 |SUB| x | dst, src1, src2 | dst <= src2 - src1 | Subtraction (note: argument order) |
+|SEQ| x | dst, src1, src2 | dst <= (src1 == src2) ? 1 : 0 | Set if equal (signed) |
 |SLT| x | dst, src1, src2 | dst <= (src1 < src2) ? 1 : 0 | Set if less than (signed) |
 |SLTU| x | dst, src1, src2 | dst <= (src1 < src2) ? 1 : 0 | Set if less than (unsigned) |
+|SLE| x | dst, src1, src2 | dst <= (src1 <= src2) ? 1 : 0 | Set if less than or equal (signed) |
+|SLEU| x | dst, src1, src2 | dst <= (src1 <= src2) ? 1 : 0 | Set if less than or equal (unsigned) |
 |LSL| x | dst, src1, src2 | dst <= src1 << src2 | Logic shift left |
 |ASR| x | dst, src1, src2 | dst <= src1 >> src2 (signed) | Arithmetic shift right |
 |LSR| x | dst, src1, src2 | dst <= src1 >> src2 (unsigned) | Logic shift right |

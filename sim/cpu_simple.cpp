@@ -31,9 +31,7 @@ struct id_in_t {
 struct ex_in_t {
   uint32_t src_a;   // Source operand A.
   uint32_t src_b;   // Source operand B.
-  uint32_t alu_op;  // ALU operation.
-  uint32_t md_op;   // Mul/Div operation.
-  uint32_t fpu_op;  // FPU operation.
+  uint32_t ex_op;  // EX operation.
 
   uint32_t mem_op;      // MEM operation.
   uint32_t store_data;  // Data to be stored in the mem step.
@@ -243,10 +241,10 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
 
       const bool is_bcc = ((sclar_instr & 0x30000000u) == 0x30000000u) &&
                           ((sclar_instr & 0x06000000u) != 0x06000000u);
-      const bool is_jmp_jsr = ((sclar_instr & 0x3f0001f0u) == 0x00000080u);
-      const bool is_branch = is_bcc || is_jmp_jsr;
+      const bool is_j = ((sclar_instr & 0x3f0001f0u) == 0x00000080u);
+      const bool is_branch = is_bcc || is_j;
       const bool is_subroutine_branch =
-          is_branch && (((sclar_instr & 0x00000001u) == 0x00000001u) ||  // jsr
+          is_branch && (((sclar_instr & 0x10000001u) == 0x00000001u) ||  // jl
                         ((sclar_instr & 0x08000000u) == 0x08000000u));   // bl[cc]
 
       // Branch source register is reg1 (for b[cc]/bl[cc] and jmp/jsr).
@@ -292,7 +290,7 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       }
 
       // jmp/jsr?
-      if (is_jmp_jsr) {
+      if (is_j) {
         branch_taken = true;
         branch_target = branch_cond_value;
       }
@@ -302,11 +300,13 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       // == DECODE ==
 
       // Is this a mem load/store operation?
-      const bool is_ldx = (sclar_instr & 0xff0001f8u) == 0x00000010u;
-      const bool is_ld = (sclar_instr & 0xf8000000u) == 0x10000000u;
+      const bool is_ldx = ((sclar_instr & 0x3f0001f8u) == 0x00000000u) &&
+                          ((sclar_instr & 0x00000007u) != 0x00000000u);
+      const bool is_ld = ((sclar_instr & 0x38000000u) == 0x00000000u) &&
+                         ((sclar_instr & 0x07000000u) != 0x00000000u);
       const bool is_mem_load = is_ldx || is_ld;
-      const bool is_stx = ((sclar_instr & 0xff0001f8u) == 0x00000018u);
-      const bool is_st = ((sclar_instr & 0xf8000000u) == 0x18000000u);
+      const bool is_stx = ((sclar_instr & 0x3f0001f8u) == 0x00000008u);
+      const bool is_st = ((sclar_instr & 0x38000000u) == 0x08000000u);
       const bool is_mem_store = is_stx || is_st;
       const bool is_mem_op = (is_mem_load || is_mem_store);
 
@@ -329,40 +329,26 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       const uint32_t dst_reg =
           (is_subroutine_branch && branch_taken) ? REG_LR : (reg1_is_dst ? reg1 : REG_Z);
 
-      // Determine ALU operation.
-      uint32_t alu_op = ALU_OP_NONE;
+      // Determine EX operation.
+      uint32_t ex_op = EX_OP_CPUID;
       if (is_subroutine_branch || is_mem_op) {
-        alu_op = ALU_OP_ADD;
-      } else if (op_class_A && (sclar_instr & 0x000001f0u) == 0x00000000u) {
-        alu_op = sclar_instr & 0x000001ff;
-      } else if (op_class_A && (sclar_instr & 0x000001f0u) == 0x00000050u) {
-        alu_op = sclar_instr & 0x000001ff;
-      } else if (op_class_B && (sclar_instr & 0x3f000000u) <= 0x0b000000u) {
-        alu_op = sclar_instr >> 24u;
+        ex_op = EX_OP_ADD;
+      } else if (op_class_A && ((sclar_instr & 0x000001f0u) != 0x00000000u)) {
+        ex_op = sclar_instr & 0x000001ff;
+      } else if (op_class_B && ((sclar_instr & 0x30000000u) != 0x00000000u)) {
+        ex_op = sclar_instr >> 24u;
       } else if (op_class_C) {
         switch (sclar_instr & 0x3f000000u) {
           case 0x36000000u:  // ldhi
-            alu_op = ALU_OP_LDHI;
+            ex_op = EX_OP_LDHI;
             break;
           case 0x37000000u:  // ldhio
-            alu_op = ALU_OP_LDHIO;
+            ex_op = EX_OP_LDHIO;
             break;
           case 0x3e000000u:  // ldi
-            alu_op = ALU_OP_OR;
+            ex_op = EX_OP_OR;
             break;
         }
-      }
-
-      // Determine MD operation.
-      uint32_t md_op = MD_OP_NONE;
-      if (op_class_A && (sclar_instr & 0x000001f8u) == 0x00000030u) {
-        md_op = sclar_instr & 0x000001ff;
-      }
-
-      // Determine FPU operation.
-      uint32_t fpu_op = FPU_OP_NONE;
-      if (op_class_A && (sclar_instr & 0x000001f8u) == 0x00000038u) {
-        fpu_op = sclar_instr & 0x000001ff;
       }
 
       // Determine MEM operation.
@@ -396,9 +382,7 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       ex_in.dst_reg = dst_reg;
       ex_in.dst_idx = vector.idx;
       ex_in.dst_is_vector = is_vector_op;
-      ex_in.alu_op = alu_op;
-      ex_in.md_op = md_op;
-      ex_in.fpu_op = fpu_op;
+      ex_in.ex_op = ex_op;
       ex_in.mem_op = mem_op;
     }
 
@@ -406,114 +390,126 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
     {
       uint32_t ex_result = 0u;
 
-      // ALU (single-cycle integer operations).
-      switch (ex_in.alu_op) {
-        case ALU_OP_OR:
+      // Do the operation.
+      switch (ex_in.ex_op) {
+        case EX_OP_CPUID:
+          ex_result = 0u;  // TODO(m): Implement me!
+          break;
+
+        case EX_OP_LDHI:
+          ex_result = ex_in.src_b << 13u;
+          break;
+        case EX_OP_LDHIO:
+          ex_result = (ex_in.src_b << 13u) | 0x1fffu;
+          break;
+
+        case EX_OP_OR:
           ex_result = ex_in.src_a | ex_in.src_b;
           break;
-        case ALU_OP_NOR:
+        case EX_OP_NOR:
           ex_result = ~(ex_in.src_a | ex_in.src_b);
           break;
-        case ALU_OP_AND:
+        case EX_OP_AND:
           ex_result = ex_in.src_a & ex_in.src_b;
           break;
-        case ALU_OP_XOR:
+        case EX_OP_BIC:
+          ex_result = ex_in.src_a & ~ex_in.src_b;
+          break;
+        case EX_OP_XOR:
           ex_result = ex_in.src_a ^ ex_in.src_b;
           break;
-        case ALU_OP_ADD:
+        case EX_OP_ADD:
           ex_result = add32(ex_in.src_a, ex_in.src_b);
           break;
-        case ALU_OP_SUB:
+        case EX_OP_SUB:
           ex_result = add32((~ex_in.src_a) + 1u, ex_in.src_b);
           break;
-        case ALU_OP_SLT:
+        case EX_OP_SEQ:
+          ex_result = (ex_in.src_a == ex_in.src_b) ? 1u : 0u;
+          break;
+        case EX_OP_SLT:
           ex_result =
               (static_cast<int32_t>(ex_in.src_a) < static_cast<int32_t>(ex_in.src_b)) ? 1u : 0u;
           break;
-        case ALU_OP_SLTU:
+        case EX_OP_SLTU:
           ex_result = (ex_in.src_a < ex_in.src_b) ? 1u : 0u;
           break;
-        case ALU_OP_LSL:
+        case EX_OP_SLE:
+          ex_result =
+              (static_cast<int32_t>(ex_in.src_a) <= static_cast<int32_t>(ex_in.src_b)) ? 1u : 0u;
+          break;
+        case EX_OP_SLEU:
+          ex_result = (ex_in.src_a <= ex_in.src_b) ? 1u : 0u;
+          break;
+        case EX_OP_SHUF:
+          ex_result = shuf32(ex_in.src_a, ex_in.src_b);
+          break;
+        case EX_OP_LSL:
           ex_result = ex_in.src_a << ex_in.src_b;
           break;
-        case ALU_OP_ASR:
+        case EX_OP_ASR:
           ex_result = static_cast<uint32_t>(static_cast<int32_t>(ex_in.src_a) >>
                                             static_cast<int32_t>(ex_in.src_b));
           break;
-        case ALU_OP_LSR:
+        case EX_OP_LSR:
           ex_result = ex_in.src_a >> ex_in.src_b;
           break;
-        case ALU_OP_SHUF:
-          ex_result = shuf32(ex_in.src_a, ex_in.src_b);
-          break;
-        case ALU_OP_CLZ:
+        case EX_OP_CLZ:
           ex_result = clz32(ex_in.src_a);
           break;
-        case ALU_OP_REV:
+        case EX_OP_REV:
           ex_result = rev32(ex_in.src_a);
           break;
-        case ALU_OP_EXTB:
+        case EX_OP_EXTB:
           ex_result = s8_as_u32(static_cast<int8_t>(ex_in.src_a));
           break;
-        case ALU_OP_EXTH:
+        case EX_OP_EXTH:
           ex_result = s16_as_u32(static_cast<int16_t>(ex_in.src_a));
           break;
-        case ALU_OP_LDHI:
-          ex_result = ex_in.src_b << 13u;
-          break;
-        case ALU_OP_LDHIO:
-          ex_result = (ex_in.src_b << 13u) | 0x1fffu;
-          break;
-      }
 
-      // Mul/Div (multi-cycle integer operations).
-      switch (ex_in.md_op) {
-        case MD_OP_MUL:
+        case EX_OP_MUL:
           ex_result = ex_in.src_a * ex_in.src_b;
           break;
-        case MD_OP_MULHI:
+        case EX_OP_MULHI:
           ex_result =
               static_cast<uint32_t>((static_cast<int64_t>(static_cast<int32_t>(ex_in.src_a)) *
                                      static_cast<int64_t>(static_cast<int32_t>(ex_in.src_b))) >>
                                     32u);
           break;
-        case MD_OP_MULHIU:
+        case EX_OP_MULHIU:
           ex_result = static_cast<uint32_t>(
               (static_cast<uint64_t>(ex_in.src_a) * static_cast<uint64_t>(ex_in.src_b)) >> 32u);
           break;
-        case MD_OP_DIV:
+        case EX_OP_DIV:
           ex_result = static_cast<uint32_t>(static_cast<int32_t>(ex_in.src_a) /
                                             static_cast<int32_t>(ex_in.src_b));
           break;
-        case MD_OP_DIVU:
+        case EX_OP_DIVU:
           ex_result = ex_in.src_a / ex_in.src_b;
           break;
-        case MD_OP_REM:
+        case EX_OP_REM:
           // TODO(m): Implement me!
           throw std::runtime_error("REM is not yet implemented.");
-        case MD_OP_REMU:
+        case EX_OP_REMU:
           // TODO(m): Implement me!
           throw std::runtime_error("REMU is not yet implemented.");
-      }
 
-      // FPU (multi-cycle floating point operations).
-      switch (ex_in.fpu_op) {
-        case FPU_OP_ITOF:
+        case EX_OP_ITOF:
           ex_result = as_u32(static_cast<float>(static_cast<int32_t>(ex_in.src_a)));
           break;
-        case FPU_OP_FTOI:
+        case EX_OP_FTOI:
           ex_result = static_cast<uint32_t>((static_cast<int32_t>(as_f32(ex_in.src_a))));
           break;
-        case FPU_OP_ADD:
+        case EX_OP_FADD:
           ex_result = static_cast<uint32_t>(as_u32(as_f32(ex_in.src_a) + as_f32(ex_in.src_b)));
           break;
-        case FPU_OP_SUB:
+        case EX_OP_FSUB:
           ex_result = static_cast<uint32_t>(as_u32(as_f32(ex_in.src_a) - as_f32(ex_in.src_b)));
           break;
-        case FPU_OP_MUL:
+        case EX_OP_FMUL:
           ex_result = static_cast<uint32_t>(as_u32(as_f32(ex_in.src_a) * as_f32(ex_in.src_b)));
           break;
-        case FPU_OP_DIV:
+        case EX_OP_FDIV:
           ex_result = static_cast<uint32_t>(as_u32(as_f32(ex_in.src_a) / as_f32(ex_in.src_b)));
           break;
       }
