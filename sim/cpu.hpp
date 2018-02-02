@@ -49,12 +49,13 @@ protected:
 
   // Register configuration.
   static const uint32_t NUM_REGS = 32u;
-  static const uint32_t NUM_VECTOR_ENTRIES = 32u;  // Must be at least 4
+  static const uint32_t LOG2_NUM_VECTOR_ELEMENTS = 5u;  // Must be at least 2
+  static const uint32_t NUM_VECTOR_ELEMENTS = 1u << LOG2_NUM_VECTOR_ELEMENTS;
   static const uint32_t NUM_VECTOR_REGS = 32u;
 
   // Named registers.
   static const uint32_t REG_Z = 0u;
-  static const uint32_t REG_VC = 28u;
+  static const uint32_t REG_VL = 28u;
   static const uint32_t REG_LR = 29u;
   static const uint32_t REG_SP = 30u;
   static const uint32_t REG_PC = 31u;
@@ -119,7 +120,7 @@ protected:
   // TODO(m): STORE32_CONDITIONAL
 
   // One vector register.
-  using vreg_t = std::array<uint32_t, NUM_VECTOR_ENTRIES>;
+  using vreg_t = std::array<uint32_t, NUM_VECTOR_ELEMENTS>;
 
   /// @brief Call a simulator routine.
   /// @param routine_no The routine to call (0, 1, ...).

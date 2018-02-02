@@ -147,8 +147,12 @@ inline uint32_t u16_as_u32(const uint16_t x) {
 
 uint32_t cpu_simple_t::cpuid(const uint32_t a, const uint32_t b) {
   switch (a) {
-    case 0x00000000u:  // Max vector length
-      return NUM_VECTOR_ENTRIES;
+    case 0x00000000u:  // Number of vector elements
+      if (b == 0x00000000u) {
+        return NUM_VECTOR_ELEMENTS;
+      } else if (b == 0x00000001u) {
+        return LOG2_NUM_VECTOR_ELEMENTS;
+      }
 
     case 0x00000001u:  // CPU features
       // MD (integer mult/div)  = 1 << 0
@@ -159,6 +163,8 @@ uint32_t cpu_simple_t::cpuid(const uint32_t a, const uint32_t b) {
     default:
       return 0u;
   }
+
+  return 0u;
 }
 
 uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
@@ -251,7 +257,7 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
 
       // Check if the next cycle will continue a vector loop (i.e. we should stall the IF stage).
       next_cycle_continues_a_vector_loop =
-          is_vector_op && (vector.idx < (m_regs[REG_VC] & (NUM_VECTOR_ENTRIES - 1)));
+          is_vector_op && (vector.idx < (m_regs[REG_VL] & (NUM_VECTOR_ELEMENTS - 1)));
 
       // == BRANCH ==
 

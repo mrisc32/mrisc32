@@ -15,15 +15,15 @@ The scalar registers are allocated as follows:
 
 | Register | Alias | Purpose | Saved by callee |
 |---|---|---|---|
-| S0  | Z | Always zero (read-only) | - |
+| Z  | S0 | Always zero (read-only) | - |
 | S1-S8   | | Subroutine arguments / return values | no |
 | S9-S15  | | Temporaries (scratch) | no |
 | S16-S26 | | Saved registers | yes |
-| S27 | FP | Frame pointer (optional) | yes |
-| S28 | VL | Vector length register (holds the last index for vector operations, 0-31) | yes |
-| S29 | LR | Link register (return address, must be 4-byte aligned) | yes |
-| S30 | SP | Stack pointer (must be 4-byte aligned on subroutine entry) | yes |
-| S31 | PC | Program counter (read-only, always 4-byte aligned) | - |
+| FP | S27 |Frame pointer (optional) | yes |
+| VL | S28 | Vector length register (holds the last index for vector operations) | yes |
+| LR | S29 | Link register (return address, must be 4-byte aligned) | yes |
+| SP | S30 | Stack pointer (must be 4-byte aligned on subroutine entry) | yes |
+| PC | S31 | Program counter (read-only, always 4-byte aligned) | - |
 
 
 ## Vector registers
@@ -36,7 +36,7 @@ The vector registers are allocated as follows:
 
 | Register | Alias | Purpose | Saved by callee |
 |---|---|---|---|
-| V0  | VZ | Always zero (read-only) | - |
-| V1-V8   | | Subroutine arguments / return values | no |
-| V9-V15  | | Temporaries (scratch) | no |
+| VZ | V0 | Always zero (read-only) | - |
+| V1-V8 | | Subroutine arguments / return values | no |
+| V9-V15 | | Temporaries (scratch) | no |
 | V16-V31 | | Saved registers | yes |

@@ -77,6 +77,7 @@ _PCREL19x4 = 14  # -1048576..1048572 (in steps of 4)
 # Names of general purpose registers.
 _REGS = {
         'Z':  0,  # Read-only: Zero
+        'FP': 27, # Frame pointer
         'VL': 28, # Vector length register
         'LR': 29, # Link register (branch return address)
         'SP': 30, # Stack pointer
@@ -109,7 +110,7 @@ _REGS = {
         'S24': 24,
         'S25': 25,
         'S26': 26,
-        'S27': 27,
+        'S27': 27,  # Alias for FP
         'S28': 28,  # Alias for VL
         'S29': 29,  # Alias for LR
         'S30': 30,  # Alias for SP
