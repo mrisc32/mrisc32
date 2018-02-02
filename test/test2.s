@@ -33,29 +33,31 @@ abs_diff_vectors:
   add     sp, sp, -4
   stw     vl, sp, 0
 
-  add     s4, s4, -1
-  ldi     vl, 31
-  blt     s4, .done     ; n == 0, nothing to do
+  beq     s4, .done     ; n == 0, nothing to do
+
+  ; Prepare for the vector operation
+  cpuid  s12, z        ; s12 is the nax number of vector elements
+  add    s4, s4, -1    ; s4 = loop counter
+  add    s11, s12, -1  ; s11 = max VL
+  lsl    s13, s12, 2   ; s13 is the memory increment per vector operation
 
   ldhio   s10, 0x7fffffff
 
 .loop:
-  add     s9, s4, -32
-  bge     s9, .still_in_core_loop
-  or      vl, s4, z     ; vl = number of elements left - 1
-.still_in_core_loop:
+  cmplt   vl, s4, s11
+  sel     vl, s4, s11  ; VL = min(s4, s11)
 
   ldw     v9, s2, 4
   ldw     v10, s3, 4
-  fsub    v9, v10, v9   ; a - b
-  and     v9, v9, s10   ; Clear the sign bit
+  fsub    v9, v10, v9  ; a - b
+  and     v9, v9, s10  ; Clear the sign bit
   stw     v9, s1, 4
 
-  or      s4, s9, z
-  add     s1, s1, 128
-  add     s2, s2, 128
-  add     s3, s3, 128
-  bge     s4, .loop
+  sub    s4, s12, s4   ; Decrement the loop counter
+  add    s1, s1, s13   ; Increment the memory pointers
+  add    s2, s2, s13
+  add    s3, s3, s13
+  bge    s4, .loop
 
 .done:
   ldw     vl, sp, 0

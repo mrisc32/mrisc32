@@ -45,7 +45,7 @@ Assuming that the arguments (c, a, b, n) are in registers S1, S2, S3 and S4 (acc
 
 ```
 abs_diff:
-  BEQ     S4, .done     ; n == 0, nothing to do
+  BEQ     S4, .done    ; n == 0, nothing to do
 
   LDHIO   S12, 0x7fffffff
 
@@ -53,8 +53,8 @@ abs_diff:
 .loop:
   LDW     S9, S2, S11
   LDW     S10, S3, S11
-  FSUB    S9, S10, S9   ; S9 = a - b
-  AND     S9, S9, S12   ; S9 = abs(a - b) (i.e. clear the sign bit)
+  FSUB    S9, S10, S9  ; S9 = a - b
+  AND     S9, S9, S12  ; S9 = abs(a - b) (i.e. clear the sign bit)
   STW     S9, S1, S11
 
   ADD     S4, S4, -1
@@ -72,34 +72,36 @@ abs_diff:
   ADD     SP, SP, -4
   STW     VL, SP, 0
 
-  ADD     S4, S4, -1
-  LDI     VL, 31
-  BLT     S4, .done     ; n == 0, nothing to do
+  BEQ     S4, .done    ; n == 0, nothing to do
+
+  ; Prepare for the vector operation
+  CPUID  S12, Z        ; S12 is the nax number of vector elements
+  ADD    S4, S4, -1    ; S4 = loop counter
+  ADD    S11, S12, -1  ; S11 = max VL
+  LSL    S13, S12, 2   ; S13 is the memory increment per vector operation
 
   LDHIO   S10, 0x7fffffff
 
 .loop:
-  ADD     S9, S4, -32
-  BGE     S9, .still_in_core_loop
-  OR      VL, S4, Z     ; VL = number of elements left - 1
-.still_in_core_loop:
+  CMPLT   VL, S4, S11
+  SEL     VL, S4, S11  ; VL = min(S4, S11)
 
   LDW     V9, S2, 4
   LDW     V10, S3, 4
-  FSUB    V9, V10, V9   ; V9 = a - b
-  AND     V9, V9, S10   ; V9 = abs(a - b) (i.e. clear the sign bit)
+  FSUB    V9, V10, V9  ; a - b
+  AND     V9, V9, S10  ; Clear the sign bit
   STW     V9, S1, 4
 
-  OR      S4, S9, 0
-  ADD     S1, S1, 128
-  ADD     S2, S2, 128
-  ADD     S3, S3, 128
-  BGE     S4, .loop
+  SUB    S4, S12, S4   ; Decrement the loop counter
+  ADD    S1, S1, S13   ; Increment the memory pointers
+  ADD    S2, S2, S13
+  ADD    S3, S3, S13
+  BGE    S4, .loop
 
 .done:
   LDW     VL, SP, 0
   ADD     SP, SP, 4
-  JMP     LR
+  J       LR
 ```
 
 Notice that the same instructions are used in both cases, only with vector operands for the vector version. Also notice that it is easy to mix scalar and vector operands for vector operations.

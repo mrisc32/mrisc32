@@ -6,6 +6,7 @@ This is an experimental, custom 32-bit RISC CPU with vector operations.
 # Features
 
 * All instructions are 32 bits wide and easy to decode.
+* Unified scalar/vector/integer/floating point ISA.
 * There are two register files:
   - There are 32 scalar registers, S0-S31, each 32 bits wide.
     - Five registers are special (Z, PC, SP, LR, VL).
@@ -23,7 +24,7 @@ This is an experimental, custom 32-bit RISC CPU with vector operations.
   - Compare/branch.
   - Sign and bit manipulation (e.g. neg, abs).
 * Vector operations use a Cray-like model:
-  - Vector operations are variable length (1-32 elements).
+  - Vector operations are variable length (1-*N* elements).
   - Most integer and floating point instructions come in both scalar and vector variants.
 * There is currently no HW support for 64-bit floating point operations (that is left for a 64-bit version of the ISA).
 
@@ -31,7 +32,6 @@ This is an experimental, custom 32-bit RISC CPU with vector operations.
 # Documentation
 
 * [Registers](doc/Registers.md)
-* [Instruction encoding](doc/InstructionEncoding.md)
 * [Instructions](doc/Instructions.md)
 * [Vector design](doc/VectorDesign.md)
 * [Common constructs](doc/CommonConstructs.md)
