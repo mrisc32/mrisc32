@@ -12,7 +12,7 @@ This is an experimental, custom 32-bit RISC CPU with vector operations.
     - 27 registers are general purpose.
     - All registers can be used for all types (integers, pointers and floating point).
     - PC is user-visible (for arithmetic and addressing) but read-only (to simplify branching logic).
-  - There are 32 vector registers, V0-V31, each with 32 32-bit elements.
+  - There are 32 vector registers, V0-V31, each with at least four 32-bit elements.
     - All registers can be used for all types (integers, pointers and floating point).
 * Branches can be executed in the ID (instruction decode) step, which gives a low branch misprediction penalty.
 * Conditionals (branches) are based on register content (not condition code flags).

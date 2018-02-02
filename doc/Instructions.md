@@ -17,7 +17,7 @@
 
 | Mnemonic | V | Operands | Operation | Description |
 |---|---|---|---|---|
-|CPUID|   | dst, src1 | dst <= cpuid(src1) | Get CPU information based on src1 |
+|CPUID|   | dst, src1, src2 | dst <= cpuid(src1, src2) | Get CPU information based on src1, src2 |
 |OR| x | dst, src1, src2 | dst <= src1 \| src2 | Bitwise or |
 |NOR| x | dst, src1, src2 | dst <= ~(src1 \| src2)  | Bitwise nor |
 |AND| x | dst, src1, src2 | dst <= src1 & src2 | Bitwise and |
@@ -25,15 +25,18 @@
 |XOR| x | dst, src1, src2 | dst <= src1 ^ src2 | Bitwise exclusive or |
 |ADD| x | dst, src1, src2 | dst <= src1 + src2 | Addition |
 |SUB| x | dst, src1, src2 | dst <= src2 - src1 | Subtraction (note: argument order) |
-|SEQ| x | dst, src1, src2 | dst <= (src1 == src2) ? 1 : 0 | Set if equal (signed) |
 |SLT| x | dst, src1, src2 | dst <= (src1 < src2) ? 1 : 0 | Set if less than (signed) |
 |SLTU| x | dst, src1, src2 | dst <= (src1 < src2) ? 1 : 0 | Set if less than (unsigned) |
-|SLE| x | dst, src1, src2 | dst <= (src1 <= src2) ? 1 : 0 | Set if less than or equal (signed) |
-|SLEU| x | dst, src1, src2 | dst <= (src1 <= src2) ? 1 : 0 | Set if less than or equal (unsigned) |
-|LSL| x | dst, src1, src2 | dst <= src1 << src2 | Logic shift left |
-|ASR| x | dst, src1, src2 | dst <= src1 >> src2 (signed) | Arithmetic shift right |
+|CMPEQ| x | dst, src1, src2 | dst <= (src1 == src2) ? 0xffffffff : 0 | Set if equal (signed) |
+|CMPLT| x | dst, src1, src2 | dst <= (src1 < src2) ? 0xffffffff : 0 | Set if less than (signed) |
+|CMPLTU| x | dst, src1, src2 | dst <= (src1 < src2) ? 0xffffffff : 0 | Set if less than (unsigned) |
+|CMPLE| x | dst, src1, src2 | dst <= (src1 <= src2) ? 0xffffffff : 0 | Set if less than or equal (signed) |
+|CMPLEU| x | dst, src1, src2 | dst <= (src1 <= src2) ? 0xffffffff : 0 | Set if less than or equal (unsigned) |
 |LSR| x | dst, src1, src2 | dst <= src1 >> src2 (unsigned) | Logic shift right |
+|ASR| x | dst, src1, src2 | dst <= src1 >> src2 (signed) | Arithmetic shift right |
+|LSL| x | dst, src1, src2 | dst <= src1 << src2 | Logic shift left |
 |SHUF| x | dst, src1, src2 | dst <= shuffle(src1, src2) | Shuffle bytes according to indices in src2 (2) |
+|SEL| x | dst, src1, src2 | dst <= (src1 & dst) | (src1 & ~dst) | Bitwise select (use with CMP[cc]]) |
 |CLZ| x | dst, src1 | dst <= clz(src1) | Count leading zeros |
 |REV| x | dst, src1 | dst <= rev(src1) | Reverse bit order |
 |EXTB| x | dst, src1 | dst <= signextend(src1[7:0]) | Sign-extend byte to word |
@@ -115,4 +118,3 @@ For instance the integer instruction `ADD` has the following operation modes:
 * Single-instruction load of common constants (mostly floating point: PI, sqrt(2), ...).
 * More floating point instructions (round, sqrt, ...?).
 * More DSP-type operations (saturate, packed addition, ...).
-

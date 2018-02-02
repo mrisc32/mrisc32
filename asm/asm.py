@@ -169,8 +169,9 @@ _OPCODES = {
         # == A + B ==
 
         # Retrieve CPU information.
-        # Note: Doubles in as NOP (0x00000000 = CPUID Z, Z).
-        'CPUID':  [[0x00000000, _REG1, _REG2]],
+        # Note: Doubles in as NOP (0x00000000 = CPUID Z, Z, Z).
+        'CPUID':  [[0x00000000, _REG1, _REG2],
+                   [0x00000000, _REG1, _REG2, _REG3]],
 
         # Load/store.
         'LDB':    [[0x00000001, _REG1, _REG2, _REG3],
@@ -188,6 +189,8 @@ _OPCODES = {
         'LDW':    [[0x00000005, _REG1, _REG2, _REG3],
                    [0x05000000, _REG1, _REG2, _IMM14],
                    [0x85000000, _VREG1, _REG2, _IMM14]],
+        'LDLW':   [[0x00000006, _REG1, _REG2, _REG3],      # Load linked
+                   [0x06000000, _REG1, _REG2, _IMM14]],
         'STB':    [[0x00000008, _REG1, _REG2, _REG3],
                    [0x08000000, _REG1, _REG2, _IMM14],
                    [0x88000000, _VREG1, _REG2, _IMM14]],
@@ -197,6 +200,8 @@ _OPCODES = {
         'STW':    [[0x0000000a, _REG1, _REG2, _REG3],
                    [0x0a000000, _REG1, _REG2, _IMM14],
                    [0x8a000000, _VREG1, _REG2, _IMM14]],
+        'STCW':   [[0x0000000b, _REG1, _REG2, _REG3],      # Store conditional
+                   [0x0b000000, _REG1, _REG2, _IMM14]],
 
         # Integer ALU ops.
         'OR':     [[0x00000010, _REG1, _REG2, _REG3],
@@ -234,51 +239,61 @@ _OPCODES = {
                    [0xc0000016, _VREG1, _VREG2, _VREG3],
                    [0x16000000, _REG1, _REG2, _IMM14],
                    [0x96000000, _VREG1, _VREG2, _IMM14]],
-        'SEQ':    [[0x00000017, _REG1, _REG2, _REG3],
+        'SLT':    [[0x00000017, _REG1, _REG2, _REG3],
                    [0x80000017, _VREG1, _VREG2, _REG3],
                    [0xc0000017, _VREG1, _VREG2, _VREG3],
                    [0x17000000, _REG1, _REG2, _IMM14],
                    [0x97000000, _VREG1, _VREG2, _IMM14]],
-        'SLT':    [[0x00000018, _REG1, _REG2, _REG3],
+        'SLTU':   [[0x00000018, _REG1, _REG2, _REG3],
                    [0x80000018, _VREG1, _VREG2, _REG3],
                    [0xc0000018, _VREG1, _VREG2, _VREG3],
                    [0x18000000, _REG1, _REG2, _IMM14],
                    [0x98000000, _VREG1, _VREG2, _IMM14]],
-        'SLTU':   [[0x00000019, _REG1, _REG2, _REG3],
+        'CMPEQ':  [[0x00000019, _REG1, _REG2, _REG3],
                    [0x80000019, _VREG1, _VREG2, _REG3],
                    [0xc0000019, _VREG1, _VREG2, _VREG3],
                    [0x19000000, _REG1, _REG2, _IMM14],
                    [0x99000000, _VREG1, _VREG2, _IMM14]],
-        'SLE':    [[0x0000001a, _REG1, _REG2, _REG3],
+        'CMPLT':  [[0x0000001a, _REG1, _REG2, _REG3],
                    [0x8000001a, _VREG1, _VREG2, _REG3],
                    [0xc000001a, _VREG1, _VREG2, _VREG3],
                    [0x1a000000, _REG1, _REG2, _IMM14],
                    [0x9a000000, _VREG1, _VREG2, _IMM14]],
-        'SLEU':   [[0x0000001b, _REG1, _REG2, _REG3],
+        'CMPLTU': [[0x0000001b, _REG1, _REG2, _REG3],
                    [0x8000001b, _VREG1, _VREG2, _REG3],
                    [0xc000001b, _VREG1, _VREG2, _VREG3],
                    [0x1b000000, _REG1, _REG2, _IMM14],
                    [0x9b000000, _VREG1, _VREG2, _IMM14]],
-        'SHUF':   [[0x0000001c, _REG1, _REG2, _REG3],
+        'CMPLE':  [[0x0000001c, _REG1, _REG2, _REG3],
                    [0x8000001c, _VREG1, _VREG2, _REG3],
                    [0xc000001c, _VREG1, _VREG2, _VREG3],
                    [0x1c000000, _REG1, _REG2, _IMM14],
                    [0x9c000000, _VREG1, _VREG2, _IMM14]],
-        'LSL':    [[0x0000001d, _REG1, _REG2, _REG3],
+        'CMPLEU': [[0x0000001d, _REG1, _REG2, _REG3],
                    [0x8000001d, _VREG1, _VREG2, _REG3],
                    [0xc000001d, _VREG1, _VREG2, _VREG3],
                    [0x1d000000, _REG1, _REG2, _IMM14],
                    [0x9d000000, _VREG1, _VREG2, _IMM14]],
-        'ASR':    [[0x0000001e, _REG1, _REG2, _REG3],
+        'LSR':    [[0x0000001e, _REG1, _REG2, _REG3],
                    [0x8000001e, _VREG1, _VREG2, _REG3],
                    [0xc000001e, _VREG1, _VREG2, _VREG3],
                    [0x1e000000, _REG1, _REG2, _IMM14],
                    [0x9e000000, _VREG1, _VREG2, _IMM14]],
-        'LSR':    [[0x0000001f, _REG1, _REG2, _REG3],
+        'ASR':    [[0x0000001f, _REG1, _REG2, _REG3],
                    [0x8000001f, _VREG1, _VREG2, _REG3],
                    [0xc000001f, _VREG1, _VREG2, _VREG3],
                    [0x1f000000, _REG1, _REG2, _IMM14],
                    [0x9f000000, _VREG1, _VREG2, _IMM14]],
+        'LSL':    [[0x00000020, _REG1, _REG2, _REG3],
+                   [0x80000020, _VREG1, _VREG2, _REG3],
+                   [0xc0000020, _VREG1, _VREG2, _VREG3],
+                   [0x20000000, _REG1, _REG2, _IMM14],
+                   [0xa0000000, _VREG1, _VREG2, _IMM14]],
+        'SHUF':   [[0x00000021, _REG1, _REG2, _REG3],
+                   [0x80000021, _VREG1, _VREG2, _REG3],
+                   [0xc0000021, _VREG1, _VREG2, _VREG3],
+                   [0x21000000, _REG1, _REG2, _IMM14],
+                   [0xa1000000, _VREG1, _VREG2, _IMM14]],
 
         # Integer mul/div.
         'MUL':    [[0x00000030, _REG1, _REG2, _REG3],
@@ -323,22 +338,23 @@ _OPCODES = {
                    [0xc000003d, _VREG1, _VREG2, _VREG3]],
 
         # Bit handling and byte/halfword/word shuffling.
-        'CLZ':    [[0x00000050, _REG1, _REG2],          # 3rd reg is always z
-                   [0x80000050, _VREG1, _VREG2]],
-        'REV':    [[0x00000051, _REG1, _REG2],          # 3rd reg is always z
-                   [0x80000051, _VREG1, _VREG2]],
-        'EXTB':   [[0x00000052, _REG1, _REG2],          # 3rd reg is always z
-                   [0x80000052, _VREG1, _VREG2]],
-        'EXTH':   [[0x00000053, _REG1, _REG2],          # 3rd reg is always z
-                   [0x80000053, _VREG1, _VREG2]],
+        'SEL':    [[0x00000040, _REG1, _REG2, _REG3],
+                   [0x80000040, _VREG1, _VREG2, _REG3],
+                   [0xc0000040, _VREG1, _VREG2, _VREG3]],
+        'CLZ':    [[0x00000041, _REG1, _REG2],          # 3rd reg is always z
+                   [0x80000041, _VREG1, _VREG2]],
+        'REV':    [[0x00000042, _REG1, _REG2],          # 3rd reg is always z
+                   [0x80000042, _VREG1, _VREG2]],
+        'EXTB':   [[0x00000043, _REG1, _REG2],          # 3rd reg is always z
+                   [0x80000043, _VREG1, _VREG2]],
+        'EXTH':   [[0x00000044, _REG1, _REG2],          # 3rd reg is always z
+                   [0x80000044, _VREG1, _VREG2]],
 
         # Special move/load/store instructions.
-        'MSX':    [[0x00000070, _XREG1, _REG2]],   # Move scalar->auxiliary (reg3 = z)
-        'MXS':    [[0x00000071, _REG1, _XREG2]],   # Move auxiliary->scalar (reg3 = z)
-        'MSV':    [[0x00000072, _VREG1, _REG2, _REG3]],  # Move scalar->vector element
-        'MVS':    [[0x00000073, _REG1, _VREG2, _REG3]],   # Move vector element->scalar
-        'LL':     [[0x00000074, _REG1, _REG2]],    # Load linked
-        'SC':     [[0x00000075, _REG1, _REG2]],    # Store conditional
+        'MSX':    [[0x00000050, _XREG1, _REG2]],         # Move scalar->auxiliary (reg3 = z)
+        'MXS':    [[0x00000051, _REG1, _XREG2]],         # Move auxiliary->scalar (reg3 = z)
+        'MSV':    [[0x00000052, _VREG1, _REG2, _REG3]],  # Move scalar->vector element
+        'MVS':    [[0x00000053, _REG1, _VREG2, _REG3]],  # Move vector element->scalar
 
         # Jump to register address.
         'J':      [[0x00000080, _REG1]],           # 2nd & 3rd regs are always z
@@ -375,7 +391,7 @@ _OPCODES = {
         # === ALIASES ===
         # ---------------------------------------------------------------------
 
-        # CPUID Z, Z
+        # CPUID Z, Z, Z
         'NOP':    [[0x00000000]],
 
         # Alias for: OR _REG1, _REG2, Z
@@ -389,7 +405,7 @@ _OPCODES = {
         # Alias for: BLEQ Z, _PCREL19x4
         'BL':     [[0x38000000, _PCREL19x4]],
 
-        # Alias for: JMP LR
+        # Alias for: J LR
         'RTS':    [[0x00e80080]],
 
         # Alias for: ADD _REG1, PC, offset

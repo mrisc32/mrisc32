@@ -29,12 +29,12 @@ struct id_in_t {
 };
 
 struct ex_in_t {
-  uint32_t src_a;   // Source operand A.
-  uint32_t src_b;   // Source operand B.
+  uint32_t src_a;  // Source operand A.
+  uint32_t src_b;  // Source operand B.
+  uint32_t src_c;  // Source operand C / Data to be stored in the mem step.
   uint32_t ex_op;  // EX operation.
 
-  uint32_t mem_op;      // MEM operation.
-  uint32_t store_data;  // Data to be stored in the mem step.
+  uint32_t mem_op;  // MEM operation.
 
   uint32_t dst_reg;    // Target register for the instruction (0 = none).
   uint32_t dst_idx;    // Target register index (for vector registers).
@@ -144,6 +144,22 @@ inline uint32_t u16_as_u32(const uint16_t x) {
 }
 
 }  // namespace
+
+uint32_t cpu_simple_t::cpuid(const uint32_t a, const uint32_t b) {
+  switch (a) {
+    case 0x00000000u:  // Max vector length
+      return NUM_VECTOR_ENTRIES;
+
+    case 0x00000001u:  // CPU features
+      // MD (integer mult/div)  = 1 << 0
+      // FP (floating point)    = 1 << 1
+      // VEC (vector processor) = 1 << 2
+      return 0x00000007u;
+
+    default:
+      return 0u;
+  }
+}
 
 uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
   m_regs[REG_PC] = addr;
@@ -310,8 +326,12 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       const bool is_mem_store = is_stx || is_st;
       const bool is_mem_op = (is_mem_load || is_mem_store);
 
+      // Is this an instruction with one destination register and three source registers?
+      const bool is_sel = ((sclar_instr & 0x3f0001ffu) == 0x00000040u);
+      const bool is_1d_3s = is_sel;
+
       // Should we use reg1 as a source (special case)?
-      const bool reg1_is_src = is_mem_store || is_branch;
+      const bool reg1_is_src = is_mem_store || is_branch || is_1d_3s;
 
       // Should we use reg2 as a source?
       const bool reg2_is_src = op_class_A || op_class_B;
@@ -320,7 +340,7 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       const bool reg3_is_src = op_class_A;
 
       // Should we use reg1 as a destination?
-      const bool reg1_is_dst = !reg1_is_src;
+      const bool reg1_is_dst = is_1d_3s || !reg1_is_src;
 
       // Determine the source & destination register numbers (zero for none).
       const uint32_t src_reg_a = is_subroutine_branch ? REG_PC : (reg2_is_src ? reg2 : REG_Z);
@@ -378,7 +398,7 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
                         ? 4
                         : (op_class_B ? ((is_vector_op && is_mem_op) ? vector.addr_offset : imm14)
                                       : (op_class_C ? imm19 : reg_b_data));
-      ex_in.store_data = reg_c_data;
+      ex_in.src_c = reg_c_data;
       ex_in.dst_reg = dst_reg;
       ex_in.dst_idx = vector.idx;
       ex_in.dst_is_vector = is_vector_op;
@@ -393,7 +413,7 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       // Do the operation.
       switch (ex_in.ex_op) {
         case EX_OP_CPUID:
-          ex_result = 0u;  // TODO(m): Implement me!
+          ex_result = cpuid(ex_in.src_a, ex_in.src_b);
           break;
 
         case EX_OP_LDHI:
@@ -424,9 +444,6 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
         case EX_OP_SUB:
           ex_result = add32((~ex_in.src_a) + 1u, ex_in.src_b);
           break;
-        case EX_OP_SEQ:
-          ex_result = (ex_in.src_a == ex_in.src_b) ? 1u : 0u;
-          break;
         case EX_OP_SLT:
           ex_result =
               (static_cast<int32_t>(ex_in.src_a) < static_cast<int32_t>(ex_in.src_b)) ? 1u : 0u;
@@ -434,25 +451,39 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
         case EX_OP_SLTU:
           ex_result = (ex_in.src_a < ex_in.src_b) ? 1u : 0u;
           break;
-        case EX_OP_SLE:
-          ex_result =
-              (static_cast<int32_t>(ex_in.src_a) <= static_cast<int32_t>(ex_in.src_b)) ? 1u : 0u;
+        case EX_OP_CMPEQ:
+          ex_result = (ex_in.src_a == ex_in.src_b) ? 0xffffffffu : 0u;
           break;
-        case EX_OP_SLEU:
-          ex_result = (ex_in.src_a <= ex_in.src_b) ? 1u : 0u;
+        case EX_OP_CMPLT:
+          ex_result = (static_cast<int32_t>(ex_in.src_a) < static_cast<int32_t>(ex_in.src_b))
+                          ? 0xffffffffu
+                          : 0u;
+        case EX_OP_CMPLTU:
+          ex_result = (ex_in.src_a < ex_in.src_b) ? 0xffffffffu : 0u;
+          break;
+        case EX_OP_CMPLE:
+          ex_result = (static_cast<int32_t>(ex_in.src_a) <= static_cast<int32_t>(ex_in.src_b))
+                          ? 0xffffffffu
+                          : 0u;
+          break;
+        case EX_OP_CMPLEU:
+          ex_result = (ex_in.src_a <= ex_in.src_b) ? 0xffffffffu : 0u;
           break;
         case EX_OP_SHUF:
           ex_result = shuf32(ex_in.src_a, ex_in.src_b);
           break;
-        case EX_OP_LSL:
-          ex_result = ex_in.src_a << ex_in.src_b;
+        case EX_OP_LSR:
+          ex_result = ex_in.src_a >> ex_in.src_b;
           break;
         case EX_OP_ASR:
           ex_result = static_cast<uint32_t>(static_cast<int32_t>(ex_in.src_a) >>
                                             static_cast<int32_t>(ex_in.src_b));
           break;
-        case EX_OP_LSR:
-          ex_result = ex_in.src_a >> ex_in.src_b;
+        case EX_OP_LSL:
+          ex_result = ex_in.src_a << ex_in.src_b;
+          break;
+        case EX_OP_SEL:
+          ex_result = (ex_in.src_a & ex_in.src_c) | (ex_in.src_b & ~ex_in.src_c);
           break;
         case EX_OP_CLZ:
           ex_result = clz32(ex_in.src_a);
@@ -520,7 +551,7 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
       mem_in.dst_idx = ex_in.dst_idx;
       mem_in.dst_is_vector = ex_in.dst_is_vector;
       mem_in.mem_op = ex_in.mem_op;
-      mem_in.store_data = ex_in.store_data;
+      mem_in.store_data = ex_in.src_c;
     }
 
     // MEM

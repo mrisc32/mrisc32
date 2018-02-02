@@ -230,12 +230,27 @@ test_6:
   stw    s17, sp, 12
   stw    s18, sp, 16
 
+  ; Print the maximum vector length
+  lea    s1, .vector_length_text
+  bl     _puts
+  cpuid  s1, z
+  bl     _printhex
+  ldi    s1, 10
+  bl     _putc
+
   ; Prepare scalars
   lea    s9, .in
   lea    s16, .result
 
-  ; The vector length is 32
-  ldi    vl, 31  ; vl = len - 1 = 31
+  ; Prepare for the vector operation
+  cpuid  s12, z        ; s12 is the nax number of vector elements
+  ldi    s10, 36       ; We want to process 37 elements
+  add    s11, s12, -1  ; s11 = max VL
+  lsl    s13, s12, 2   ; s13 is the memory increment per vector operation
+
+.vector_loop:
+  cmplt  vl, s10, s11
+  sel    vl, s10, s11  ; VL = min(s10, s11)
 
   ; Load v9 from memory
   ldw    v9, s9, 4
@@ -252,14 +267,20 @@ test_6:
   ; Store the result to memory
   stw    v9, s16, 4
 
+  sub    s10, s12, s10      ; Decrement the loop counter
+  add    s9, s9, s13        ; Increment the memory pointers
+  add    s16, s16, s13
+  bge    s10, .vector_loop
+
   ; Print the result
+  lea    s16, .result
   ldi    s17, 0
 .print:
   lsl    s9, s17, 2
   ldw    s1, s16, s9
   bl     _printhex
   ldi    s1, 0x2c
-  add    s18, s17, -31  ; s17 == 31 ?
+  add    s18, s17, -36  ; s17 == 36 ?
   add    s17, s17, 1
   bne    s18, .not_last_element
   ldi    s1, 10         ; Print comma or newline depending on if this is the last element
@@ -280,9 +301,14 @@ test_6:
 .in:
   .i32   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
   .i32   17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32
+  .i32   33, 34, 35, 36, 37
 
 .result:
-  .space 128
+  .space 148
+
+.vector_length_text:
+  .asciz "Max vector length: "
+
 
 ; ----------------------------------------------------------------------------
 
