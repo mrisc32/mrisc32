@@ -35,29 +35,28 @@ abs_diff_vectors:
 
   beq     s4, .done     ; n == 0, nothing to do
 
-  ; Prepare for the vector operation
-  cpuid  s12, z        ; s12 is the nax number of vector elements
-  add    s4, s4, -1    ; s4 = loop counter
-  add    s11, s12, -1  ; s11 = max VL
-  lsl    s13, s12, 2   ; s13 is the memory increment per vector operation
-
   ldhio   s10, 0x7fffffff
+
+  ; Prepare the vector operation
+  cpuid   s11, z       ; s11 is the nax number of vector elements
+  lsl     s12, s11, 2  ; s12 is the memory increment per vector operation
 
 .loop:
   cmplt   vl, s4, s11
   sel     vl, s4, s11  ; VL = min(s4, s11)
 
-  ldw     v9, s2, 4
-  ldw     v10, s3, 4
-  fsub    v9, v10, v9  ; a - b
-  and     v9, v9, s10  ; Clear the sign bit
-  stw     v9, s1, 4
+  sub     s4, s11, s4  ; Decrement the loop counter
 
-  sub    s4, s12, s4   ; Decrement the loop counter
-  add    s1, s1, s13   ; Increment the memory pointers
-  add    s2, s2, s13
-  add    s3, s3, s13
-  bge    s4, .loop
+  ldw     v9, s2, 4    ; v9  = a
+  ldw     v10, s3, 4   ; v10 = b
+  fsub    v9, v10, v9  ; v9  = a - b
+  and     v9, v9, s10  ; v9  = abs(a - b) (i.e. clear the sign bit)
+  stw     v9, s1, 4    ; c   = abs(a - b)
+
+  add     s1, s1, s12  ; Increment the memory pointers
+  add     s2, s2, s12
+  add     s3, s3, s12
+  bgt     s4, .loop
 
 .done:
   ldw     vl, sp, 0
@@ -72,20 +71,21 @@ abs_diff_vectors_scalar:
   ; s3 = b
   ; s4 = n
 
-  beq     s4, .done     ; n == 0, nothing to do
+  beq     s4, .done    ; n == 0, nothing to do
 
   ldhio   s12, 0x7fffffff
 
   ldi     s11, 0
 .loop:
-  ldw     s9, s2, s11
-  ldw     s10, s3, s11
-  fsub    s9, s10, s9   ; a - b
-  and     s9, s9, s12   ; Clear the sign bit
-  stw     s9, s1, s11
+  add     s4, s4, -1   ; Decrement the loop counter
 
-  add     s4, s4, -1
-  add     s11, s11, 4
+  ldw     s9, s2, s11  ; s9  = a
+  ldw     s10, s3, s11 ; s10 = b
+  fsub    s9, s10, s9  ; s9  = a - b
+  and     s9, s9, s12  ; s9  = abs(a - b) (i.e. clear the sign bit)
+  stw     s9, s1, s11  ; c   = abs(a - b)
+
+  add     s11, s11, 4  ; Increment the array offset
   bne     s4, .loop
 
 .done:

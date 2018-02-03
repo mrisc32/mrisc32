@@ -3,8 +3,8 @@
 ## Description
 
 The MRISC32 approach to Single Instruction Multiple Data (SIMD) operation is very similar to the early [vector processors](https://en.wikipedia.org/wiki/Vector_processor) (such as the [Cray-1](https://en.wikipedia.org/wiki/Cray-1)):
-* There are 32 vector registers, V0-V31, with *at least* 4 entries in each register.
-* All vector entries are the same size (32 bits), regardless if they represent bytes, half-words, words or floats.
+* There are 32 vector registers, V0-V31, with *at least* 4 elements in each register.
+* All vector elements are the same size (32 bits), regardless if they represent bytes, half-words, words or floats.
 * A Vector Length (VL) register controls the length of the vector operation.
 * There are vector,vector and vector,scalar versions of most integer and floating point operations.
 * Vector loads and stores have a stride parameter.
@@ -51,18 +51,19 @@ abs_diff:
 
   LDI     S11, 0
 .loop:
-  LDW     S9, S2, S11
-  LDW     S10, S3, S11
-  FSUB    S9, S10, S9  ; S9 = a - b
-  AND     S9, S9, S12  ; S9 = abs(a - b) (i.e. clear the sign bit)
-  STW     S9, S1, S11
+  ADD     S4, S4, -1   ; Decrement the loop counter
 
-  ADD     S4, S4, -1
-  ADD     S11, S11, 4
-  BNE     S4, .loop
+  LDW     S9, S2, S11  ; S9  = a
+  LDW     S10, S3, S11 ; S10 = b
+  FSUB    S9, S10, S9  ; S9  = a - b
+  AND     S9, S9, S12  ; S9  = abs(a - b) (i.e. clear the sign bit)
+  STW     S9, S1, S11  ; c   = abs(a - b)
+
+  ADD     S11, S11, 4  ; Increment the array offset
+  BGT     S4, .loop
 
 .done:
-  JMP     LR
+  J       LR
 ```
 
 ...or using vector opertaions as:
@@ -74,29 +75,28 @@ abs_diff:
 
   BEQ     S4, .done    ; n == 0, nothing to do
 
-  ; Prepare for the vector operation
-  CPUID  S12, Z        ; S12 is the nax number of vector elements
-  ADD    S4, S4, -1    ; S4 = loop counter
-  ADD    S11, S12, -1  ; S11 = max VL
-  LSL    S13, S12, 2   ; S13 is the memory increment per vector operation
-
   LDHIO   S10, 0x7fffffff
+
+  ; Prepare the vector operation
+  CPUID   S11, Z       ; S11 is the nax number of vector elements
+  LSL     S12, S11, 2  ; S12 is the memory increment per vector operation
 
 .loop:
   CMPLT   VL, S4, S11
   SEL     VL, S4, S11  ; VL = min(S4, S11)
 
-  LDW     V9, S2, 4
-  LDW     V10, S3, 4
-  FSUB    V9, V10, V9  ; a - b
-  AND     V9, V9, S10  ; Clear the sign bit
-  STW     V9, S1, 4
+  SUB     S4, S11, S4  ; Decrement the loop counter
 
-  SUB    S4, S12, S4   ; Decrement the loop counter
-  ADD    S1, S1, S13   ; Increment the memory pointers
-  ADD    S2, S2, S13
-  ADD    S3, S3, S13
-  BGE    S4, .loop
+  LDW     V9, S2, 4    ; V9  = a
+  LDW     V10, S3, 4   ; V10 = b
+  FSUB    V9, V10, V9  ; V9  = a - b
+  AND     V9, V9, S10  ; V9  = abs(a - b) (i.e. clear the sign bit)
+  STW     V9, S1, 4    ; c   = abs(a - b)
+
+  ADD     S1, S1, S12  ; Increment the memory pointers
+  ADD     S2, S2, S12
+  ADD     S3, S3, S12
+  BGT     S4, .loop
 
 .done:
   LDW     VL, SP, 0

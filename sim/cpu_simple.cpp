@@ -257,7 +257,7 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
 
       // Check if the next cycle will continue a vector loop (i.e. we should stall the IF stage).
       next_cycle_continues_a_vector_loop =
-          is_vector_op && (vector.idx < (m_regs[REG_VL] & (NUM_VECTOR_ELEMENTS - 1)));
+          is_vector_op && ((vector.idx + 1) < (m_regs[REG_VL] & (2 * NUM_VECTOR_ELEMENTS - 1)));
 
       // == BRANCH ==
 

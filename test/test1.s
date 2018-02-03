@@ -242,11 +242,11 @@ test_6:
   lea    s9, .in
   lea    s16, .result
 
-  ; Prepare for the vector operation
-  cpuid  s12, z        ; s12 is the nax number of vector elements
-  ldi    s10, 36       ; We want to process 37 elements
-  add    s11, s12, -1  ; s11 = max VL
-  lsl    s13, s12, 2   ; s13 is the memory increment per vector operation
+  ldi    s11, 37       ; We want to process 37 elements
+
+  ; Prepare the vector operation
+  cpuid  s10, z        ; s10 is the nax number of vector elements
+  lsl    s12, s10, 2   ; s12 is the memory increment per vector operation
 
 .vector_loop:
   cmplt  vl, s10, s11
@@ -267,10 +267,10 @@ test_6:
   ; Store the result to memory
   stw    v9, s16, 4
 
-  sub    s10, s12, s10      ; Decrement the loop counter
-  add    s9, s9, s13        ; Increment the memory pointers
-  add    s16, s16, s13
-  bge    s10, .vector_loop
+  sub    s11, s10, s11      ; Decrement the loop counter
+  add    s9, s9, s12        ; Increment the memory pointers
+  add    s16, s16, s12
+  bgt    s11, .vector_loop
 
   ; Print the result
   lea    s16, .result
