@@ -91,6 +91,7 @@ architecture rtl of alu is
   signal s_sel_res : std_logic_vector(31 downto 0);
   signal s_slt_res : std_logic_vector(31 downto 0);
   signal s_cmp_res : std_logic_vector(31 downto 0);
+  signal s_shuf_res : std_logic_vector(31 downto 0);
   -- ...
 
   -- Signals for the adder.
@@ -127,6 +128,36 @@ begin
 
   -- OP_SEL
   s_sel_res <= (i_src_a and i_src_c) or (i_src_b and (not i_src_c));
+
+
+  ------------------------------------------------------------------------------------------------
+  -- Byte shuffling (OP_SHUF)
+  ------------------------------------------------------------------------------------------------
+
+  ShufMux1: with i_src_b(2 downto 0) select
+    s_shuf_res(7 downto 0) <= i_src_a(7 downto 0) when "000",
+                              i_src_a(15 downto 8) when "001",
+                              i_src_a(23 downto 16) when "010",
+                              i_src_a(31 downto 24) when "011",
+                              (others => '0') when others;
+  ShufMux2: with i_src_b(5 downto 3) select
+    s_shuf_res(15 downto 8) <= i_src_a(7 downto 0) when "000",
+                               i_src_a(15 downto 8) when "001",
+                               i_src_a(23 downto 16) when "010",
+                               i_src_a(31 downto 24) when "011",
+                               (others => '0') when others;
+  ShufMux3: with i_src_b(8 downto 6) select
+    s_shuf_res(23 downto 16) <= i_src_a(7 downto 0) when "000",
+                                i_src_a(15 downto 8) when "001",
+                                i_src_a(23 downto 16) when "010",
+                                i_src_a(31 downto 24) when "011",
+                                (others => '0') when others;
+  ShufMux4: with i_src_b(11 downto 9) select
+    s_shuf_res(23 downto 16) <= i_src_a(7 downto 0) when "000",
+                                i_src_a(15 downto 8) when "001",
+                                i_src_a(23 downto 16) when "010",
+                                i_src_a(31 downto 24) when "011",
+                                (others => '0') when others;
 
 
   ------------------------------------------------------------------------------------------------
@@ -191,6 +222,7 @@ begin
                 s_adder_result when OP_ADD | OP_SUB,
                 s_slt_res when OP_SLT | OP_SLTU,
                 s_cmp_res when OP_CEQ | OP_CLT | OP_CLTU | OP_CLE | OP_CLEU,
+                s_shuf_res when OP_SHUF,
                 -- ...
                 "00000000000000000000000000000000" when others;
 
