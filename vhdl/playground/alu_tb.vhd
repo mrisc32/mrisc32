@@ -16,7 +16,6 @@ architecture behav of alu_tb is
       );
   end component;
   --  Specifies which entity is bound with the component.
-  for alu_0: alu use entity work.alu;
   signal op : std_logic_vector(8 downto 0);
   signal src_a : std_logic_vector(31 downto 0);
   signal src_b : std_logic_vector(31 downto 0);
@@ -24,11 +23,14 @@ architecture behav of alu_tb is
   signal result : std_logic_vector(31 downto 0);
 begin
   --  Component instantiation.
-  alu_0: alu port map (i_op => op,
-                       i_src_a => src_a,
-                       i_src_b => src_b,
-                       i_src_c => src_c,
-                       o_result => result);
+  alu_0: entity work.alu
+    port map (
+      i_op => op,
+      i_src_a => src_a,
+      i_src_b => src_b,
+      i_src_c => src_c,
+      o_result => result
+    );
    
   --  This process does the real job.
   process

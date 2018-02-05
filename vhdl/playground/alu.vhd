@@ -59,6 +59,16 @@ architecture rtl of alu is
   constant OP_EXTB   : std_logic_vector(8 downto 0) := "001000011";
   constant OP_EXTH   : std_logic_vector(8 downto 0) := "001000100";
 
+  -- We use an adder.
+  component adder
+    generic(WIDTH : positive);
+    port(i_c_in   : in  std_logic;
+         i_src_a  : in  std_logic_vector(WIDTH-1 downto 0);
+         i_src_b  : in  std_logic_vector(WIDTH-1 downto 0);
+         o_result : out std_logic_vector(WIDTH-1 downto 0);
+         o_c_out  : out std_logic
+      );
+  end component;
 
   -- Intermediate (concurrent) operation results.
   signal s_or_res : std_logic_vector(31 downto 0);
@@ -67,7 +77,19 @@ architecture rtl of alu is
   signal s_bic_res : std_logic_vector(31 downto 0);
   -- ...
 
+  -- Signals for the adder.
+  signal s_adder_xor_mask : std_logic_vector(31 downto 0);
+  signal s_adder_a : std_logic_vector(31 downto 0);
+  signal s_adder_b : std_logic_vector(31 downto 0);
+  signal s_adder_carry_in : std_logic;
+  signal s_adder_result : std_logic_vector(31 downto 0);
+  signal s_adder_carry_out : std_logic;
+
 begin
+
+  ------------------------------------------------------------------------------------------------
+  -- Bitwise operations
+  ------------------------------------------------------------------------------------------------
 
   -- OP_OR
   s_or_res <= i_src_a or i_src_b;
@@ -83,12 +105,44 @@ begin
 
   -- ...
 
+
+  ------------------------------------------------------------------------------------------------
+  -- Arithmetic operations
+  ------------------------------------------------------------------------------------------------
+
+  AluAdder: entity work.adder
+    generic map (
+      WIDTH => 32
+    )
+    port map (
+      i_c_in => s_adder_carry_in,
+      i_src_a => s_adder_a,
+      i_src_b => s_adder_b,
+      o_result => s_adder_result,
+      o_c_out => s_adder_carry_out
+    );
+
+  -- Should we negate the first input to the adder?
+  NegAdderAMux: with i_op select
+    s_adder_carry_in <= '1' when OP_SUB | OP_SLT | OP_SLTU | OP_CEQ | OP_CLT | OP_CLTU | OP_CLE | OP_CLEU,
+                        '0' when others;
+  s_adder_xor_mask <= (others => s_adder_carry_in);
+  s_adder_a <= i_src_a xor s_adder_xor_mask;
+  s_adder_b <= i_src_b;
+
+  -- TODO(m): Add a comparator for the OP_C* and OP_SLT* operations.
+
+
+  ------------------------------------------------------------------------------------------------
   -- Select the output.
+  ------------------------------------------------------------------------------------------------
+
   AluMux: with i_op select
     o_result <= s_or_res when OP_OR,
                 s_nor_res when OP_NOR,
                 s_and_res when OP_AND,
                 s_bic_res when OP_BIC,
+                s_adder_result when OP_ADD | OP_SUB,
                 -- ...
                 "00000000000000000000000000000000" when others;
 
