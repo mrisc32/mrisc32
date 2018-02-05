@@ -92,7 +92,10 @@ architecture rtl of alu is
   signal s_slt_res : std_logic_vector(31 downto 0);
   signal s_cmp_res : std_logic_vector(31 downto 0);
   signal s_shuf_res : std_logic_vector(31 downto 0);
-  -- ...
+  signal s_rev_res : std_logic_vector(31 downto 0);
+  signal s_extb_res : std_logic_vector(31 downto 0);
+  signal s_exth_res : std_logic_vector(31 downto 0);
+  signal s_ldhi_res : std_logic_vector(31 downto 0);
 
   -- Signals for the adder.
   signal s_adder_subtract : std_logic;
@@ -131,9 +134,10 @@ begin
 
 
   ------------------------------------------------------------------------------------------------
-  -- Byte shuffling (OP_SHUF)
+  -- Bit, byte and word shuffling
   ------------------------------------------------------------------------------------------------
 
+  -- OP_SHUF
   ShufMux1: with i_src_b(2 downto 0) select
     s_shuf_res(7 downto 0) <= i_src_a(7 downto 0) when "000",
                               i_src_a(15 downto 8) when "001",
@@ -158,6 +162,23 @@ begin
                                 i_src_a(23 downto 16) when "010",
                                 i_src_a(31 downto 24) when "011",
                                 (others => '0') when others;
+
+  -- OP_REV
+  RevGen: for k in 0 to 31 generate
+    s_rev_res(k) <= i_src_a(31-k);
+  end generate;
+
+  -- OP_EXTB
+  s_extb_res(31 downto 8) <= (others => i_src_a(7));
+  s_extb_res(7 downto 0) <= i_src_a(7 downto 0);
+
+  -- OP_EXTH
+  s_exth_res(31 downto 16) <= (others => i_src_a(15));
+  s_exth_res(15 downto 0) <= i_src_a(15 downto 0);
+
+  -- OP_LDHI, OP_LDHIO
+  s_ldhi_res(31 downto 13) <= i_src_a(18 downto 0);
+  s_ldhi_res(12 downto 0) <= (others => i_op(1));  -- OP_LDHI="000000001", OP_LDHIO="000000010"
 
 
   ------------------------------------------------------------------------------------------------
@@ -223,6 +244,10 @@ begin
                 s_slt_res when OP_SLT | OP_SLTU,
                 s_cmp_res when OP_CEQ | OP_CLT | OP_CLTU | OP_CLE | OP_CLEU,
                 s_shuf_res when OP_SHUF,
+                s_rev_res when OP_REV,
+                s_extb_res when OP_EXTB,
+                s_exth_res when OP_EXTH,
+                s_ldhi_res when OP_LDHI | OP_LDHIO,
                 -- ...
                 "00000000000000000000000000000000" when others;
 
