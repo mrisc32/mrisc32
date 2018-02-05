@@ -6,10 +6,12 @@ RUN = ghdl -r
 
 TESTS = \
     adder_tb \
+    comparator_tb \
     alu_tb
 
 test: $(TESTS)
 	$(RUN) adder_tb
+	$(RUN) comparator_tb
 	$(RUN) alu_tb
 
 all: $(TESTS)
