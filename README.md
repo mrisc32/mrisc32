@@ -1,11 +1,10 @@
 # MRISC32
 *Mostly harmless Reduced Instruction Set Computer, 32-bit edition*
 
-This is an experimental, custom 32-bit RISC CPU with vector operations.
+This is an experimental, custom 32-bit RISC/Vector CPU.
 
 # Features
 
-* All instructions are 32 bits wide and easy to decode.
 * Unified scalar/vector/integer/floating point ISA.
 * There are two register files:
   - There are 32 scalar registers, S0-S31, each 32 bits wide.
@@ -13,8 +12,12 @@ This is an experimental, custom 32-bit RISC CPU with vector operations.
     - 27 registers are general purpose.
     - All registers can be used for all types (integers, pointers and floating point).
     - PC is user-visible (for arithmetic and addressing) but read-only (to simplify branching logic).
-  - There are 32 vector registers, V0-V31, each with at least four 32-bit elements.
+  - There are 32 vector registers, V0-V31, each with *at least* four 32-bit elements.
     - All registers can be used for all types (integers, pointers and floating point).
+* All instructions are 32 bits wide and easy to decode.
+  - There are only three basic types of instruction encodings.
+  - There is room for 512 register-based and 62 immediate-based instructions.
+  - Space has been reserved for future double-word instruction encodings, for an almost infinite number of instructions.
 * Branches can be executed in the ID (instruction decode) step, which gives a low branch misprediction penalty.
 * Conditionals (branches) are based on register content (not condition code flags).
 * There are *no* condition code flags (carry, overflow, ...).
@@ -49,11 +52,11 @@ Not yet...
 
 # Goals
 
-* Experiment and learn the pros and cons of various design decisions.
 * Keep things simple - both the ISA and the architecture.
 * The ISA should map well to a [classic 5-stage RISC pipeline](https://en.wikipedia.org/wiki/Classic_RISC_pipeline).
 * The ISA should scale from small embedded to larger superscalar implementations.
 * The CPU should be easy to implement in an FPGA.
+* Create a simple baseline scalar CPU that actually works, and then experiment with optimizations.
 
 ## Non-goals
 

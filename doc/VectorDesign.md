@@ -78,7 +78,7 @@ abs_diff:
   LDHIO   S10, 0x7fffffff
 
   ; Prepare the vector operation
-  CPUID   S11, Z       ; S11 is the nax number of vector elements
+  CPUID   S11, Z       ; S11 is the max number of vector elements
   LSL     S12, S11, 2  ; S12 is the memory increment per vector operation
 
 .loop:

@@ -245,7 +245,7 @@ test_6:
   ldi    s11, 37       ; We want to process 37 elements
 
   ; Prepare the vector operation
-  cpuid  s10, z        ; s10 is the nax number of vector elements
+  cpuid  s10, z        ; s10 is the max number of vector elements
   lsl    s12, s10, 2   ; s12 is the memory increment per vector operation
 
 .vector_loop:

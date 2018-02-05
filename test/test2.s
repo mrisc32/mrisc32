@@ -38,7 +38,7 @@ abs_diff_vectors:
   ldhio   s10, 0x7fffffff
 
   ; Prepare the vector operation
-  cpuid   s11, z       ; s11 is the nax number of vector elements
+  cpuid   s11, z       ; s11 is the max number of vector elements
   lsl     s12, s11, 2  ; s12 is the memory increment per vector operation
 
 .loop:
