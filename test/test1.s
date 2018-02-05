@@ -249,7 +249,7 @@ test_6:
   lsl    s12, s10, 2   ; s12 is the memory increment per vector operation
 
 .vector_loop:
-  cmplt  vl, s10, s11
+  clt    vl, s10, s11
   sel    vl, s10, s11  ; VL = min(s10, s11)
 
   ; Load v9 from memory

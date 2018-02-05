@@ -27,16 +27,16 @@
 |SUB| x | dst, src1, src2 | dst <= src2 - src1 | Subtraction (note: argument order) |
 |SLT| x | dst, src1, src2 | dst <= (src1 < src2) ? 1 : 0 | Set if less than (signed) |
 |SLTU| x | dst, src1, src2 | dst <= (src1 < src2) ? 1 : 0 | Set if less than (unsigned) |
-|CMPEQ| x | dst, src1, src2 | dst <= (src1 == src2) ? 0xffffffff : 0 | Set if equal (signed) |
-|CMPLT| x | dst, src1, src2 | dst <= (src1 < src2) ? 0xffffffff : 0 | Set if less than (signed) |
-|CMPLTU| x | dst, src1, src2 | dst <= (src1 < src2) ? 0xffffffff : 0 | Set if less than (unsigned) |
-|CMPLE| x | dst, src1, src2 | dst <= (src1 <= src2) ? 0xffffffff : 0 | Set if less than or equal (signed) |
-|CMPLEU| x | dst, src1, src2 | dst <= (src1 <= src2) ? 0xffffffff : 0 | Set if less than or equal (unsigned) |
+|CEQ| x | dst, src1, src2 | dst <= (src1 == src2) ? 0xffffffff : 0 | Compare if equal (signed) |
+|CLT| x | dst, src1, src2 | dst <= (src1 < src2) ? 0xffffffff : 0 | Compare if less than (signed) |
+|CLTU| x | dst, src1, src2 | dst <= (src1 < src2) ? 0xffffffff : 0 | Compare if less than (unsigned) |
+|CLE| x | dst, src1, src2 | dst <= (src1 <= src2) ? 0xffffffff : 0 | Compare less than or equal (signed) |
+|CLEU| x | dst, src1, src2 | dst <= (src1 <= src2) ? 0xffffffff : 0 | Compare less than or equal (unsigned) |
 |LSR| x | dst, src1, src2 | dst <= src1 >> src2 (unsigned) | Logic shift right |
 |ASR| x | dst, src1, src2 | dst <= src1 >> src2 (signed) | Arithmetic shift right |
 |LSL| x | dst, src1, src2 | dst <= src1 << src2 | Logic shift left |
 |SHUF| x | dst, src1, src2 | dst <= shuffle(src1, src2) | Shuffle bytes according to indices in src2 (2) |
-|SEL| x | dst, src1, src2 | dst <= (src1 & dst) | (src1 & ~dst) | Bitwise select (use with CMP[cc]]) |
+|SEL| x | dst, src1, src2 | dst <= (src1 & dst) \| (src1 & ~dst) | Bitwise select (use with C[cc]]) |
 |CLZ| x | dst, src1 | dst <= clz(src1) | Count leading zeros |
 |REV| x | dst, src1 | dst <= rev(src1) | Reverse bit order |
 |EXTB| x | dst, src1 | dst <= signextend(src1[7:0]) | Sign-extend byte to word |

@@ -457,22 +457,22 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
         case EX_OP_SLTU:
           ex_result = (ex_in.src_a < ex_in.src_b) ? 1u : 0u;
           break;
-        case EX_OP_CMPEQ:
+        case EX_OP_CEQ:
           ex_result = (ex_in.src_a == ex_in.src_b) ? 0xffffffffu : 0u;
           break;
-        case EX_OP_CMPLT:
+        case EX_OP_CLT:
           ex_result = (static_cast<int32_t>(ex_in.src_a) < static_cast<int32_t>(ex_in.src_b))
                           ? 0xffffffffu
                           : 0u;
-        case EX_OP_CMPLTU:
+        case EX_OP_CLTU:
           ex_result = (ex_in.src_a < ex_in.src_b) ? 0xffffffffu : 0u;
           break;
-        case EX_OP_CMPLE:
+        case EX_OP_CLE:
           ex_result = (static_cast<int32_t>(ex_in.src_a) <= static_cast<int32_t>(ex_in.src_b))
                           ? 0xffffffffu
                           : 0u;
           break;
-        case EX_OP_CMPLEU:
+        case EX_OP_CLEU:
           ex_result = (ex_in.src_a <= ex_in.src_b) ? 0xffffffffu : 0u;
           break;
         case EX_OP_SHUF:

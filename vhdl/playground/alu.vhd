@@ -26,11 +26,11 @@ architecture rtl of alu is
   constant OP_SUB    : std_logic_vector(8 downto 0) := "000010110";
   constant OP_SLT    : std_logic_vector(8 downto 0) := "000010111";
   constant OP_SLTU   : std_logic_vector(8 downto 0) := "000011000";
-  constant OP_CMPEQ  : std_logic_vector(8 downto 0) := "000011001";
-  constant OP_CMPLT  : std_logic_vector(8 downto 0) := "000011010";
-  constant OP_CMPLTU : std_logic_vector(8 downto 0) := "000011011";
-  constant OP_CMPLE  : std_logic_vector(8 downto 0) := "000011100";
-  constant OP_CMPLEU : std_logic_vector(8 downto 0) := "000011101";
+  constant OP_CEQ    : std_logic_vector(8 downto 0) := "000011001";
+  constant OP_CLT    : std_logic_vector(8 downto 0) := "000011010";
+  constant OP_CLTU   : std_logic_vector(8 downto 0) := "000011011";
+  constant OP_CLE    : std_logic_vector(8 downto 0) := "000011100";
+  constant OP_CLEU   : std_logic_vector(8 downto 0) := "000011101";
   constant OP_LSR    : std_logic_vector(8 downto 0) := "000011110";
   constant OP_ASR    : std_logic_vector(8 downto 0) := "000011111";
   constant OP_LSL    : std_logic_vector(8 downto 0) := "000100000";

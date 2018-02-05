@@ -82,7 +82,7 @@ abs_diff:
   LSL     S12, S11, 2  ; S12 is the memory increment per vector operation
 
 .loop:
-  CMPLT   VL, S4, S11
+  CLT     VL, S4, S11
   SEL     VL, S4, S11  ; VL = min(S4, S11)
 
   SUB     S4, S11, S4  ; Decrement the loop counter
