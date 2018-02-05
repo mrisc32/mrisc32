@@ -62,11 +62,23 @@ architecture rtl of alu is
   -- We use an adder.
   component adder
     generic(WIDTH : positive);
-    port(i_c_in   : in  std_logic;
-         i_src_a  : in  std_logic_vector(WIDTH-1 downto 0);
-         i_src_b  : in  std_logic_vector(WIDTH-1 downto 0);
-         o_result : out std_logic_vector(WIDTH-1 downto 0);
-         o_c_out  : out std_logic
+    port(
+        i_c_in   : in  std_logic;
+        i_src_a  : in  std_logic_vector(WIDTH-1 downto 0);
+        i_src_b  : in  std_logic_vector(WIDTH-1 downto 0);
+        o_result : out std_logic_vector(WIDTH-1 downto 0);
+        o_c_out  : out std_logic
+      );
+  end component;
+
+  -- We use a comparator.
+  component comparator
+    generic(WIDTH : positive);
+    port(
+        i_src : in  std_logic_vector(WIDTH-1 downto 0);
+        o_eq  : out std_logic;
+        o_lt  : out std_logic;
+        o_le  : out std_logic
       );
   end component;
 
@@ -75,6 +87,10 @@ architecture rtl of alu is
   signal s_nor_res : std_logic_vector(31 downto 0);
   signal s_and_res : std_logic_vector(31 downto 0);
   signal s_bic_res : std_logic_vector(31 downto 0);
+  signal s_xor_res : std_logic_vector(31 downto 0);
+  signal s_sel_res : std_logic_vector(31 downto 0);
+  signal s_slt_res : std_logic_vector(31 downto 0);
+  signal s_cmp_res : std_logic_vector(31 downto 0);
   -- ...
 
   -- Signals for the adder.
@@ -84,6 +100,13 @@ architecture rtl of alu is
   signal s_adder_carry_in : std_logic;
   signal s_adder_result : std_logic_vector(31 downto 0);
   signal s_adder_carry_out : std_logic;
+
+  -- Signals for the comparator.
+  signal s_comparator_src : std_logic_vector(31 downto 0);
+  signal s_comparator_eq  : std_logic;
+  signal s_comparator_lt  : std_logic;
+  signal s_comparator_le  : std_logic;
+  signal s_cmp_bit : std_logic;
 
 begin
 
@@ -103,12 +126,18 @@ begin
   -- OP_BIC
   s_bic_res <= i_src_a and (not i_src_b);
 
-  -- ...
+  -- OP_XOR
+  s_xor_res <= i_src_a xor i_src_b;
+
+  -- OP_SEL
+  s_sel_res <= (i_src_a and i_src_c) or (i_src_b and (not i_src_c));
 
 
   ------------------------------------------------------------------------------------------------
   -- Arithmetic operations
   ------------------------------------------------------------------------------------------------
+
+  -- TODO(m): Handle unsigned compares (SLTU, CLTU, CLEU).
 
   AluAdder: entity work.adder
     generic map (
@@ -122,7 +151,18 @@ begin
       o_c_out => s_adder_carry_out
     );
 
-  -- Should we negate the first input to the adder?
+  AluComparator: entity work.comparator
+    generic map (
+      WIDTH => 32
+    )
+    port map (
+      i_src => s_comparator_src,
+      o_eq => s_comparator_eq,
+      o_lt => s_comparator_lt,
+      o_le => s_comparator_le
+    );
+
+  -- Set up inputs to the adder.
   NegAdderAMux: with i_op select
     s_adder_carry_in <= '1' when OP_SUB | OP_SLT | OP_SLTU | OP_CEQ | OP_CLT | OP_CLTU | OP_CLE | OP_CLEU,
                         '0' when others;
@@ -130,7 +170,20 @@ begin
   s_adder_a <= i_src_a xor s_adder_xor_mask;
   s_adder_b <= i_src_b;
 
-  -- TODO(m): Add a comparator for the OP_C* and OP_SLT* operations.
+  -- Set up inputs to the comparator.
+  s_comparator_src <= s_adder_result;
+
+  -- Set operations.
+  s_slt_res(31 downto 1) <= "0000000000000000000000000000000";
+  s_slt_res(0) <= s_comparator_lt;
+
+  -- Compare operations.
+  CmpMux: with i_op select
+    s_cmp_bit <= s_comparator_eq when OP_CEQ,
+                 s_comparator_lt when OP_CLT | OP_CLTU,
+                 s_comparator_le when OP_CLE | OP_CLEU,
+                 '0' when others;
+  s_cmp_res <= (others => s_cmp_bit);
 
 
   ------------------------------------------------------------------------------------------------
@@ -142,7 +195,11 @@ begin
                 s_nor_res when OP_NOR,
                 s_and_res when OP_AND,
                 s_bic_res when OP_BIC,
+                s_xor_res when OP_XOR,
+                s_sel_res when OP_SEL,
                 s_adder_result when OP_ADD | OP_SUB,
+                s_slt_res when OP_SLT | OP_SLTU,
+                s_cmp_res when OP_CEQ | OP_CLT | OP_CLTU | OP_CLE | OP_CLEU,
                 -- ...
                 "00000000000000000000000000000000" when others;
 
