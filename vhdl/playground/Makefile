@@ -1,29 +1,25 @@
-ANALYZE = ghdl -a
-ELABORATE = ghdl -e
-RUN = ghdl -r
+GHDL = ghdl
 
-.PHONY: all test clean
+.PHONY: all clean
 
-TESTS = \
-    adder_tb \
-    comparator_tb \
-    alu_tb
+SRCS = \
+    consts.vhd \
+    adder.vhd \
+    adder_tb.vhd \
+    comparator.vhd \
+    comparator_tb.vhd \
+    alu.vhd \
+    alu_tb.vhd
 
-test: $(TESTS)
-	$(RUN) adder_tb
-	$(RUN) comparator_tb
-	$(RUN) alu_tb
-
-all: $(TESTS)
+all: $(SRCS)
+	$(GHDL) -i $(SRCS)
+	$(GHDL) -m adder_tb
+	$(GHDL) -r adder_tb
+	$(GHDL) -m comparator_tb
+	$(GHDL) -r comparator_tb
+	$(GHDL) -m alu_tb
+	$(GHDL) -r alu_tb
 
 clean:
+	$(GHDL) --clean
 	rm -rf *.o *.cf *_tb
-
-# Rule for linking test benches.
-%_tb : %.o %_tb.o
-	$(ELABORATE) $@
-
-# Rule for analyzing VHDL files.
-%.o : %.vhd
-	$(ANALYZE) $<
-
