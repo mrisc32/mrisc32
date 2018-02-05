@@ -1,13 +1,15 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 use work.consts.all;
 
 entity alu is
-  port (i_op : in std_logic_vector(8 downto 0);        -- Operation
-        i_src_a : in std_logic_vector(31 downto 0);    -- Source operand A
-        i_src_b : in std_logic_vector(31 downto 0);    -- Source operand B
-        i_src_c : in std_logic_vector(31 downto 0);    -- Source operand C
-        o_result : out std_logic_vector(31 downto 0)   -- ALU result
+  port(
+      i_op : in opcode_t;                                      -- Operation
+      i_src_a : in std_logic_vector(C_WORD_SIZE-1 downto 0);   -- Source operand A
+      i_src_b : in std_logic_vector(C_WORD_SIZE-1 downto 0);   -- Source operand B
+      i_src_c : in std_logic_vector(C_WORD_SIZE-1 downto 0);   -- Source operand C
+      o_result : out std_logic_vector(C_WORD_SIZE-1 downto 0)  -- ALU result
     );
 end;
  
@@ -36,32 +38,51 @@ architecture rtl of alu is
   end component;
 
   -- Intermediate (concurrent) operation results.
-  signal s_or_res : std_logic_vector(31 downto 0);
-  signal s_nor_res : std_logic_vector(31 downto 0);
-  signal s_and_res : std_logic_vector(31 downto 0);
-  signal s_bic_res : std_logic_vector(31 downto 0);
-  signal s_xor_res : std_logic_vector(31 downto 0);
-  signal s_sel_res : std_logic_vector(31 downto 0);
-  signal s_slt_res : std_logic_vector(31 downto 0);
-  signal s_cmp_res : std_logic_vector(31 downto 0);
-  signal s_shuf_res : std_logic_vector(31 downto 0);
-  signal s_rev_res : std_logic_vector(31 downto 0);
-  signal s_extb_res : std_logic_vector(31 downto 0);
-  signal s_exth_res : std_logic_vector(31 downto 0);
-  signal s_ldhi_res : std_logic_vector(31 downto 0);
+  signal s_cpuid_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_or_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_nor_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_and_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_bic_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_xor_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_sel_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_slt_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_cmp_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_shuf_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_rev_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_extb_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_exth_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_ldhi_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
   -- Signals for the adder.
   signal s_adder_subtract : std_logic;
-  signal s_adder_result : std_logic_vector(31 downto 0);
+  signal s_adder_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_adder_carry_out : std_logic;
 
   -- Signals for the comparator.
-  signal s_comparator_eq  : std_logic;
-  signal s_comparator_lt  : std_logic;
-  signal s_comparator_le  : std_logic;
+  signal s_comparator_eq : std_logic;
+  signal s_comparator_lt : std_logic;
+  signal s_comparator_le : std_logic;
   signal s_cmp_bit : std_logic;
 
 begin
+  ------------------------------------------------------------------------------------------------
+  -- CPUID
+  ------------------------------------------------------------------------------------------------
+
+  process(i_src_a, i_src_b)
+  begin
+    if (i_src_a = to_word(0)) and (i_src_b = to_word(0)) then
+      s_cpuid_res <= to_word(C_VEC_REG_ELEMENTS);
+    elsif (i_src_a = to_word(1)) and (i_src_b = to_word(0)) then
+      s_cpuid_res(0) <= to_std_logic(C_CPU_HAS_MULDIV);
+      s_cpuid_res(1) <= to_std_logic(C_CPU_HAS_FPU);
+      s_cpuid_res(2) <= to_std_logic(C_CPU_HAS_VECTOR);
+      s_cpuid_res(C_WORD_SIZE-1 downto 3) <= (others => '0');
+    else
+      s_cpuid_res <= (others => '0');
+    end if;
+  end process;
+
 
   ------------------------------------------------------------------------------------------------
   -- Bitwise operations
@@ -117,21 +138,21 @@ begin
                                 (others => '0') when others;
 
   -- OP_REV
-  RevGen: for k in 0 to 31 generate
-    s_rev_res(k) <= i_src_a(31-k);
+  RevGen: for k in 0 to C_WORD_SIZE-1 generate
+    s_rev_res(k) <= i_src_a(C_WORD_SIZE-1-k);
   end generate;
 
   -- OP_EXTB
-  s_extb_res(31 downto 8) <= (others => i_src_a(7));
+  s_extb_res(C_WORD_SIZE-1 downto 8) <= (others => i_src_a(7));
   s_extb_res(7 downto 0) <= i_src_a(7 downto 0);
 
   -- OP_EXTH
-  s_exth_res(31 downto 16) <= (others => i_src_a(15));
+  s_exth_res(C_WORD_SIZE-1 downto 16) <= (others => i_src_a(15));
   s_exth_res(15 downto 0) <= i_src_a(15 downto 0);
 
   -- OP_LDHI, OP_LDHIO
-  s_ldhi_res(31 downto 13) <= i_src_a(18 downto 0);
-  s_ldhi_res(12 downto 0) <= (others => i_op(1));  -- OP_LDHI="000000001", OP_LDHIO="000000010"
+  s_ldhi_res(C_WORD_SIZE-1 downto C_WORD_SIZE-19) <= i_src_a(18 downto 0);
+  s_ldhi_res(C_WORD_SIZE-20 downto 0) <= (others => i_op(1));  -- OP_LDHI="000000001", OP_LDHIO="000000010"
 
 
   ------------------------------------------------------------------------------------------------
@@ -142,7 +163,7 @@ begin
 
   AluAdder: entity work.adder
     generic map (
-      WIDTH => 32
+      WIDTH => C_WORD_SIZE
     )
     port map (
       i_subtract => s_adder_subtract,
@@ -154,7 +175,7 @@ begin
 
   AluComparator: entity work.comparator
     generic map (
-      WIDTH => 32
+      WIDTH => C_WORD_SIZE
     )
     port map (
       i_src => s_adder_result,
@@ -170,7 +191,7 @@ begin
                         '0' when others;
 
   -- Set operations.
-  s_slt_res(31 downto 1) <= (others => '0');
+  s_slt_res(C_WORD_SIZE-1 downto 1) <= (others => '0');
   s_slt_res(0) <= s_comparator_lt;
 
   -- Compare operations.
@@ -187,22 +208,24 @@ begin
   ------------------------------------------------------------------------------------------------
 
   AluMux: with i_op select
-    o_result <= s_or_res when OP_OR,
-                s_nor_res when OP_NOR,
-                s_and_res when OP_AND,
-                s_bic_res when OP_BIC,
-                s_xor_res when OP_XOR,
-                s_sel_res when OP_SEL,
-                s_adder_result when OP_ADD | OP_SUB,
-                s_slt_res when OP_SLT | OP_SLTU,
-                s_cmp_res when OP_CEQ | OP_CLT | OP_CLTU | OP_CLE | OP_CLEU,
-                s_shuf_res when OP_SHUF,
-                s_rev_res when OP_REV,
-                s_extb_res when OP_EXTB,
-                s_exth_res when OP_EXTH,
-                s_ldhi_res when OP_LDHI | OP_LDHIO,
-                -- ...
-                (others => '0') when others;
+    o_result <=
+        s_cpuid_res when OP_CPUID,
+        s_or_res when OP_OR,
+        s_nor_res when OP_NOR,
+        s_and_res when OP_AND,
+        s_bic_res when OP_BIC,
+        s_xor_res when OP_XOR,
+        s_sel_res when OP_SEL,
+        s_adder_result when OP_ADD | OP_SUB,
+        s_slt_res when OP_SLT | OP_SLTU,
+        s_cmp_res when OP_CEQ | OP_CLT | OP_CLTU | OP_CLE | OP_CLEU,
+        s_shuf_res when OP_SHUF,
+        s_rev_res when OP_REV,
+        s_extb_res when OP_EXTB,
+        s_exth_res when OP_EXTH,
+        s_ldhi_res when OP_LDHI | OP_LDHIO,
+        -- ...
+        (others => '0') when others;
 
 end rtl;
 
