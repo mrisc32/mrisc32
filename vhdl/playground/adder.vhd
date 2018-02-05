@@ -1,14 +1,24 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
 entity adder is
-  port (i0, i1 : in bit;  -- Inputs
-        ci : in bit;      -- Carry in
-        s : out bit;      -- Output sum
-        co : out bit);    -- Carry out
+  generic(WIDTH : positive := 32);
+  port(i_c_in   : in  std_logic;
+       i_src_a  : in  std_logic_vector(WIDTH-1 downto 0);
+       i_src_b  : in  std_logic_vector(WIDTH-1 downto 0);
+       o_result : out std_logic_vector(WIDTH-1 downto 0);
+       o_c_out  : out std_logic
+    );
 end adder;
  
 architecture rtl of adder is
+  signal s_carry : unsigned(0 downto 0);
+  signal s_result : unsigned(WIDTH downto 0);
 begin
-  --  Compute the sum and carry.
-  s <= i0 xor i1 xor ci;
-  co <= (i0 and i1) or (i0 and ci) or (i1 and ci);
+  s_carry(0) <= i_c_in;
+  s_result <= resize(unsigned(i_src_a), WIDTH+1) + resize(unsigned(i_src_b), WIDTH+1) + s_carry;
+  o_result <= std_logic_vector(s_result(WIDTH-1 downto 0));
+  o_c_out <= s_result(WIDTH);
 end rtl;
 
