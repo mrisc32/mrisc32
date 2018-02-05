@@ -113,29 +113,33 @@ begin
 
   -- OP_SHUF
   ShufMux1: with i_src_b(2 downto 0) select
-    s_shuf_res(7 downto 0) <= i_src_a(7 downto 0) when "000",
-                              i_src_a(15 downto 8) when "001",
-                              i_src_a(23 downto 16) when "010",
-                              i_src_a(31 downto 24) when "011",
-                              (others => '0') when others;
+    s_shuf_res(7 downto 0) <=
+      i_src_a(7 downto 0) when "000",
+      i_src_a(15 downto 8) when "001",
+      i_src_a(23 downto 16) when "010",
+      i_src_a(31 downto 24) when "011",
+      (others => '0') when others;
   ShufMux2: with i_src_b(5 downto 3) select
-    s_shuf_res(15 downto 8) <= i_src_a(7 downto 0) when "000",
-                               i_src_a(15 downto 8) when "001",
-                               i_src_a(23 downto 16) when "010",
-                               i_src_a(31 downto 24) when "011",
-                               (others => '0') when others;
+    s_shuf_res(15 downto 8) <=
+      i_src_a(7 downto 0) when "000",
+      i_src_a(15 downto 8) when "001",
+      i_src_a(23 downto 16) when "010",
+      i_src_a(31 downto 24) when "011",
+      (others => '0') when others;
   ShufMux3: with i_src_b(8 downto 6) select
-    s_shuf_res(23 downto 16) <= i_src_a(7 downto 0) when "000",
-                                i_src_a(15 downto 8) when "001",
-                                i_src_a(23 downto 16) when "010",
-                                i_src_a(31 downto 24) when "011",
-                                (others => '0') when others;
+    s_shuf_res(23 downto 16) <=
+      i_src_a(7 downto 0) when "000",
+      i_src_a(15 downto 8) when "001",
+      i_src_a(23 downto 16) when "010",
+      i_src_a(31 downto 24) when "011",
+      (others => '0') when others;
   ShufMux4: with i_src_b(11 downto 9) select
-    s_shuf_res(23 downto 16) <= i_src_a(7 downto 0) when "000",
-                                i_src_a(15 downto 8) when "001",
-                                i_src_a(23 downto 16) when "010",
-                                i_src_a(31 downto 24) when "011",
-                                (others => '0') when others;
+    s_shuf_res(23 downto 16) <=
+      i_src_a(7 downto 0) when "000",
+      i_src_a(15 downto 8) when "001",
+      i_src_a(23 downto 16) when "010",
+      i_src_a(31 downto 24) when "011",
+      (others => '0') when others;
 
   -- OP_REV
   RevGen: for k in 0 to C_WORD_SIZE-1 generate
@@ -186,9 +190,9 @@ begin
 
   -- Select if we're doing addition or subtraction.
   NegAdderAMux: with i_op select
-    s_adder_subtract <= '1' when OP_SUB | OP_SLT | OP_SLTU | OP_CEQ |
-                                 OP_CLT | OP_CLTU | OP_CLE | OP_CLEU,
-                        '0' when others;
+    s_adder_subtract <=
+      '1' when OP_SUB | OP_SLT | OP_SLTU | OP_CEQ | OP_CLT | OP_CLTU | OP_CLE | OP_CLEU,
+      '0' when others;
 
   -- Set operations.
   s_slt_res(C_WORD_SIZE-1 downto 1) <= (others => '0');
@@ -196,10 +200,11 @@ begin
 
   -- Compare operations.
   CmpMux: with i_op select
-    s_cmp_bit <= s_comparator_eq when OP_CEQ,
-                 s_comparator_lt when OP_CLT | OP_CLTU,
-                 s_comparator_le when OP_CLE | OP_CLEU,
-                 '0' when others;
+    s_cmp_bit <=
+      s_comparator_eq when OP_CEQ,
+      s_comparator_lt when OP_CLT | OP_CLTU,
+      s_comparator_le when OP_CLE | OP_CLEU,
+      '0' when others;
   s_cmp_res <= (others => s_cmp_bit);
 
 
