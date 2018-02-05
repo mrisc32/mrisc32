@@ -94,15 +94,11 @@ architecture rtl of alu is
   -- ...
 
   -- Signals for the adder.
-  signal s_adder_xor_mask : std_logic_vector(31 downto 0);
-  signal s_adder_a : std_logic_vector(31 downto 0);
-  signal s_adder_b : std_logic_vector(31 downto 0);
-  signal s_adder_carry_in : std_logic;
+  signal s_adder_subtract : std_logic;
   signal s_adder_result : std_logic_vector(31 downto 0);
   signal s_adder_carry_out : std_logic;
 
   -- Signals for the comparator.
-  signal s_comparator_src : std_logic_vector(31 downto 0);
   signal s_comparator_eq  : std_logic;
   signal s_comparator_lt  : std_logic;
   signal s_comparator_le  : std_logic;
@@ -144,9 +140,9 @@ begin
       WIDTH => 32
     )
     port map (
-      i_c_in => s_adder_carry_in,
-      i_src_a => s_adder_a,
-      i_src_b => s_adder_b,
+      i_subtract => s_adder_subtract,
+      i_src_a => i_src_a,
+      i_src_b => i_src_b,
       o_result => s_adder_result,
       o_c_out => s_adder_carry_out
     );
@@ -156,22 +152,17 @@ begin
       WIDTH => 32
     )
     port map (
-      i_src => s_comparator_src,
+      i_src => s_adder_result,
       o_eq => s_comparator_eq,
       o_lt => s_comparator_lt,
       o_le => s_comparator_le
     );
 
-  -- Set up inputs to the adder.
+  -- Select if we're doing addition or subtraction.
   NegAdderAMux: with i_op select
-    s_adder_carry_in <= '1' when OP_SUB | OP_SLT | OP_SLTU | OP_CEQ | OP_CLT | OP_CLTU | OP_CLE | OP_CLEU,
+    s_adder_subtract <= '1' when OP_SUB | OP_SLT | OP_SLTU | OP_CEQ |
+                                 OP_CLT | OP_CLTU | OP_CLE | OP_CLEU,
                         '0' when others;
-  s_adder_xor_mask <= (others => s_adder_carry_in);
-  s_adder_a <= i_src_a xor s_adder_xor_mask;
-  s_adder_b <= i_src_b;
-
-  -- Set up inputs to the comparator.
-  s_comparator_src <= s_adder_result;
 
   -- Set operations.
   s_slt_res(31 downto 1) <= "0000000000000000000000000000000";

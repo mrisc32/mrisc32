@@ -7,26 +7,27 @@ end adder_tb;
 architecture behavioral of adder_tb is
   component adder
     generic(WIDTH : positive);
-    port(i_c_in   : in  std_logic;
-         i_src_a  : in  std_logic_vector(WIDTH-1 downto 0);
-         i_src_b  : in  std_logic_vector(WIDTH-1 downto 0);
-         o_result : out std_logic_vector(WIDTH-1 downto 0);
-         o_c_out  : out std_logic
+    port(
+        i_subtract : in  std_logic;
+        i_src_a    : in  std_logic_vector(WIDTH-1 downto 0);
+        i_src_b    : in  std_logic_vector(WIDTH-1 downto 0);
+        o_result   : out std_logic_vector(WIDTH-1 downto 0);
+        o_c_out    : out std_logic
       );
   end component;
 
-  signal s_c_in   : std_logic;
-  signal s_src_a  : std_logic_vector(7 downto 0);
-  signal s_src_b  : std_logic_vector(7 downto 0);
-  signal s_result : std_logic_vector(7 downto 0);
-  signal s_c_out  : std_logic;
+  signal s_subtract : std_logic;
+  signal s_src_a    : std_logic_vector(7 downto 0);
+  signal s_src_b    : std_logic_vector(7 downto 0);
+  signal s_result   : std_logic_vector(7 downto 0);
+  signal s_c_out    : std_logic;
 begin
   adder_0: entity work.adder
     generic map (
       WIDTH => 8
     )
     port map (
-      i_c_in => s_c_in,
+      i_subtract => s_subtract,
       i_src_a => s_src_a,
       i_src_b => s_src_b,
       o_result => s_result,
@@ -37,9 +38,9 @@ begin
     --  The patterns to apply.
     type pattern_type is record
       -- Inputs
-      c_in  : std_logic;
-      src_a : std_logic_vector(7 downto 0);
-      src_b : std_logic_vector(7 downto 0);
+      subtract : std_logic;
+      src_a    : std_logic_vector(7 downto 0);
+      src_b    : std_logic_vector(7 downto 0);
 
       -- Expected outputs
       result : std_logic_vector(7 downto 0);
@@ -48,15 +49,15 @@ begin
     type pattern_array is array (natural range <>) of pattern_type;
     constant patterns : pattern_array := (
         ('0', "00000001", "00000001", "00000010", '0'),
-        ('1', "00000001", "00000001", "00000011", '0'),
+        ('1', "00000001", "00000111", "00000110", '1'),
         ('0', "11111111", "00000001", "00000000", '1'),
-        ('1', "11111110", "00000001", "00000000", '1')
+        ('1', "00000001", "11111110", "11111101", '1')
       );
   begin
     -- Test all the patterns in the pattern array.
     for i in patterns'range loop
       --  Set the inputs.
-      s_c_in <= patterns(i).c_in;
+      s_subtract <= patterns(i).subtract;
       s_src_a <= patterns(i).src_a;
       s_src_b <= patterns(i).src_b;
 
