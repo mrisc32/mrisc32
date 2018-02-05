@@ -47,7 +47,7 @@ Currently there is a simple assembler (written in python) and a CPU simulator (w
 
 # Hardware/HDL
 
-Not yet...
+A VHDL implementation is in progress (not much code yet).
 
 
 # Goals
