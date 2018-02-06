@@ -20,58 +20,64 @@ package consts is
   -- Operation identifiers
   ------------------------------------------------------------------------------------------------
 
-  constant C_OP_SIZE : integer := 9;
-  subtype opcode_t is std_logic_vector(C_OP_SIZE-1 downto 0);
-
   -- ALU operations.
-  constant OP_CPUID  : opcode_t := "000000000";
+  constant C_ALU_OP_SIZE : integer := 9;
+  subtype alu_op_t is std_logic_vector(C_ALU_OP_SIZE-1 downto 0);
 
-  constant OP_LDHI   : opcode_t := "000000001";
-  constant OP_LDHIO  : opcode_t := "000000010";
+  constant OP_CPUID  : alu_op_t := "000000000";
 
-  constant OP_OR     : opcode_t := "000010000";
-  constant OP_NOR    : opcode_t := "000010001";
-  constant OP_AND    : opcode_t := "000010010";
-  constant OP_BIC    : opcode_t := "000010011";
-  constant OP_XOR    : opcode_t := "000010100";
-  constant OP_ADD    : opcode_t := "000010101";
-  constant OP_SUB    : opcode_t := "000010110";
-  constant OP_SLT    : opcode_t := "000010111";
-  constant OP_SLTU   : opcode_t := "000011000";
-  constant OP_CEQ    : opcode_t := "000011001";
-  constant OP_CLT    : opcode_t := "000011010";
-  constant OP_CLTU   : opcode_t := "000011011";
-  constant OP_CLE    : opcode_t := "000011100";
-  constant OP_CLEU   : opcode_t := "000011101";
+  constant OP_LDHI   : alu_op_t := "000000001";
+  constant OP_LDHIO  : alu_op_t := "000000010";
 
-  constant OP_LSR    : opcode_t := "000011110";
-  constant OP_ASR    : opcode_t := "000011111";
-  constant OP_LSL    : opcode_t := "000100000";
+  constant OP_OR     : alu_op_t := "000010000";
+  constant OP_NOR    : alu_op_t := "000010001";
+  constant OP_AND    : alu_op_t := "000010010";
+  constant OP_BIC    : alu_op_t := "000010011";
+  constant OP_XOR    : alu_op_t := "000010100";
+  constant OP_ADD    : alu_op_t := "000010101";
+  constant OP_SUB    : alu_op_t := "000010110";
+  constant OP_SLT    : alu_op_t := "000010111";
+  constant OP_SLTU   : alu_op_t := "000011000";
+  constant OP_CEQ    : alu_op_t := "000011001";
+  constant OP_CLT    : alu_op_t := "000011010";
+  constant OP_CLTU   : alu_op_t := "000011011";
+  constant OP_CLE    : alu_op_t := "000011100";
+  constant OP_CLEU   : alu_op_t := "000011101";
+
+  constant OP_LSR    : alu_op_t := "000011110";
+  constant OP_ASR    : alu_op_t := "000011111";
+  constant OP_LSL    : alu_op_t := "000100000";
   
-  constant OP_SHUF   : opcode_t := "000100001";
+  constant OP_SHUF   : alu_op_t := "000100001";
 
-  constant OP_SEL    : opcode_t := "001000000";
-  constant OP_CLZ    : opcode_t := "001000001";
-  constant OP_REV    : opcode_t := "001000010";
-  constant OP_EXTB   : opcode_t := "001000011";
-  constant OP_EXTH   : opcode_t := "001000100";
+  constant OP_SEL    : alu_op_t := "001000000";
+  constant OP_CLZ    : alu_op_t := "001000001";
+  constant OP_REV    : alu_op_t := "001000010";
+  constant OP_EXTB   : alu_op_t := "001000011";
+  constant OP_EXTH   : alu_op_t := "001000100";
 
   -- MUL/DIV operations.
-  constant OP_MUL    : opcode_t := "000110000";
-  constant OP_MULHI  : opcode_t := "000110010";
-  constant OP_MULHIU : opcode_t := "000110011";
-  constant OP_DIV    : opcode_t := "000110100";
-  constant OP_DIVU   : opcode_t := "000110101";
-  constant OP_REM    : opcode_t := "000110110";
-  constant OP_REMU   : opcode_t := "000110111";
+  constant C_MULDIV_OP_SIZE : integer := 9;
+  subtype muldiv_op_t is std_logic_vector(C_MULDIV_OP_SIZE-1 downto 0);
+
+  constant OP_MUL    : muldiv_op_t := "000110000";
+  constant OP_MULHI  : muldiv_op_t := "000110010";
+  constant OP_MULHIU : muldiv_op_t := "000110011";
+  constant OP_DIV    : muldiv_op_t := "000110100";
+  constant OP_DIVU   : muldiv_op_t := "000110101";
+  constant OP_REM    : muldiv_op_t := "000110110";
+  constant OP_REMU   : muldiv_op_t := "000110111";
 
   -- FPU operations.
-  constant OP_ITOF   : opcode_t := "000111000";
-  constant OP_FTOI   : opcode_t := "000111001";
-  constant OP_FADD   : opcode_t := "000111010";
-  constant OP_FSUB   : opcode_t := "000111011";
-  constant OP_FMUL   : opcode_t := "000111100";
-  constant OP_FDIV   : opcode_t := "000111101";
+  constant C_FPU_OP_SIZE : integer := 9;
+  subtype fpu_op_t is std_logic_vector(C_FPU_OP_SIZE-1 downto 0);
+
+  constant OP_ITOF   : fpu_op_t := "000111000";
+  constant OP_FTOI   : fpu_op_t := "000111001";
+  constant OP_FADD   : fpu_op_t := "000111010";
+  constant OP_FSUB   : fpu_op_t := "000111011";
+  constant OP_FMUL   : fpu_op_t := "000111100";
+  constant OP_FDIV   : fpu_op_t := "000111101";
 
 
   ------------------------------------------------------------------------------------------------

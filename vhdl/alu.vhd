@@ -5,7 +5,7 @@ use work.consts.all;
 
 entity alu is
   port(
-      i_op : in opcode_t;                                      -- Operation
+      i_op : in alu_op_t;                                      -- Operation
       i_src_a : in std_logic_vector(C_WORD_SIZE-1 downto 0);   -- Source operand A
       i_src_b : in std_logic_vector(C_WORD_SIZE-1 downto 0);   -- Source operand B
       i_src_c : in std_logic_vector(C_WORD_SIZE-1 downto 0);   -- Source operand C
