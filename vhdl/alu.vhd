@@ -138,7 +138,7 @@ begin
       i_src_a(31 downto 24) when "011",
       (others => '0') when others;
   ShufMux4: with i_src_b(11 downto 9) select
-    s_shuf_res(23 downto 16) <=
+    s_shuf_res(31 downto 24) <=
       i_src_a(7 downto 0) when "000",
       i_src_a(15 downto 8) when "001",
       i_src_a(23 downto 16) when "010",
