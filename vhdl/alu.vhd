@@ -52,6 +52,7 @@ architecture rtl of alu is
   signal s_extb_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_exth_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ldhi_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_clz_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
   -- Signals for the adder.
   signal s_adder_subtract : std_logic;
@@ -63,6 +64,9 @@ architecture rtl of alu is
   signal s_comparator_lt : std_logic;
   signal s_comparator_le : std_logic;
   signal s_cmp_bit : std_logic;
+
+  -- Signals for the shifter.
+  signal s_shifter_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
 begin
   ------------------------------------------------------------------------------------------------
@@ -158,6 +162,10 @@ begin
   s_ldhi_res(C_WORD_SIZE-1 downto C_WORD_SIZE-19) <= i_src_a(18 downto 0);
   s_ldhi_res(C_WORD_SIZE-20 downto 0) <= (others => i_op(1));  -- OP_LDHI="000000001", OP_LDHIO="000000010"
 
+  -- OP_CLZ
+  -- TODO(m): Implement me!
+  s_clz_res <= (others => '0');
+
 
   ------------------------------------------------------------------------------------------------
   -- Arithmetic operations
@@ -209,6 +217,14 @@ begin
 
 
   ------------------------------------------------------------------------------------------------
+  -- Shift operations
+  ------------------------------------------------------------------------------------------------
+
+  -- TODO(m): Implement OP_LSR, OP_ASR and OP_LSL!
+  s_shifter_res <= (others => '0');
+
+
+  ------------------------------------------------------------------------------------------------
   -- Select the output.
   ------------------------------------------------------------------------------------------------
 
@@ -224,12 +240,13 @@ begin
         s_adder_result when OP_ADD | OP_SUB,
         s_slt_res when OP_SLT | OP_SLTU,
         s_cmp_res when OP_CEQ | OP_CLT | OP_CLTU | OP_CLE | OP_CLEU,
+        s_shifter_res when OP_LSR | OP_ASR | OP_LSL,
         s_shuf_res when OP_SHUF,
+        s_clz_res when OP_CLZ,
         s_rev_res when OP_REV,
         s_extb_res when OP_EXTB,
         s_exth_res when OP_EXTH,
         s_ldhi_res when OP_LDHI | OP_LDHIO,
-        -- ...
         (others => '0') when others;
 
 end rtl;
