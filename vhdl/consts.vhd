@@ -86,6 +86,7 @@ package consts is
 
   function to_word(x: integer) return std_logic_vector;
   function to_std_logic(x: boolean) return std_logic;
+  function to_string(x: std_logic_vector) return string;
 
 end package;
 
@@ -103,4 +104,17 @@ package body consts is
       return '0';
     end if;
   end function;
+
+  function to_string(x: std_logic_vector) return string is
+    variable v_b : string (1 to x'length) := (others => NUL);
+    variable v_stri : integer := 1;
+  begin
+    for i in x'range loop
+      v_b(v_stri) := std_logic'image(x((i)))(2);
+      v_stri := v_stri+1;
+    end loop;
+    return v_b;
+  end function;
+
 end package body;
+
