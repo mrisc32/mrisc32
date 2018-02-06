@@ -55,7 +55,7 @@ abs_diff:
 
   LDW     S9, S2, S11  ; S9  = a
   LDW     S10, S3, S11 ; S10 = b
-  FSUB    S9, S10, S9  ; S9  = a - b
+  FSUB    S9, S9, S10  ; S9  = a - b
   AND     S9, S9, S12  ; S9  = abs(a - b) (i.e. clear the sign bit)
   STW     S9, S1, S11  ; c   = abs(a - b)
 
@@ -85,11 +85,11 @@ abs_diff:
   CLT     VL, S4, S11
   SEL     VL, S4, S11  ; VL = min(S4, S11)
 
-  SUB     S4, S11, S4  ; Decrement the loop counter
+  SUB     S4, S4, S11  ; Decrement the loop counter
 
   LDW     V9, S2, 4    ; V9  = a
   LDW     V10, S3, 4   ; V10 = b
-  FSUB    V9, V10, V9  ; V9  = a - b
+  FSUB    V9, V9, V10  ; V9  = a - b
   AND     V9, V9, S10  ; V9  = abs(a - b) (i.e. clear the sign bit)
   STW     V9, S1, 4    ; c   = abs(a - b)
 

@@ -24,7 +24,7 @@
 |BIC| x | dst, src1, src2 | dst <= src1 & ~src2 | Bitwise clear |
 |XOR| x | dst, src1, src2 | dst <= src1 ^ src2 | Bitwise exclusive or |
 |ADD| x | dst, src1, src2 | dst <= src1 + src2 | Addition |
-|SUB| x | dst, src1, src2 | dst <= src2 - src1 | Subtraction (note: argument order) |
+|SUB| x | dst, src1, src2 | dst <= src1 - src2 | Subtraction (note: src1 can be an immediate value) |
 |SLT| x | dst, src1, src2 | dst <= (src1 < src2) ? 1 : 0 | Set if less than (signed) |
 |SLTU| x | dst, src1, src2 | dst <= (src1 < src2) ? 1 : 0 | Set if less than (unsigned) |
 |CEQ| x | dst, src1, src2 | dst <= (src1 == src2) ? 0xffffffff : 0 | Compare if equal (signed) |
@@ -95,7 +95,7 @@
 |ITOF| x | dst, src1 | dst <= (float)src1 | Cast integer to float |
 |FTOI| x | dst, src1 | dst <= (int)src1 | Cast float to integer |
 |FADD| x | dst, src1, src2 | dst <= src1 + src2 | Floating point addition |
-|FSUB| x | dst, src1, src2 | dst <= src2 - src1 | Floating point subtraction (note: argument order) |
+|FSUB| x | dst, src1, src2 | dst <= src1 - src2 | Floating point subtraction |
 |FMUL| x | dst, src1, src2 | dst <= src1 * src2 | Floating point multiplication |
 |FDIV| x | dst, src1, src2 | dst <= src1 / src2 | Floating point division |
 

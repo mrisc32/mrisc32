@@ -452,28 +452,28 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
           break;
         case EX_OP_SLT:
           ex_result =
-              (static_cast<int32_t>(ex_in.src_a) < static_cast<int32_t>(ex_in.src_b)) ? 1u : 0u;
+              (static_cast<int32_t>(ex_in.src_b) < static_cast<int32_t>(ex_in.src_a)) ? 1u : 0u;
           break;
         case EX_OP_SLTU:
-          ex_result = (ex_in.src_a < ex_in.src_b) ? 1u : 0u;
+          ex_result = (ex_in.src_b < ex_in.src_a) ? 1u : 0u;
           break;
         case EX_OP_CEQ:
-          ex_result = (ex_in.src_a == ex_in.src_b) ? 0xffffffffu : 0u;
+          ex_result = (ex_in.src_b == ex_in.src_a) ? 0xffffffffu : 0u;
           break;
         case EX_OP_CLT:
-          ex_result = (static_cast<int32_t>(ex_in.src_a) < static_cast<int32_t>(ex_in.src_b))
+          ex_result = (static_cast<int32_t>(ex_in.src_b) < static_cast<int32_t>(ex_in.src_a))
                           ? 0xffffffffu
                           : 0u;
         case EX_OP_CLTU:
-          ex_result = (ex_in.src_a < ex_in.src_b) ? 0xffffffffu : 0u;
+          ex_result = (ex_in.src_b < ex_in.src_a) ? 0xffffffffu : 0u;
           break;
         case EX_OP_CLE:
-          ex_result = (static_cast<int32_t>(ex_in.src_a) <= static_cast<int32_t>(ex_in.src_b))
+          ex_result = (static_cast<int32_t>(ex_in.src_b) <= static_cast<int32_t>(ex_in.src_a))
                           ? 0xffffffffu
                           : 0u;
           break;
         case EX_OP_CLEU:
-          ex_result = (ex_in.src_a <= ex_in.src_b) ? 0xffffffffu : 0u;
+          ex_result = (ex_in.src_b <= ex_in.src_a) ? 0xffffffffu : 0u;
           break;
         case EX_OP_SHUF:
           ex_result = shuf32(ex_in.src_a, ex_in.src_b);
@@ -541,7 +541,7 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
           ex_result = static_cast<uint32_t>(as_u32(as_f32(ex_in.src_a) + as_f32(ex_in.src_b)));
           break;
         case EX_OP_FSUB:
-          ex_result = static_cast<uint32_t>(as_u32(as_f32(ex_in.src_a) - as_f32(ex_in.src_b)));
+          ex_result = static_cast<uint32_t>(as_u32(-as_f32(ex_in.src_a) + as_f32(ex_in.src_b)));
           break;
         case EX_OP_FMUL:
           ex_result = static_cast<uint32_t>(as_u32(as_f32(ex_in.src_a) * as_f32(ex_in.src_b)));

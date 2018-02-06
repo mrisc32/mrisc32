@@ -92,7 +92,7 @@ test_2:
 
   ldhi   s10, 0xbeef0000
   or     s10, s10, 0x42 ; s10 = 0xbeef0042
-  sub    s10, s10, s16  ; s10 = s16 - s10
+  sub    s10, s16, s10  ; s10 = s16 - s10
 
   ; return (s16 == 0xbeef0042) ? 0 : 1
   ldi    s1, 0
@@ -194,7 +194,7 @@ test_5:
 
   ; Was the result 2 * PI?
   ldpcw  s9, .twopi
-  fsub   s9, s9, s16  ; s9 = (2 * PI) - .twopi
+  fsub   s9, s16, s9  ; s9 = (2 * PI) - .twopi
 
   ldw    lr, sp, 0
   ldw    s16, sp, 4
@@ -267,7 +267,7 @@ test_6:
   ; Store the result to memory
   stw    v9, s16, 4
 
-  sub    s11, s10, s11      ; Decrement the loop counter
+  sub    s11, s11, s10      ; Decrement the loop counter
   add    s9, s9, s12        ; Increment the memory pointers
   add    s16, s16, s12
   bgt    s11, .vector_loop

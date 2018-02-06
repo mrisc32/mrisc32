@@ -45,11 +45,11 @@ abs_diff_vectors:
   clt     vl, s4, s11
   sel     vl, s4, s11  ; VL = min(s4, s11)
 
-  sub     s4, s11, s4  ; Decrement the loop counter
+  sub     s4, s4, s11  ; Decrement the loop counter
 
   ldw     v9, s2, 4    ; v9  = a
   ldw     v10, s3, 4   ; v10 = b
-  fsub    v9, v10, v9  ; v9  = a - b
+  fsub    v9, v9, v10  ; v9  = a - b
   and     v9, v9, s10  ; v9  = abs(a - b) (i.e. clear the sign bit)
   stw     v9, s1, 4    ; c   = abs(a - b)
 
@@ -81,7 +81,7 @@ abs_diff_vectors_scalar:
 
   ldw     s9, s2, s11  ; s9  = a
   ldw     s10, s3, s11 ; s10 = b
-  fsub    s9, s10, s9  ; s9  = a - b
+  fsub    s9, s9, s10  ; s9  = a - b
   and     s9, s9, s12  ; s9  = abs(a - b) (i.e. clear the sign bit)
   stw     s9, s1, s11  ; c   = abs(a - b)
 
