@@ -37,6 +37,14 @@ architecture rtl of alu is
       );
   end component;
 
+  -- We use a leading-zero counter.
+  component clz32
+    port(
+        i_src : in  std_logic_vector(31 downto 0);
+        o_cnt : out std_logic_vector(5 downto 0)
+      );
+  end component;
+
   -- Intermediate (concurrent) operation results.
   signal s_cpuid_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_or_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -163,8 +171,12 @@ begin
   s_ldhi_res(C_WORD_SIZE-20 downto 0) <= (others => i_op(1));  -- OP_LDHI="000000001", OP_LDHIO="000000010"
 
   -- OP_CLZ
-  -- TODO(m): Implement me!
-  s_clz_res <= (others => '0');
+  AluCLZ32: entity work.clz32
+    port map (
+      i_src => i_src_a,
+      o_cnt => s_clz_res(5 downto 0)
+    );
+  s_clz_res(31 downto 6) <= (others => '0');
 
 
   ------------------------------------------------------------------------------------------------
