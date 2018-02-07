@@ -36,7 +36,7 @@
 |ASR| x | dst, src1, src2 | dst <= src1 >> src2 (signed) | Arithmetic shift right |
 |LSL| x | dst, src1, src2 | dst <= src1 << src2 | Logic shift left |
 |SHUF| x | dst, src1, src2 | dst <= shuffle(src1, src2) | Shuffle bytes according to indices in src2 (2) |
-|SEL| x | dst, src1, src2 | dst <= (src1 & dst) \| (src1 & ~dst) | Bitwise select (use with C[cc]]) |
+|SEL| x | dst, src1, src2 | dst <= (src1 & dst) \| (src2 & ~dst) | Bitwise select (use with C[cc]]) |
 |CLZ| x | dst, src1 | dst <= clz(src1) | Count leading zeros |
 |REV| x | dst, src1 | dst <= rev(src1) | Reverse bit order |
 |EXTB| x | dst, src1 | dst <= signextend(src1[7:0]) | Sign-extend byte to word |

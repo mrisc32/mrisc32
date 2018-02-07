@@ -271,7 +271,7 @@ begin
           "00000001001000110100010101100111",
           "11111111111111111110111011111011",
           "01010101101010101010101001010101",
-          "01010101101010111110111101110011"),
+          "10101011011101110100010011101111"),
 
         (OP_CLZ,
           "00000001001000110100010101100111",
@@ -326,7 +326,8 @@ begin
                "  a=" & to_string(s_src_a) & lf &
                "  b=" & to_string(s_src_b) & lf &
                "  c=" & to_string(s_src_c) & lf &
-               "  r=" & to_string(s_result) & " (expected " & to_string(patterns(i).result) & ")"
+               "  r=" & to_string(s_result) & lf &
+               " (e=" & to_string(patterns(i).result) & ")"
             severity error;
     end loop;
     assert false report "End of test" severity note;
