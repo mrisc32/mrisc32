@@ -10,6 +10,8 @@ SRCS = \
     clz32_tb.vhd \
     comparator.vhd \
     comparator_tb.vhd \
+    shift32.vhd \
+    shift32_tb.vhd \
     alu.vhd \
     alu_tb.vhd
 
@@ -21,6 +23,8 @@ all: $(SRCS)
 	$(GHDL) -r clz32_tb
 	$(GHDL) -m comparator_tb
 	$(GHDL) -r comparator_tb
+	$(GHDL) -m shift32_tb
+	$(GHDL) -r shift32_tb
 	$(GHDL) -m alu_tb
 	$(GHDL) -r alu_tb
 

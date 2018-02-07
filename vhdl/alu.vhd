@@ -45,6 +45,17 @@ architecture rtl of alu is
       );
   end component;
 
+  -- We use a shifter.
+  component shift32
+    port(
+        i_right      : in  std_logic;
+        i_arithmetic : in  std_logic;
+        i_src        : in  std_logic_vector(31 downto 0);
+        i_shift      : in  std_logic_vector(4 downto 0);
+        o_result     : out std_logic_vector(31 downto 0)
+      );
+  end component;
+
   -- Intermediate (concurrent) operation results.
   signal s_cpuid_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_or_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -232,8 +243,14 @@ begin
   -- Shift operations
   ------------------------------------------------------------------------------------------------
 
-  -- TODO(m): Implement OP_LSR, OP_ASR and OP_LSL!
-  s_shifter_res <= (others => '0');
+  AluShifter: entity work.shift32
+    port map (
+      i_right => i_op(1),       -- '1' for OP_LSR and OP_ASR, '0' for OP_LSL
+      i_arithmetic => i_op(0),  -- '1' for OP_ASR, '0' for OP_LSR and OP_LSL
+      i_src => i_src_a,
+      i_shift => i_src_b(4 downto 0),
+      o_result => s_shifter_res
+    );
 
 
   ------------------------------------------------------------------------------------------------
