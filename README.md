@@ -17,12 +17,12 @@ This is an experimental, custom 32-bit RISC/Vector CPU.
 * All instructions are 32 bits wide and easy to decode.
   - There are only three basic types of instruction encodings.
   - There is room for 512 register-based and 62 immediate-based instructions.
-  - Space has been reserved for future double-word instruction encodings, for an almost infinite number of instructions.
+  - Space has been reserved for future double-word instruction encodings, for an additional 8192+8192 (at least) register and immediate instructions.
 * Branches can be executed in the ID (instruction decode) step, which gives a low branch misprediction penalty.
-* Conditionals (branches) are based on register content (not condition code flags).
-* There are *no* condition code flags (carry, overflow, ...).
+* All conditionals (branches etc) are based on register content (not condition code flags).
+* There are no condition code flags (carry, overflow, ...).
 * Unlike early RISC architectures, there are *no* delay slots.
-* Many traditional floating point operations are handled by integer operations, reducing the number of necessary instructions:
+* Many traditional floating point operations can be handled by integer operations, reducing the number of necessary instructions:
   - Load/store.
   - Compare/branch.
   - Sign and bit manipulation (e.g. neg, abs).
@@ -42,7 +42,7 @@ This is an experimental, custom 32-bit RISC/Vector CPU.
 
 # Tools
 
-Currently there is a simple assembler (written in python) and a CPU simulator (written in C++).
+Currently there is a simple assembler (written in Python) and a CPU simulator (written in C++).
 
 
 # Hardware/HDL

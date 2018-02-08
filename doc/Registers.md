@@ -6,7 +6,7 @@ Each scalar register is 32 bits wide, and can be used for integers, floating poi
 
 There are five special purpose scalar registers:
 * Z (S0) - This register is always zero.
-* VL (S28) - Vector length register (determines the length of vector opertaions).
+* VL (S28) - Vector length register (determines the length of vector operations).
 * LR (S29) - Link register (return address for subroutines)
 * SP (S30) - Stack pointer.
 * PC (S31) - The program counter (read-only),
@@ -20,7 +20,7 @@ The scalar registers are allocated as follows:
 | S9-S15  | | Temporaries (scratch) | no |
 | S16-S26 | | Saved registers | yes |
 | FP | S27 |Frame pointer (optional) | yes |
-| VL | S28 | Vector length register (holds the last index for vector operations) | yes |
+| VL | S28 | Vector length register (holds the length for vector operations) | yes |
 | LR | S29 | Link register (return address, must be 4-byte aligned) | yes |
 | SP | S30 | Stack pointer (must be 4-byte aligned on subroutine entry) | yes |
 | PC | S31 | Program counter (read-only, always 4-byte aligned) | - |

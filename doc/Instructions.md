@@ -13,11 +13,11 @@
 | i19 | 19-bit immediate value |
 | V | Supports vector operation |
 
-## Integer instructions
+## Integer ALU instructions
 
 | Mnemonic | V | Operands | Operation | Description |
 |---|---|---|---|---|
-|CPUID|   | dst, src1, src2 | dst <= cpuid(src1, src2) | Get CPU information based on src1, src2 |
+|CPUID| x | dst, src1, src2 | dst <= cpuid(src1, src2) | Get CPU information based on src1, src2 |
 |OR| x | dst, src1, src2 | dst <= src1 \| src2 | Bitwise or |
 |NOR| x | dst, src1, src2 | dst <= ~(src1 \| src2)  | Bitwise nor |
 |AND| x | dst, src1, src2 | dst <= src1 & src2 | Bitwise and |

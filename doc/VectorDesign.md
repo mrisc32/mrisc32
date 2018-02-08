@@ -66,7 +66,7 @@ abs_diff:
   J       LR
 ```
 
-...or using vector opertaions as:
+...or using vector operations as:
 
 ```
 abs_diff:
