@@ -17,7 +17,7 @@ This is an experimental, custom 32-bit RISC/Vector CPU.
 * All instructions are 32 bits wide and easy to decode.
   - There are only three basic types of instruction encodings.
   - There is room for 512 register-based and 62 immediate-based instructions.
-  - Space has been reserved for future double-word instruction encodings, for an additional 8192+8192 (at least) register and immediate instructions.
+  - Space has been reserved for future double-word instruction encodings, for an additional 8192 register + 8192 immediate instructions (or more).
 * Branches can be executed in the ID (instruction decode) step, which gives a low branch misprediction penalty.
 * All conditionals (branches etc) are based on register content (not condition code flags).
 * There are no condition code flags (carry, overflow, ...).
