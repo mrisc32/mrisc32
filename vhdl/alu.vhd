@@ -101,6 +101,8 @@ architecture rtl of alu is
   signal s_comparator_eq : std_logic;
   signal s_comparator_lt : std_logic;
   signal s_comparator_le : std_logic;
+  signal s_comparator_ltu : std_logic;
+  signal s_comparator_leu : std_logic;
   signal s_cmp_bit : std_logic;
 
   -- Signals for the shifter.
@@ -213,8 +215,6 @@ begin
   -- Arithmetic operations
   ------------------------------------------------------------------------------------------------
 
-  -- TODO(m): Handle unsigned compares (SLTU, CLTU, CLEU).
-
   AluAdder: entity work.adder
     generic map (
       WIDTH => C_WORD_SIZE
@@ -244,16 +244,22 @@ begin
       '1' when OP_SUB | OP_SLT | OP_SLTU | OP_CEQ | OP_CLT | OP_CLTU | OP_CLE | OP_CLEU,
       '0' when others;
 
+  -- Unsigned comparator results.
+  s_comparator_ltu <= not s_adder_carry_out;
+  s_comparator_leu <= s_comparator_eq or s_comparator_ltu;
+
   -- Set operations.
   s_slt_res(C_WORD_SIZE-1 downto 1) <= (others => '0');
-  s_slt_res(0) <= s_comparator_lt;
+  s_slt_res(0) <= s_comparator_ltu when i_op = OP_SLTU else s_comparator_lt;
 
   -- Compare operations.
   CmpMux: with i_op select
     s_cmp_bit <=
       s_comparator_eq when OP_CEQ,
-      s_comparator_lt when OP_CLT | OP_CLTU,
-      s_comparator_le when OP_CLE | OP_CLEU,
+      s_comparator_lt when OP_CLT,
+      s_comparator_ltu when OP_CLTU,
+      s_comparator_le when OP_CLE,
+      s_comparator_leu when OP_CLEU,
       '0' when others;
   s_cmp_res <= (others => s_cmp_bit);
 
