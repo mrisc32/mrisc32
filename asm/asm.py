@@ -77,10 +77,11 @@ _PCREL19x4 = 14  # -1048576..1048572 (in steps of 4)
 # Names of general purpose registers.
 _REGS = {
         'Z':  0,  # Read-only: Zero
-        'FP': 27, # Frame pointer
-        'VL': 28, # Vector length register
-        'LR': 29, # Link register (branch return address)
-        'SP': 30, # Stack pointer
+        'FP': 26, # Frame pointer
+        'TP': 27, # Thread pointer
+        'SP': 28, # Stack pointer
+        'VL': 29, # Vector length register
+        'LR': 30, # Link register (branch return address)
         'PC': 31, # Read-only: Program counter
 
         'S0': 0,  # Alias for Z
@@ -109,11 +110,11 @@ _REGS = {
         'S23': 23,
         'S24': 24,
         'S25': 25,
-        'S26': 26,
-        'S27': 27,  # Alias for FP
-        'S28': 28,  # Alias for VL
-        'S29': 29,  # Alias for LR
-        'S30': 30,  # Alias for SP
+        'S26': 26,  # Alias for FP
+        'S27': 27,  # Alias for TP
+        'S28': 28,  # Alias for SP
+        'S29': 29,  # Alias for VL
+        'S30': 30,  # Alias for LR
         'S31': 31,  # Alias for PC
     }
 
@@ -405,9 +406,6 @@ _OPCODES = {
 
         # Alias for: BLEQ Z, _PCREL19x4
         'BL':     [[0x38000000, _PCREL19x4]],
-
-        # Alias for: J LR
-        'RTS':    [[0x00e80080]],
 
         # Alias for: ADD _REG1, PC, offset
         'LEA':    [[0x1507c000, _REG1, _PCREL14]],

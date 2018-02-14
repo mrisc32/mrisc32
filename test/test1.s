@@ -67,7 +67,7 @@ test_1:
   bne    s10, .loop
 
   ldi    s1, 0
-  rts
+  j      lr
 
 
 ; ----------------------------------------------------------------------------
@@ -105,7 +105,7 @@ test_2:
   ldw    s17, sp, 8
   add    sp, sp, 12
 
-  rts
+  j      lr
 
 .data:
   .u32   0x40, 1, 0xbeef0001
@@ -125,7 +125,7 @@ test_3:
   ldw    lr, sp, 0
   add    sp, sp, 4
   ldi    s1, 0
-  rts
+  j      lr
 
 
 .hello_world:
@@ -152,8 +152,8 @@ test_4:
   ; Add the numbers into s1:s16
   add    s16, s10, s12  ; s16 = low bits
   add    s1, s11, s13   ; s1 = high bits
-  sltu   s14, s16, s10  ; s14 = carry (0 or 1)
-  add    s1, s1, s14    ; Add carry to the high word
+  sltu   s9, s16, s10   ; s9 = carry (0 or 1)
+  add    s1, s1, s9     ; Add carry to the high word
 
   bl     _printhex      ; Print high word
   mov    s1, s16
@@ -166,7 +166,7 @@ test_4:
   add    sp, sp, 8
 
   ldi    s1, 0
-  rts
+  j      lr
 
 .dword1:
   .u32   0x89abcdef, 0x01234567
@@ -206,7 +206,7 @@ test_5:
   ldi    s1, 1
 .ok:
 
-  rts
+  j      lr
 
 
 .one:
@@ -296,7 +296,7 @@ test_6:
   add    sp, sp, 20
 
   ldi    s1, 0
-  rts
+  j      lr
 
 .in:
   .i32   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16

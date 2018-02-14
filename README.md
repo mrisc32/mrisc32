@@ -8,8 +8,8 @@ This is an experimental, custom 32-bit RISC/Vector CPU.
 * Unified scalar/vector/integer/floating point ISA.
 * There are two register files:
   - There are 32 scalar registers, S0-S31, each 32 bits wide.
-    - Five registers are special (Z, PC, SP, LR, VL).
-    - 27 registers are general purpose.
+    - Four registers are special: Z, PC, LR, VL.
+    - 28 registers are general purpose (of which three are reserved: SP, TP, FP).
     - All registers can be used for all types (integers, pointers and floating point).
     - PC is user-visible (for arithmetic and addressing) but read-only (to simplify branching logic).
   - There are 32 vector registers, V0-V31, each with *at least* four 32-bit elements.

@@ -48,7 +48,7 @@ _puts:
   ldw    s17, sp, 8
   add    sp, sp, 12
   ldi    s1, 1        ; Return a non-negative number
-  rts
+  j      lr
 
 
 ; -----------------------------------------------------------------------------
@@ -78,7 +78,7 @@ _printhex:
   ldw    s17, sp, 8
   ldw    s18, sp, 12
   add    sp, sp, 16
-  rts
+  j      lr
 
 .hex_chars:
   .ascii "0123456789abcdef"
