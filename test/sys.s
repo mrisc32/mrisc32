@@ -33,8 +33,7 @@ _puts:
   mov    s16, s1
   ldi    s17, 0
 .loop:
-  ldb    s1, s16, s17
-  and    s1, s1, 255
+  ldub   s1, s16, s17
   add    s17, s17, 1
   beq    s1, .eos
   bl     _putc
@@ -66,8 +65,7 @@ _printhex:
   mov    s17, s1
   ldi    s18, 7
 .loop:
-  add    s9, s18, s18
-  add    s9, s9, s9   ; s9 = s18 * 4
+  lsl    s9, s18, 2   ; s9 = s18 * 4
   lsr    s9, s17, s9  ; s9 = x >> (s18 * 4)
   and    s9, s9, 15   ; s9 = (x >> (s18 * 4)) & 15
   ldb    s1, s16, s9  ; s1 = hex_chars[(x >> (s18 * 4)) & 15]
