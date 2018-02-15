@@ -32,7 +32,9 @@ SRCS = \
     shift32.vhd \
     shift32_tb.vhd \
     alu.vhd \
-    alu_tb.vhd
+    alu_tb.vhd \
+    reg32x32.vhd \
+    reg32x32_tb.vhd
 
 all: $(SRCS)
 	$(GHDL) -i $(SRCS)
@@ -46,7 +48,9 @@ all: $(SRCS)
 	$(GHDL) -r shift32_tb
 	$(GHDL) -m alu_tb
 	$(GHDL) -r alu_tb
+	$(GHDL) -m reg32x32_tb
+	$(GHDL) -r reg32x32_tb
 
 clean:
-	$(GHDL) #clean
+	$(GHDL) --clean
 	rm -rf *.o *.cf *_tb *.vcd
