@@ -42,7 +42,9 @@ This is an experimental, custom 32-bit RISC/Vector CPU.
 
 # Tools
 
-Currently there is a simple assembler (written in Python) and a CPU simulator (written in C++).
+Currently there is a simple [assembler](asm/) (written in Python) and a [CPU simulator](sim/) (written in C++).
+
+Use the assembler to compile programs, and use the simulator to run them.
 
 
 # Hardware/HDL
