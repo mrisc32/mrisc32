@@ -33,6 +33,8 @@ SRCS = \
     shift32_tb.vhd \
     alu.vhd \
     alu_tb.vhd \
+    icache.vhd \
+    icache_tb.vhd \
     reg32x32.vhd \
     reg32x32_tb.vhd
 
@@ -48,6 +50,8 @@ all: $(SRCS)
 	$(GHDL) -r shift32_tb
 	$(GHDL) -m alu_tb
 	$(GHDL) -r alu_tb
+	$(GHDL) -m icache_tb
+	$(GHDL) -r icache_tb
 	$(GHDL) -m reg32x32_tb
 	$(GHDL) -r reg32x32_tb
 
