@@ -28,11 +28,21 @@ package consts is
 
   constant C_WORD_SIZE : integer := 32;
   constant C_NUM_REGS : integer := 32;
+  constant C_LOG2_NUM_REGS : integer := 5;
   constant C_VEC_REG_ELEMENTS : integer := 4;
 
   constant C_CPU_HAS_MULDIV : boolean := false;
   constant C_CPU_HAS_FPU : boolean := false;
   constant C_CPU_HAS_VECTOR : boolean := false;
+
+
+  ------------------------------------------------------------------------------------------------
+  -- Registers
+  ------------------------------------------------------------------------------------------------
+
+  constant C_Z_REG  : integer := 0;   -- Z  = S0
+  constant C_VL_REG : integer := 29;  -- VL = S29
+  constant C_PC_REG : integer := 31;  -- PC = S31
 
 
   ------------------------------------------------------------------------------------------------

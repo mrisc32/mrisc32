@@ -30,34 +30,33 @@ architecture behavioral of regs_scalar_tb is
     port (
       i_clk : in std_logic;
       i_rst : in std_logic;
-      i_sel_a : in std_logic_vector(4 downto 0);
-      i_sel_b : in std_logic_vector(4 downto 0);
-      i_sel_c : in std_logic_vector(4 downto 0);
-      o_data_a : out std_logic_vector(31 downto 0);
-      o_data_b : out std_logic_vector(31 downto 0);
-      o_data_c : out std_logic_vector(31 downto 0);
-      o_vl : out std_logic_vector(31 downto 0);
+      i_sel_a : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      i_sel_b : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      i_sel_c : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      o_data_a : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_data_b : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_data_c : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_vl : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_we : in std_logic;
-      i_data_w : in std_logic_vector(31 downto 0);
-      i_sel_w : in std_logic_vector(4 downto 0);
-      i_pc : in std_logic_vector(31 downto 0)
+      i_data_w : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_sel_w : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      i_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0)
     );
   end component;
 
   signal s_clk : std_logic;
   signal s_rst : std_logic;
-
-  signal s_sel_a : std_logic_vector(4 downto 0);
-  signal s_sel_b : std_logic_vector(4 downto 0);
-  signal s_sel_c : std_logic_vector(4 downto 0);
-  signal s_data_a : std_logic_vector(31 downto 0);
-  signal s_data_b : std_logic_vector(31 downto 0);
-  signal s_data_c : std_logic_vector(31 downto 0);
-  signal s_vl : std_logic_vector(31 downto 0);
+  signal s_sel_a : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_sel_b : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_sel_c : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_data_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_data_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_data_c : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_vl : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_we : std_logic;
-  signal s_data_w : std_logic_vector(31 downto 0);
-  signal s_sel_w : std_logic_vector(4 downto 0);
-  signal s_pc : std_logic_vector(31 downto 0);
+  signal s_data_w : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_sel_w : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
   -- Clock period.
   constant C_HALF_PERIOD : time := 2 ns;
@@ -103,9 +102,9 @@ begin
     wait for C_HALF_PERIOD;
     s_clk <= '0';
 
-    -- Check that S1-S30 are zero (reset).
-    for i in 1 to 30 loop
-      s_sel_a <= std_logic_vector(to_unsigned(i, 5));
+    -- Check that all writable registers are zero (reset).
+    for i in 1 to C_NUM_REGS-1 loop
+      s_sel_a <= std_logic_vector(to_unsigned(i, s_sel_a'length));
 
       s_we <= '1';
       wait for C_HALF_PERIOD;

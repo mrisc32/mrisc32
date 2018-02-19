@@ -23,7 +23,7 @@ use ieee.numeric_std.all;
 use work.consts.all;
 
 ---------------------------------------------------------------------------------------------------
--- This implements the 32-entry scalar register file, with the following properties:
+-- This implements the scalar register file, with the following properties:
 --
 --  * There are three generic read ports.
 --  * There is a dedicated, fourth read port hard-wired to the VL register.
@@ -40,9 +40,9 @@ entity regs_scalar is
     i_rst : in std_logic;
 
     -- We have three generic read ports.
-    i_sel_a : in std_logic_vector(4 downto 0);
-    i_sel_b : in std_logic_vector(4 downto 0);
-    i_sel_c : in std_logic_vector(4 downto 0);
+    i_sel_a : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+    i_sel_b : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+    i_sel_c : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
     o_data_a : out std_logic_vector(C_WORD_SIZE-1 downto 0);
     o_data_b : out std_logic_vector(C_WORD_SIZE-1 downto 0);
     o_data_c : out std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -53,7 +53,7 @@ entity regs_scalar is
     -- We have one write port.
     i_we : in std_logic;
     i_data_w : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-    i_sel_w : in std_logic_vector(4 downto 0);
+    i_sel_w : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
 
     -- The PC register always returns the current PC.
     i_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0)
@@ -61,21 +61,17 @@ entity regs_scalar is
 end regs_scalar;
 
 architecture rtl of regs_scalar is
-  constant C_Z_REG  : integer := 0;   -- Z  = S0
-  constant C_VL_REG : integer := 29;  -- VL = S29
-  constant C_PC_REG : integer := 31;  -- PC = S31
-
-  -- There are 30 internal write-enable signals (one for each dynamic register).
-  type T_WE_ARRAY is array (1 to 30) of std_logic;
+  -- Internal write-enable signals (one for each dynamic register, which excludes Z and PC).
+  type T_WE_ARRAY is array (1 to C_NUM_REGS-2) of std_logic;
   signal s_we : T_WE_ARRAY;
 
-  -- There are 32 internal register data signals.
-  type T_DATA_ARRAY is array (0 to 31) of std_logic_vector(C_WORD_SIZE-1 downto 0);
+  -- Internal register data signals for all registers.
+  type T_DATA_ARRAY is array (0 to C_NUM_REGS-1) of std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_data : T_DATA_ARRAY;
 begin
   -- Instantiate the registers.
-  -- Note: We do not need any registers for S0 and S31, since they are read-only.
-  RegGen: for k in 1 to 30 generate
+  -- Note: We only need registers that can be written (read-only registers are handled separately).
+  RegGen: for k in s_we'range generate
     reg_x: entity work.reg
       generic map (
         WIDTH => C_WORD_SIZE
@@ -91,11 +87,11 @@ begin
 
   -- The write port of the register file is connected to all registers. Select which register to
   -- write to by setting at most one of the register write-enable signals to '1'.
-  WEGen: for k in 1 to 30 generate
+  WEGen: for k in s_we'range generate
     s_we(k) <= i_we when i_sel_w = std_logic_vector(to_unsigned(k, i_sel_w'length)) else '0';
   end generate;
 
-  -- We hard-wire the values of registers 0 and 31 to Z and PC respectively.
+  -- We hard-wire the values of the Z and PC registers to zero and the input PC respectively.
   s_data(C_Z_REG) <= (others => '0');
   s_data(C_PC_REG) <= i_pc;
 
