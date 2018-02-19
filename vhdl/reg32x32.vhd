@@ -26,11 +26,12 @@ use work.consts.all;
 -- This implements the 32-entry scalar register file, with the following properties:
 --
 --  * There are three generic read ports.
---  * There is a dedicated, fourth read port for the VL register.
+--  * There is a dedicated, fourth read port hard-wired to the VL register.
 --  * There is a single write port.
 --  * Data is forwarded from the write port to the read ports within the same cycle.
---  * Reading the Z register always returns zero ("00000000000000000000000000000000").
+--  * Reading the Z register always returns zero (0).
 --  * Reading the PC register returns the current PC (from the input i_pc).
+--  * Writing to the Z or PC registers has no effect (no operation).
 ---------------------------------------------------------------------------------------------------
 
 entity reg32x32 is
@@ -59,66 +60,50 @@ entity reg32x32 is
   );
 end reg32x32;
 
-architecture behavioural of reg32x32 is
-  type registerFile is array(0 to C_NUM_REGS-1) of std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal regs : registerFile;
-
+architecture rtl of reg32x32 is
   constant C_Z_REG  : integer := 0;   -- Z  = S0
   constant C_VL_REG : integer := 29;  -- VL = S29
   constant C_PC_REG : integer := 31;  -- PC = S31
 
+  -- There are 30 internal write-enable signals (one for each dynamic register).
+  type T_WE_ARRAY is array (1 to 30) of std_logic;
+  signal s_we : T_WE_ARRAY;
+
+  -- There are 32 internal register data signals.
+  type T_DATA_ARRAY is array (0 to 31) of std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_data : T_DATA_ARRAY;
 begin
-  process(i_clk, i_rst)
-  begin
-    if i_rst = '1' then
-      for i in regs'range loop
-        regs(i) <= (others => '0');
-      end loop;
-    elsif rising_edge(i_clk) then
-      -- Read.
-      o_data_a <= regs(to_integer(unsigned(i_sel_a)));
-      o_data_b <= regs(to_integer(unsigned(i_sel_b)));
-      o_data_c <= regs(to_integer(unsigned(i_sel_c)));
+  -- Instantiate the registers.
+  -- Note: We do not need any registers for S0 and S31, since they are read-only.
+  RegGen: for k in 1 to 30 generate
+    reg_x: entity work.reg
+      generic map (
+        WIDTH => C_WORD_SIZE
+      )
+      port map (
+        i_clk => i_clk,
+        i_rst => i_rst,
+        i_we => s_we(k),
+        i_data_w => i_data_w,
+        o_data => s_data(k)
+      );
+  end generate;
 
-      -- Always read the VL register (S29).
-      o_vl <= regs(C_VL_REG);
+  -- The write port of the register file is connected to all registers. Select which register to
+  -- write to by setting at most one of the register write-enable signals to '1'.
+  WEGen: for k in 1 to 30 generate
+    s_we(k) <= i_we when i_sel_w = std_logic_vector(to_unsigned(k, i_sel_w'length)) else '0';
+  end generate;
 
-      -- Write.
-      if (i_we = '1') then
-        regs(to_integer(unsigned(i_sel_w))) <= i_data_w;
+  -- We hard-wire the values of registers 0 and 31 to Z and PC respectively.
+  s_data(C_Z_REG) <= (others => '0');
+  s_data(C_PC_REG) <= i_pc;
 
-        -- Bypass for read ports (overrides reads from the register file).
-        if i_sel_a = i_sel_w then
-          o_data_a <= i_data_w;
-        end if;
-        if i_sel_b = i_sel_w then
-          o_data_b <= i_data_w;
-        end if;
-        if i_sel_c = i_sel_w then
-          o_data_c <= i_data_w;
-        end if;
-        if i_sel_w = std_logic_vector(to_unsigned(C_VL_REG, 5)) then
-          o_vl <= i_data_w;
-        end if;
-      end if;
+  -- We hard-wire the VL read-port to the VL-register.
+  o_vl <= s_data(C_VL_REG);
 
-      -- Read-only register reads trump other reads.
-      if i_sel_a = std_logic_vector(to_unsigned(C_Z_REG, 5)) then
-        o_data_a <= (others => '0');
-      elsif i_sel_a = std_logic_vector(to_unsigned(C_PC_REG, 5)) then
-        o_data_a <= i_pc;
-      end if;
-      if i_sel_b = std_logic_vector(to_unsigned(C_Z_REG, 5)) then
-        o_data_b <= (others => '0');
-      elsif i_sel_b = std_logic_vector(to_unsigned(C_PC_REG, 5)) then
-        o_data_b <= i_pc;
-      end if;
-      if i_sel_c = std_logic_vector(to_unsigned(C_Z_REG, 5)) then
-        o_data_c <= (others => '0');
-      elsif i_sel_c = std_logic_vector(to_unsigned(C_PC_REG, 5)) then
-        o_data_c <= i_pc;
-      end if;
-    end if;
-  end process;
-end behavioural;
-
+  -- Read ports.
+  o_data_a <= s_data(to_integer(unsigned(i_sel_a)));
+  o_data_b <= s_data(to_integer(unsigned(i_sel_b)));
+  o_data_c <= s_data(to_integer(unsigned(i_sel_c)));
+end rtl;
