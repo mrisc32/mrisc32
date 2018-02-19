@@ -49,7 +49,12 @@ Use the assembler to compile programs, and use the simulator to run them.
 
 # Hardware/HDL
 
-A VHDL implementation is in progress (not much code yet).
+A [VHDL implementation](vhdl/) of a scalar in-order CPU is currently under (early) development. So far, the following components have been implemented:
+
+* The integer ALU.
+  - All single-cycle integer operations are supported.
+* The scalar register file.
+  - There are three read ports and one write port.
 
 
 # Goals
