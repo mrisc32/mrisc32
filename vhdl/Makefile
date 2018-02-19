@@ -37,8 +37,8 @@ SRCS = \
     reg_tb.vhd \
     icache.vhd \
     icache_tb.vhd \
-    reg32x32.vhd \
-    reg32x32_tb.vhd
+    regs_scalar.vhd \
+    regs_scalar_tb.vhd
 
 all: $(SRCS)
 	$(GHDL) -i $(SRCS)
@@ -56,8 +56,8 @@ all: $(SRCS)
 	$(GHDL) -r reg_tb
 	$(GHDL) -m icache_tb
 	$(GHDL) -r icache_tb
-	$(GHDL) -m reg32x32_tb
-	$(GHDL) -r reg32x32_tb
+	$(GHDL) -m regs_scalar_tb
+	$(GHDL) -r regs_scalar_tb
 
 clean:
 	$(GHDL) --clean

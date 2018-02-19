@@ -34,7 +34,7 @@ use work.consts.all;
 --  * Writing to the Z or PC registers has no effect (no operation).
 ---------------------------------------------------------------------------------------------------
 
-entity reg32x32 is
+entity regs_scalar is
   port (
     i_clk : in std_logic;
     i_rst : in std_logic;
@@ -58,9 +58,9 @@ entity reg32x32 is
     -- The PC register always returns the current PC.
     i_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0)
   );
-end reg32x32;
+end regs_scalar;
 
-architecture rtl of reg32x32 is
+architecture rtl of regs_scalar is
   constant C_Z_REG  : integer := 0;   -- Z  = S0
   constant C_VL_REG : integer := 29;  -- VL = S29
   constant C_PC_REG : integer := 31;  -- PC = S31

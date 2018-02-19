@@ -22,11 +22,11 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.consts.all;
 
-entity reg32x32_tb is
-end reg32x32_tb;
+entity regs_scalar_tb is
+end regs_scalar_tb;
 
-architecture behavioral of reg32x32_tb is
-  component reg32x32
+architecture behavioral of regs_scalar_tb is
+  component regs_scalar
     port (
       i_clk : in std_logic;
       i_rst : in std_logic;
@@ -62,7 +62,7 @@ architecture behavioral of reg32x32_tb is
   -- Clock period.
   constant C_HALF_PERIOD : time := 2 ns;
 begin
-  reg32x32_0: entity work.reg32x32
+  regs_scalar_0: entity work.regs_scalar
     port map (
       i_clk => s_clk,
       i_rst => s_rst,
