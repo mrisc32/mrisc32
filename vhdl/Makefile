@@ -38,7 +38,13 @@ SRCS = \
     icache.vhd \
     icache_tb.vhd \
     regs_scalar.vhd \
-    regs_scalar_tb.vhd
+    regs_scalar_tb.vhd \
+    branch_target_cache.vhd \
+    pipeline_if.vhd \
+    pipeline_id.vhd \
+    pipeline_ex.vhd \
+    pipeline_mem.vhd \
+    pipeline_wb.vhd
 
 all: $(SRCS)
 	$(GHDL) -i $(SRCS)

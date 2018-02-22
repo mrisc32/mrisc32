@@ -27,9 +27,12 @@ use ieee.std_logic_1164.all;
 entity pipeline_ex is
   port(
       i_clk : in std_logic;
-      i_rst : in std_logic;
-
-      -- TODO(m): Implement me!
+      i_rst : in std_logic
     );
 end pipeline_ex;
+
+architecture rtl of pipeline_ex is
+begin
+  -- TODO(m): Implement me!
+end rtl;
 

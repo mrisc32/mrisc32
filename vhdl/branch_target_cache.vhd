@@ -18,21 +18,37 @@
 ----------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------
--- Pipeline Stage 5: Writeback (WB)
+-- Branch Target Cache
 ----------------------------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
+use work.consts.all;
 
-entity pipeline_wb is
+entity branch_target_cache is
   port(
+      -- Control signals.
       i_clk : in std_logic;
-      i_rst : in std_logic
-    );
-end pipeline_wb;
+      i_rst : in std_logic;
+      i_invalidate : in std_logic;
 
-architecture rtl of pipeline_wb is
+      -- Cache lookup (async).
+      i_read_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_predict_taken : out std_logic;
+      o_predict_target : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+
+      -- Cache update (sync).
+      i_write_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_write_is_branch : in std_logic;
+      i_write_is_taken : in std_logic;
+      i_write_target : in std_logic_vector(C_WORD_SIZE-1 downto 0)
+    );
+end branch_target_cache;
+
+architecture rtl of branch_target_cache is
 begin
-  -- TODO(m): Implement me!
+  -- TODO(m): Right now we always predict "not taken". Implement a proper cache!
+  o_predict_taken <= '0';
+  o_predict_taken <= (others => '0');
 end rtl;
 

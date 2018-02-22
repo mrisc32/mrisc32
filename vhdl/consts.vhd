@@ -35,6 +35,9 @@ package consts is
   constant C_CPU_HAS_FPU : boolean := false;
   constant C_CPU_HAS_VECTOR : boolean := false;
 
+  -- The start PC after reset.
+  constant C_RESET_PC : std_logic_vector(C_WORD_SIZE-1 downto 0) := X"00000200";
+
 
   ------------------------------------------------------------------------------------------------
   -- Registers

@@ -19,17 +19,153 @@
 
 ----------------------------------------------------------------------------------------------------
 -- Pipeline Stage 1: Instruction Fetch (IF)
+--
+-- A major part of this stage is the branch logic (PC prediction and correction). This relies on
+-- a few different concepts:
+--   * A branch target cache provides information about historical branch events.
+--   * A simple predictor (PC + 4) is used when no branch was predicted taken.
+--   * Information from the ID stage (which evaluates branch instructions) is used for detecting
+--     mispredictions and correcting the PC.
+--     - An unconditional register-target branch is considered mispredicted if the register content
+--       and the predicted PC for the next instruction differ.
+--     - A conditional PC-offset branch is considered mispredicted if the predicted taken signal
+--       differs from the actual branch taken result (based on condition evaluation in the ID
+--       stage).
 ----------------------------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+use work.consts.all;
 
 entity pipeline_if is
   port(
+      -- Control signals.
       i_clk : in std_logic;
       i_rst : in std_logic;
+      i_stall : in std_logic;
 
-      -- TODO(m): Implement me!
+      -- ICache interface.
+      o_icache_read : out std_logic;
+      o_icache_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_icache_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_icache_data_ready : in std_logic;
+
+      -- To ID stage (sync).
+      o_id_pc : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_id_instr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_id_bubble : out std_logic;  -- 1 if IF could not provide a new instruction.
+
+      -- Branch results from ID stage (async).
+      i_id_branch_reg_addr : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_id_branch_offset_addr : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_id_branch_is_branch : in std_logic;
+      i_id_branch_is_reg : in std_logic;  -- 1 for register branches, 0 for all other instructions.
+      i_id_branch_is_taken : in std_logic
     );
 end pipeline_if;
+
+architecture rtl of pipeline_if is
+  -- We use a branch target cache.
+  component branch_target_cache
+    port(
+        i_clk : in std_logic;
+        i_rst : in std_logic;
+        i_invalidate : in std_logic;
+        i_read_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+        o_predict_taken : out std_logic;
+        o_predict_target : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+        i_write_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+        i_write_is_branch : in std_logic;
+        i_write_is_taken : in std_logic;
+        i_write_target : in std_logic_vector(C_WORD_SIZE-1 downto 0)
+      );
+  end component;
+
+  -- Internal PC.
+  signal s_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);       -- Current PC.
+  signal s_next_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);  -- Next IF PC.
+  signal s_id_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);    -- Current ID PC.
+
+  -- Branch target cache signals.
+  signal s_btc_taken : std_logic;
+  signal s_btc_target : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_prev_btc_taken : std_logic;
+
+  -- Branch prediction signals.
+  signal s_pc_plus_4 : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_predicted_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
+
+  -- Branch calculation signals.
+  signal s_branch_target : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_reg_branch_mispredicted : std_logic;
+  signal s_offset_branch_mispredicted : std_logic;
+  signal s_branch_mispredicted : std_logic;
+  signal s_id_bubble : std_logic;
+begin
+  -- Instruction fetch from the ICache.
+  o_icache_read <= '1';  -- We always read from the cache.
+  o_icache_addr <= s_pc;
+
+  -- Branch target cache.
+  BTC: entity work.branch_target_cache
+    port map (
+      i_clk => i_clk,
+      i_rst => i_rst,
+      i_invalidate => '0',
+      i_read_pc => s_pc,
+      o_predict_taken => s_btc_taken,
+      o_predict_target => s_btc_target,
+      i_write_pc => s_id_pc,
+      i_write_is_branch => i_id_branch_is_branch,
+      i_write_is_taken => i_id_branch_is_taken,
+      i_write_target => s_branch_target
+    );
+
+  -- Predict the next PC.
+  s_pc_plus_4 <= std_logic_vector(unsigned(s_pc(C_WORD_SIZE-1 downto 2) + unsigned(1))) & "00";
+  s_predicted_pc <= s_btc_target when s_btc_taken = '1' else s_pc_plus_4;
+
+  -- Select the corrected PC for the current cycle (based on the decoded branch
+  -- info from the ID stage), if the previous instruction was a branch.
+  s_branch_target <= i_id_branch_reg_addr when i_id_branch_is_reg = '1' else i_id_branch_offset_addr;
+
+  -- Determine if we had a branch misprediction in the previous cycle.
+  s_reg_branch_mispredicted <= std_logic(s_pc /= i_id_branch_reg_addr) and i_id_branch_is_reg;
+  s_offset_branch_mispredicted <= i_id_branch_is_branch and (not i_id_branch_is_reg) and
+                                  (not (s_prev_btc_taken xor i_id_branch_is_taken));
+  s_branch_mispredicted <= s_reg_branch_mispredicted or s_offset_branch_mispredicted;
+
+  -- Select the corrected or the predicted PC for the next IF cycle.
+  s_next_pc <= s_branch_target when s_branch_mispredicted = '1' else s_predicted_pc;
+
+  -- Determine if we need to send a bubble down the pipeline.
+  s_id_bubble <= s_branch_mispredicted or not i_icache_data_ready;
+
+  -- Internal registered signals.
+  process(i_clk, i_rst)
+  begin
+    if i_rst = '1' then
+      s_pc <= C_RESET_PC;
+    elsif rising_edge(i_clk) then
+      s_pc <= s_next_pc;
+      s_id_pc <= s_pc;
+      s_prev_btc_taken <= s_btc_taken;
+    end if;
+  end process;
+
+  -- Outputs to the ID stage.
+  process(i_clk, i_rst)
+  begin
+    if i_rst = '1' then
+      o_id_pc <= (others => '0');
+      o_id_instr <= (others => '0');
+      o_id_bubble <= '1';
+    elsif rising_edge(i_clk) then
+      o_id_pc <= s_id_pc;
+      o_id_instr <= i_icache_data;
+      o_id_bubble <= s_id_bubble;
+    end if;
+  end process;
+end rtl;
 

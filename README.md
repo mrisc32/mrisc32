@@ -55,6 +55,8 @@ A [VHDL implementation](vhdl/) of a scalar in-order CPU is currently under (earl
   - All single-cycle integer operations are supported.
 * The scalar register file.
   - There are three read ports and one write port.
+* The instruction fetch (IF) pipeline stage.
+  - Currently incomplete and untested.
 
 
 # Goals
