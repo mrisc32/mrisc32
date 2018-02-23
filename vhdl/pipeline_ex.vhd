@@ -23,16 +23,70 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use work.consts.all;
 
 entity pipeline_ex is
   port(
+      -- Control signals.
       i_clk : in std_logic;
-      i_rst : in std_logic
+      i_rst : in std_logic;
+      i_stall : in std_logic;
+
+      -- From ID stage (sync).
+      i_id_alu_op : in alu_op_t;
+      i_id_src_a : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_id_src_b : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_id_src_c : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_id_mem_op : in T_MEM_OP;
+      i_id_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+
+      -- To MEM stage (sync).
+      o_mem_op : out T_MEM_OP;
+      o_mem_alu_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_mem_store_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_mem_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0)
     );
 end pipeline_ex;
 
 architecture rtl of pipeline_ex is
+  -- We use an ALU.
+  component alu
+    port(
+        i_op : in alu_op_t;
+        i_src_a : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+        i_src_b : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+        i_src_c : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+        o_result : out std_logic_vector(C_WORD_SIZE-1 downto 0)
+      );
+  end component;
+
+  signal s_alu_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_mem_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
 begin
-  -- TODO(m): Implement me!
+  -- Instantiate the ALU.
+  alu_1: entity work.alu
+    port map (
+      i_op => i_id_alu_op,
+      i_src_a => i_id_src_a,
+      i_src_b => i_id_src_b,
+      i_src_c => i_id_src_c,
+      o_result => s_alu_result
+    );
+
+  -- Outputs to the MEM stage.
+  process(i_clk, i_rst)
+  begin
+    if i_rst = '1' then
+      o_mem_op <= (others => '0');
+      o_mem_alu_result <= (others => '0');
+      o_mem_store_data <= (others => '0');
+      o_mem_dst_reg <= (others => '0');
+    elsif rising_edge(i_clk) then
+      o_mem_op <= i_id_mem_op;
+      o_mem_alu_result <= s_alu_result;
+      o_mem_store_data <= i_src_a;
+      o_mem_dst_reg <= i_id_dst_reg;
+    end if;
+  end process;
 end rtl;
 

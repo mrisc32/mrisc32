@@ -112,6 +112,22 @@ package consts is
   constant OP_FDIV   : fpu_op_t := "000111101";
 
 
+  -- MEM operations.
+  constant C_MEM_OP_SIZE : integer := 4;
+  subtype T_MEM_OP is std_logic_vector(C_MEM_OP_SIZE-1 downto 0);
+
+  -- TODO(m): Smarter encoding (1 bit = load/store, 2 bits = size, 1 bit = signed/unsigned).
+  constant C_MEM_OP_NONE    : T_MEM_OP := "0000";
+  constant C_MEM_OP_LOAD8   : T_MEM_OP := "0001";
+  constant C_MEM_OP_LOADU8  : T_MEM_OP := "0010";
+  constant C_MEM_OP_LOAD16  : T_MEM_OP := "0011";
+  constant C_MEM_OP_LOADU16 : T_MEM_OP := "0100";
+  constant C_MEM_OP_LOAD32  : T_MEM_OP := "0101";
+  constant C_MEM_OP_STORE8  : T_MEM_OP := "1000";
+  constant C_MEM_OP_STORE16 : T_MEM_OP := "1001";
+  constant C_MEM_OP_STORE32 : T_MEM_OP := "1010";
+
+
   ------------------------------------------------------------------------------------------------
   -- Helper functions
   ------------------------------------------------------------------------------------------------
