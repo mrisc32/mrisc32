@@ -45,6 +45,13 @@ entity pipeline_if is
       i_rst : in std_logic;
       i_stall : in std_logic;
 
+      -- Branch results from the ID stage (async).
+      i_id_branch_reg_addr : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_id_branch_offset_addr : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_id_branch_is_branch : in std_logic;
+      i_id_branch_is_reg : in std_logic;  -- 1 for register branches, 0 for all other instructions.
+      i_id_branch_is_taken : in std_logic;
+
       -- ICache interface.
       o_icache_read : out std_logic;
       o_icache_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -54,14 +61,7 @@ entity pipeline_if is
       -- To ID stage (sync).
       o_id_pc : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_id_instr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_id_bubble : out std_logic;  -- 1 if IF could not provide a new instruction.
-
-      -- Branch results from ID stage (async).
-      i_id_branch_reg_addr : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_id_branch_offset_addr : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_id_branch_is_branch : in std_logic;
-      i_id_branch_is_reg : in std_logic;  -- 1 for register branches, 0 for all other instructions.
-      i_id_branch_is_taken : in std_logic
+      o_id_bubble : out std_logic  -- 1 if IF could not provide a new instruction.
     );
 end pipeline_if;
 

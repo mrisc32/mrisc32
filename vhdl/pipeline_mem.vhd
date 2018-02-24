@@ -23,16 +23,52 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use work.consts.all;
 
 entity pipeline_mem is
   port(
+      -- Control signals.
       i_clk : in std_logic;
-      i_rst : in std_logic
+      i_rst : in std_logic;
+      i_stall : in std_logic;
+
+      -- From EX stage (sync).
+      i_ex_op : in T_MEM_OP;
+      i_ex_alu_result : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_ex_store_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_ex_dst_reg : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+
+      -- DCache interface.
+      o_dcache_enable : out std_logic;  -- 1 = enable, 0 = nop
+      o_dcache_write : out std_logic;   -- 1 = write, 0 = read
+      o_dcache_size : out std_logic_vector(1 downto 0);
+      o_dcache_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_dcache_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_dcache_data_ready : in std_logic;
+
+      -- To WB stage (sync).
+      o_wb_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_wb_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0)
     );
 end pipeline_mem;
 
 architecture rtl of pipeline_mem is
+  signal s_wb_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
 begin
   -- TODO(m): Implement me!
+  -- Right now we just forward the result from EX to WB.
+  s_wb_data <= i_ex_alu_result;
+
+  -- Outputs to the WB stage.
+  process(i_clk, i_rst)
+  begin
+    if i_rst = '1' then
+      o_wb_data <= (others => '0');
+      o_wb_dst_reg <= (others => '0');
+    elsif rising_edge(i_clk) then
+      o_wb_data <= s_wb_data;
+      o_wb_dst_reg <= i_ex_dst_reg;
+    end if;
+  end process;
 end rtl;
 
