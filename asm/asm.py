@@ -179,31 +179,31 @@ _OPCODES = {
         'LDB':    [[0x00000001, _REG1, _REG2, _REG3],
                    [0x01000000, _REG1, _REG2, _IMM14],
                    [0x81000000, _VREG1, _REG2, _IMM14]],
-        'LDUB':   [[0x00000002, _REG1, _REG2, _REG3],
+        'LDH':    [[0x00000002, _REG1, _REG2, _REG3],
                    [0x02000000, _REG1, _REG2, _IMM14],
                    [0x82000000, _VREG1, _REG2, _IMM14]],
-        'LDH':    [[0x00000003, _REG1, _REG2, _REG3],
+        'LDW':    [[0x00000003, _REG1, _REG2, _REG3],
                    [0x03000000, _REG1, _REG2, _IMM14],
                    [0x83000000, _VREG1, _REG2, _IMM14]],
-        'LDUH':   [[0x00000004, _REG1, _REG2, _REG3],
-                   [0x04000000, _REG1, _REG2, _IMM14],
-                   [0x84000000, _VREG1, _REG2, _IMM14]],
-        'LDW':    [[0x00000005, _REG1, _REG2, _REG3],
+        'LDUB':   [[0x00000005, _REG1, _REG2, _REG3],
                    [0x05000000, _REG1, _REG2, _IMM14],
                    [0x85000000, _VREG1, _REG2, _IMM14]],
-        'LDLW':   [[0x00000006, _REG1, _REG2, _REG3],      # Load linked
-                   [0x06000000, _REG1, _REG2, _IMM14]],
-        'STB':    [[0x00000008, _REG1, _REG2, _REG3],
-                   [0x08000000, _REG1, _REG2, _IMM14],
-                   [0x88000000, _VREG1, _REG2, _IMM14]],
-        'STH':    [[0x00000009, _REG1, _REG2, _REG3],
+        'LDUH':   [[0x00000006, _REG1, _REG2, _REG3],
+                   [0x06000000, _REG1, _REG2, _IMM14],
+                   [0x86000000, _VREG1, _REG2, _IMM14]],
+        'LDLW':   [[0x00000007, _REG1, _REG2, _REG3],      # Load linked
+                   [0x07000000, _REG1, _REG2, _IMM14]],
+        'STB':    [[0x00000009, _REG1, _REG2, _REG3],
                    [0x09000000, _REG1, _REG2, _IMM14],
                    [0x89000000, _VREG1, _REG2, _IMM14]],
-        'STW':    [[0x0000000a, _REG1, _REG2, _REG3],
+        'STH':    [[0x0000000a, _REG1, _REG2, _REG3],
                    [0x0a000000, _REG1, _REG2, _IMM14],
                    [0x8a000000, _VREG1, _REG2, _IMM14]],
-        'STCW':   [[0x0000000b, _REG1, _REG2, _REG3],      # Store conditional
-                   [0x0b000000, _REG1, _REG2, _IMM14]],
+        'STW':    [[0x0000000b, _REG1, _REG2, _REG3],
+                   [0x0b000000, _REG1, _REG2, _IMM14],
+                   [0x8b000000, _VREG1, _REG2, _IMM14]],
+        'STCW':   [[0x0000000f, _REG1, _REG2, _REG3],      # Store conditional
+                   [0x0f000000, _REG1, _REG2, _IMM14]],
 
         # Integer ALU ops.
         'OR':     [[0x00000010, _REG1, _REG2, _REG3],
@@ -412,13 +412,13 @@ _OPCODES = {
 
         # Load/store pc-relative (alias for: LD?/ST? _REG1, pc, offset).
         'LDPCB':  [[0x0107c000, _REG1, _PCREL14]],
-        'LDPCUB': [[0x0207c000, _REG1, _PCREL14]],
-        'LDPCH':  [[0x0307c000, _REG1, _PCREL14]],
-        'LDPCUH': [[0x0407c000, _REG1, _PCREL14]],
-        'LDPCW':  [[0x0507c000, _REG1, _PCREL14]],
-        'STPCB':  [[0x0807c000, _REG1, _PCREL14]],
-        'STPCH':  [[0x0907c000, _REG1, _PCREL14]],
-        'STPCW':  [[0x0a07c000, _REG1, _PCREL14]],
+        'LDPCH':  [[0x0207c000, _REG1, _PCREL14]],
+        'LDPCW':  [[0x0307c000, _REG1, _PCREL14]],
+        'LDPCUB': [[0x0507c000, _REG1, _PCREL14]],
+        'LDPCUH': [[0x0607c000, _REG1, _PCREL14]],
+        'STPCB':  [[0x0907c000, _REG1, _PCREL14]],
+        'STPCH':  [[0x0a07c000, _REG1, _PCREL14]],
+        'STPCW':  [[0x0b07c000, _REG1, _PCREL14]],
     }
 
 

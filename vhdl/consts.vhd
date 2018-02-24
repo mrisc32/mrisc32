@@ -116,16 +116,19 @@ package consts is
   constant C_MEM_OP_SIZE : integer := 4;
   subtype T_MEM_OP is std_logic_vector(C_MEM_OP_SIZE-1 downto 0);
 
-  -- TODO(m): Smarter encoding (1 bit = load/store, 2 bits = size, 1 bit = signed/unsigned).
+  -- The memory operation is encoded as follows: "SUWW", where:
+  --   S  = Store    (1 = store, 0 = load).
+  --   U  = Unsigned (1 = unsigned, 0 = signed)
+  --   WW = Width    (01 = byte, 10 = halfword, 11 = word)
   constant C_MEM_OP_NONE    : T_MEM_OP := "0000";
   constant C_MEM_OP_LOAD8   : T_MEM_OP := "0001";
-  constant C_MEM_OP_LOADU8  : T_MEM_OP := "0010";
-  constant C_MEM_OP_LOAD16  : T_MEM_OP := "0011";
-  constant C_MEM_OP_LOADU16 : T_MEM_OP := "0100";
-  constant C_MEM_OP_LOAD32  : T_MEM_OP := "0101";
-  constant C_MEM_OP_STORE8  : T_MEM_OP := "1000";
-  constant C_MEM_OP_STORE16 : T_MEM_OP := "1001";
-  constant C_MEM_OP_STORE32 : T_MEM_OP := "1010";
+  constant C_MEM_OP_LOAD16  : T_MEM_OP := "0010";
+  constant C_MEM_OP_LOAD32  : T_MEM_OP := "0011";
+  constant C_MEM_OP_LOADU8  : T_MEM_OP := "0101";
+  constant C_MEM_OP_LOADU16 : T_MEM_OP := "0110";
+  constant C_MEM_OP_STORE8  : T_MEM_OP := "1001";
+  constant C_MEM_OP_STORE16 : T_MEM_OP := "1010";
+  constant C_MEM_OP_STORE32 : T_MEM_OP := "1011";
 
 
   ------------------------------------------------------------------------------------------------

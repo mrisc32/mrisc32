@@ -109,16 +109,16 @@ protected:
   static const uint32_t EX_OP_EXTH = 0x44u;
 
   // Memory operations.
-  static const uint32_t MEM_OP_NONE = 0x00u;
-  static const uint32_t MEM_OP_LOAD8 = 0x01u;
-  static const uint32_t MEM_OP_LOADU8 = 0x02u;
-  static const uint32_t MEM_OP_LOAD16 = 0x03u;
-  static const uint32_t MEM_OP_LOADU16 = 0x04u;
-  static const uint32_t MEM_OP_LOAD32 = 0x05u;
+  static const uint32_t MEM_OP_NONE = 0x0u;
+  static const uint32_t MEM_OP_LOAD8 = 0x1u;
+  static const uint32_t MEM_OP_LOAD16 = 0x2u;
+  static const uint32_t MEM_OP_LOAD32 = 0x3u;
+  static const uint32_t MEM_OP_LOADU8 = 0x5u;
+  static const uint32_t MEM_OP_LOADU16 = 0x6u;
   // TODO(m): LOAD32_LINKED
-  static const uint32_t MEM_OP_STORE8 = 0x08u;
-  static const uint32_t MEM_OP_STORE16 = 0x09u;
-  static const uint32_t MEM_OP_STORE32 = 0x0au;
+  static const uint32_t MEM_OP_STORE8 = 0x9u;
+  static const uint32_t MEM_OP_STORE16 = 0xau;
+  static const uint32_t MEM_OP_STORE32 = 0xbu;
   // TODO(m): STORE32_CONDITIONAL
 
   // One vector register.
