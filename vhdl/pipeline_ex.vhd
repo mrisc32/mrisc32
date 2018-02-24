@@ -38,7 +38,7 @@ entity pipeline_ex is
       i_id_src_b : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_id_src_c : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_id_mem_op : in T_MEM_OP;
-      i_id_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      i_id_dst_reg : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
 
       -- To MEM stage (sync).
       o_mem_op : out T_MEM_OP;
