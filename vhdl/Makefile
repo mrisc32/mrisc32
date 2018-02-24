@@ -43,8 +43,7 @@ SRCS = \
     pipeline_if.vhd \
     pipeline_id.vhd \
     pipeline_ex.vhd \
-    pipeline_mem.vhd \
-    pipeline_wb.vhd
+    pipeline_mem.vhd
 
 all: $(SRCS)
 	$(GHDL) -i $(SRCS)

@@ -47,6 +47,9 @@ entity pipeline_mem is
       i_dcache_data_ready : in std_logic;
 
       -- To WB stage (sync).
+      -- NOTE: The WB stage is actually implemented in pipeline_id (where the
+      -- register files are interfaced).
+      o_wb_we : out std_logic;
       o_wb_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_wb_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0)
     );
@@ -56,16 +59,22 @@ architecture rtl of pipeline_mem is
   signal s_wb_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
 begin
   -- TODO(m): Implement me!
+
   -- Right now we just forward the result from EX to WB.
   s_wb_data <= i_ex_alu_result;
+
+  -- Write enabled?
+  s_wb_we <= '1' when (i_ex_dst_reg /= "00000") and (i_ex_dst_reg /= "11111") else '0';
 
   -- Outputs to the WB stage.
   process(i_clk, i_rst)
   begin
     if i_rst = '1' then
+      o_wb_we <= '0';
       o_wb_data <= (others => '0');
       o_wb_dst_reg <= (others => '0');
     elsif rising_edge(i_clk) then
+      o_wb_we <= s_wb_we;
       o_wb_data <= s_wb_data;
       o_wb_dst_reg <= i_ex_dst_reg;
     end if;

@@ -19,10 +19,13 @@
 
 ----------------------------------------------------------------------------------------------------
 -- Pipeline Stage 2: Instruction Decode (ID)
+--
+-- Note: This entity also implements the WB stage (stage 5), since the register files live here.
 ----------------------------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
+use work.consts.all;
 
 entity pipeline_id is
   port(
@@ -35,6 +38,11 @@ entity pipeline_id is
       i_if_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_if_instr : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_if_bubble : in std_logic;  -- 1 if IF could not provide a new instruction.
+
+      -- WB data from the MEM stage (sync).
+      i_wb_we : in std_logic;
+      i_wb_data_w : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_wb_sel_w : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
 
       -- Branch results to the IF stage (async).
       o_if_branch_reg_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -130,10 +138,9 @@ begin
       o_data_b => s_reg_b_data,
       o_data_c => s_reg_c_data,
       o_vl => s_vl_data,
-      -- TODO(m): Use the write port (hook in from the WB stage).
-      i_we => '0',
-      i_data_w => (others => '0'),
-      i_sel_w => (others => '0'),
+      i_we => i_wb_we,
+      i_data_w => i_wb_data_w,
+      i_sel_w => i_wb_sel_w,
       i_pc => i_if_pc
     );
 
