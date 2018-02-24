@@ -33,7 +33,7 @@ entity pipeline_ex is
       i_stall : in std_logic;
 
       -- From ID stage (sync).
-      i_id_alu_op : in alu_op_t;
+      i_id_alu_op : in T_ALU_OP;
       i_id_src_a : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_id_src_b : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_id_src_c : in std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -52,7 +52,7 @@ architecture rtl of pipeline_ex is
   -- We use an ALU.
   component alu
     port(
-        i_op : in alu_op_t;
+        i_op : in T_ALU_OP;
         i_src_a : in std_logic_vector(C_WORD_SIZE-1 downto 0);
         i_src_b : in std_logic_vector(C_WORD_SIZE-1 downto 0);
         i_src_c : in std_logic_vector(C_WORD_SIZE-1 downto 0);

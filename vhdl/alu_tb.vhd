@@ -29,7 +29,7 @@ architecture behav of alu_tb is
   --  Declaration of the component that will be instantiated.
   component alu
     port(
-        i_op : in alu_op_t;                                      -- Operation
+        i_op : in T_ALU_OP;                                      -- Operation
         i_src_a : in std_logic_vector(C_WORD_SIZE-1 downto 0);   -- Source operand A
         i_src_b : in std_logic_vector(C_WORD_SIZE-1 downto 0);   -- Source operand B
         i_src_c : in std_logic_vector(C_WORD_SIZE-1 downto 0);   -- Source operand C
@@ -37,7 +37,7 @@ architecture behav of alu_tb is
       );
   end component;
 
-  signal s_op : alu_op_t;
+  signal s_op : T_ALU_OP;
   signal s_src_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_src_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_src_c : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -57,7 +57,7 @@ begin
     --  The patterns to apply.
     type pattern_type is record
       -- Inputs
-      op : alu_op_t;
+      op : T_ALU_OP;
       src_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
       src_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
       src_c : std_logic_vector(C_WORD_SIZE-1 downto 0);
