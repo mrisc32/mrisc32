@@ -57,6 +57,7 @@ end memory;
 
 architecture rtl of memory is
   signal s_wb_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_wb_we : std_logic;
 begin
   -- TODO(m): Implement me!
 

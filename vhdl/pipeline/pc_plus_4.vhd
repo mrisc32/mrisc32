@@ -18,37 +18,29 @@
 ----------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------
--- Branch Target Cache
+-- Increment a PC by 4.
 ----------------------------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 use work.common.all;
 
-entity branch_target_cache is
+entity pc_plus_4 is
   port(
-      -- Control signals.
-      i_clk : in std_logic;
-      i_rst : in std_logic;
-      i_invalidate : in std_logic;
-
-      -- Cache lookup (async).
-      i_read_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_predict_taken : out std_logic;
-      o_predict_target : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-
-      -- Cache update (sync).
-      i_write_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_write_is_branch : in std_logic;
-      i_write_is_taken : in std_logic;
-      i_write_target : in std_logic_vector(C_WORD_SIZE-1 downto 0)
+      i_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_pc_plus_4 : out std_logic_vector(C_WORD_SIZE-1 downto 0)
     );
-end branch_target_cache;
+end pc_plus_4;
 
-architecture rtl of branch_target_cache is
+architecture rtl of pc_plus_4 is
+  signal s_carry : unsigned(0 downto 0);
+  signal s_result : unsigned(C_WORD_SIZE-3 downto 0);
 begin
-  -- TODO(m): Right now we always predict "not taken". Implement a proper cache!
-  o_predict_taken <= '0';
-  o_predict_target <= (others => '0');
+  s_carry(0) <= '1';
+  s_result <= resize(unsigned(i_pc(C_WORD_SIZE-1 downto 2)), C_WORD_SIZE-2) +
+              s_carry;
+  o_pc_plus_4(C_WORD_SIZE-1 downto 2) <= std_logic_vector(s_result(C_WORD_SIZE-3 downto 0));
+  o_pc_plus_4(1 downto 0) <= "00";
 end rtl;
 

@@ -82,6 +82,14 @@ architecture rtl of fetch is
       );
   end component;
 
+  -- We use a PC incrementor.
+  component pc_plus_4
+    port(
+        i_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+        o_pc_plus_4 : out std_logic_vector(C_WORD_SIZE-1 downto 0)
+      );
+  end component;
+
   -- Internal PC.
   signal s_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);       -- Current PC.
   signal s_next_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);  -- Next IF PC.
@@ -93,6 +101,7 @@ architecture rtl of fetch is
   signal s_prev_btc_taken : std_logic;
 
   -- Branch prediction signals.
+  signal s_pc_d4_plus_1 : std_logic_vector(C_WORD_SIZE-3 downto 0);
   signal s_pc_plus_4 : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_predicted_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
@@ -123,7 +132,11 @@ begin
     );
 
   -- Predict the next PC.
-  s_pc_plus_4 <= std_logic_vector(unsigned(s_pc(C_WORD_SIZE-1 downto 2) + unsigned(1))) & "00";
+  pc_plus_4_0: entity work.pc_plus_4
+    port map (
+      i_pc => s_pc,
+      o_pc_plus_4 => s_pc_plus_4
+    );
   s_predicted_pc <= s_btc_target when s_btc_taken = '1' else s_pc_plus_4;
 
   -- Select the corrected PC for the current cycle (based on the decoded branch
@@ -131,7 +144,7 @@ begin
   s_branch_target <= i_id_branch_reg_addr when i_id_branch_is_reg = '1' else i_id_branch_offset_addr;
 
   -- Determine if we had a branch misprediction in the previous cycle.
-  s_reg_branch_mispredicted <= std_logic(s_pc /= i_id_branch_reg_addr) and i_id_branch_is_reg;
+  s_reg_branch_mispredicted <= to_std_logic(s_pc /= i_id_branch_reg_addr) and i_id_branch_is_reg;
   s_offset_branch_mispredicted <= i_id_branch_is_branch and (not i_id_branch_is_reg) and
                                   (not (s_prev_btc_taken xor i_id_branch_is_taken));
   s_branch_mispredicted <= s_reg_branch_mispredicted or s_offset_branch_mispredicted;

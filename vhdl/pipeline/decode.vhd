@@ -145,9 +145,9 @@ begin
     );
 
   -- Select source data for the EX stage.
-  s_src_a <= s_reg_a_data when s_is_type_c = '0' else s_imm;
-  s_src_b <= s_reg_b_data when s_is_type_a = '1' else s_imm;
-  s_src_c <= s_reg_c_data;
+  s_ex_src_a <= s_reg_a_data when s_is_type_c = '0' else s_imm;
+  s_ex_src_b <= s_reg_b_data when s_is_type_a = '1' else s_imm;
+  s_ex_src_c <= s_reg_c_data;
 
   -- Select destination register.
   -- TODO(m): There are more things to consider (e.g. branches, stores, ...).
@@ -180,12 +180,12 @@ begin
       o_ex_mem_op <= (others => '0');
       o_ex_dst_reg <= (others => '0');
     elsif rising_edge(i_clk) then
-      o_ex_alu_op <= s_alu_op;
-      o_ex_src_a <= s_src_a;
-      o_ex_src_b <= s_src_b;
-      o_ex_src_c <= s_src_c;
-      o_ex_mem_op <= s_mem_op;
-      o_ex_dst_reg <= s_dst_reg;
+      o_ex_alu_op <= s_ex_alu_op;
+      o_ex_src_a <= s_ex_src_a;
+      o_ex_src_b <= s_ex_src_b;
+      o_ex_src_c <= s_ex_src_c;
+      o_ex_mem_op <= s_ex_mem_op;
+      o_ex_dst_reg <= s_ex_dst_reg;
     end if;
   end process;
 end rtl;
