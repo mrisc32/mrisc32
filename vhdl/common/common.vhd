@@ -21,7 +21,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-package consts is
+package common is
   ------------------------------------------------------------------------------------------------
   -- Machine configuration
   ------------------------------------------------------------------------------------------------
@@ -79,7 +79,7 @@ package consts is
   constant OP_LSR    : T_ALU_OP := "000011110";
   constant OP_ASR    : T_ALU_OP := "000011111";
   constant OP_LSL    : T_ALU_OP := "000100000";
-  
+
   constant OP_SHUF   : T_ALU_OP := "000100001";
 
   constant OP_SEL    : T_ALU_OP := "001000000";
@@ -141,7 +141,7 @@ package consts is
 
 end package;
 
-package body consts is
+package body common is
   function to_word(x: integer) return std_logic_vector is
   begin
     return std_logic_vector(to_unsigned(x, C_WORD_SIZE));

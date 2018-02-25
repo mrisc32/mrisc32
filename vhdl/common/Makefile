@@ -20,5 +20,5 @@
 COMMON_PATH = common
 
 SRCS += \
-    $(COMMON_PATH)/consts.vhd
+    $(COMMON_PATH)/common.vhd
 

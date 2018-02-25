@@ -19,7 +19,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
-use work.consts.all;
+use work.common.all;
 
 --  A testbench has no ports.
 entity alu_tb is
