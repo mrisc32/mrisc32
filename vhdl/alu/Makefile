@@ -17,29 +17,24 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ####################################################################################################
 
-GHDL = ghdl
-GHDLFLAGS = --std=93 --work=work
+ALU_PATH = alu
 
-.PHONY: all clean
+SRCS += \
+    $(ALU_PATH)/adder.vhd \
+    $(ALU_PATH)/adder_tb.vhd \
+    $(ALU_PATH)/clz32.vhd \
+    $(ALU_PATH)/clz32_tb.vhd \
+    $(ALU_PATH)/comparator.vhd \
+    $(ALU_PATH)/comparator_tb.vhd \
+    $(ALU_PATH)/shift32.vhd \
+    $(ALU_PATH)/shift32_tb.vhd \
+    $(ALU_PATH)/alu.vhd \
+    $(ALU_PATH)/alu_tb.vhd
 
-SRCS =
-TESTS =
-
-include common/Makefile
-include alu/Makefile
-include cache/Makefile
-include pipeline/Makefile
-
-all: $(TESTS)
-
-$(TESTS): work-obj93.cf $(SRCS)
-	$(GHDL) -m $(GHDLFLAGS) $@
-	$(GHDL) -r $(GHDLFLAGS) $@
-
-clean:
-	$(GHDL) --clean
-	rm -rf *.o *.cf *_tb *.vcd
-
-work-obj93.cf: $(SRCS)
-	$(GHDL) -i $(GHDLFLAGS) $(SRCS)
+TESTS += \
+    adder_tb \
+    clz32_tb \
+    comparator_tb \
+    shift32_tb \
+    alu_tb
 

@@ -17,29 +17,12 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ####################################################################################################
 
-GHDL = ghdl
-GHDLFLAGS = --std=93 --work=work
+CACHE_PATH = cache
 
-.PHONY: all clean
+SRCS += \
+    $(CACHE_PATH)/icache.vhd \
+    $(CACHE_PATH)/icache_tb.vhd
 
-SRCS =
-TESTS =
-
-include common/Makefile
-include alu/Makefile
-include cache/Makefile
-include pipeline/Makefile
-
-all: $(TESTS)
-
-$(TESTS): work-obj93.cf $(SRCS)
-	$(GHDL) -m $(GHDLFLAGS) $@
-	$(GHDL) -r $(GHDLFLAGS) $@
-
-clean:
-	$(GHDL) --clean
-	rm -rf *.o *.cf *_tb *.vcd
-
-work-obj93.cf: $(SRCS)
-	$(GHDL) -i $(GHDLFLAGS) $(SRCS)
+TESTS += \
+    icache_tb
 

@@ -17,29 +17,20 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ####################################################################################################
 
-GHDL = ghdl
-GHDLFLAGS = --std=93 --work=work
+PIPELINE_PATH = pipeline
 
-.PHONY: all clean
+SRCS += \
+    $(PIPELINE_PATH)/reg.vhd \
+    $(PIPELINE_PATH)/reg_tb.vhd \
+    $(PIPELINE_PATH)/regs_scalar.vhd \
+    $(PIPELINE_PATH)/regs_scalar_tb.vhd \
+    $(PIPELINE_PATH)/branch_target_cache.vhd \
+    $(PIPELINE_PATH)/pipeline_if.vhd \
+    $(PIPELINE_PATH)/pipeline_id.vhd \
+    $(PIPELINE_PATH)/pipeline_ex.vhd \
+    $(PIPELINE_PATH)/pipeline_mem.vhd
 
-SRCS =
-TESTS =
-
-include common/Makefile
-include alu/Makefile
-include cache/Makefile
-include pipeline/Makefile
-
-all: $(TESTS)
-
-$(TESTS): work-obj93.cf $(SRCS)
-	$(GHDL) -m $(GHDLFLAGS) $@
-	$(GHDL) -r $(GHDLFLAGS) $@
-
-clean:
-	$(GHDL) --clean
-	rm -rf *.o *.cf *_tb *.vcd
-
-work-obj93.cf: $(SRCS)
-	$(GHDL) -i $(GHDLFLAGS) $(SRCS)
+TESTS += \
+    reg_tb \
+    regs_scalar_tb
 
