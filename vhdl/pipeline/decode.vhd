@@ -27,7 +27,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use work.common.all;
 
-entity pipeline_id is
+entity decode is
   port(
       -- Control signals.
       i_clk : in std_logic;
@@ -59,9 +59,9 @@ entity pipeline_id is
       o_ex_mem_op : out T_MEM_OP;
       o_ex_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0)
     );
-end pipeline_id;
+end decode;
 
-architecture rtl of pipeline_id is
+architecture rtl of decode is
   -- The scalar register file is instantiated in this pipeline stage.
   component regs_scalar
     port (

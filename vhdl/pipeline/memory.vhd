@@ -25,7 +25,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use work.common.all;
 
-entity pipeline_mem is
+entity memory is
   port(
       -- Control signals.
       i_clk : in std_logic;
@@ -47,15 +47,15 @@ entity pipeline_mem is
       i_dcache_data_ready : in std_logic;
 
       -- To WB stage (sync).
-      -- NOTE: The WB stage is actually implemented in pipeline_id (where the
+      -- NOTE: The WB stage is actually implemented in decode (where the
       -- register files are interfaced).
       o_wb_we : out std_logic;
       o_wb_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_wb_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0)
     );
-end pipeline_mem;
+end memory;
 
-architecture rtl of pipeline_mem is
+architecture rtl of memory is
   signal s_wb_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
 begin
   -- TODO(m): Implement me!

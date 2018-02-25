@@ -38,7 +38,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.common.all;
 
-entity pipeline_if is
+entity fetch is
   port(
       -- Control signals.
       i_clk : in std_logic;
@@ -63,9 +63,9 @@ entity pipeline_if is
       o_id_instr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_id_bubble : out std_logic  -- 1 if IF could not provide a new instruction.
     );
-end pipeline_if;
+end fetch;
 
-architecture rtl of pipeline_if is
+architecture rtl of fetch is
   -- We use a branch target cache.
   component branch_target_cache
     port(

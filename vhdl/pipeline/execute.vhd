@@ -25,7 +25,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use work.common.all;
 
-entity pipeline_ex is
+entity execute is
   port(
       -- Control signals.
       i_clk : in std_logic;
@@ -46,9 +46,9 @@ entity pipeline_ex is
       o_mem_store_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_mem_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0)
     );
-end pipeline_ex;
+end execute;
 
-architecture rtl of pipeline_ex is
+architecture rtl of execute is
   -- We use an ALU.
   component alu
     port(
