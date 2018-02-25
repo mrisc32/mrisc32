@@ -18,6 +18,7 @@
 ####################################################################################################
 
 GHDL = ghdl
+GHDLFLAGS = --std=93 --work=work
 
 .PHONY: all clean
 
@@ -45,25 +46,26 @@ SRCS = \
     pipeline_ex.vhd \
     pipeline_mem.vhd
 
-all: $(SRCS)
-	$(GHDL) -i $(SRCS)
-	$(GHDL) -m adder_tb
-	$(GHDL) -r adder_tb
-	$(GHDL) -m clz32_tb
-	$(GHDL) -r clz32_tb
-	$(GHDL) -m comparator_tb
-	$(GHDL) -r comparator_tb
-	$(GHDL) -m shift32_tb
-	$(GHDL) -r shift32_tb
-	$(GHDL) -m alu_tb
-	$(GHDL) -r alu_tb
-	$(GHDL) -m reg_tb
-	$(GHDL) -r reg_tb
-	$(GHDL) -m icache_tb
-	$(GHDL) -r icache_tb
-	$(GHDL) -m regs_scalar_tb
-	$(GHDL) -r regs_scalar_tb
+TESTS = \
+    adder_tb \
+    clz32_tb \
+    comparator_tb \
+    shift32_tb \
+    alu_tb \
+    reg_tb \
+    icache_tb \
+    regs_scalar_tb
+
+all: $(TESTS)
+
+$(TESTS): work-obj93.cf $(SRCS)
+	$(GHDL) -m $(GHDLFLAGS) $@
+	$(GHDL) -r $(GHDLFLAGS) $@
 
 clean:
 	$(GHDL) --clean
 	rm -rf *.o *.cf *_tb *.vcd
+
+work-obj93.cf: $(SRCS)
+	$(GHDL) -i $(GHDLFLAGS) $(SRCS)
+
