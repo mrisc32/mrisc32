@@ -596,7 +596,7 @@ def compile_file(file_name, out_name, verbosity_level):
                 print 'Pass %d' % (compilation_pass)
 
             # Set the default start address.
-            addr = 49152
+            addr = 0x200  # The reset PC address = 0x200.
 
             # Clear the scope for local labels.
             scope_label = ''
