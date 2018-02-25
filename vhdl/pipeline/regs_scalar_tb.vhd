@@ -26,24 +26,6 @@ entity regs_scalar_tb is
 end regs_scalar_tb;
 
 architecture behavioral of regs_scalar_tb is
-  component regs_scalar
-    port (
-      i_clk : in std_logic;
-      i_rst : in std_logic;
-      i_sel_a : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-      i_sel_b : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-      i_sel_c : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-      o_data_a : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_data_b : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_data_c : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_vl : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_we : in std_logic;
-      i_data_w : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_sel_w : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-      i_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0)
-    );
-  end component;
-
   signal s_clk : std_logic;
   signal s_rst : std_logic;
   signal s_sel_a : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);

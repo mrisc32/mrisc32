@@ -49,17 +49,6 @@ entity execute is
 end execute;
 
 architecture rtl of execute is
-  -- We use an ALU.
-  component alu
-    port(
-        i_op : in T_ALU_OP;
-        i_src_a : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-        i_src_b : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-        i_src_c : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-        o_result : out std_logic_vector(C_WORD_SIZE-1 downto 0)
-      );
-  end component;
-
   signal s_alu_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_mem_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
 begin

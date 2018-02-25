@@ -66,30 +66,6 @@ entity fetch is
 end fetch;
 
 architecture rtl of fetch is
-  -- We use a branch target cache.
-  component branch_target_cache
-    port(
-        i_clk : in std_logic;
-        i_rst : in std_logic;
-        i_invalidate : in std_logic;
-        i_read_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-        o_predict_taken : out std_logic;
-        o_predict_target : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-        i_write_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-        i_write_is_branch : in std_logic;
-        i_write_is_taken : in std_logic;
-        i_write_target : in std_logic_vector(C_WORD_SIZE-1 downto 0)
-      );
-  end component;
-
-  -- We use a PC incrementor.
-  component pc_plus_4
-    port(
-        i_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-        o_pc_plus_4 : out std_logic_vector(C_WORD_SIZE-1 downto 0)
-      );
-  end component;
-
   -- Internal PC.
   signal s_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);       -- Current PC.
   signal s_next_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);  -- Next IF PC.

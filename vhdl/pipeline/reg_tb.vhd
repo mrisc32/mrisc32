@@ -26,17 +26,6 @@ entity reg_tb is
 end reg_tb;
 
 architecture behavioral of reg_tb is
-  component reg
-    generic(WIDTH : positive);
-    port(
-      i_clk : in std_logic;
-      i_rst : in std_logic;
-      i_we : in std_logic;
-      i_data_w : in std_logic_vector(WIDTH-1 downto 0);
-      o_data : out std_logic_vector(WIDTH-1 downto 0)
-    );
-  end component;
-
   signal s_clk : std_logic;
   signal s_rst : std_logic;
   signal s_we : std_logic;

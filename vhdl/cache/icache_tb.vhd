@@ -26,25 +26,6 @@ entity icache_tb is
 end icache_tb;
 
 architecture behavioral of icache_tb is
-  component icache
-    generic(
-        NUM_LINES : integer;
-        LINE_SIZE : integer
-      );
-    port(
-        i_clk : in std_logic;
-        i_rst : in std_logic;
-        i_cpu_read : in std_logic;
-        i_cpu_addr : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-        o_cpu_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-        o_cpu_data_ready : out std_logic;
-        o_mem_read : out std_logic;
-        o_mem_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-        i_mem_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-        i_mem_ready : in std_logic
-      );
-  end component;
-
   signal s_clk : std_logic;
   signal s_rst : std_logic;
 

@@ -24,16 +24,6 @@ entity comparator_tb is
 end comparator_tb;
 
 architecture behavioral of comparator_tb is
-  component comparator
-    generic(WIDTH : positive);
-    port(
-        i_src : in  std_logic_vector(WIDTH-1 downto 0);
-        o_eq  : out std_logic;
-        o_lt  : out std_logic;
-        o_le  : out std_logic
-      );
-  end component;
-
   signal s_src : std_logic_vector(7 downto 0);
   signal s_eq  : std_logic;
   signal s_lt  : std_logic;

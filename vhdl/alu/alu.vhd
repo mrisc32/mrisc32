@@ -33,48 +33,6 @@ entity alu is
 end;
  
 architecture rtl of alu is
-  -- We use an adder.
-  component adder
-    generic(WIDTH : positive);
-    port(
-        i_c_in   : in  std_logic;
-        i_src_a  : in  std_logic_vector(WIDTH-1 downto 0);
-        i_src_b  : in  std_logic_vector(WIDTH-1 downto 0);
-        o_result : out std_logic_vector(WIDTH-1 downto 0);
-        o_c_out  : out std_logic
-      );
-  end component;
-
-  -- We use a comparator.
-  component comparator
-    generic(WIDTH : positive);
-    port(
-        i_src : in  std_logic_vector(WIDTH-1 downto 0);
-        o_eq  : out std_logic;
-        o_lt  : out std_logic;
-        o_le  : out std_logic
-      );
-  end component;
-
-  -- We use a leading-zero counter.
-  component clz32
-    port(
-        i_src : in  std_logic_vector(31 downto 0);
-        o_cnt : out std_logic_vector(5 downto 0)
-      );
-  end component;
-
-  -- We use a shifter.
-  component shift32
-    port(
-        i_right      : in  std_logic;
-        i_arithmetic : in  std_logic;
-        i_src        : in  std_logic_vector(31 downto 0);
-        i_shift      : in  std_logic_vector(4 downto 0);
-        o_result     : out std_logic_vector(31 downto 0)
-      );
-  end component;
-
   -- Intermediate (concurrent) operation results.
   signal s_cpuid_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_or_res : std_logic_vector(C_WORD_SIZE-1 downto 0);

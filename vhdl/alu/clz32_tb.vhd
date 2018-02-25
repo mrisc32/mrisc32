@@ -26,13 +26,6 @@ entity clz32_tb is
 end clz32_tb;
 
 architecture behavioral of clz32_tb is
-  component clz32
-    port(
-        i_src : in  std_logic_vector(31 downto 0);
-        o_cnt : out std_logic_vector(5 downto 0)
-      );
-  end component;
-
   signal s_src : std_logic_vector(31 downto 0);
   signal s_cnt : std_logic_vector(5 downto 0);
 begin

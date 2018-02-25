@@ -25,16 +25,6 @@ entity shift32_tb is
 end shift32_tb;
 
 architecture behavioral of shift32_tb is
-  component shift32
-    port(
-        i_right      : in  std_logic;
-        i_arithmetic : in  std_logic;
-        i_src        : in  std_logic_vector(31 downto 0);
-        i_shift      : in  std_logic_vector(4 downto 0);
-        o_result     : out std_logic_vector(31 downto 0)
-      );
-  end component;
-
   signal s_right      : std_logic;
   signal s_arithmetic : std_logic;
   signal s_src        : std_logic_vector(31 downto 0);

@@ -24,17 +24,6 @@ entity adder_tb is
 end adder_tb;
  
 architecture behavioral of adder_tb is
-  component adder
-    generic(WIDTH : positive);
-    port(
-        i_subtract : in  std_logic;
-        i_src_a    : in  std_logic_vector(WIDTH-1 downto 0);
-        i_src_b    : in  std_logic_vector(WIDTH-1 downto 0);
-        o_result   : out std_logic_vector(WIDTH-1 downto 0);
-        o_c_out    : out std_logic
-      );
-  end component;
-
   signal s_subtract : std_logic;
   signal s_src_a    : std_logic_vector(7 downto 0);
   signal s_src_b    : std_logic_vector(7 downto 0);
