@@ -29,9 +29,11 @@ SRCS += \
     $(PIPELINE_PATH)/fetch.vhd \
     $(PIPELINE_PATH)/decode.vhd \
     $(PIPELINE_PATH)/execute.vhd \
-    $(PIPELINE_PATH)/memory.vhd
+    $(PIPELINE_PATH)/memory.vhd \
+    $(PIPELINE_PATH)/pipeline_tb.vhd
 
 TESTS += \
     reg_tb \
-    regs_scalar_tb
+    regs_scalar_tb \
+    pipeline_tb
 
