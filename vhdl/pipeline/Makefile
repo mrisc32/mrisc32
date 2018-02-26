@@ -30,6 +30,7 @@ SRCS += \
     $(PIPELINE_PATH)/decode.vhd \
     $(PIPELINE_PATH)/execute.vhd \
     $(PIPELINE_PATH)/memory.vhd \
+    $(PIPELINE_PATH)/pipeline.vhd \
     $(PIPELINE_PATH)/pipeline_tb.vhd
 
 TESTS += \
