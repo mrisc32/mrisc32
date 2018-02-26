@@ -167,9 +167,6 @@ begin
       i_clk => i_clk,
       i_rst => i_rst,
 
-      -- TODO(m): Remove this (it's never used).
-      i_stall => '0',
-
       -- From EX stage (sync).
       i_ex_op => s_ex_mem_op,
       i_ex_alu_result => s_ex_alu_result,

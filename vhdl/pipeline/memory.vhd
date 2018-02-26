@@ -30,7 +30,6 @@ entity memory is
       -- Control signals.
       i_clk : in std_logic;
       i_rst : in std_logic;
-      i_stall : in std_logic;
 
       -- From EX stage (sync).
       i_ex_op : in T_MEM_OP;

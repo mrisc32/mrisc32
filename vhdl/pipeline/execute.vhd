@@ -71,10 +71,12 @@ begin
       o_mem_store_data <= (others => '0');
       o_mem_dst_reg <= (others => '0');
     elsif rising_edge(i_clk) then
-      o_mem_op <= i_id_mem_op;
-      o_mem_alu_result <= s_alu_result;
-      o_mem_store_data <= i_id_src_a;
-      o_mem_dst_reg <= i_id_dst_reg;
+      if i_stall = '0' then
+        o_mem_op <= i_id_mem_op;
+        o_mem_alu_result <= s_alu_result;
+        o_mem_store_data <= i_id_src_a;
+        o_mem_dst_reg <= i_id_dst_reg;
+      end if;
     end if;
   end process;
 end rtl;

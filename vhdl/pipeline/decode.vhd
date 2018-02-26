@@ -161,13 +161,14 @@ begin
       o_ex_mem_op <= (others => '0');
       o_ex_dst_reg <= (others => '0');
     elsif rising_edge(i_clk) then
-      o_ex_alu_op <= s_ex_alu_op;
-      o_ex_src_a <= s_ex_src_a;
-      o_ex_src_b <= s_ex_src_b;
-      o_ex_src_c <= s_ex_src_c;
-      o_ex_mem_op <= s_ex_mem_op;
-      o_ex_dst_reg <= s_ex_dst_reg;
+      if i_stall = '0' then
+        o_ex_alu_op <= s_ex_alu_op;
+        o_ex_src_a <= s_ex_src_a;
+        o_ex_src_b <= s_ex_src_b;
+        o_ex_src_c <= s_ex_src_c;
+        o_ex_mem_op <= s_ex_mem_op;
+        o_ex_dst_reg <= s_ex_dst_reg;
+      end if;
     end if;
   end process;
 end rtl;
-

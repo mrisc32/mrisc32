@@ -87,6 +87,9 @@ architecture rtl of fetch is
   signal s_offset_branch_mispredicted : std_logic;
   signal s_branch_mispredicted : std_logic;
   signal s_id_bubble : std_logic;
+
+  -- Internal stall handling signals.
+  signal s_stall : std_logic;
 begin
   -- Instruction fetch from the ICache.
   o_icache_read <= '1';  -- We always read from the cache.
@@ -131,15 +134,22 @@ begin
   -- Determine if we need to send a bubble down the pipeline.
   s_id_bubble <= s_branch_mispredicted or not i_icache_data_ready;
 
+  -- Determine if we need to stall the fetch stage.
+  s_stall <= i_stall or not i_icache_data_ready;
+
   -- Internal registered signals.
   process(i_clk, i_rst)
   begin
     if i_rst = '1' then
       s_pc <= C_RESET_PC;
+      s_id_pc <= (others => '0');
+      s_prev_btc_taken <= '0';
     elsif rising_edge(i_clk) then
-      s_pc <= s_next_pc;
-      s_id_pc <= s_pc;
-      s_prev_btc_taken <= s_btc_taken;
+      if s_stall = '0' then
+        s_pc <= s_next_pc;
+        s_id_pc <= s_pc;
+        s_prev_btc_taken <= s_btc_taken;
+      end if;
     end if;
   end process;
 
