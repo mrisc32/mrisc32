@@ -74,6 +74,9 @@ architecture rtl of decode is
   signal s_is_type_b : std_logic;
   signal s_is_type_c : std_logic;
 
+  signal s_is_reg_branch : std_logic;
+  signal s_is_offset_branch : std_logic;
+
   -- Register read signals.
   signal s_reg_a_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_reg_b_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -142,12 +145,29 @@ begin
   -- TODO(m): Implement me!
   s_ex_mem_op <= (others => '0');
 
-  -- Async outputs to the IF stage (branch logic).
+  -- Is this a branch?
+  IsRegBranchMux: with s_op_low select
+    s_is_reg_branch <=
+        '1' when "010000000" | "010000001",  -- J, JL
+        '0' when others;
+
+  IsOffsetBranchMux: with s_op_high select
+    s_is_offset_branch <=
+        '1' when "110000" | "110001" | "110010" | "110011" | "110100" | "110101" |  -- B[cc]
+                 "111000" | "111001" | "111010" | "111011" | "111100" | "111101",   -- BL[cc]
+        '0' when others;
+
+  -- Calculate the offset branch target.
   -- TODO(m): Implement me!
-  o_if_branch_reg_addr <= (others => '0');
+
+  -- Determine if a conditional (offset) branch is taken?
+  -- TODO(m): Implement me!
+
+  -- Async outputs to the IF stage (branch logic).
+  o_if_branch_reg_addr <= s_reg_a_data;  -- TODO(m): Needs operand forwarding.
   o_if_branch_offset_addr <= (others => '0');
-  o_if_branch_is_branch <= '0';
-  o_if_branch_is_reg <= '0';
+  o_if_branch_is_branch <= s_is_reg_branch or s_is_offset_branch;
+  o_if_branch_is_reg <= s_is_reg_branch;
   o_if_branch_is_taken <= '0';
 
   -- Outputs to the EX stage.
