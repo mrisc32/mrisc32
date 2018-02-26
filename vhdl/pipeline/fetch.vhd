@@ -161,10 +161,14 @@ begin
       o_id_instr <= (others => '0');
       o_id_bubble <= '1';
     elsif rising_edge(i_clk) then
-      o_id_pc <= s_id_pc;
-      o_id_instr <= i_icache_data;
+      if s_stall = '0' then
+        o_id_pc <= s_id_pc;
+        o_id_instr <= i_icache_data;
+      end if;
+
+      -- If we're idling this cycle, we need to let ID know since it will continue running anyway.
+      -- I.e. don't let ID use the PC or instruction signals since they are not valid.
       o_id_bubble <= s_id_bubble;
     end if;
   end process;
 end rtl;
-
