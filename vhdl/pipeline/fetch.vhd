@@ -77,7 +77,6 @@ architecture rtl of fetch is
   signal s_prev_btc_taken : std_logic;
 
   -- Branch prediction signals.
-  signal s_pc_d4_plus_1 : std_logic_vector(C_WORD_SIZE-3 downto 0);
   signal s_pc_plus_4 : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_predicted_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
@@ -162,7 +161,7 @@ begin
       o_id_bubble <= '1';
     elsif rising_edge(i_clk) then
       if s_stall = '0' then
-        o_id_pc <= s_id_pc;
+        o_id_pc <= s_pc;
         o_id_instr <= i_icache_data;
       end if;
 
