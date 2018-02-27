@@ -645,7 +645,7 @@ def compile_file(file_name, out_name, verbosity_level):
                             raise AsmError(line_no, 'Re-definition of label: {}'.format(label))
                         labels[label] = addr
                         if verbosity_level >= 2:
-                            print ' Label: "%s": %d' % (label, addr)
+                            print ' Label: ' + format(addr, '08x') + ' = {}'.format(label)
 
                 elif line.startswith('.'):
                     # This is a data directive.
@@ -776,7 +776,7 @@ def compile_file(file_name, out_name, verbosity_level):
                                 msg += '\n  Candidate: {}'.format(e)
                             raise AsmError(line_no, msg)
                         if verbosity_level >= 2:
-                            print format(instr, '08x') + ' <= ' + '{}'.format(operation)
+                            print format(addr, '08x') + ': ' + format(instr, '08x') + ' <= ' + '{}'.format(operation)
                         code += struct.pack('<L', instr)
                     addr += 4
 
