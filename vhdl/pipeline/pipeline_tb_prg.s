@@ -14,3 +14,5 @@ main:
   ADD S1,S1,1
   B   .loop
 
+  OR  S1,Z,0xBAD  ; Should not be executed.
+

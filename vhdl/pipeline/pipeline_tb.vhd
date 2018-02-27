@@ -75,7 +75,8 @@ begin
         X"00184415",  -- ADD S3,S1,S2
         X"00208216",  -- SUB S4,S1,S2
         X"15084001",  -- ADD S1,S1,1
-        X"3007fffa"   -- B   .loop
+        X"3007fffa",  -- B   .loop
+        X"10080bad"   -- OR  S1,Z,0xBAD
       );
 
     constant C_TEST_CYCLES : integer := 20;

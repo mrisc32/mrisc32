@@ -124,7 +124,7 @@ begin
   -- Determine if we had a branch misprediction in the previous cycle.
   s_reg_branch_mispredicted <= to_std_logic(s_pc /= i_id_branch_reg_addr) and i_id_branch_is_reg;
   s_offset_branch_mispredicted <= i_id_branch_is_branch and (not i_id_branch_is_reg) and
-                                  (not (s_prev_btc_taken xor i_id_branch_is_taken));
+                                  (s_prev_btc_taken xor i_id_branch_is_taken);
   s_branch_mispredicted <= s_reg_branch_mispredicted or s_offset_branch_mispredicted;
 
   -- Select the corrected or the predicted PC for the next IF cycle.
