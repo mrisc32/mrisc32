@@ -25,9 +25,12 @@ end comparator_tb;
 
 architecture behavioral of comparator_tb is
   signal s_src : std_logic_vector(7 downto 0);
-  signal s_eq  : std_logic;
-  signal s_lt  : std_logic;
-  signal s_le  : std_logic;
+  signal s_eq : std_logic;
+  signal s_ne : std_logic;
+  signal s_lt : std_logic;
+  signal s_le : std_logic;
+  signal s_gt : std_logic;
+  signal s_ge : std_logic;
 begin
   comparator_0: entity work.comparator
     generic map (
@@ -36,8 +39,11 @@ begin
     port map (
       i_src => s_src,
       o_eq => s_eq,
+      o_ne => s_ne,
       o_lt => s_lt,
-      o_le => s_le
+      o_le => s_le,
+      o_gt => s_gt,
+      o_ge => s_ge
     );
 
   process
@@ -48,16 +54,19 @@ begin
 
       -- Expected outputs
       eq : std_logic;
+      ne : std_logic;
       lt : std_logic;
       le : std_logic;
+      gt : std_logic;
+      ge : std_logic;
     end record;
     type pattern_array is array (natural range <>) of pattern_type;
     constant patterns : pattern_array := (
-        ("00000000", '1', '0', '1'),
-        ("00000001", '0', '0', '0'),
-        ("01111111", '0', '0', '0'),
-        ("11000000", '0', '1', '1'),
-        ("11111111", '0', '1', '1')
+        ("00000000", '1', '0', '0', '1', '0', '1'),
+        ("00000001", '0', '1', '0', '0', '1', '1'),
+        ("01111111", '0', '1', '0', '0', '1', '1'),
+        ("11000000", '0', '1', '1', '1', '0', '0'),
+        ("11111111", '0', '1', '1', '1', '0', '0')
       );
   begin
     -- Test all the patterns in the pattern array.
@@ -71,10 +80,16 @@ begin
       --  Check the outputs.
       assert s_eq = patterns(i).eq
         report "Bad EQ value" severity error;
+      assert s_ne = patterns(i).ne
+        report "Bad NE value" severity error;
       assert s_lt = patterns(i).lt
         report "Bad LT value" severity error;
       assert s_le = patterns(i).le
         report "Bad LE value" severity error;
+      assert s_gt = patterns(i).gt
+        report "Bad GT value" severity error;
+      assert s_ge = patterns(i).ge
+        report "Bad GE value" severity error;
     end loop;
     assert false report "End of test" severity note;
     --  Wait forever; this will finish the simulation.

@@ -20,5 +20,7 @@
 COMMON_PATH = common
 
 SRCS += \
-    $(COMMON_PATH)/common.vhd
+    $(COMMON_PATH)/common.vhd \
+    $(COMMON_PATH)/comparator.vhd \
+    $(COMMON_PATH)/comparator_tb.vhd
 

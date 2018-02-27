@@ -76,6 +76,17 @@ architecture rtl of decode is
 
   signal s_is_reg_branch : std_logic;
   signal s_is_offset_branch : std_logic;
+  signal s_is_branch : std_logic;
+  signal s_is_link_branch : std_logic;
+
+  -- Branch condition signals.
+  signal s_branch_cond_eq : std_logic;
+  signal s_branch_cond_ne : std_logic;
+  signal s_branch_cond_lt : std_logic;
+  signal s_branch_cond_le : std_logic;
+  signal s_branch_cond_ge : std_logic;
+  signal s_branch_cond_gt : std_logic;
+  signal s_branch_cond_true : std_logic;
 
   -- Branch target signals.
   signal s_branch_offset_addr : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -133,6 +144,77 @@ begin
       i_pc => i_if_pc
     );
 
+
+  --------------------------------------------------------------------------------------------------
+  -- Branch logic.
+  --------------------------------------------------------------------------------------------------
+
+  -- Is this a branch?
+  IsRegBranchMux: with s_op_low select
+    s_is_reg_branch <=
+        '1' when "010000000" | "010000001",  -- J, JL
+        '0' when others;
+
+  IsOffsetBranchMux: with s_op_high select
+    s_is_offset_branch <=
+        '1' when "110000" | "110001" | "110010" | "110011" | "110100" | "110101" |  -- B[cc]
+                 "111000" | "111001" | "111010" | "111011" | "111100" | "111101",   -- BL[cc]
+        '0' when others;
+
+  s_is_branch <= s_is_reg_branch or s_is_offset_branch;
+
+  -- Is this a link branch.
+  s_is_link_branch <= s_is_branch and (s_op_high(3) or s_op_low(0));
+
+  -- Calculate the offset branch target.
+  pc_plus_offset_0: entity work.pc_plus_offset
+    port map (
+      i_pc => i_if_pc,
+      i_offset => i_if_instr(18 downto 0),
+      o_result => s_branch_offset_addr
+    );
+
+  -- Get the register content for branch logic (condition or target address).
+  -- TODO(m): Needs operand forwarding.
+  s_branch_reg_data <= s_reg_c_data;
+
+  -- Determine if a conditional (offset) branch is taken?
+  branch_comparator_0: entity work.comparator
+    generic map (WIDTH => C_WORD_SIZE)
+    port map (
+      i_src => s_branch_reg_data,
+      o_eq => s_branch_cond_eq,
+      o_ne => s_branch_cond_ne,
+      o_lt => s_branch_cond_lt,
+      o_le => s_branch_cond_le,
+      o_gt => s_branch_cond_gt,
+      o_ge => s_branch_cond_ge
+    );
+
+  BranchCondMux: with s_op_high(2 downto 0) select
+    s_branch_cond_true <=
+        s_branch_cond_eq when "000",  -- BEQ
+        s_branch_cond_ne when "001",  -- BNE
+        s_branch_cond_ge when "010",  -- BGE
+        s_branch_cond_gt when "011",  -- BGT
+        s_branch_cond_le when "100",  -- BLE
+        s_branch_cond_lt when "101",  -- BLT
+        '0' when others;
+
+  s_branch_is_taken <= s_is_reg_branch or (s_is_offset_branch and s_branch_cond_true);
+
+  -- Async outputs to the IF stage (branch logic).
+  o_if_branch_reg_addr <= s_branch_reg_data;
+  o_if_branch_offset_addr <= s_branch_offset_addr;
+  o_if_branch_is_branch <= s_is_branch;
+  o_if_branch_is_reg <= s_is_reg_branch;
+  o_if_branch_is_taken <= s_branch_is_taken;
+
+
+  --------------------------------------------------------------------------------------------------
+  -- Prepare data for the EX stage.
+  --------------------------------------------------------------------------------------------------
+
   -- Select source data for the EX stage.
   s_ex_src_a <= s_reg_a_data when s_is_type_c = '0' else s_imm;
   s_ex_src_b <= s_reg_b_data when s_is_type_a = '1' else s_imm;
@@ -149,41 +231,6 @@ begin
   -- Select MEM operation.
   -- TODO(m): Implement me!
   s_ex_mem_op <= (others => '0');
-
-  -- Is this a branch?
-  IsRegBranchMux: with s_op_low select
-    s_is_reg_branch <=
-        '1' when "010000000" | "010000001",  -- J, JL
-        '0' when others;
-
-  IsOffsetBranchMux: with s_op_high select
-    s_is_offset_branch <=
-        '1' when "110000" | "110001" | "110010" | "110011" | "110100" | "110101" |  -- B[cc]
-                 "111000" | "111001" | "111010" | "111011" | "111100" | "111101",   -- BL[cc]
-        '0' when others;
-
-  -- Calculate the offset branch target.
-  pc_plus_offset_0: entity work.pc_plus_offset
-    port map (
-      i_pc => i_if_pc,
-      i_offset => i_if_instr(18 downto 0),
-      o_result => s_branch_offset_addr
-    );
-
-  -- Get the register content for branch logic (condition or target address).
-  -- TODO(m): Needs operand forwarding.
-  s_branch_reg_data <= s_reg_a_data;
-
-  -- Determine if a conditional (offset) branch is taken?
-  -- TODO(m): Implement me!
-  s_branch_is_taken <= '0';
-
-  -- Async outputs to the IF stage (branch logic).
-  o_if_branch_reg_addr <= s_branch_reg_data;
-  o_if_branch_offset_addr <= s_branch_offset_addr;
-  o_if_branch_is_branch <= s_is_reg_branch or s_is_offset_branch;
-  o_if_branch_is_reg <= s_is_reg_branch;
-  o_if_branch_is_taken <= s_branch_is_taken;
 
   -- Outputs to the EX stage.
   process(i_clk, i_rst)

@@ -24,8 +24,6 @@ SRCS += \
     $(ALU_PATH)/adder_tb.vhd \
     $(ALU_PATH)/clz32.vhd \
     $(ALU_PATH)/clz32_tb.vhd \
-    $(ALU_PATH)/comparator.vhd \
-    $(ALU_PATH)/comparator_tb.vhd \
     $(ALU_PATH)/shift32.vhd \
     $(ALU_PATH)/shift32_tb.vhd \
     $(ALU_PATH)/alu.vhd \
