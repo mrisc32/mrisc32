@@ -113,7 +113,7 @@ begin
   pc_plus_4_0: entity work.pc_plus_4
     port map (
       i_pc => s_pc,
-      o_pc_plus_4 => s_pc_plus_4
+      o_result => s_pc_plus_4
     );
   s_predicted_pc <= s_btc_target when s_btc_taken = '1' else s_pc_plus_4;
 

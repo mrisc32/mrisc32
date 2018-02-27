@@ -77,6 +77,11 @@ architecture rtl of decode is
   signal s_is_reg_branch : std_logic;
   signal s_is_offset_branch : std_logic;
 
+  -- Branch target signals.
+  signal s_branch_offset_addr : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_branch_reg_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_branch_is_taken : std_logic;
+
   -- Register read signals.
   signal s_reg_a_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_reg_b_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -158,17 +163,27 @@ begin
         '0' when others;
 
   -- Calculate the offset branch target.
-  -- TODO(m): Implement me!
+  pc_plus_offset_0: entity work.pc_plus_offset
+    port map (
+      i_pc => i_if_pc,
+      i_offset => i_if_instr(18 downto 0),
+      o_result => s_branch_offset_addr
+    );
+
+  -- Get the register content for branch logic (condition or target address).
+  -- TODO(m): Needs operand forwarding.
+  s_branch_reg_data <= s_reg_a_data;
 
   -- Determine if a conditional (offset) branch is taken?
   -- TODO(m): Implement me!
+  s_branch_is_taken <= '0';
 
   -- Async outputs to the IF stage (branch logic).
-  o_if_branch_reg_addr <= s_reg_a_data;  -- TODO(m): Needs operand forwarding.
-  o_if_branch_offset_addr <= (others => '0');
+  o_if_branch_reg_addr <= s_branch_reg_data;
+  o_if_branch_offset_addr <= s_branch_offset_addr;
   o_if_branch_is_branch <= s_is_reg_branch or s_is_offset_branch;
   o_if_branch_is_reg <= s_is_reg_branch;
-  o_if_branch_is_taken <= '0';
+  o_if_branch_is_taken <= s_branch_is_taken;
 
   -- Outputs to the EX stage.
   process(i_clk, i_rst)

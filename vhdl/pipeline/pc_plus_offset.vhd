@@ -18,9 +18,9 @@
 ----------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------
--- Increment a PC by 4.
+-- Increment a PC by a 19-bit signed word-offset.
 --
--- This is implemented as a 30-bit adder, and the two least significant bits are set to zero.
+-- This is implemented as a (19+11)-bit adder, and the two least significant bits are set to zero.
 ----------------------------------------------------------------------------------------------------
 
 library ieee;
@@ -28,22 +28,31 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.common.all;
 
-entity pc_plus_4 is
+entity pc_plus_offset is
+  generic(
+      OFFSET_SIZE : integer := 19  -- Number of bits for the offset signal.
+    );
   port(
       i_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_offset : in std_logic_vector(OFFSET_SIZE-1 downto 0);
       o_result : out std_logic_vector(C_WORD_SIZE-1 downto 0)
     );
-end pc_plus_4;
+end pc_plus_offset;
 
-architecture rtl of pc_plus_4 is
+architecture rtl of pc_plus_offset is
+  signal s_offset_sign_extended : std_logic_vector(C_WORD_SIZE-3 downto 0); 
   signal s_pc : unsigned(C_WORD_SIZE-3 downto 0);
-  signal s_one : unsigned(0 downto 0);
+  signal s_offset : unsigned(C_WORD_SIZE-3 downto 0);
   signal s_result : unsigned(C_WORD_SIZE-3 downto 0);
 begin
+  -- Sign-extend the offset.
+  s_offset_sign_extended(C_WORD_SIZE-3 downto OFFSET_SIZE-1) <= (others => i_offset(OFFSET_SIZE-1));
+  s_offset_sign_extended(OFFSET_SIZE-2 downto 0) <= i_offset(OFFSET_SIZE-2 downto 0);
+
   -- Convert the signals to unsigned and add.
   s_pc <= resize(unsigned(i_pc(C_WORD_SIZE-1 downto 2)), C_WORD_SIZE-2);
-  s_one(0) <= '1';
-  s_result <= s_pc + s_one;
+  s_offset <= resize(unsigned(s_offset_sign_extended), C_WORD_SIZE-2);
+  s_result <= s_pc + s_offset;
 
   -- Convert the result back to std_logic_vector, and append two zeros.
   o_result(C_WORD_SIZE-1 downto 2) <= std_logic_vector(s_result);
