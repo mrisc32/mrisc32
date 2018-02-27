@@ -64,21 +64,24 @@ begin
     );
 
   process
-    -- Program to run.
-    type instruction_array is array (natural range <>) of std_logic_vector(31 downto 0);
-    constant program_memory : instruction_array := (
-        X"00000000",  -- NOP
+    -- Program to run (from pipeline_tb_prg.s).
+    type T_INSTRUCTION_ARRAY is array (natural range <>) of std_logic_vector(31 downto 0);
+    constant C_PROGRAM_MEM : T_INSTRUCTION_ARRAY := (
         X"10081234",  -- OR  S1,Z,0x1234
         X"10101111",  -- OR  S2,Z,0x1111
-        X"00000000",  -- NOP
-        X"00000000",  -- NOP
+        X"00000000",  -- NOP (.loop)
         X"00000000",  -- NOP
         X"00000000",  -- NOP
         X"00184415",  -- ADD S3,S1,S2
-        X"00208216"   -- SUB S4,S1,S2
+        X"00208216",  -- SUB S4,S1,S2
+        X"15084001",  -- ADD S1,S1,1
+        X"3007fffa"   -- B   .loop
       );
 
+    constant C_TEST_CYCLES : integer := 20;
+
     variable v_prg_idx : integer;
+    variable v_instr : std_logic_vector(C_WORD_SIZE-1 downto 0);
   begin
     -- Start by resetting the pipeline (to have defined signals).
     s_rst <= '1';
@@ -93,37 +96,27 @@ begin
     wait for 1 ns;
 
     -- Run the program.
-    for i in 0 to 10 loop
+    for i in 0 to C_TEST_CYCLES-1 loop
       -- Positive clock flank -> we should get a PC address on the ICache interface.
       s_clk <= '1';
       wait for 0.5 ns;
 
       -- Convert the PC address to a program array index.
       v_prg_idx := (to_integer(unsigned(s_icache_addr)) - 512) / 4;
-      if (v_prg_idx < program_memory'left) or (v_prg_idx > program_memory'right) then
-        v_prg_idx := 0;
+      if (v_prg_idx >= C_PROGRAM_MEM'left) and (v_prg_idx <= C_PROGRAM_MEM'right) then
+        v_instr := C_PROGRAM_MEM(v_prg_idx);
+      else
+        v_instr := X"00000000";  -- NOP
       end if;
 
       -- Load an instruction from the program memory.
-      s_icache_data <= program_memory(v_prg_idx);
+      s_icache_data <= v_instr;
       s_icache_data_ready <= '1';
 
       -- Tick the clock.
       wait for 0.5 ns;
       s_clk <= '0';
       wait for 1 ns;
-    end loop;
-
-    -- Run a few cycles to flush the pipeline.
-    for i in 0 to 6 loop
-      s_icache_data <= X"00000000";  -- NOP
-      s_icache_data_ready <= '1';
-
-      -- Tick the clock.
-      wait for 1 ns;
-      s_clk <= '1';
-      wait for 1 ns;
-      s_clk <= '0';
     end loop;
 
     --  Wait forever; this will finish the simulation.
