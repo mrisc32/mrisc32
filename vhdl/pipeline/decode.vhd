@@ -79,6 +79,10 @@ architecture rtl of decode is
   signal s_is_branch : std_logic;
   signal s_is_link_branch : std_logic;
 
+  signal s_mem_op_type : std_logic_vector(1 downto 0);
+  signal s_is_mem_op : std_logic;
+  signal s_is_mem_store : std_logic;
+
   -- Branch condition signals.
   signal s_branch_cond_eq : std_logic;
   signal s_branch_cond_ne : std_logic;
@@ -218,22 +222,29 @@ begin
   -- Prepare data for the EX stage.
   --------------------------------------------------------------------------------------------------
 
+  -- Determine MEM operation.
+  s_mem_op_type(0) <= s_is_type_a when (s_op_low(8 downto 4) = "00000") else '0';
+  s_mem_op_type(1) <= s_is_type_b when (s_op_high(5 downto 4) = "00") else '0';
+  MemOpMux: with s_mem_op_type select
+    s_ex_mem_op <=
+        s_op_low(3 downto 0) when "01",    -- Addr = reg + reg
+        s_op_high(3 downto 0) when "10",   -- Addr = reg + imm
+        (others => '0') when others;
+  s_is_mem_op <= s_mem_op_type(0) or s_mem_op_type(1);
+  s_is_mem_store <= s_is_mem_op and s_ex_mem_op(3);
+
   -- Select source data for the EX stage.
   s_ex_src_a <= s_reg_a_data when s_is_type_c = '0' else s_imm;
   s_ex_src_b <= s_reg_b_data when s_is_type_a = '1' else s_imm;
   s_ex_src_c <= s_reg_c_data;
 
   -- Select destination register.
-  -- TODO(m): There are more things to consider (e.g. branches, stores, ...).
-  s_ex_dst_reg <= s_reg_c;
+  -- TODO(m): There are more things to consider (e.g. link branches, ...).
+  s_ex_dst_reg <= s_reg_c when (s_is_mem_store or s_is_branch) = '0' else (others => '0');
 
   -- Select ALU operation.
   -- TODO(m): There are more things to consider (e.g. branches, LDHI, ...).
   s_ex_alu_op <= s_op_low when s_is_type_a = '1' else ("000" & s_op_high);
-
-  -- Select MEM operation.
-  -- TODO(m): Implement me!
-  s_ex_mem_op <= (others => '0');
 
   -- Should we discard the operation?
   -- TODO(m): There are more things to consider (e.g. non-taken BL[cc] branches,
