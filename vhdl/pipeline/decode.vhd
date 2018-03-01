@@ -83,6 +83,10 @@ architecture rtl of decode is
   signal s_is_mem_op : std_logic;
   signal s_is_mem_store : std_logic;
 
+  signal s_is_ldhi : std_logic;
+  signal s_is_ldhio : std_logic;
+  signal s_is_ldi : std_logic;
+
   -- Branch condition signals.
   signal s_branch_cond_eq : std_logic;
   signal s_branch_cond_ne : std_logic;
@@ -233,7 +237,13 @@ begin
   s_is_mem_op <= s_mem_op_type(0) or s_mem_op_type(1);
   s_is_mem_store <= s_is_mem_op and s_ex_mem_op(3);
 
+  -- Is this an immediate load?
+  s_is_ldhi  <= '1' when s_op_high = "110110" else '0';
+  s_is_ldhio <= '1' when s_op_high = "110111" else '0';
+  s_is_ldi   <= '1' when s_op_high = "111110" else '0';
+
   -- Select source data for the EX stage.
+  -- TODO(m): There are more things to consider (e.g. link branches, ...).
   s_ex_src_a <= s_reg_a_data when s_is_type_c = '0' else s_imm;
   s_ex_src_b <= s_reg_b_data when s_is_type_a = '1' else s_imm;
   s_ex_src_c <= s_reg_c_data;
@@ -243,8 +253,28 @@ begin
   s_ex_dst_reg <= s_reg_c when (s_is_mem_store or s_is_branch) = '0' else (others => '0');
 
   -- Select ALU operation.
-  -- TODO(m): There are more things to consider (e.g. branches, LDHI, ...).
-  s_ex_alu_op <= s_op_low when s_is_type_a = '1' else ("000" & s_op_high);
+  s_ex_alu_op <=
+      -- Use the ALU to calculate the memory/return address.
+      OP_ADD when (s_is_mem_op or (s_is_link_branch and s_branch_is_taken)) = '1' else
+
+      -- Use NOP for non-linking branches (they do not produce any result).
+      OP_CPUID when s_is_branch = '1' else
+
+      -- LDHI has a special ALU op.
+      OP_LDHI when s_is_ldhi = '1' else
+
+      -- LDHIO has a special ALU op.
+      OP_LDHIO when s_is_ldhio = '1' else
+
+      -- LDI can use the OR operator (i.e. just move the immediate value to the target reg).
+      OP_OR when s_is_ldi = '1' else
+
+      -- Map the low order opcode directly to the ALU.
+      s_op_low when s_is_type_a = '1' else
+
+      -- Map the high order opcode directly to the ALU.
+      ("000" & s_op_high);
+
 
   -- Should we discard the operation?
   -- TODO(m): There are more things to consider (e.g. non-taken BL[cc] branches,
