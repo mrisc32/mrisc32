@@ -78,6 +78,7 @@ architecture rtl of decode is
   signal s_is_offset_branch : std_logic;
   signal s_is_branch : std_logic;
   signal s_is_link_branch : std_logic;
+  signal s_is_taken_link_branch : std_logic;
 
   signal s_mem_op_type : std_logic_vector(1 downto 0);
   signal s_is_mem_op : std_logic;
@@ -214,6 +215,8 @@ begin
 
   s_branch_is_taken <= s_is_reg_branch or (s_is_offset_branch and s_branch_cond_true);
 
+  s_is_taken_link_branch <= s_is_link_branch and s_branch_is_taken;
+
   -- Async outputs to the IF stage (branch logic).
   o_if_branch_reg_addr <= s_branch_reg_data;
   o_if_branch_offset_addr <= s_branch_offset_addr;
@@ -243,19 +246,25 @@ begin
   s_is_ldi   <= '1' when s_op_high = "111110" else '0';
 
   -- Select source data for the EX stage.
-  -- TODO(m): There are more things to consider (e.g. link branches, ...).
-  s_ex_src_a <= s_reg_a_data when s_is_type_c = '0' else s_imm;
-  s_ex_src_b <= s_reg_b_data when s_is_type_a = '1' else s_imm;
+  -- Note: For linking branches we use the ALU to calculate PC + 4.
+  s_ex_src_a <= i_if_pc when s_is_link_branch = '1' else
+                s_reg_a_data when s_is_type_c = '0' else
+                s_imm;
+  s_ex_src_b <= X"00000004" when s_is_link_branch = '1' else
+                s_reg_b_data when s_is_type_a = '1' else
+                s_imm;
   s_ex_src_c <= s_reg_c_data;
 
   -- Select destination register.
-  -- TODO(m): There are more things to consider (e.g. link branches, ...).
-  s_ex_dst_reg <= s_reg_c when (s_is_mem_store or s_is_branch) = '0' else (others => '0');
+  -- Note: For linking branches we set the target register to LR.
+  s_ex_dst_reg <= to_vector(C_LR_REG, C_LOG2_NUM_REGS) when s_is_taken_link_branch = '1' else
+                  s_reg_c when (s_is_mem_store or s_is_branch) = '0' else
+                  (others => '0');
 
   -- Select ALU operation.
   s_ex_alu_op <=
       -- Use the ALU to calculate the memory/return address.
-      OP_ADD when (s_is_mem_op or (s_is_link_branch and s_branch_is_taken)) = '1' else
+      OP_ADD when (s_is_mem_op or s_is_taken_link_branch ) = '1' else
 
       -- Use NOP for non-linking branches (they do not produce any result).
       OP_CPUID when s_is_branch = '1' else

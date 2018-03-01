@@ -9,6 +9,7 @@ main:
   NOP
   BNE   Z,.dont_go_here
   NOP
+  BL    .subroutine
   ADD   S3,S1,S2
   SUB   S4,S1,S2
   ADD   S1,S1,1
@@ -16,4 +17,11 @@ main:
 
 .dont_go_here:
   OR    S1,Z,0xBAD  ; Should not be executed.
+
+.subroutine:
+  LDI   S9,0x34543
+  NOP
+  NOP
+  NOP
+  J     LR          ; Return from subroutine
 

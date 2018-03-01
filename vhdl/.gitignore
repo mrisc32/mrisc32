@@ -2,3 +2,4 @@
 *.cf
 *_tb
 *.vcd
+*.bin

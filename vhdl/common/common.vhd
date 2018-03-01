@@ -45,6 +45,7 @@ package common is
 
   constant C_Z_REG  : integer := 0;   -- Z  = S0
   constant C_VL_REG : integer := 29;  -- VL = S29
+  constant C_LR_REG : integer := 30;  -- LR = S30
   constant C_PC_REG : integer := 31;  -- PC = S31
 
 
@@ -135,6 +136,7 @@ package common is
   -- Helper functions
   ------------------------------------------------------------------------------------------------
 
+  function to_vector(x: integer; size: integer) return std_logic_vector;
   function to_word(x: integer) return std_logic_vector;
   function to_std_logic(x: boolean) return std_logic;
   function to_string(x: std_logic_vector) return string;
@@ -142,9 +144,14 @@ package common is
 end package;
 
 package body common is
+  function to_vector(x: integer; size: integer) return std_logic_vector is
+  begin
+    return std_logic_vector(to_unsigned(x, size));
+  end function;
+
   function to_word(x: integer) return std_logic_vector is
   begin
-    return std_logic_vector(to_unsigned(x, C_WORD_SIZE));
+    return to_vector(x, C_WORD_SIZE);
   end function;
 
   function to_std_logic(x: boolean) return std_logic is

@@ -67,21 +67,28 @@ begin
     -- Program to run (from pipeline_tb_prg.s).
     type T_INSTRUCTION_ARRAY is array (natural range <>) of std_logic_vector(31 downto 0);
     constant C_PROGRAM_MEM : T_INSTRUCTION_ARRAY := (
-        X"3e081234",  --     LDI   S1,0x1234
-        X"3e101111",  --     LDI   S2,0x1111
+        X"3e081234",  --   LDI   S1,0x1234
+        X"3e101111",  --   LDI   S2,0x1111
                       -- .loop:
-        X"00000000",  --     NOP
-        X"31000007",  --     BNE   Z,.dont_go_here
-        X"00000000",  --     NOP
-        X"00184415",  --     ADD   S3,S1,S2
-        X"00208216",  --     SUB   S4,S1,S2
-        X"15084001",  --     ADD   S1,S1,1
-        X"3007fffa",  --     B     .loop
+        X"00000000",  --   NOP
+        X"31000007",  --   BNE   Z,.dont_go_here
+        X"00000000",  --   NOP
+        X"38000006",  --   BL    .subroutine
+        X"00184415",  --   ADD   S3,S1,S2
+        X"00208216",  --   SUB   S4,S1,S2
+        X"15084001",  --   ADD   S1,S1,1
+        X"3007fffa",  --   B     .loop
                       -- .dont_go_here:
-        X"10080bad"   --     OR    S1,Z,0xBAD
+        X"10080bad",  --   OR    S1,Z,0xBAD
+                      -- .subroutine:
+        X"3e4b4543",  --   LDI   S9,0x34543
+        X"00000000",  --   NOP
+        X"00000000",  --   NOP
+        X"00000000",  --   NOP
+        X"00f00080"   --   J     LR
       );
 
-    constant C_TEST_CYCLES : integer := 20;
+    constant C_TEST_CYCLES : integer := 40;
 
     variable v_prg_idx : integer;
     variable v_instr : std_logic_vector(C_WORD_SIZE-1 downto 0);
