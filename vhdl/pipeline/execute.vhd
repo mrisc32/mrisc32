@@ -31,6 +31,7 @@ entity execute is
       i_clk : in std_logic;
       i_rst : in std_logic;
       i_stall : in std_logic;
+      o_stall : out std_logic;
 
       -- From ID stage (sync).
       i_id_alu_op : in T_ALU_OP;
@@ -70,12 +71,14 @@ begin
       o_mem_alu_result <= (others => '0');
       o_mem_store_data <= (others => '0');
       o_mem_dst_reg <= (others => '0');
+      o_stall <= '0';
     elsif rising_edge(i_clk) then
       if i_stall = '0' then
         o_mem_op <= i_id_mem_op;
         o_mem_alu_result <= s_alu_result;
         o_mem_store_data <= i_id_src_a;
         o_mem_dst_reg <= i_id_dst_reg;
+        o_stall <= '0';  -- TODO(m): Implement me (operand forwarding & multi-cycle instructions)!
       end if;
     end if;
   end process;

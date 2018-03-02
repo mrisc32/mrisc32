@@ -55,6 +55,8 @@ architecture rtl of pipeline is
   signal s_if_bubble : std_logic;
 
   -- From ID.
+  signal s_id_stall : std_logic;
+
   signal s_id_branch_reg_addr : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_id_branch_offset_addr : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_id_branch_is_branch : std_logic;
@@ -69,23 +71,31 @@ architecture rtl of pipeline is
   signal s_id_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
 
   -- From EX.
+  signal s_ex_stall : std_logic;
+
   signal s_ex_mem_op : T_MEM_OP;
   signal s_ex_alu_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ex_store_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ex_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
 
   -- From MEM.
+  signal s_mem_stall : std_logic;
+
   signal s_mem_we : std_logic;
   signal s_mem_data_w : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_mem_sel_w : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+
+  -- Stall logic.
+  signal s_stall_if : std_logic;
+  signal s_stall_id : std_logic;
+  signal s_stall_ex : std_logic;
 begin
   fetch_0: entity work.fetch
     port map (
       i_clk => i_clk,
       i_rst => i_rst,
 
-      -- TODO(m): Implement me!
-      i_stall => '0',
+      i_stall => s_stall_if,
 
       -- Branch results from the ID stage (async).
       i_id_branch_reg_addr => s_id_branch_reg_addr,
@@ -111,8 +121,8 @@ begin
       i_clk => i_clk,
       i_rst => i_rst,
 
-      -- TODO(m): Implement me!
-      i_stall => '0',
+      i_stall => s_stall_id,
+      o_stall => s_id_stall,
 
       -- From the IF stage (sync).
       i_if_pc => s_if_pc,
@@ -145,8 +155,8 @@ begin
       i_clk => i_clk,
       i_rst => i_rst,
 
-      -- TODO(m): Implement me!
-      i_stall => '0',
+      i_stall => s_stall_ex,
+      o_stall => s_ex_stall,
 
       -- From ID stage (sync).
       i_id_alu_op => s_id_alu_op,
@@ -167,6 +177,7 @@ begin
     port map (
       i_clk => i_clk,
       i_rst => i_rst,
+      o_stall => s_mem_stall,
 
       -- From EX stage (sync).
       i_ex_op => s_ex_mem_op,
@@ -188,4 +199,9 @@ begin
       o_wb_data => s_mem_data_w,
       o_wb_dst_reg => s_mem_sel_w
     );
+
+  -- Determine which pipeline stages need to be stalled.
+  s_stall_if <= s_id_stall or s_ex_stall or s_mem_stall;
+  s_stall_id <= s_ex_stall or s_mem_stall;
+  s_stall_ex <= s_mem_stall;
 end rtl;

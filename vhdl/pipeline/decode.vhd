@@ -33,6 +33,7 @@ entity decode is
       i_clk : in std_logic;
       i_rst : in std_logic;
       i_stall : in std_logic;
+      o_stall : out std_logic;
 
       -- From the IF stage (sync).
       i_if_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -303,6 +304,7 @@ begin
       o_ex_src_c <= (others => '0');
       o_ex_mem_op <= (others => '0');
       o_ex_dst_reg <= (others => '0');
+      o_stall <= '0';
     elsif rising_edge(i_clk) then
       if i_stall = '0' then
         o_ex_alu_op <= s_ex_alu_op_masked;
@@ -311,6 +313,7 @@ begin
         o_ex_src_c <= s_ex_src_c;
         o_ex_mem_op <= s_ex_mem_op_masked;
         o_ex_dst_reg <= s_ex_dst_reg_masked;
+        o_stall <= '0';  -- TODO(m): Implement me (unsatisfied operand forwarding)!
       end if;
     end if;
   end process;

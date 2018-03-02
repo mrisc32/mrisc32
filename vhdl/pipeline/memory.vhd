@@ -30,6 +30,7 @@ entity memory is
       -- Control signals.
       i_clk : in std_logic;
       i_rst : in std_logic;
+      o_stall : out std_logic;
 
       -- From EX stage (sync).
       i_ex_op : in T_MEM_OP;
@@ -74,10 +75,12 @@ begin
       o_wb_we <= '0';
       o_wb_data <= (others => '0');
       o_wb_dst_reg <= (others => '0');
+      o_stall <= '0';
     elsif rising_edge(i_clk) then
       o_wb_we <= s_wb_we;
       o_wb_data <= s_wb_data;
       o_wb_dst_reg <= i_ex_dst_reg;
+      o_stall <= '0';  -- TODO(m): Implement me (cache misses)!
     end if;
   end process;
 end rtl;
