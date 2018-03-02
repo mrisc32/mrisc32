@@ -74,6 +74,7 @@ architecture rtl of pipeline is
   signal s_ex_stall : std_logic;
 
   signal s_ex_mem_op : T_MEM_OP;
+  signal s_ex_mem_enable : std_logic;
   signal s_ex_alu_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ex_store_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ex_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
@@ -168,6 +169,7 @@ begin
 
       -- To MEM stage (sync).
       o_mem_op => s_ex_mem_op,
+      o_mem_enable => s_ex_mem_enable,
       o_mem_alu_result => s_ex_alu_result,
       o_mem_store_data => s_ex_store_data,
       o_mem_dst_reg => s_ex_dst_reg
@@ -180,7 +182,8 @@ begin
       o_stall => s_mem_stall,
 
       -- From EX stage (sync).
-      i_ex_op => s_ex_mem_op,
+      i_ex_mem_op => s_ex_mem_op,
+      i_ex_mem_enable => s_ex_mem_enable,
       i_ex_alu_result => s_ex_alu_result,
       i_ex_store_data => s_ex_store_data,
       i_ex_dst_reg => s_ex_dst_reg,
@@ -200,7 +203,7 @@ begin
       o_wb_dst_reg => s_mem_sel_w
     );
 
-  -- Determine which pipeline stages need to be stalled.
+  -- Determine which pipeline stages need to be stalled during the next cycle.
   s_stall_if <= s_id_stall or s_ex_stall or s_mem_stall;
   s_stall_id <= s_ex_stall or s_mem_stall;
   s_stall_ex <= s_mem_stall;

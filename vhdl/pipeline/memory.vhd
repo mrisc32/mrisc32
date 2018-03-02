@@ -33,7 +33,8 @@ entity memory is
       o_stall : out std_logic;
 
       -- From EX stage (sync).
-      i_ex_op : in T_MEM_OP;
+      i_ex_mem_op : in T_MEM_OP;
+      i_ex_mem_enable : in std_logic;
       i_ex_alu_result : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_ex_store_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_ex_dst_reg : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
@@ -57,15 +58,21 @@ entity memory is
 end memory;
 
 architecture rtl of memory is
+  signal s_dcache_write : std_logic;
   signal s_wb_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_wb_we : std_logic;
 begin
-  -- TODO(m): Implement me!
+  s_dcache_write <= i_ex_mem_op(3);
 
-  -- Right now we just forward the result from EX to WB.
-  s_wb_data <= i_ex_alu_result;
+  -- Outputs to the data cache.
+  o_dcache_enable <= i_ex_mem_enable;
+  o_dcache_write <= s_dcache_write;
+  o_dcache_size <= i_ex_mem_op(1 downto 0);
+  o_dcache_addr <= i_ex_alu_result;
+  o_dcache_data <= i_ex_store_data;
 
-  -- Write enabled?
+  -- Prepare signals for the WB stage.
+  s_wb_data <= i_dcache_data when i_ex_mem_enable = '1' else i_ex_alu_result;
   s_wb_we <= '1' when (i_ex_dst_reg /= "00000") and (i_ex_dst_reg /= "11111") else '0';
 
   -- Outputs to the WB stage.
@@ -75,13 +82,14 @@ begin
       o_wb_we <= '0';
       o_wb_data <= (others => '0');
       o_wb_dst_reg <= (others => '0');
-      o_stall <= '0';
     elsif rising_edge(i_clk) then
       o_wb_we <= s_wb_we;
       o_wb_data <= s_wb_data;
       o_wb_dst_reg <= i_ex_dst_reg;
-      o_stall <= '0';  -- TODO(m): Implement me (cache misses)!
     end if;
   end process;
+
+  -- Do we need to stall the pipeline (async)?
+  o_stall <= i_ex_mem_enable and (not s_dcache_write) and (not i_dcache_data_ready);
 end rtl;
 

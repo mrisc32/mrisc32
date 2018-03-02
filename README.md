@@ -55,8 +55,13 @@ A [VHDL implementation](vhdl/) of a scalar in-order CPU is currently under (earl
   - All single-cycle integer operations are supported.
 * The scalar register file.
   - There are three read ports and one write port.
-
-A 5-stage pipeline is currently being developed.
+* A basic 5-stage pipeline, without data dependency handling (no operand forwarding or stalling logic).
+  - PC and branching logic (no branch prediction cache yet).
+  - Instruction fetch.
+  - Decode.
+  - Execute.
+  - Data read/write logic.
+  - Register write-back.
 
 **TODO**: Operand forwarding, pipeline stall/bubble logic, caches, vector logic, vector register file, multiply and divide, FPU, etc.
 

@@ -304,7 +304,6 @@ begin
       o_ex_src_c <= (others => '0');
       o_ex_mem_op <= (others => '0');
       o_ex_dst_reg <= (others => '0');
-      o_stall <= '0';
     elsif rising_edge(i_clk) then
       if i_stall = '0' then
         o_ex_alu_op <= s_ex_alu_op_masked;
@@ -313,8 +312,10 @@ begin
         o_ex_src_c <= s_ex_src_c;
         o_ex_mem_op <= s_ex_mem_op_masked;
         o_ex_dst_reg <= s_ex_dst_reg_masked;
-        o_stall <= '0';  -- TODO(m): Implement me (unsatisfied operand forwarding)!
       end if;
     end if;
   end process;
+
+  -- Do we need to stall the pipeline (async)?
+  o_stall <= '0';  -- TODO(m): Implement me (unsatisfied operand forwarding)!
 end rtl;
