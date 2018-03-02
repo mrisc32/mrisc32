@@ -42,6 +42,7 @@ entity pipeline is
       o_dcache_write : out std_logic;   -- 1 = write, 0 = read
       o_dcache_size : out std_logic_vector(1 downto 0);
       o_dcache_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_dcache_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_dcache_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_dcache_data_ready : in std_logic
     );
@@ -178,6 +179,7 @@ begin
       o_dcache_write => o_dcache_write,
       o_dcache_size => o_dcache_size,
       o_dcache_addr => o_dcache_addr,
+      o_dcache_data => o_dcache_data,
       i_dcache_data => i_dcache_data,
       i_dcache_data_ready => i_dcache_data_ready,
 
