@@ -40,13 +40,15 @@ entity execute is
       i_id_src_c : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_id_mem_op : in T_MEM_OP;
       i_id_dst_reg : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      i_id_writes_to_reg : in std_logic;
 
       -- To MEM stage (sync).
       o_mem_op : out T_MEM_OP;
       o_mem_enable : out std_logic;
       o_mem_alu_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_mem_store_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_mem_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0)
+      o_mem_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      o_mem_writes_to_reg : out std_logic
     );
 end execute;
 
@@ -77,6 +79,7 @@ begin
       o_mem_alu_result <= (others => '0');
       o_mem_store_data <= (others => '0');
       o_mem_dst_reg <= (others => '0');
+      o_mem_writes_to_reg <= '0';
     elsif rising_edge(i_clk) then
       if i_stall = '0' then
         o_mem_op <= i_id_mem_op;
@@ -84,6 +87,7 @@ begin
         o_mem_alu_result <= s_alu_result;
         o_mem_store_data <= i_id_src_a;
         o_mem_dst_reg <= i_id_dst_reg;
+        o_mem_writes_to_reg <= i_id_writes_to_reg;
       end if;
     end if;
   end process;

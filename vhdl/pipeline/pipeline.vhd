@@ -69,6 +69,7 @@ architecture rtl of pipeline is
   signal s_id_src_c : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_id_mem_op : T_MEM_OP;
   signal s_id_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_id_writes_to_reg : std_logic;
 
   -- From EX.
   signal s_ex_stall : std_logic;
@@ -78,13 +79,14 @@ architecture rtl of pipeline is
   signal s_ex_alu_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ex_store_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ex_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_ex_writes_to_reg : std_logic;
 
   -- From MEM.
   signal s_mem_stall : std_logic;
 
-  signal s_mem_we : std_logic;
   signal s_mem_data_w : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_mem_sel_w : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_mem_writes_to_reg : std_logic;
 
   -- Stall logic.
   signal s_stall_if : std_logic;
@@ -131,9 +133,9 @@ begin
       i_if_bubble => s_if_bubble,
 
       -- WB data from the MEM stage (sync).
-      i_wb_we => s_mem_we,
       i_wb_data_w => s_mem_data_w,
       i_wb_sel_w => s_mem_sel_w,
+      i_wb_we => s_mem_writes_to_reg,
 
       -- Branch results to the IF stage (async).
       o_if_branch_reg_addr => s_id_branch_reg_addr,
@@ -148,7 +150,8 @@ begin
       o_ex_src_b => s_id_src_b,
       o_ex_src_c => s_id_src_c,
       o_ex_mem_op => s_id_mem_op,
-      o_ex_dst_reg => s_id_dst_reg
+      o_ex_dst_reg => s_id_dst_reg,
+      o_ex_writes_to_reg => s_id_writes_to_reg
     );
 
   execute_0: entity work.execute
@@ -166,13 +169,15 @@ begin
       i_id_src_c => s_id_src_c,
       i_id_mem_op => s_id_mem_op,
       i_id_dst_reg => s_id_dst_reg,
+      i_id_writes_to_reg => s_id_writes_to_reg,
 
       -- To MEM stage (sync).
       o_mem_op => s_ex_mem_op,
       o_mem_enable => s_ex_mem_enable,
       o_mem_alu_result => s_ex_alu_result,
       o_mem_store_data => s_ex_store_data,
-      o_mem_dst_reg => s_ex_dst_reg
+      o_mem_dst_reg => s_ex_dst_reg,
+      o_mem_writes_to_reg => s_ex_writes_to_reg
     );
 
   memory_0: entity work.memory
@@ -187,6 +192,7 @@ begin
       i_ex_alu_result => s_ex_alu_result,
       i_ex_store_data => s_ex_store_data,
       i_ex_dst_reg => s_ex_dst_reg,
+      i_ex_writes_to_reg => s_ex_writes_to_reg,
 
       -- DCache interface.
       o_dcache_enable => o_dcache_enable,
@@ -198,9 +204,9 @@ begin
       i_dcache_data_ready => i_dcache_data_ready,
 
       -- To WB stage (sync).
-      o_wb_we => s_mem_we,
       o_wb_data => s_mem_data_w,
-      o_wb_dst_reg => s_mem_sel_w
+      o_wb_dst_reg => s_mem_sel_w,
+      o_wb_writes_to_reg => s_mem_writes_to_reg
     );
 
   -- Determine which pipeline stages need to be stalled during the next cycle.

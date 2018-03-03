@@ -58,7 +58,8 @@ entity decode is
       o_ex_src_b : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_ex_src_c : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_ex_mem_op : out T_MEM_OP;
-      o_ex_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0)
+      o_ex_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      o_ex_writes_to_reg : out std_logic
     );
 end decode;
 
@@ -116,6 +117,7 @@ architecture rtl of decode is
   signal s_ex_src_c : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ex_mem_op : T_MEM_OP;
   signal s_ex_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_ex_writes_to_reg : std_logic;
 
   -- Signals for handling discarding of the current operation (i.e. bubble).
   signal s_discard_operation : std_logic;
@@ -294,6 +296,10 @@ begin
   s_ex_mem_op_masked <= s_ex_mem_op when s_discard_operation = '0' else (others => '0');
   s_ex_dst_reg_masked <= s_ex_dst_reg when s_discard_operation = '0' else (others => '0');
 
+  -- Will this instruction write to a register?
+  s_ex_writes_to_reg <= '1' when ((s_ex_dst_reg_masked /= to_vector(C_Z_REG, C_LOG2_NUM_REGS)) and
+                                  (s_ex_dst_reg_masked /= to_vector(C_PC_REG, C_LOG2_NUM_REGS))) else '0';
+
   -- Outputs to the EX stage.
   process(i_clk, i_rst)
   begin
@@ -304,6 +310,7 @@ begin
       o_ex_src_c <= (others => '0');
       o_ex_mem_op <= (others => '0');
       o_ex_dst_reg <= (others => '0');
+      o_ex_writes_to_reg <= '0';
     elsif rising_edge(i_clk) then
       if i_stall = '0' then
         o_ex_alu_op <= s_ex_alu_op_masked;
@@ -312,6 +319,7 @@ begin
         o_ex_src_c <= s_ex_src_c;
         o_ex_mem_op <= s_ex_mem_op_masked;
         o_ex_dst_reg <= s_ex_dst_reg_masked;
+        o_ex_writes_to_reg <= s_ex_writes_to_reg;
       end if;
     end if;
   end process;
