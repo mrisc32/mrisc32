@@ -88,11 +88,22 @@ architecture rtl of pipeline is
   signal s_mem_sel_w : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_mem_writes_to_reg : std_logic;
 
+  -- Operand forwarding signals.
+  signal s_value_ready_from_ex : std_logic;
+
+  signal s_id_fwd_value : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_id_fwd_use_value : std_logic;
+  signal s_id_fwd_needs_stall : std_logic;
+
   -- Stall logic.
   signal s_stall_if : std_logic;
   signal s_stall_id : std_logic;
   signal s_stall_ex : std_logic;
 begin
+  --------------------------------------------------------------------------------------------------
+  -- Pipeline stages.
+  --------------------------------------------------------------------------------------------------
+
   fetch_0: entity work.fetch
     port map (
       i_clk => i_clk,
@@ -209,8 +220,53 @@ begin
       o_wb_writes_to_reg => s_mem_writes_to_reg
     );
 
+
+  --------------------------------------------------------------------------------------------------
+  -- Operand forwarding.
+  --------------------------------------------------------------------------------------------------
+
+  -- Did the EX stage produce a value that is ready to use?
+  s_value_ready_from_ex <= not s_ex_mem_enable;
+
+  -- Forwarding logic for the ID stage.
+  forward_to_decode_0: entity work.forward_to_decode
+    port map (
+      i_src_reg => s_if_instr(23 downto 19),      -- From IF (sync).
+      i_src_reg_needed => s_id_branch_is_branch,  -- From ID (async).
+
+      -- From ID (sync).
+      i_id_writes_to_reg => s_id_writes_to_reg,
+      i_dst_reg_from_id => s_id_dst_reg,
+
+      -- From EX (sync).
+      i_ex_writes_to_reg => s_ex_writes_to_reg,
+      i_dst_reg_from_ex => s_ex_dst_reg,
+      i_value_from_ex => s_ex_alu_result,
+      i_ready_from_ex => s_value_ready_from_ex,
+
+      -- From MEM (sync).
+      i_mem_writes_to_reg => s_mem_writes_to_reg,
+      i_dst_reg_from_mem => s_mem_sel_w,
+      i_value_from_mem => s_mem_data_w,
+
+      -- TODO(m): Forward these signals to the ID stage.
+      o_value => s_id_fwd_value,
+      o_use_value => s_id_fwd_use_value,
+
+      -- Used by the stall logic.
+      o_needs_stall => s_id_fwd_needs_stall
+    );
+
+
+  --------------------------------------------------------------------------------------------------
+  -- Pipeline stall logic.
+  --------------------------------------------------------------------------------------------------
+
+  -- TODO(m): In many situations, the final stage in a stall chain should output a bubble rather
+  -- than gating the clock to the output flip-flops. This has to be handled properly!
+
   -- Determine which pipeline stages need to be stalled during the next cycle.
-  s_stall_if <= s_id_stall or s_ex_stall or s_mem_stall;
-  s_stall_id <= s_ex_stall or s_mem_stall;
   s_stall_ex <= s_mem_stall;
+  s_stall_id <= s_ex_stall or s_stall_ex or s_id_fwd_needs_stall;
+  s_stall_if <= s_id_stall or s_stall_id;
 end rtl;
