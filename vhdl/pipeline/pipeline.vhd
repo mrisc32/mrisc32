@@ -93,7 +93,7 @@ architecture rtl of pipeline is
 
   signal s_id_fwd_value : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_id_fwd_use_value : std_logic;
-  signal s_id_fwd_needs_stall : std_logic;
+  signal s_id_fwd_value_ready : std_logic;
 
   -- Stall logic.
   signal s_stall_if : std_logic;
@@ -142,6 +142,11 @@ begin
       i_if_pc => s_if_pc,
       i_if_instr => s_if_instr,
       i_if_bubble => s_if_bubble,
+
+      -- Operand forwarding to the branch logic.
+      i_fwd_value => s_id_fwd_value,
+      i_fwd_use_value => s_id_fwd_use_value,
+      i_fwd_value_ready => s_id_fwd_value_ready,
 
       -- WB data from the MEM stage (sync).
       i_wb_data_w => s_mem_data_w,
@@ -249,12 +254,10 @@ begin
       i_dst_reg_from_mem => s_mem_sel_w,
       i_value_from_mem => s_mem_data_w,
 
-      -- TODO(m): Forward these signals to the ID stage.
+      -- Operand forwarding to the ID stage.
       o_value => s_id_fwd_value,
       o_use_value => s_id_fwd_use_value,
-
-      -- Used by the stall logic.
-      o_needs_stall => s_id_fwd_needs_stall
+      o_value_ready => s_id_fwd_value_ready
     );
 
 
@@ -262,11 +265,8 @@ begin
   -- Pipeline stall logic.
   --------------------------------------------------------------------------------------------------
 
-  -- TODO(m): In many situations, the final stage in a stall chain should output a bubble rather
-  -- than gating the clock to the output flip-flops. This has to be handled properly!
-
   -- Determine which pipeline stages need to be stalled during the next cycle.
   s_stall_ex <= s_mem_stall;
-  s_stall_id <= s_ex_stall or s_stall_ex or s_id_fwd_needs_stall;
+  s_stall_id <= s_ex_stall or s_stall_ex;
   s_stall_if <= s_id_stall or s_stall_id;
 end rtl;

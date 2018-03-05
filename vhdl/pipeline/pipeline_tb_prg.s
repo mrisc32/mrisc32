@@ -6,7 +6,7 @@ main:
   LDI   S1,0x1234
   LDI   S2,0x1111
 .loop:
-  NOP
+  BEQ   S2,.dont_go_here
   BNE   Z,.dont_go_here
   NOP
   BL    .subroutine

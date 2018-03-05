@@ -40,6 +40,11 @@ entity decode is
       i_if_instr : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_if_bubble : in std_logic;  -- 1 if IF could not provide a new instruction.
 
+      -- Operand forwarding to the branch logic.
+      i_fwd_value : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_fwd_use_value : std_logic;
+      i_fwd_value_ready : std_logic;
+
       -- WB data from the MEM stage (sync).
       i_wb_we : in std_logic;
       i_wb_data_w : in std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -119,6 +124,9 @@ architecture rtl of decode is
   signal s_ex_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_ex_writes_to_reg : std_logic;
 
+  -- Operand forwarding signals.
+  signal s_missing_fwd_operand : std_logic;
+
   -- Signals for handling discarding of the current operation (i.e. bubble).
   signal s_discard_operation : std_logic;
   signal s_ex_alu_op_masked : T_ALU_OP;
@@ -190,8 +198,8 @@ begin
     );
 
   -- Get the register content for branch logic (condition or target address).
-  -- TODO(m): Needs operand forwarding.
-  s_branch_reg_data <= s_reg_c_data;
+  s_missing_fwd_operand <= s_is_branch and (i_fwd_use_value and not i_fwd_value_ready);
+  s_branch_reg_data <= i_fwd_value when i_fwd_use_value = '1' else s_reg_c_data;
 
   -- Determine if a conditional (offset) branch is taken?
   branch_comparator_0: entity work.comparator
@@ -289,9 +297,8 @@ begin
 
 
   -- Should we discard the operation?
-  -- TODO(m): There are more things to consider (e.g. non-taken BL[cc] branches,
-  -- unsatisfied operand forwarding, ...).
-  s_discard_operation <= i_if_bubble;
+  -- TODO(m): There are more things to consider (e.g. non-taken BL[cc] branches, ...).
+  s_discard_operation <= i_if_bubble or s_missing_fwd_operand;
   s_ex_alu_op_masked <= s_ex_alu_op when s_discard_operation = '0' else (others => '0');
   s_ex_mem_op_masked <= s_ex_mem_op when s_discard_operation = '0' else (others => '0');
   s_ex_dst_reg_masked <= s_ex_dst_reg when s_discard_operation = '0' else (others => '0');
@@ -325,5 +332,5 @@ begin
   end process;
 
   -- Do we need to stall the pipeline (async)?
-  o_stall <= '0';  -- TODO(m): Implement me (unsatisfied operand forwarding)!
+  o_stall <= s_missing_fwd_operand;
 end rtl;

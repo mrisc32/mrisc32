@@ -56,7 +56,7 @@ entity forward_to_decode is
       -- Operand selection for the ID stage.
       o_value : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_use_value : out std_logic;
-      o_needs_stall : out std_logic
+      o_value_ready : out std_logic
     );
 end forward_to_decode;
 
@@ -70,13 +70,13 @@ begin
   s_reg_from_ex <= i_ex_writes_to_reg when i_src_reg = i_dst_reg_from_ex else '0';
   s_reg_from_mem <= i_mem_writes_to_reg when i_src_reg = i_dst_reg_from_mem else '0';
 
-  -- Do we need to stall?
-  o_needs_stall <= i_src_reg_needed and (s_reg_from_id or (s_reg_from_ex and not i_ready_from_ex));
-
   -- Which value to forward?
   o_value <= i_value_from_ex when (s_reg_from_ex and i_ready_from_ex) = '1' else i_value_from_mem;
 
-  -- Should the value be used?
-  o_use_value <= i_ready_from_ex when s_reg_from_ex = '1' else s_reg_from_mem;
+  -- Should the forwarded pipeline value be used instead of register file value?
+  o_use_value <= s_reg_from_id or s_reg_from_ex or s_reg_from_mem;
+
+  -- Is the value ready for use?
+  o_value_ready <= not (s_reg_from_id or (s_reg_from_ex and not i_ready_from_ex));
 end rtl;
 

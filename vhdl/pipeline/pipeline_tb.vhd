@@ -70,14 +70,14 @@ begin
         X"3e081234",  --   LDI   S1,0x1234
         X"3e101111",  --   LDI   S2,0x1111
                       -- .loop:
-        X"00000000",  --   NOP
+        X"30100008",  --   BEQ   S2,.dont_go_here
         X"31000007",  --   BNE   Z,.dont_go_here
         X"00000000",  --   NOP
         X"38000006",  --   BL    .subroutine
         X"00184415",  --   ADD   S3,S1,S2
         X"00208216",  --   SUB   S4,S1,S2
         X"15084001",  --   ADD   S1,S1,1
-        X"3007fffa",  --   B     .loop
+        X"3007fff9",  --   B     .loop
                       -- .dont_go_here:
         X"10080bad",  --   OR    S1,Z,0xBAD
                       -- .subroutine:
