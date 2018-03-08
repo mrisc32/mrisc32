@@ -46,11 +46,11 @@ entity fetch is
       i_stall : in std_logic;
 
       -- Branch results from the ID stage (async).
-      i_id_branch_reg_addr : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_id_branch_offset_addr : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_id_branch_is_branch : in std_logic;
-      i_id_branch_is_reg : in std_logic;  -- 1 for register branches, 0 for all other instructions.
-      i_id_branch_is_taken : in std_logic;
+      i_branch_reg_addr : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_branch_offset_addr : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_branch_is_branch : in std_logic;
+      i_branch_is_reg : in std_logic;  -- 1 for register branches, 0 for all other instructions.
+      i_branch_is_taken : in std_logic;
 
       -- ICache interface.
       o_icache_read : out std_logic;
@@ -59,9 +59,9 @@ entity fetch is
       i_icache_data_ready : in std_logic;
 
       -- To ID stage (sync).
-      o_id_pc : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_id_instr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_id_bubble : out std_logic  -- 1 if IF could not provide a new instruction.
+      o_pc : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_instr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_bubble : out std_logic  -- 1 if IF could not provide a new instruction.
     );
 end fetch;
 
@@ -104,8 +104,8 @@ begin
       o_predict_taken => s_btc_taken,
       o_predict_target => s_btc_target,
       i_write_pc => s_id_pc,
-      i_write_is_branch => i_id_branch_is_branch,
-      i_write_is_taken => i_id_branch_is_taken,
+      i_write_is_branch => i_branch_is_branch,
+      i_write_is_taken => i_branch_is_taken,
       i_write_target => s_branch_target
     );
 
@@ -119,12 +119,12 @@ begin
 
   -- Select the corrected PC for the current cycle (based on the decoded branch
   -- info from the ID stage), if the previous instruction was a branch.
-  s_branch_target <= i_id_branch_reg_addr when i_id_branch_is_reg = '1' else i_id_branch_offset_addr;
+  s_branch_target <= i_branch_reg_addr when i_branch_is_reg = '1' else i_branch_offset_addr;
 
   -- Determine if we had a branch misprediction in the previous cycle.
-  s_reg_branch_mispredicted <= to_std_logic(s_pc /= i_id_branch_reg_addr) and i_id_branch_is_reg;
-  s_offset_branch_mispredicted <= i_id_branch_is_branch and (not i_id_branch_is_reg) and
-                                  (s_prev_btc_taken xor i_id_branch_is_taken);
+  s_reg_branch_mispredicted <= to_std_logic(s_pc /= i_branch_reg_addr) and i_branch_is_reg;
+  s_offset_branch_mispredicted <= i_branch_is_branch and (not i_branch_is_reg) and
+                                  (s_prev_btc_taken xor i_branch_is_taken);
   s_branch_mispredicted <= s_reg_branch_mispredicted or s_offset_branch_mispredicted;
 
   -- Select the corrected or the predicted PC for the next IF cycle.
@@ -156,18 +156,18 @@ begin
   process(i_clk, i_rst)
   begin
     if i_rst = '1' then
-      o_id_pc <= (others => '0');
-      o_id_instr <= (others => '0');
-      o_id_bubble <= '1';
+      o_pc <= (others => '0');
+      o_instr <= (others => '0');
+      o_bubble <= '1';
     elsif rising_edge(i_clk) then
       if s_stall = '0' then
-        o_id_pc <= s_pc;
-        o_id_instr <= i_icache_data;
+        o_pc <= s_pc;
+        o_instr <= i_icache_data;
       end if;
 
       -- If we're idling this cycle, we need to let ID know since it will continue running anyway.
       -- I.e. don't let ID use the PC or instruction signals since they are not valid.
-      o_id_bubble <= s_id_bubble;
+      o_bubble <= s_id_bubble;
     end if;
   end process;
 end rtl;

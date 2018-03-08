@@ -36,9 +36,9 @@ entity decode is
       o_stall : out std_logic;
 
       -- From the IF stage (sync).
-      i_if_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_if_instr : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_if_bubble : in std_logic;  -- 1 if IF could not provide a new instruction.
+      i_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_instr : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_bubble : in std_logic;  -- 1 if IF could not provide a new instruction.
 
       -- Operand forwarding to the branch logic.
       i_fwd_value : in std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -51,20 +51,20 @@ entity decode is
       i_wb_sel_w : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
 
       -- Branch results to the IF stage (async).
-      o_if_branch_reg_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_if_branch_offset_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_if_branch_is_branch : out std_logic;
-      o_if_branch_is_reg : out std_logic;  -- 1 for register branches, 0 for all other instructions.
-      o_if_branch_is_taken : out std_logic;
+      o_branch_reg_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_branch_offset_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_branch_is_branch : out std_logic;
+      o_branch_is_reg : out std_logic;  -- 1 for register branches, 0 for all other instructions.
+      o_branch_is_taken : out std_logic;
 
       -- To the EX stage (sync).
-      o_ex_alu_op : out T_ALU_OP;
-      o_ex_src_a : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_ex_src_b : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_ex_src_c : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_ex_mem_op : out T_MEM_OP;
-      o_ex_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-      o_ex_writes_to_reg : out std_logic
+      o_alu_op : out T_ALU_OP;
+      o_src_a : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_src_b : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_src_c : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_mem_op : out T_MEM_OP;
+      o_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      o_writes_to_reg : out std_logic
     );
 end decode;
 
@@ -134,8 +134,8 @@ architecture rtl of decode is
   signal s_ex_dst_reg_masked : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
 begin
   -- Extract operation codes.
-  s_op_high <= i_if_instr(29 downto 24);
-  s_op_low <= i_if_instr(8 downto 0);
+  s_op_high <= i_instr(29 downto 24);
+  s_op_low <= i_instr(8 downto 0);
 
   -- Determine encoding type.
   s_is_type_a <= '1' when s_op_high = "000000" else '0';
@@ -143,14 +143,14 @@ begin
   s_is_type_b <= not (s_is_type_a or s_is_type_c);
 
   -- Extract immediate.
-  s_imm(13 downto 0) <= i_if_instr(13 downto 0);
-  s_imm(18 downto 14) <= i_if_instr(18 downto 14) when s_is_type_c = '1' else (others => i_if_instr(13));
+  s_imm(13 downto 0) <= i_instr(13 downto 0);
+  s_imm(18 downto 14) <= i_instr(18 downto 14) when s_is_type_c = '1' else (others => i_instr(13));
   s_imm(31 downto 19) <= (others => s_imm(18));
 
   -- Extract register numbers.
-  s_reg_a <= i_if_instr(18 downto 14);
-  s_reg_b <= i_if_instr(13 downto 9);
-  s_reg_c <= i_if_instr(23 downto 19);  -- Usually destination, somtimes source.
+  s_reg_a <= i_instr(18 downto 14);
+  s_reg_b <= i_instr(13 downto 9);
+  s_reg_c <= i_instr(23 downto 19);  -- Usually destination, somtimes source.
 
   -- Read from the register file.
   regs_scalar_1: entity work.regs_scalar
@@ -167,7 +167,7 @@ begin
       i_we => i_wb_we,
       i_data_w => i_wb_data_w,
       i_sel_w => i_wb_sel_w,
-      i_pc => i_if_pc
+      i_pc => i_pc
     );
 
 
@@ -192,8 +192,8 @@ begin
   -- Calculate the offset branch target.
   pc_plus_offset_0: entity work.pc_plus_offset
     port map (
-      i_pc => i_if_pc,
-      i_offset => i_if_instr(18 downto 0),
+      i_pc => i_pc,
+      i_offset => i_instr(18 downto 0),
       o_result => s_branch_offset_addr
     );
 
@@ -229,11 +229,11 @@ begin
   s_is_taken_link_branch <= s_is_link_branch and s_branch_is_taken;
 
   -- Async outputs to the IF stage (branch logic).
-  o_if_branch_reg_addr <= s_branch_reg_data;
-  o_if_branch_offset_addr <= s_branch_offset_addr;
-  o_if_branch_is_branch <= s_is_branch;
-  o_if_branch_is_reg <= s_is_reg_branch;
-  o_if_branch_is_taken <= s_branch_is_taken;
+  o_branch_reg_addr <= s_branch_reg_data;
+  o_branch_offset_addr <= s_branch_offset_addr;
+  o_branch_is_branch <= s_is_branch;
+  o_branch_is_reg <= s_is_reg_branch;
+  o_branch_is_taken <= s_branch_is_taken;
 
 
   --------------------------------------------------------------------------------------------------
@@ -258,7 +258,7 @@ begin
 
   -- Select source data for the EX stage.
   -- Note: For linking branches we use the ALU to calculate PC + 4.
-  s_ex_src_a <= i_if_pc when s_is_link_branch = '1' else
+  s_ex_src_a <= i_pc when s_is_link_branch = '1' else
                 s_reg_a_data when s_is_type_c = '0' else
                 s_imm;
   s_ex_src_b <= X"00000004" when s_is_link_branch = '1' else
@@ -298,7 +298,7 @@ begin
 
   -- Should we discard the operation?
   -- TODO(m): There are more things to consider (e.g. non-taken BL[cc] branches, ...).
-  s_discard_operation <= i_if_bubble or s_missing_fwd_operand;
+  s_discard_operation <= i_bubble or s_missing_fwd_operand;
   s_ex_alu_op_masked <= s_ex_alu_op when s_discard_operation = '0' else (others => '0');
   s_ex_mem_op_masked <= s_ex_mem_op when s_discard_operation = '0' else (others => '0');
   s_ex_dst_reg_masked <= s_ex_dst_reg when s_discard_operation = '0' else (others => '0');
@@ -311,22 +311,22 @@ begin
   process(i_clk, i_rst)
   begin
     if i_rst = '1' then
-      o_ex_alu_op <= (others => '0');
-      o_ex_src_a <= (others => '0');
-      o_ex_src_b <= (others => '0');
-      o_ex_src_c <= (others => '0');
-      o_ex_mem_op <= (others => '0');
-      o_ex_dst_reg <= (others => '0');
-      o_ex_writes_to_reg <= '0';
+      o_alu_op <= (others => '0');
+      o_src_a <= (others => '0');
+      o_src_b <= (others => '0');
+      o_src_c <= (others => '0');
+      o_mem_op <= (others => '0');
+      o_dst_reg <= (others => '0');
+      o_writes_to_reg <= '0';
     elsif rising_edge(i_clk) then
       if i_stall = '0' then
-        o_ex_alu_op <= s_ex_alu_op_masked;
-        o_ex_src_a <= s_ex_src_a;
-        o_ex_src_b <= s_ex_src_b;
-        o_ex_src_c <= s_ex_src_c;
-        o_ex_mem_op <= s_ex_mem_op_masked;
-        o_ex_dst_reg <= s_ex_dst_reg_masked;
-        o_ex_writes_to_reg <= s_ex_writes_to_reg;
+        o_alu_op <= s_ex_alu_op_masked;
+        o_src_a <= s_ex_src_a;
+        o_src_b <= s_ex_src_b;
+        o_src_c <= s_ex_src_c;
+        o_mem_op <= s_ex_mem_op_masked;
+        o_dst_reg <= s_ex_dst_reg_masked;
+        o_writes_to_reg <= s_ex_writes_to_reg;
       end if;
     end if;
   end process;

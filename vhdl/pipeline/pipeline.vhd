@@ -124,11 +124,11 @@ begin
       i_stall => s_stall_if,
 
       -- Branch results from the ID stage (async).
-      i_id_branch_reg_addr => s_id_branch_reg_addr,
-      i_id_branch_offset_addr => s_id_branch_offset_addr,
-      i_id_branch_is_branch => s_id_branch_is_branch,
-      i_id_branch_is_reg => s_id_branch_is_reg,
-      i_id_branch_is_taken => s_id_branch_is_taken,
+      i_branch_reg_addr => s_id_branch_reg_addr,
+      i_branch_offset_addr => s_id_branch_offset_addr,
+      i_branch_is_branch => s_id_branch_is_branch,
+      i_branch_is_reg => s_id_branch_is_reg,
+      i_branch_is_taken => s_id_branch_is_taken,
 
       -- ICache interface.
       o_icache_read => o_icache_read,
@@ -137,9 +137,9 @@ begin
       i_icache_data_ready => i_icache_data_ready,
 
       -- To ID stage (sync).
-      o_id_pc => s_if_pc,
-      o_id_instr => s_if_instr,
-      o_id_bubble => s_if_bubble
+      o_pc => s_if_pc,
+      o_instr => s_if_instr,
+      o_bubble => s_if_bubble
     );
 
   decode_0: entity work.decode
@@ -151,9 +151,9 @@ begin
       o_stall => s_id_stall,
 
       -- From the IF stage (sync).
-      i_if_pc => s_if_pc,
-      i_if_instr => s_if_instr,
-      i_if_bubble => s_if_bubble,
+      i_pc => s_if_pc,
+      i_instr => s_if_instr,
+      i_bubble => s_if_bubble,
 
       -- Operand forwarding to the branch logic.
       i_fwd_value => s_id_fwd_value,
@@ -166,20 +166,20 @@ begin
       i_wb_we => s_mem_writes_to_reg,
 
       -- Branch results to the IF stage (async).
-      o_if_branch_reg_addr => s_id_branch_reg_addr,
-      o_if_branch_offset_addr => s_id_branch_offset_addr,
-      o_if_branch_is_branch => s_id_branch_is_branch,
-      o_if_branch_is_reg => s_id_branch_is_reg,
-      o_if_branch_is_taken => s_id_branch_is_taken,
+      o_branch_reg_addr => s_id_branch_reg_addr,
+      o_branch_offset_addr => s_id_branch_offset_addr,
+      o_branch_is_branch => s_id_branch_is_branch,
+      o_branch_is_reg => s_id_branch_is_reg,
+      o_branch_is_taken => s_id_branch_is_taken,
 
       -- To the EX stage (sync).
-      o_ex_alu_op => s_id_alu_op,
-      o_ex_src_a => s_id_src_a,
-      o_ex_src_b => s_id_src_b,
-      o_ex_src_c => s_id_src_c,
-      o_ex_mem_op => s_id_mem_op,
-      o_ex_dst_reg => s_id_dst_reg,
-      o_ex_writes_to_reg => s_id_writes_to_reg
+      o_alu_op => s_id_alu_op,
+      o_src_a => s_id_src_a,
+      o_src_b => s_id_src_b,
+      o_src_c => s_id_src_c,
+      o_mem_op => s_id_mem_op,
+      o_dst_reg => s_id_dst_reg,
+      o_writes_to_reg => s_id_writes_to_reg
     );
 
   execute_0: entity work.execute
@@ -191,21 +191,21 @@ begin
       o_stall => s_ex_stall,
 
       -- From ID stage (sync).
-      i_id_alu_op => s_id_alu_op,
-      i_id_src_a => s_id_src_a,
-      i_id_src_b => s_id_src_b,
-      i_id_src_c => s_id_src_c,
-      i_id_mem_op => s_id_mem_op,
-      i_id_dst_reg => s_id_dst_reg,
-      i_id_writes_to_reg => s_id_writes_to_reg,
+      i_alu_op => s_id_alu_op,
+      i_src_a => s_id_src_a,
+      i_src_b => s_id_src_b,
+      i_src_c => s_id_src_c,
+      i_mem_op => s_id_mem_op,
+      i_dst_reg => s_id_dst_reg,
+      i_writes_to_reg => s_id_writes_to_reg,
 
       -- To MEM stage (sync).
       o_mem_op => s_ex_mem_op,
       o_mem_enable => s_ex_mem_enable,
-      o_mem_alu_result => s_ex_alu_result,
-      o_mem_store_data => s_ex_store_data,
-      o_mem_dst_reg => s_ex_dst_reg,
-      o_mem_writes_to_reg => s_ex_writes_to_reg
+      o_alu_result => s_ex_alu_result,
+      o_store_data => s_ex_store_data,
+      o_dst_reg => s_ex_dst_reg,
+      o_writes_to_reg => s_ex_writes_to_reg
     );
 
   memory_0: entity work.memory
@@ -215,12 +215,12 @@ begin
       o_stall => s_mem_stall,
 
       -- From EX stage (sync).
-      i_ex_mem_op => s_ex_mem_op,
-      i_ex_mem_enable => s_ex_mem_enable,
-      i_ex_alu_result => s_ex_alu_result,
-      i_ex_store_data => s_ex_store_data,
-      i_ex_dst_reg => s_ex_dst_reg,
-      i_ex_writes_to_reg => s_ex_writes_to_reg,
+      i_mem_op => s_ex_mem_op,
+      i_mem_enable => s_ex_mem_enable,
+      i_alu_result => s_ex_alu_result,
+      i_store_data => s_ex_store_data,
+      i_dst_reg => s_ex_dst_reg,
+      i_writes_to_reg => s_ex_writes_to_reg,
 
       -- DCache interface.
       o_dcache_enable => o_dcache_enable,
@@ -232,9 +232,9 @@ begin
       i_dcache_data_ready => i_dcache_data_ready,
 
       -- To WB stage (sync).
-      o_wb_data => s_mem_data_w,
-      o_wb_dst_reg => s_mem_sel_w,
-      o_wb_writes_to_reg => s_mem_writes_to_reg
+      o_data => s_mem_data_w,
+      o_dst_reg => s_mem_sel_w,
+      o_writes_to_reg => s_mem_writes_to_reg
     );
 
 

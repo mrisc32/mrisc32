@@ -33,12 +33,12 @@ entity memory is
       o_stall : out std_logic;
 
       -- From EX stage (sync).
-      i_ex_mem_op : in T_MEM_OP;
-      i_ex_mem_enable : in std_logic;
-      i_ex_alu_result : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_ex_store_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_ex_dst_reg : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-      i_ex_writes_to_reg : in std_logic;
+      i_mem_op : in T_MEM_OP;
+      i_mem_enable : in std_logic;
+      i_alu_result : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_store_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_dst_reg : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      i_writes_to_reg : in std_logic;
 
       -- DCache interface.
       o_dcache_enable : out std_logic;  -- 1 = enable, 0 = nop
@@ -52,9 +52,9 @@ entity memory is
       -- To WB stage (sync).
       -- NOTE: The WB stage is actually implemented in decode (where the
       -- register files are interfaced).
-      o_wb_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_wb_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-      o_wb_writes_to_reg : out std_logic
+      o_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      o_writes_to_reg : out std_logic
     );
 end memory;
 
@@ -63,33 +63,33 @@ architecture rtl of memory is
   signal s_wb_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_wb_we : std_logic;
 begin
-  s_dcache_write <= i_ex_mem_op(3);
+  s_dcache_write <= i_mem_op(3);
 
   -- Outputs to the data cache.
-  o_dcache_enable <= i_ex_mem_enable;
+  o_dcache_enable <= i_mem_enable;
   o_dcache_write <= s_dcache_write;
-  o_dcache_size <= i_ex_mem_op(1 downto 0);
-  o_dcache_addr <= i_ex_alu_result;
-  o_dcache_data <= i_ex_store_data;
+  o_dcache_size <= i_mem_op(1 downto 0);
+  o_dcache_addr <= i_alu_result;
+  o_dcache_data <= i_store_data;
 
   -- Prepare signals for the WB stage.
-  s_wb_data <= i_dcache_data when i_ex_mem_enable = '1' else i_ex_alu_result;
+  s_wb_data <= i_dcache_data when i_mem_enable = '1' else i_alu_result;
 
   -- Outputs to the WB stage.
   process(i_clk, i_rst)
   begin
     if i_rst = '1' then
-      o_wb_data <= (others => '0');
-      o_wb_dst_reg <= (others => '0');
-      o_wb_writes_to_reg <= '0';
+      o_data <= (others => '0');
+      o_dst_reg <= (others => '0');
+      o_writes_to_reg <= '0';
     elsif rising_edge(i_clk) then
-      o_wb_data <= s_wb_data;
-      o_wb_dst_reg <= i_ex_dst_reg;
-      o_wb_writes_to_reg <= i_ex_writes_to_reg;
+      o_data <= s_wb_data;
+      o_dst_reg <= i_dst_reg;
+      o_writes_to_reg <= i_writes_to_reg;
     end if;
   end process;
 
   -- Do we need to stall the pipeline (async)?
-  o_stall <= i_ex_mem_enable and (not s_dcache_write) and (not i_dcache_data_ready);
+  o_stall <= i_mem_enable and (not s_dcache_write) and (not i_dcache_data_ready);
 end rtl;
 
