@@ -81,19 +81,24 @@ architecture rtl of pipeline is
   signal s_ex_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_ex_writes_to_reg : std_logic;
 
+  signal s_ex_next_alu_result : std_logic_vector(C_WORD_SIZE-1 downto 0);  -- Async.
+  signal s_ex_next_result_ready : std_logic;  -- Async.
+
   -- From MEM.
   signal s_mem_stall : std_logic;
 
-  signal s_mem_data_w : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_mem_sel_w : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_mem_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_mem_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_mem_writes_to_reg : std_logic;
+
+  signal s_mem_next_data : std_logic_vector(C_WORD_SIZE-1 downto 0);  -- Async.
 
   -- Operand forwarding signals.
   signal s_value_ready_from_ex : std_logic;
 
-  signal s_id_fwd_value : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_id_fwd_use_value : std_logic;
-  signal s_id_fwd_value_ready : std_logic;
+  signal s_branch_fwd_value : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_branch_fwd_use_value : std_logic;
+  signal s_branch_fwd_value_ready : std_logic;
 
   signal s_reg_a_fwd_value : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_reg_a_fwd_use_value : std_logic;
@@ -156,13 +161,24 @@ begin
       i_bubble => s_if_bubble,
 
       -- Operand forwarding to the branch logic.
-      i_fwd_value => s_id_fwd_value,
-      i_fwd_use_value => s_id_fwd_use_value,
-      i_fwd_value_ready => s_id_fwd_value_ready,
+      i_branch_fwd_value => s_branch_fwd_value,
+      i_branch_fwd_use_value => s_branch_fwd_use_value,
+      i_branch_fwd_value_ready => s_branch_fwd_value_ready,
+
+      -- Operand forwarding to the source registers.
+      i_reg_a_fwd_value => s_reg_a_fwd_value,
+      i_reg_a_fwd_use_value => s_reg_a_fwd_use_value,
+      i_reg_a_fwd_value_ready => s_reg_a_fwd_value_ready,
+      i_reg_b_fwd_value => s_reg_b_fwd_value,
+      i_reg_b_fwd_use_value => s_reg_b_fwd_use_value,
+      i_reg_b_fwd_value_ready => s_reg_b_fwd_value_ready,
+      i_reg_c_fwd_value => s_reg_c_fwd_value,
+      i_reg_c_fwd_use_value => s_reg_c_fwd_use_value,
+      i_reg_c_fwd_value_ready => s_reg_c_fwd_value_ready,
 
       -- WB data from the MEM stage (sync).
-      i_wb_data_w => s_mem_data_w,
-      i_wb_sel_w => s_mem_sel_w,
+      i_wb_data_w => s_mem_data,
+      i_wb_sel_w => s_mem_dst_reg,
       i_wb_we => s_mem_writes_to_reg,
 
       -- Branch results to the IF stage (async).
@@ -205,7 +221,11 @@ begin
       o_alu_result => s_ex_alu_result,
       o_store_data => s_ex_store_data,
       o_dst_reg => s_ex_dst_reg,
-      o_writes_to_reg => s_ex_writes_to_reg
+      o_writes_to_reg => s_ex_writes_to_reg,
+
+      -- To operand forwarding (async).
+      o_next_alu_result => s_ex_next_alu_result,
+      o_next_result_ready => s_ex_next_result_ready
     );
 
   memory_0: entity work.memory
@@ -232,9 +252,12 @@ begin
       i_dcache_data_ready => i_dcache_data_ready,
 
       -- To WB stage (sync).
-      o_data => s_mem_data_w,
-      o_dst_reg => s_mem_sel_w,
-      o_writes_to_reg => s_mem_writes_to_reg
+      o_data => s_mem_data,
+      o_dst_reg => s_mem_dst_reg,
+      o_writes_to_reg => s_mem_writes_to_reg,
+
+      -- To operand forwarding (async).
+      o_next_data => s_mem_next_data
     );
 
 
@@ -262,36 +285,35 @@ begin
 
       -- From MEM (sync).
       i_mem_writes_to_reg => s_mem_writes_to_reg,
-      i_dst_reg_from_mem => s_mem_sel_w,
-      i_value_from_mem => s_mem_data_w,
+      i_dst_reg_from_mem => s_mem_dst_reg,
+      i_value_from_mem => s_mem_data,
 
       -- Operand forwarding to the ID stage.
-      o_value => s_id_fwd_value,
-      o_use_value => s_id_fwd_use_value,
-      o_value_ready => s_id_fwd_value_ready
+      o_value => s_branch_fwd_value,
+      o_use_value => s_branch_fwd_use_value,
+      o_value_ready => s_branch_fwd_value_ready
     );
 
   -- Forwarding logic for the A operand input to the EX stage (sync).
-  -- TODO(m): Implement me!
   forward_to_ex_A: entity work.forward_to_ex
     port map (
       i_src_reg => s_if_instr(18 downto 14),  -- Reg A, from IF (sync).
 
       -- From EX input (async).
-      i_ex_writes_to_reg => '0',
-      i_dst_reg_from_ex => (others => '0'),
-      i_value_from_ex => (others => '0'),
-      i_ready_from_ex => '0',
+      i_ex_writes_to_reg => s_id_writes_to_reg,
+      i_dst_reg_from_ex => s_id_dst_reg,
+      i_value_from_ex => s_ex_next_alu_result,
+      i_ready_from_ex => s_ex_next_result_ready,
 
       -- From MEM input (async).
-      i_mem_writes_to_reg => '0',
-      i_dst_reg_from_mem => (others => '0'),
-      i_value_from_mem => (others => '0'),
+      i_mem_writes_to_reg => s_ex_writes_to_reg,
+      i_dst_reg_from_mem => s_ex_dst_reg,
+      i_value_from_mem => s_mem_next_data,
 
       -- From WB input (async).
-      i_wb_writes_to_reg => '0',
-      i_dst_reg_from_wb => (others => '0'),
-      i_value_from_wb => (others => '0'),
+      i_wb_writes_to_reg => s_mem_writes_to_reg,
+      i_dst_reg_from_wb => s_mem_dst_reg,
+      i_value_from_wb => s_mem_data,
 
       -- Operand forwarding to the EX inputs in the ID stage.
       o_value => s_reg_a_fwd_value,
@@ -299,60 +321,58 @@ begin
       o_value_ready => s_reg_a_fwd_value_ready
     );
 
-  -- Forwarding logic for the A operand input to the EX stage (sync).
-  -- TODO(m): Implement me!
+  -- Forwarding logic for the B operand input to the EX stage (sync).
   forward_to_ex_B: entity work.forward_to_ex
     port map (
       i_src_reg => s_if_instr(13 downto 9),   -- Reg B, from IF (sync).
 
       -- From EX input (async).
-      i_ex_writes_to_reg => '0',
-      i_dst_reg_from_ex => (others => '0'),
-      i_value_from_ex => (others => '0'),
-      i_ready_from_ex => '0',
+      i_ex_writes_to_reg => s_id_writes_to_reg,
+      i_dst_reg_from_ex => s_id_dst_reg,
+      i_value_from_ex => s_ex_next_alu_result,
+      i_ready_from_ex => s_ex_next_result_ready,
 
       -- From MEM input (async).
-      i_mem_writes_to_reg => '0',
-      i_dst_reg_from_mem => (others => '0'),
-      i_value_from_mem => (others => '0'),
+      i_mem_writes_to_reg => s_ex_writes_to_reg,
+      i_dst_reg_from_mem => s_ex_dst_reg,
+      i_value_from_mem => s_mem_next_data,
 
       -- From WB input (async).
-      i_wb_writes_to_reg => '0',
-      i_dst_reg_from_wb => (others => '0'),
-      i_value_from_wb => (others => '0'),
+      i_wb_writes_to_reg => s_mem_writes_to_reg,
+      i_dst_reg_from_wb => s_mem_dst_reg,
+      i_value_from_wb => s_mem_data,
 
       -- Operand forwarding to the EX inputs in the ID stage.
-      o_value => s_reg_a_fwd_value,
-      o_use_value => s_reg_a_fwd_use_value,
-      o_value_ready => s_reg_a_fwd_value_ready
+      o_value => s_reg_b_fwd_value,
+      o_use_value => s_reg_b_fwd_use_value,
+      o_value_ready => s_reg_b_fwd_value_ready
     );
 
-  -- Forwarding logic for the A operand input to the EX stage (sync).
-  -- TODO(m): Implement me!
+  -- Forwarding logic for the C operand input to the EX stage (sync).
   forward_to_ex_C: entity work.forward_to_ex
     port map (
       i_src_reg => s_if_instr(23 downto 19),  -- Reg C, from IF (sync).
 
       -- From EX input (async).
-      i_ex_writes_to_reg => '0',
-      i_dst_reg_from_ex => (others => '0'),
-      i_value_from_ex => (others => '0'),
-      i_ready_from_ex => '0',
+      i_ex_writes_to_reg => s_id_writes_to_reg,
+      i_dst_reg_from_ex => s_id_dst_reg,
+      i_value_from_ex => s_ex_next_alu_result,
+      i_ready_from_ex => s_ex_next_result_ready,
 
       -- From MEM input (async).
-      i_mem_writes_to_reg => '0',
-      i_dst_reg_from_mem => (others => '0'),
-      i_value_from_mem => (others => '0'),
+      i_mem_writes_to_reg => s_ex_writes_to_reg,
+      i_dst_reg_from_mem => s_ex_dst_reg,
+      i_value_from_mem => s_mem_next_data,
 
       -- From WB input (async).
-      i_wb_writes_to_reg => '0',
-      i_dst_reg_from_wb => (others => '0'),
-      i_value_from_wb => (others => '0'),
+      i_wb_writes_to_reg => s_mem_writes_to_reg,
+      i_dst_reg_from_wb => s_mem_dst_reg,
+      i_value_from_wb => s_mem_data,
 
       -- Operand forwarding to the EX inputs in the ID stage.
-      o_value => s_reg_a_fwd_value,
-      o_use_value => s_reg_a_fwd_use_value,
-      o_value_ready => s_reg_a_fwd_value_ready
+      o_value => s_reg_c_fwd_value,
+      o_use_value => s_reg_c_fwd_use_value,
+      o_value_ready => s_reg_c_fwd_value_ready
     );
 
 

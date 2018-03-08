@@ -48,7 +48,11 @@ entity execute is
       o_alu_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_store_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-      o_writes_to_reg : out std_logic
+      o_writes_to_reg : out std_logic;
+
+      -- To operand forward logic (async).
+      o_next_alu_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_next_result_ready : out std_logic
     );
 end execute;
 
@@ -91,6 +95,10 @@ begin
       end if;
     end if;
   end process;
+
+  -- Output the generated result to operand forwarding logic (async).
+  o_next_alu_result <= s_alu_result;
+  o_next_result_ready <= not s_mem_enable;
 
   -- Do we need to stall the pipeline (async)?
   o_stall <= '0';  -- TODO(m): Implement me (operand forwarding & multi-cycle instructions)!

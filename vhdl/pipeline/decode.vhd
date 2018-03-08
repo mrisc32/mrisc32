@@ -41,9 +41,20 @@ entity decode is
       i_bubble : in std_logic;  -- 1 if IF could not provide a new instruction.
 
       -- Operand forwarding to the branch logic.
-      i_fwd_value : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_fwd_use_value : std_logic;
-      i_fwd_value_ready : std_logic;
+      i_branch_fwd_value : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_branch_fwd_use_value : std_logic;
+      i_branch_fwd_value_ready : std_logic;
+
+      -- Operand forwarding to EX input.
+      i_reg_a_fwd_value : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_reg_a_fwd_use_value : in std_logic;
+      i_reg_a_fwd_value_ready : in std_logic;
+      i_reg_b_fwd_value : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_reg_b_fwd_use_value : in std_logic;
+      i_reg_b_fwd_value_ready : in std_logic;
+      i_reg_c_fwd_value : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_reg_c_fwd_use_value : in std_logic;
+      i_reg_c_fwd_value_ready : in std_logic;
 
       -- WB data from the MEM stage (sync).
       i_wb_we : in std_logic;
@@ -198,8 +209,7 @@ begin
     );
 
   -- Get the register content for branch logic (condition or target address).
-  s_missing_fwd_operand <= s_is_branch and (i_fwd_use_value and not i_fwd_value_ready);
-  s_branch_reg_data <= i_fwd_value when i_fwd_use_value = '1' else s_reg_c_data;
+  s_branch_reg_data <= i_branch_fwd_value when i_branch_fwd_use_value = '1' else s_reg_c_data;
 
   -- Determine if a conditional (offset) branch is taken?
   branch_comparator_0: entity work.comparator
@@ -295,6 +305,9 @@ begin
       -- Map the high order opcode directly to the ALU.
       ("000" & s_op_high);
 
+  -- Are we missing any fwd operation that has not yet been produced by the pipeline?
+  -- TODO(m): Add logic for register forwarding too.
+  s_missing_fwd_operand <= s_is_branch and (i_branch_fwd_use_value and not i_branch_fwd_value_ready);
 
   -- Should we discard the operation?
   -- TODO(m): There are more things to consider (e.g. non-taken BL[cc] branches, ...).

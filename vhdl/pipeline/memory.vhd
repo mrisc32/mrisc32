@@ -54,14 +54,16 @@ entity memory is
       -- register files are interfaced).
       o_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-      o_writes_to_reg : out std_logic
+      o_writes_to_reg : out std_logic;
+
+      -- To operand forward logic (async).
+      o_next_data : out std_logic_vector(C_WORD_SIZE-1 downto 0)
     );
 end memory;
 
 architecture rtl of memory is
   signal s_dcache_write : std_logic;
-  signal s_wb_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_wb_we : std_logic;
+  signal s_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
 begin
   s_dcache_write <= i_mem_op(3);
 
@@ -73,7 +75,7 @@ begin
   o_dcache_data <= i_store_data;
 
   -- Prepare signals for the WB stage.
-  s_wb_data <= i_dcache_data when i_mem_enable = '1' else i_alu_result;
+  s_data <= i_dcache_data when i_mem_enable = '1' else i_alu_result;
 
   -- Outputs to the WB stage.
   process(i_clk, i_rst)
@@ -83,11 +85,14 @@ begin
       o_dst_reg <= (others => '0');
       o_writes_to_reg <= '0';
     elsif rising_edge(i_clk) then
-      o_data <= s_wb_data;
+      o_data <= s_data;
       o_dst_reg <= i_dst_reg;
       o_writes_to_reg <= i_writes_to_reg;
     end if;
   end process;
+
+  -- Output the generated result to operand forwarding logic (async).
+  o_next_data <= s_data;
 
   -- Do we need to stall the pipeline (async)?
   o_stall <= i_mem_enable and (not s_dcache_write) and (not i_dcache_data_ready);
