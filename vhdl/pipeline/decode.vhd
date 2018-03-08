@@ -116,22 +116,22 @@ architecture rtl of decode is
   signal s_vl_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
   -- Signals to the EX stage.
-  signal s_ex_alu_op : T_ALU_OP;
-  signal s_ex_src_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_ex_src_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_ex_src_c : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_ex_mem_op : T_MEM_OP;
-  signal s_ex_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-  signal s_ex_writes_to_reg : std_logic;
+  signal s_alu_op : T_ALU_OP;
+  signal s_src_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_src_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_src_c : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_mem_op : T_MEM_OP;
+  signal s_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_writes_to_reg : std_logic;
 
   -- Operand forwarding signals.
   signal s_missing_fwd_operand : std_logic;
 
   -- Signals for handling discarding of the current operation (i.e. bubble).
   signal s_discard_operation : std_logic;
-  signal s_ex_alu_op_masked : T_ALU_OP;
-  signal s_ex_mem_op_masked : T_MEM_OP;
-  signal s_ex_dst_reg_masked : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_alu_op_masked : T_ALU_OP;
+  signal s_mem_op_masked : T_MEM_OP;
+  signal s_dst_reg_masked : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
 begin
   -- Extract operation codes.
   s_op_high <= i_instr(29 downto 24);
@@ -244,12 +244,12 @@ begin
   s_mem_op_type(0) <= s_is_type_a when (s_op_low(8 downto 4) = "00000") else '0';
   s_mem_op_type(1) <= s_is_type_b when (s_op_high(5 downto 4) = "00") else '0';
   MemOpMux: with s_mem_op_type select
-    s_ex_mem_op <=
+    s_mem_op <=
         s_op_low(3 downto 0) when "01",    -- Addr = reg + reg
         s_op_high(3 downto 0) when "10",   -- Addr = reg + imm
         (others => '0') when others;
   s_is_mem_op <= s_mem_op_type(0) or s_mem_op_type(1);
-  s_is_mem_store <= s_is_mem_op and s_ex_mem_op(3);
+  s_is_mem_store <= s_is_mem_op and s_mem_op(3);
 
   -- Is this an immediate load?
   s_is_ldhi  <= '1' when s_op_high = "110110" else '0';
@@ -258,22 +258,22 @@ begin
 
   -- Select source data for the EX stage.
   -- Note: For linking branches we use the ALU to calculate PC + 4.
-  s_ex_src_a <= i_pc when s_is_link_branch = '1' else
-                s_reg_a_data when s_is_type_c = '0' else
-                s_imm;
-  s_ex_src_b <= X"00000004" when s_is_link_branch = '1' else
-                s_reg_b_data when s_is_type_a = '1' else
-                s_imm;
-  s_ex_src_c <= s_reg_c_data;
+  s_src_a <= i_pc when s_is_link_branch = '1' else
+             s_reg_a_data when s_is_type_c = '0' else
+             s_imm;
+  s_src_b <= X"00000004" when s_is_link_branch = '1' else
+             s_reg_b_data when s_is_type_a = '1' else
+             s_imm;
+  s_src_c <= s_reg_c_data;
 
   -- Select destination register.
   -- Note: For linking branches we set the target register to LR.
-  s_ex_dst_reg <= to_vector(C_LR_REG, C_LOG2_NUM_REGS) when s_is_taken_link_branch = '1' else
-                  s_reg_c when (s_is_mem_store or s_is_branch) = '0' else
-                  (others => '0');
+  s_dst_reg <= to_vector(C_LR_REG, C_LOG2_NUM_REGS) when s_is_taken_link_branch = '1' else
+               s_reg_c when (s_is_mem_store or s_is_branch) = '0' else
+               (others => '0');
 
   -- Select ALU operation.
-  s_ex_alu_op <=
+  s_alu_op <=
       -- Use the ALU to calculate the memory/return address.
       OP_ADD when (s_is_mem_op or s_is_taken_link_branch ) = '1' else
 
@@ -299,13 +299,13 @@ begin
   -- Should we discard the operation?
   -- TODO(m): There are more things to consider (e.g. non-taken BL[cc] branches, ...).
   s_discard_operation <= i_bubble or s_missing_fwd_operand;
-  s_ex_alu_op_masked <= s_ex_alu_op when s_discard_operation = '0' else (others => '0');
-  s_ex_mem_op_masked <= s_ex_mem_op when s_discard_operation = '0' else (others => '0');
-  s_ex_dst_reg_masked <= s_ex_dst_reg when s_discard_operation = '0' else (others => '0');
+  s_alu_op_masked <= s_alu_op when s_discard_operation = '0' else (others => '0');
+  s_mem_op_masked <= s_mem_op when s_discard_operation = '0' else (others => '0');
+  s_dst_reg_masked <= s_dst_reg when s_discard_operation = '0' else (others => '0');
 
   -- Will this instruction write to a register?
-  s_ex_writes_to_reg <= '1' when ((s_ex_dst_reg_masked /= to_vector(C_Z_REG, C_LOG2_NUM_REGS)) and
-                                  (s_ex_dst_reg_masked /= to_vector(C_PC_REG, C_LOG2_NUM_REGS))) else '0';
+  s_writes_to_reg <= '1' when ((s_dst_reg_masked /= to_vector(C_Z_REG, C_LOG2_NUM_REGS)) and
+                               (s_dst_reg_masked /= to_vector(C_PC_REG, C_LOG2_NUM_REGS))) else '0';
 
   -- Outputs to the EX stage.
   process(i_clk, i_rst)
@@ -320,13 +320,13 @@ begin
       o_writes_to_reg <= '0';
     elsif rising_edge(i_clk) then
       if i_stall = '0' then
-        o_alu_op <= s_ex_alu_op_masked;
-        o_src_a <= s_ex_src_a;
-        o_src_b <= s_ex_src_b;
-        o_src_c <= s_ex_src_c;
-        o_mem_op <= s_ex_mem_op_masked;
-        o_dst_reg <= s_ex_dst_reg_masked;
-        o_writes_to_reg <= s_ex_writes_to_reg;
+        o_alu_op <= s_alu_op_masked;
+        o_src_a <= s_src_a;
+        o_src_b <= s_src_b;
+        o_src_c <= s_src_c;
+        o_mem_op <= s_mem_op_masked;
+        o_dst_reg <= s_dst_reg_masked;
+        o_writes_to_reg <= s_writes_to_reg;
       end if;
     end if;
   end process;
