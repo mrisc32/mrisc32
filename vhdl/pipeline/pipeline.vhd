@@ -233,11 +233,10 @@ begin
   -- Did the EX stage produce a value that is ready to use?
   s_value_ready_from_ex <= not s_ex_mem_enable;
 
-  -- Forwarding logic for the ID stage.
-  forward_to_decode_0: entity work.forward_to_decode
+  -- Forwarding logic for the branching logic in the ID stage (async).
+  forward_to_branch_logic_0: entity work.forward_to_branch_logic
     port map (
       i_src_reg => s_if_instr(23 downto 19),      -- From IF (sync).
-      i_src_reg_needed => s_id_branch_is_branch,  -- From ID (async).
 
       -- From ID (sync).
       i_id_writes_to_reg => s_id_writes_to_reg,

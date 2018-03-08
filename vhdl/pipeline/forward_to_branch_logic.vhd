@@ -34,11 +34,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 use work.common.all;
 
-entity forward_to_decode is
+entity forward_to_branch_logic is
   port(
       -- What register is required in the ID stage (if any)?
       i_src_reg : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-      i_src_reg_needed : in std_logic;
 
       -- Operand information from the different pipeline stages.
       i_id_writes_to_reg : in std_logic;
@@ -58,9 +57,9 @@ entity forward_to_decode is
       o_use_value : out std_logic;
       o_value_ready : out std_logic
     );
-end forward_to_decode;
+end forward_to_branch_logic;
 
-architecture rtl of forward_to_decode is
+architecture rtl of forward_to_branch_logic is
   signal s_reg_from_id : std_logic;
   signal s_reg_from_ex : std_logic;
   signal s_reg_from_mem : std_logic;
