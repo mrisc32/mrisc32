@@ -49,21 +49,26 @@ Use the assembler to compile programs, and use the simulator to run them.
 
 # Hardware/HDL
 
-A [VHDL implementation](vhdl/) of a scalar in-order CPU is currently under (early) development. So far, the following components have been implemented:
+A [VHDL implementation](vhdl/) of a scalar in-order CPU is currently under development. The working name for the CPU is *MRISC32-A1*:
+
+![MRISC32-A1 pipleine](doc/mrisc32-a1-pipeline.png)
+
+So far, the following components have been implemented:
 
 * The integer ALU.
   - All single-cycle integer operations are supported.
 * The scalar register file.
   - There are three read ports and one write port.
-* A basic 5-stage pipeline, without data dependency handling (no operand forwarding or stalling logic).
-  - PC and branching logic (no branch prediction cache yet).
+* A basic 5-stage pipeline.
+  - PC and branching logic (no branch target buffer yet).
   - Instruction fetch.
   - Decode.
   - Execute.
   - Data read/write logic.
   - Register write-back.
+  - Operand forwarding (WIP).
 
-**TODO**: Operand forwarding, pipeline stall/bubble logic, caches, vector logic, vector register file, multiply and divide, FPU, etc.
+**TODO**: Caches, vector logic, vector register file, multiply and divide, FPU, etc.
 
 # Goals
 
