@@ -8,7 +8,7 @@ main:
 .loop:
   BEQ   S2,.dont_go_here
   BNE   Z,.dont_go_here
-  NOP
+  ADD   S5,S2,S2
   BL    .subroutine
   ADD   S3,S1,S2
   SUB   S4,S1,S2
@@ -20,8 +20,8 @@ main:
 
 .subroutine:
   LDI   S9,0x34543
-  NOP
-  NOP
-  NOP
+  ADD   S9,S9,5
+  ADD   S9,S9,-4
+  AND   S9,S9,0x00FF
   J     LR          ; Return from subroutine
 

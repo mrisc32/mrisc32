@@ -66,7 +66,7 @@ So far, the following components have been implemented:
   - Execute.
   - Data read/write logic.
   - Register write-back.
-  - Operand forwarding (WIP).
+  - Operand forwarding.
 
 **TODO**: Caches, vector logic, vector register file, multiply and divide, FPU, etc.
 

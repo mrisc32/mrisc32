@@ -72,7 +72,7 @@ begin
                       -- .loop:
         X"30100008",  --   BEQ   S2,.dont_go_here
         X"31000007",  --   BNE   Z,.dont_go_here
-        X"00000000",  --   NOP
+        X"00288415",  --   ADD   S5,S2,S2
         X"38000006",  --   BL    .subroutine
         X"00184415",  --   ADD   S3,S1,S2
         X"00208216",  --   SUB   S4,S1,S2
@@ -82,9 +82,9 @@ begin
         X"10080bad",  --   OR    S1,Z,0xBAD
                       -- .subroutine:
         X"3e4b4543",  --   LDI   S9,0x34543
-        X"00000000",  --   NOP
-        X"00000000",  --   NOP
-        X"00000000",  --   NOP
+        X"154a4005",  --   ADD   S9,S9,5
+        X"154a7ffc",  --   ADD   S9,S9,-4
+        X"124a40ff",  --   AND   S9,S9,0x00FF
         X"00f00080"   --   J     LR
       );
 

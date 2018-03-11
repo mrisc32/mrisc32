@@ -105,6 +105,7 @@ architecture rtl of decode is
   signal s_is_ldhi : std_logic;
   signal s_is_ldhio : std_logic;
   signal s_is_ldi : std_logic;
+  signal s_is_sel : std_logic;
 
   -- Branch condition signals.
   signal s_branch_cond_eq : std_logic;
@@ -125,6 +126,9 @@ architecture rtl of decode is
   signal s_reg_b_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_reg_c_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_vl_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_reg_a_required : std_logic;
+  signal s_reg_b_required : std_logic;
+  signal s_reg_c_required : std_logic;
 
   -- Signals to the EX stage.
   signal s_alu_op : T_ALU_OP;
@@ -136,6 +140,9 @@ architecture rtl of decode is
   signal s_writes_to_reg : std_logic;
 
   -- Operand forwarding signals.
+  signal s_reg_a_data_or_fwd : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_reg_b_data_or_fwd : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_reg_c_data_or_fwd : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_missing_fwd_operand : std_logic;
 
   -- Signals for handling discarding of the current operation (i.e. bubble).
@@ -266,15 +273,28 @@ begin
   s_is_ldhio <= '1' when s_op_high = "110111" else '0';
   s_is_ldi   <= '1' when s_op_high = "111110" else '0';
 
+  -- Is this a SEL operation (0x040)?
+  s_is_sel <= s_is_type_a when s_op_low = "001000000" else '0';
+
+  -- What source registers are required for this operation?
+  s_reg_a_required <= not s_is_type_c;
+  s_reg_b_required <= s_is_type_a;
+  s_reg_c_required <= s_is_mem_store or s_is_sel;
+
+  -- Select data from the register file or operand forwarding.
+  s_reg_a_data_or_fwd <= i_reg_a_fwd_value when i_reg_a_fwd_use_value = '1' else s_reg_a_data;
+  s_reg_b_data_or_fwd <= i_reg_b_fwd_value when i_reg_b_fwd_use_value = '1' else s_reg_b_data;
+  s_reg_c_data_or_fwd <= i_reg_c_fwd_value when i_reg_c_fwd_use_value = '1' else s_reg_c_data;
+
   -- Select source data for the EX stage.
   -- Note: For linking branches we use the ALU to calculate PC + 4.
   s_src_a <= i_pc when s_is_link_branch = '1' else
-             s_reg_a_data when s_is_type_c = '0' else
+             s_reg_a_data_or_fwd when s_is_type_c = '0' else
              s_imm;
   s_src_b <= X"00000004" when s_is_link_branch = '1' else
-             s_reg_b_data when s_is_type_a = '1' else
+             s_reg_b_data_or_fwd when s_is_type_a = '1' else
              s_imm;
-  s_src_c <= s_reg_c_data;
+  s_src_c <= s_reg_c_data_or_fwd;
 
   -- Select destination register.
   -- Note: For linking branches we set the target register to LR.
@@ -306,8 +326,11 @@ begin
       ("000" & s_op_high);
 
   -- Are we missing any fwd operation that has not yet been produced by the pipeline?
-  -- TODO(m): Add logic for register forwarding too.
-  s_missing_fwd_operand <= s_is_branch and (i_branch_fwd_use_value and not i_branch_fwd_value_ready);
+  s_missing_fwd_operand <=
+      (s_is_branch and (i_branch_fwd_use_value and not i_branch_fwd_value_ready)) or
+      (s_reg_a_required and (i_reg_a_fwd_use_value and not i_reg_a_fwd_value_ready)) or
+      (s_reg_b_required and (i_reg_b_fwd_use_value and not i_reg_b_fwd_value_ready)) or
+      (s_reg_c_required and (i_reg_c_fwd_use_value and not i_reg_c_fwd_value_ready));
 
   -- Should we discard the operation?
   -- TODO(m): There are more things to consider (e.g. non-taken BL[cc] branches, ...).
