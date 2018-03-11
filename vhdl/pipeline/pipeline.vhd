@@ -32,19 +32,19 @@ entity pipeline is
       i_rst : in std_logic;
 
       -- ICache interface.
-      o_icache_read : out std_logic;
+      o_icache_req : out std_logic;
       o_icache_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_icache_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_icache_data_ready : in std_logic;
 
       -- DCache interface.
-      o_dcache_enable : out std_logic;  -- 1 = enable, 0 = nop
-      o_dcache_write : out std_logic;   -- 1 = write, 0 = read
+      o_dcache_req : out std_logic;  -- 1 = request, 0 = nop
+      o_dcache_we : out std_logic;   -- 1 = write, 0 = read
       o_dcache_size : out std_logic_vector(1 downto 0);
       o_dcache_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_dcache_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_dcache_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_dcache_data_ready : in std_logic
+      o_dcache_write_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_dcache_read_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_dcache_read_data_ready : in std_logic
     );
 end pipeline;
 
@@ -136,7 +136,7 @@ begin
       i_branch_is_taken => s_id_branch_is_taken,
 
       -- ICache interface.
-      o_icache_read => o_icache_read,
+      o_icache_req => o_icache_req,
       o_icache_addr => o_icache_addr,
       i_icache_data => i_icache_data,
       i_icache_data_ready => i_icache_data_ready,
@@ -243,13 +243,13 @@ begin
       i_writes_to_reg => s_ex_writes_to_reg,
 
       -- DCache interface.
-      o_dcache_enable => o_dcache_enable,
-      o_dcache_write => o_dcache_write,
+      o_dcache_req => o_dcache_req,
+      o_dcache_we => o_dcache_we,
       o_dcache_size => o_dcache_size,
       o_dcache_addr => o_dcache_addr,
-      o_dcache_data => o_dcache_data,
-      i_dcache_data => i_dcache_data,
-      i_dcache_data_ready => i_dcache_data_ready,
+      o_dcache_write_data => o_dcache_write_data,
+      i_dcache_read_data => i_dcache_read_data,
+      i_dcache_read_data_ready => i_dcache_read_data_ready,
 
       -- To WB stage (sync).
       o_data => s_mem_data,

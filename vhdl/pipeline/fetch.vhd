@@ -53,7 +53,7 @@ entity fetch is
       i_branch_is_taken : in std_logic;
 
       -- ICache interface.
-      o_icache_read : out std_logic;
+      o_icache_req : out std_logic;
       o_icache_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_icache_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_icache_data_ready : in std_logic;
@@ -91,7 +91,7 @@ architecture rtl of fetch is
   signal s_stall : std_logic;
 begin
   -- Instruction fetch from the ICache.
-  o_icache_read <= '1';  -- We always read from the cache.
+  o_icache_req <= '1';  -- We always read from the cache.
   o_icache_addr <= s_pc;
 
   -- Branch target cache.

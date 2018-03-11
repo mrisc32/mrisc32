@@ -41,13 +41,13 @@ entity memory is
       i_writes_to_reg : in std_logic;
 
       -- DCache interface.
-      o_dcache_enable : out std_logic;  -- 1 = enable, 0 = nop
-      o_dcache_write : out std_logic;   -- 1 = write, 0 = read
+      o_dcache_req : out std_logic;  -- 1 = request, 0 = nop
+      o_dcache_we : out std_logic;   -- 1 = write, 0 = read
       o_dcache_size : out std_logic_vector(1 downto 0);
       o_dcache_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_dcache_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_dcache_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_dcache_data_ready : in std_logic;
+      o_dcache_write_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_dcache_read_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_dcache_read_data_ready : in std_logic;
 
       -- To WB stage (sync).
       -- NOTE: The WB stage is actually implemented in decode (where the
@@ -62,20 +62,20 @@ entity memory is
 end memory;
 
 architecture rtl of memory is
-  signal s_dcache_write : std_logic;
+  signal s_dcache_we : std_logic;
   signal s_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
 begin
-  s_dcache_write <= i_mem_op(3);
+  s_dcache_we <= i_mem_op(3);
 
   -- Outputs to the data cache.
-  o_dcache_enable <= i_mem_enable;
-  o_dcache_write <= s_dcache_write;
+  o_dcache_req <= i_mem_enable;
+  o_dcache_we <= s_dcache_we;
   o_dcache_size <= i_mem_op(1 downto 0);
   o_dcache_addr <= i_alu_result;
-  o_dcache_data <= i_store_data;
+  o_dcache_write_data <= i_store_data;
 
   -- Prepare signals for the WB stage.
-  s_data <= i_dcache_data when i_mem_enable = '1' else i_alu_result;
+  s_data <= i_dcache_read_data when i_mem_enable = '1' else i_alu_result;
 
   -- Outputs to the WB stage.
   process(i_clk, i_rst)
@@ -95,6 +95,6 @@ begin
   o_next_data <= s_data;
 
   -- Do we need to stall the pipeline (async)?
-  o_stall <= i_mem_enable and (not s_dcache_write) and (not i_dcache_data_ready);
+  o_stall <= i_mem_enable and (not s_dcache_we) and (not i_dcache_read_data_ready);
 end rtl;
 

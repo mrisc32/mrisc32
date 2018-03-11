@@ -30,18 +30,19 @@ architecture behavioral of pipeline_tb is
   signal s_rst : std_logic;
 
   -- ICache interface.
-  signal s_icache_read : std_logic;
+  signal s_icache_req : std_logic;
   signal s_icache_addr : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_icache_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_icache_data_ready : std_logic;
 
   -- DCache interface.
-  signal s_dcache_enable : std_logic;
-  signal s_dcache_write : std_logic;
+  signal s_dcache_req : std_logic;
+  signal s_dcache_we : std_logic;
   signal s_dcache_size : std_logic_vector(1 downto 0);
   signal s_dcache_addr : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_dcache_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_dcache_data_ready : std_logic;
+  signal s_dcache_write_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_dcache_read_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_dcache_read_data_ready : std_logic;
 begin
   pipeline_0: entity work.pipeline
     port map (
@@ -49,18 +50,19 @@ begin
       i_rst => s_rst,
 
       -- ICache interface.
-      o_icache_read => s_icache_read,
+      o_icache_req => s_icache_req,
       o_icache_addr => s_icache_addr,
       i_icache_data => s_icache_data,
       i_icache_data_ready => s_icache_data_ready,
 
       -- DCache interface.
-      o_dcache_enable => s_dcache_enable,
-      o_dcache_write => s_dcache_write,
+      o_dcache_req => s_dcache_req,
+      o_dcache_we => s_dcache_we,
       o_dcache_size => s_dcache_size,
       o_dcache_addr => s_dcache_addr,
-      i_dcache_data => s_dcache_data,
-      i_dcache_data_ready => s_dcache_data_ready
+      o_dcache_write_data => s_dcache_write_data,
+      i_dcache_read_data => s_dcache_read_data,
+      i_dcache_read_data_ready => s_dcache_read_data_ready
     );
 
   process
@@ -104,6 +106,11 @@ begin
     s_rst <= '0';
     s_clk <= '0';
     wait for 1 ns;
+
+    -- Reset the data cache signals.
+    -- TODO(m): Simulate the data memory instead.
+    s_dcache_read_data <= (others => '0');
+    s_dcache_read_data_ready <= '1';
 
     -- Run the program.
     for i in 0 to C_TEST_CYCLES-1 loop
