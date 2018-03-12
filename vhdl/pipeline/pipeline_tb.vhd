@@ -68,18 +68,23 @@ begin
     );
 
   process
+    -- We have a memory array that represents 64KB or RAM (for program and data).
     constant C_MEM_NUM_WORDS : integer := 2**14;
     type T_MEM_ARRAY is array (0 to C_MEM_NUM_WORDS-1) of std_logic_vector(C_WORD_SIZE-1 downto 0);
     variable v_mem_array : T_MEM_ARRAY;
 
+    -- File I/O.
     type T_CHAR_FILE is file of character;
     file f_char_file : T_CHAR_FILE;
 
-    constant C_TEST_CYCLES : integer := 40;
-
+    -- Variables for the memory interface.
     variable v_mem_idx : integer;
     variable v_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
+    -- How many CPU cycles should we simulate?
+    constant C_TEST_CYCLES : integer := 100;
+
+    -- Helper function for reading one word from a binary file.
     function read_word(file f : T_CHAR_FILE) return std_logic_vector is
       variable v_char : character;
       variable v_byte : std_logic_vector(7 downto 0);
@@ -92,6 +97,18 @@ begin
       end loop;
       return v_word;
     end function;
+
+    -- Helper function for writing one word to a binary file.
+    procedure write_word(file f : T_CHAR_FILE; word : std_logic_vector(C_WORD_SIZE-1 downto 0)) is
+      variable v_char : character;
+      variable v_byte : std_logic_vector(7 downto 0);
+    begin
+      for i in 0 to (C_WORD_SIZE/8)-1 loop
+        v_byte := word(((i+1)*8)-1 downto i*8);
+        v_char := character'val(to_integer(unsigned(v_byte)));
+        write(f, v_char);
+      end loop;
+    end procedure;
   begin
     -- Clear the memory with zeros.
     for i in 0 to C_MEM_NUM_WORDS-1 loop
@@ -120,7 +137,6 @@ begin
     wait for 1 ns;
 
     -- Reset the data cache signals.
-    -- TODO(m): Simulate the data memory instead.
     s_dcache_read_data <= (others => '0');
     s_dcache_read_data_ready <= '1';
 
@@ -167,9 +183,15 @@ begin
       wait for 1 ns;
     end loop;
 
+    -- Dump the memory to the binary file /tmp/mrisc32_pipeline_tb_ram.bin.
+    file_open(f_char_file, "/tmp/mrisc32_pipeline_tb_ram.bin", WRITE_MODE);
+    for i in 0 to C_MEM_NUM_WORDS-1 loop
+      write_word(f_char_file, v_mem_array(i));
+    end loop;
+    file_close(f_char_file);
+
     --  Wait forever; this will finish the simulation.
     assert false report "End of test" severity note;
     wait;
   end process;
 end behavioral;
-
