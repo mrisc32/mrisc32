@@ -19,8 +19,11 @@
 
 GHDL = ghdl
 GHDLFLAGS = --std=93 --work=work
+ASM = ../asm/asm.py
 
 .PHONY: all clean
+
+default: all
 
 SRCS =
 TESTS =

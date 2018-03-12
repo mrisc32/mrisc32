@@ -20,6 +20,8 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+library std;
+use std.textio.all;
 use work.common.all;
 
 entity pipeline_tb is
@@ -66,7 +68,12 @@ begin
     );
 
   process
-    -- Program to run (from pipeline_tb_prg.s).
+    type T_CHAR_FILE is file of character;
+    subtype T_BYTE is natural range 0 to 255;
+    file f_char_file : T_CHAR_FILE;
+    variable v_char : character;
+    variable v_byte : T_BYTE;
+
     type T_INSTRUCTION_ARRAY is array (natural range <>) of std_logic_vector(31 downto 0);
     constant C_PROGRAM_MEM : T_INSTRUCTION_ARRAY := (
         X"3e081234",  --   LDI   S1,0x1234
@@ -94,7 +101,17 @@ begin
 
     variable v_prg_idx : integer;
     variable v_instr : std_logic_vector(C_WORD_SIZE-1 downto 0);
+
   begin
+    -- Read the program to run from the binary file pipeline_tb_prg.bin.
+    file_open(f_char_file, "pipeline/pipeline_tb_prg.bin");
+    while not endfile(f_char_file) loop
+      read(f_char_file, v_char);
+      v_byte := character'pos(v_char);
+      -- report "Char: " & " #" & integer'image(v_byte);
+    end loop;
+    file_close(f_char_file);
+
     -- Start by resetting the pipeline (to have defined signals).
     s_rst <= '1';
     s_clk <= '1';

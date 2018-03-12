@@ -41,3 +41,8 @@ TESTS += \
     regs_scalar_tb \
     pipeline_tb
 
+$(PIPELINE_PATH)/pipeline_tb_prg.bin: $(PIPELINE_PATH)/pipeline_tb_prg.s
+	$(ASM) $<
+
+pipeline_tb: $(PIPELINE_PATH)/pipeline_tb_prg.bin
+
