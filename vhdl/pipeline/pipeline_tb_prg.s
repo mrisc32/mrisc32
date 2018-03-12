@@ -1,6 +1,6 @@
 ; Test program for pipeline_tb.vhd
 ;
-; Compile using asm.py -vv, and copy the instructions (in hex) to the testbench.
+; This program is compiled using asm.py, and loaded into the testbench.
 
 main:
   LDI   S1,0x1234

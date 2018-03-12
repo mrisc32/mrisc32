@@ -69,46 +69,38 @@ begin
 
   process
     type T_CHAR_FILE is file of character;
-    subtype T_BYTE is natural range 0 to 255;
     file f_char_file : T_CHAR_FILE;
-    variable v_char : character;
-    variable v_byte : T_BYTE;
+    variable v_word : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
-    type T_INSTRUCTION_ARRAY is array (natural range <>) of std_logic_vector(31 downto 0);
-    constant C_PROGRAM_MEM : T_INSTRUCTION_ARRAY := (
-        X"3e081234",  --   LDI   S1,0x1234
-        X"3e101111",  --   LDI   S2,0x1111
-                      -- .loop:
-        X"30100008",  --   BEQ   S2,.dont_go_here
-        X"31000007",  --   BNE   Z,.dont_go_here
-        X"00288415",  --   ADD   S5,S2,S2
-        X"38000006",  --   BL    .subroutine
-        X"00184415",  --   ADD   S3,S1,S2
-        X"00208216",  --   SUB   S4,S1,S2
-        X"15084001",  --   ADD   S1,S1,1
-        X"3007fff9",  --   B     .loop
-                      -- .dont_go_here:
-        X"10080bad",  --   OR    S1,Z,0xBAD
-                      -- .subroutine:
-        X"3e4b4543",  --   LDI   S9,0x34543
-        X"154a4005",  --   ADD   S9,S9,5
-        X"154a7ffc",  --   ADD   S9,S9,-4
-        X"124a40ff",  --   AND   S9,S9,0x00FF
-        X"00f00080"   --   J     LR
-      );
+    type T_INSTRUCTION_ARRAY is array (0 to 10000) of std_logic_vector(31 downto 0);
+    variable v_program_mem : T_INSTRUCTION_ARRAY;
+    variable v_program_len : integer;
 
     constant C_TEST_CYCLES : integer := 40;
 
     variable v_prg_idx : integer;
     variable v_instr : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
+    function read_word32(file f : T_CHAR_FILE) return std_logic_vector is
+      variable v_char : character;
+      variable v_byte : std_logic_vector(7 downto 0);
+      variable v_word : std_logic_vector(C_WORD_SIZE-1 downto 0);
+    begin
+      for i in 0 to (C_WORD_SIZE/8)-1 loop
+        read(f, v_char);
+        v_byte := std_logic_vector(to_unsigned(character'pos(v_char), 8));
+        v_word(((i+1)*8)-1 downto i*8) := v_byte;
+      end loop;
+      return v_word;
+    end function;
   begin
     -- Read the program to run from the binary file pipeline_tb_prg.bin.
     file_open(f_char_file, "pipeline/pipeline_tb_prg.bin");
+    v_word := read_word32(f_char_file);  -- Skip first word (program start addr).
+    v_program_len := 0;
     while not endfile(f_char_file) loop
-      read(f_char_file, v_char);
-      v_byte := character'pos(v_char);
-      -- report "Char: " & " #" & integer'image(v_byte);
+      v_program_mem(v_program_len) := read_word32(f_char_file);
+      v_program_len := v_program_len + 1;
     end loop;
     file_close(f_char_file);
 
@@ -137,8 +129,8 @@ begin
 
       -- Convert the PC address to a program array index.
       v_prg_idx := (to_integer(unsigned(s_icache_addr)) - 512) / 4;
-      if (v_prg_idx >= C_PROGRAM_MEM'left) and (v_prg_idx <= C_PROGRAM_MEM'right) then
-        v_instr := C_PROGRAM_MEM(v_prg_idx);
+      if (v_prg_idx >= 0) and (v_prg_idx < v_program_len) then
+        v_instr := v_program_mem(v_prg_idx);
       else
         v_instr := X"00000000";  -- NOP
       end if;
