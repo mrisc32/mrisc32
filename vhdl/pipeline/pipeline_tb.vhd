@@ -68,20 +68,19 @@ begin
     );
 
   process
+    constant C_MEM_NUM_WORDS : integer := 2**14;
+    type T_MEM_ARRAY is array (0 to C_MEM_NUM_WORDS-1) of std_logic_vector(C_WORD_SIZE-1 downto 0);
+    variable v_mem_array : T_MEM_ARRAY;
+
     type T_CHAR_FILE is file of character;
     file f_char_file : T_CHAR_FILE;
-    variable v_word : std_logic_vector(C_WORD_SIZE-1 downto 0);
-
-    type T_INSTRUCTION_ARRAY is array (0 to 10000) of std_logic_vector(31 downto 0);
-    variable v_program_mem : T_INSTRUCTION_ARRAY;
-    variable v_program_len : integer;
 
     constant C_TEST_CYCLES : integer := 40;
 
-    variable v_prg_idx : integer;
-    variable v_instr : std_logic_vector(C_WORD_SIZE-1 downto 0);
+    variable v_mem_idx : integer;
+    variable v_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
-    function read_word32(file f : T_CHAR_FILE) return std_logic_vector is
+    function read_word(file f : T_CHAR_FILE) return std_logic_vector is
       variable v_char : character;
       variable v_byte : std_logic_vector(7 downto 0);
       variable v_word : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -94,13 +93,17 @@ begin
       return v_word;
     end function;
   begin
+    -- Clear the memory with zeros.
+    for i in 0 to C_MEM_NUM_WORDS-1 loop
+      v_mem_array(i) := to_word(0);
+    end loop;
+
     -- Read the program to run from the binary file pipeline_tb_prg.bin.
     file_open(f_char_file, "pipeline/pipeline_tb_prg.bin");
-    v_word := read_word32(f_char_file);  -- Skip first word (program start addr).
-    v_program_len := 0;
+    v_mem_idx := to_integer(unsigned(read_word(f_char_file)))/4;  -- Fist word = program start.
     while not endfile(f_char_file) loop
-      v_program_mem(v_program_len) := read_word32(f_char_file);
-      v_program_len := v_program_len + 1;
+      v_mem_array(v_mem_idx) := read_word(f_char_file);
+      v_mem_idx := v_mem_idx + 1;
     end loop;
     file_close(f_char_file);
 
@@ -125,19 +128,38 @@ begin
     for i in 0 to C_TEST_CYCLES-1 loop
       -- Positive clock flank -> we should get a PC address on the ICache interface.
       s_clk <= '1';
-      wait for 0.5 ns;
+      wait for 0.25 ns;
 
-      -- Convert the PC address to a program array index.
-      v_prg_idx := (to_integer(unsigned(s_icache_addr)) - 512) / 4;
-      if (v_prg_idx >= 0) and (v_prg_idx < v_program_len) then
-        v_instr := v_program_mem(v_prg_idx);
+      -- Load an instruction from the memory (simulate ICache).
+      v_mem_idx := to_integer(unsigned(s_icache_addr)) / 4;
+      if (v_mem_idx >= 0) and (v_mem_idx < C_MEM_NUM_WORDS) then
+        v_data := v_mem_array(v_mem_idx);
       else
-        v_instr := X"00000000";  -- NOP
+        v_data := X"00000000";  -- NOP
       end if;
-
-      -- Load an instruction from the program memory.
-      s_icache_data <= v_instr;
+      s_icache_data <= v_data;
       s_icache_data_ready <= '1';
+
+      wait for 0.25 ns;
+
+      -- Read/write data to/from the memory (simulate DCache).
+      if s_dcache_req = '1' then
+        assert s_dcache_size = "11" report "Unsupported DCache data size (only word access is supported)";
+        v_mem_idx := to_integer(unsigned(s_dcache_addr)) / 4;
+        if s_dcache_we = '1' then
+          if (v_mem_idx >= 0) and (v_mem_idx < C_MEM_NUM_WORDS) then
+            v_mem_array(v_mem_idx) := s_dcache_write_data;
+          end if;
+        else
+          if (v_mem_idx >= 0) and (v_mem_idx < C_MEM_NUM_WORDS) then
+            v_data := v_mem_array(v_mem_idx);
+          else
+            v_data := X"00000000";
+          end if;
+          s_dcache_read_data <= v_data;
+          s_dcache_read_data_ready <= '1';
+        end if;
+      end if;
 
       -- Tick the clock.
       wait for 0.5 ns;
