@@ -24,7 +24,8 @@ use ieee.numeric_std.all;
 ----------------------------------------------------------------------------------------------------
 -- This is a configurable synchronous dual port RAM (one read port and one write port).
 --
--- Altera/Intel: Synthesizes to megafunction altsyncram.
+-- Altera/Intel: Synthesizes to dedicated RAM blocks.
+-- Xilinx:       Should synthesize to block RAM (untested).
 ----------------------------------------------------------------------------------------------------
 
 entity ram_dual_port is
@@ -52,8 +53,8 @@ begin
     variable v_write_addr : integer range 0 to C_NUM_WORDS-1;
     variable v_read_addr : integer range 0 to C_NUM_WORDS-1;
   begin
-    if (i_clk'event and i_clk = '1') then
-      if (i_we = '1') then
+    if rising_edge(i_clk) then
+      if i_we = '1' then
         v_write_addr := to_integer(unsigned(i_write_addr));
         ram_block(v_write_addr) <= i_write_data;
       end if;
