@@ -89,7 +89,7 @@ begin
         o_mem_op <= i_mem_op;
         o_mem_enable <= s_mem_enable;
         o_alu_result <= s_alu_result;
-        o_store_data <= i_src_a;
+        o_store_data <= i_src_c;
         o_dst_reg <= i_dst_reg;
         o_writes_to_reg <= i_writes_to_reg;
       end if;
