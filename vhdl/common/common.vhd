@@ -140,6 +140,7 @@ package common is
   function to_word(x: integer) return std_logic_vector;
   function to_std_logic(x: boolean) return std_logic;
   function to_string(x: std_logic_vector) return string;
+  function to_string(x: std_logic) return string;
 
 end package;
 
@@ -172,6 +173,11 @@ package body common is
       v_stri := v_stri+1;
     end loop;
     return v_b;
+  end function;
+
+  function to_string(x: std_logic) return string is
+  begin
+    return std_logic'image(x);
   end function;
 
 end package body;

@@ -17,33 +17,13 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ####################################################################################################
 
-GHDL = ghdl
-GHDLFLAGS = --std=93 --work=work
-ASM = ../asm/asm.py
+MULDIV_PATH = muldiv
 
-.PHONY: all clean
+SRCS += \
+    $(MULDIV_PATH)/mulu.vhd \
+    $(MULDIV_PATH)/mulu_tb.vhd
 
-default: all
 
-SRCS =
-TESTS =
-
-include common/Makefile
-include alu/Makefile
-include muldiv/Makefile
-include cache/Makefile
-include pipeline/Makefile
-
-all: $(TESTS)
-
-$(TESTS): work-obj93.cf $(SRCS)
-	$(GHDL) -m $(GHDLFLAGS) $@
-	$(GHDL) -r $(GHDLFLAGS) $@
-
-clean:
-	$(GHDL) --clean
-	rm -rf *.o *.cf *_tb *.vcd
-
-work-obj93.cf: $(SRCS)
-	$(GHDL) -i $(GHDLFLAGS) $(SRCS)
+TESTS += \
+    mulu_tb
 
