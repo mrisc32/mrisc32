@@ -39,6 +39,12 @@ main:
   bl     .test_failed
 .test6_passed:
 
+  bl     test_7
+  or     s16, s16, s1
+  beq    s1, .test7_passed
+  bl     .test_failed
+.test7_passed:
+
   ; exit(s16)
   mov    s1, s16
   b      _exit
@@ -308,6 +314,27 @@ test_6:
 
 .vector_length_text:
   .asciz "Max vector length: "
+
+
+; ----------------------------------------------------------------------------
+; Software multiply.
+
+test_7:
+  add    sp, sp, -4
+  stw    lr, sp, 0
+
+  ldi    s1, 123
+  ldi    s2, 456
+  bl     _mul32
+  ; mul    s1, s1, s2
+  bl     _printhex
+  ldi    s1, 10
+  bl     _putc
+
+  ldw    lr, sp, 0
+  add    sp, sp, 4
+  ldi    s1, 0
+  j      lr
 
 
 ; ----------------------------------------------------------------------------

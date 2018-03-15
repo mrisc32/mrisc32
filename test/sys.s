@@ -83,3 +83,22 @@ _printhex:
 .hex_chars:
   .ascii "0123456789abcdef"
 
+
+; -----------------------------------------------------------------------------
+; unsigned mul32(unsigned a, unsigned b)
+; -----------------------------------------------------------------------------
+_mul32:
+  ; TODO(m): This is broken!
+  and    s4, s2, 1
+  ldi    s3, 0
+.loop:
+  beq    s4, .no_add
+  add    s3, s3, s1
+.no_add:
+  lsr    s2, s2, 1
+  and    s4, s2, 1
+  bne    s2, .loop
+
+  or     s1, s3, z    ; s1 = result
+  j      lr
+
