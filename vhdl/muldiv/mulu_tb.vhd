@@ -27,10 +27,10 @@ end mulu_tb;
 architecture behavioral of mulu_tb is
   signal s_clk : std_logic;
   signal s_rst : std_logic;
+  signal s_stall_requested : std_logic;
   signal s_src_a : std_logic_vector(3 downto 0);
   signal s_src_b : std_logic_vector(3 downto 0);
   signal s_start_op : std_logic;
-  signal s_stall : std_logic;
   signal s_result : std_logic_vector(7 downto 0);
   signal s_result_ready : std_logic;
 begin
@@ -41,10 +41,11 @@ begin
     port map (
       i_clk => s_clk,
       i_rst => s_rst,
+      i_stall => '0',  -- TODO(m): Test this too!
+      o_stall => s_stall_requested,
       i_src_a => s_src_a,
       i_src_b => s_src_b,
       i_start_op => s_start_op,
-      o_stall => s_stall,
       o_result => s_result,
       o_result_ready => s_result_ready
     );
@@ -59,7 +60,7 @@ begin
 
       -- Expected outputs
       result : std_logic_vector(7 downto 0);
-      stall : std_logic;
+      stall_requested : std_logic;
       result_ready : std_logic;
     end record;
     type pattern_array is array (natural range <>) of pattern_type;
@@ -127,9 +128,9 @@ begin
             "  b=" & to_string(s_src_b) & lf &
             "  r=" & to_string(s_result) & " (expected " & to_string(patterns(i).result) & ")"
             severity error;
-      assert s_stall = patterns(i).stall
+      assert s_stall_requested = patterns(i).stall_requested
         report "Bad stall signal (" & integer'image(i) & "):" & lf &
-            "  r=" & to_string(s_stall) & " (expected " & to_string(patterns(i).stall) & ")"
+            "  r=" & to_string(s_stall_requested) & " (expected " & to_string(patterns(i).stall_requested) & ")"
             severity error;
       assert s_result_ready = patterns(i).result_ready
         report "Bad result ready signal (" & integer'image(i) & "):" & lf &

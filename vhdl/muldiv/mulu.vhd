@@ -49,6 +49,7 @@ entity mulu is
     -- Control signals.
     i_clk : in std_logic;
     i_rst : in std_logic;
+    i_stall : in std_logic;
     o_stall : out std_logic;
 
     -- Inputs.
@@ -135,10 +136,12 @@ begin
       s_shifted_a <= (others => '0');
       s_shifted_b <= (others => '0');
     elsif rising_edge(i_clk) then
-      s_continue <= s_next_continue;
-      s_prev_result <= s_result;
-      s_shifted_a <= s_next_shifted_a;
-      s_shifted_b <= s_next_shifted_b;
+      if i_stall = '0' then
+        s_continue <= s_next_continue;
+        s_prev_result <= s_result;
+        s_shifted_a <= s_next_shifted_a;
+        s_shifted_b <= s_next_shifted_b;
+      end if;
     end if;
   end process;
 end rtl;
