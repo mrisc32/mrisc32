@@ -124,6 +124,12 @@ begin
     end loop;
     file_close(f_char_file);
 
+    -- Reset the cache signals.
+    s_dcache_read_data <= (others => '0');
+    s_dcache_read_data_ready <= '0';
+    s_icache_data <= (others => '0');
+    s_icache_data_ready <= '0';
+
     -- Start by resetting the pipeline (to have defined signals).
     s_rst <= '1';
     s_clk <= '1';
@@ -135,10 +141,6 @@ begin
     s_rst <= '0';
     s_clk <= '0';
     wait for 1 ns;
-
-    -- Reset the data cache signals.
-    s_dcache_read_data <= (others => '0');
-    s_dcache_read_data_ready <= '1';
 
     -- Run the program.
     for i in 0 to C_TEST_CYCLES-1 loop

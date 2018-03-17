@@ -18,7 +18,14 @@
 ####################################################################################################
 
 GHDL = ghdl
-GHDLFLAGS = --std=93 --work=work
+GHDLWARNINGS = \
+    --warn-reserved \
+    --warn-default-binding \
+    --warn-binding \
+    --warn-library \
+    --warn-specs \
+    --warn-unused
+GHDLFLAGS = --std=93 --work=work $(GHDLWARNINGS)
 ASM = ../asm/asm.py
 
 .PHONY: all clean
