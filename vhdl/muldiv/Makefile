@@ -21,7 +21,8 @@ MULDIV_PATH = muldiv
 
 SRCS += \
     $(MULDIV_PATH)/mulu.vhd \
-    $(MULDIV_PATH)/mulu_tb.vhd
+    $(MULDIV_PATH)/mulu_tb.vhd \
+    $(MULDIV_PATH)/muldiv.vhd
 
 
 TESTS += \

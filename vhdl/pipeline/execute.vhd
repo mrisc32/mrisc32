@@ -62,15 +62,14 @@ end execute;
 
 architecture rtl of execute is
   signal s_alu_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_muldiv_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
-  signal s_stall_for_mulu : std_logic;
-  signal s_mulu_result : std_logic_vector(C_WORD_SIZE*2-1 downto 0);
-  signal s_mulu_result_ready : std_logic;
+  signal s_muldiv_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_muldiv_result_ready : std_logic;
+  signal s_stall_for_muldiv : std_logic;
 
   -- Multicycle operation handling.
   signal s_start_multicycle_op : std_logic;
-  signal s_start_mulu_op : std_logic;
+  signal s_start_muldiv_op : std_logic;
   signal s_stall_for_multicycle_op : std_logic;
   signal s_multicycle_op_finished : std_logic;
   signal s_prev_stall_for_multicycle_op : std_logic;
@@ -93,35 +92,25 @@ begin
     );
 
   -- Instantiate a multiply unit.
-  -- TODO(m): Support more operations. Right now we just have a mulu entity.
-  mulu_1: entity work.mulu
-    generic map (
-      WIDTH => 32
-    )
+  muldiv_1: entity work.muldiv
     port map (
       i_clk => i_clk,
       i_rst => i_rst,
       i_stall => i_stall,
-      o_stall => s_stall_for_mulu,
+      o_stall => s_stall_for_muldiv,
+      i_op => i_muldiv_op,
       i_src_a => i_src_a,
       i_src_b => i_src_b,
-      i_start_op => s_start_mulu_op,
-      o_result => s_mulu_result,
-      o_result_ready => s_mulu_result_ready
+      i_start_op => s_start_muldiv_op,
+      o_result => s_muldiv_result,
+      o_result_ready => s_muldiv_result_ready
     );
-
-  MuldivMux: with i_muldiv_op select
-    s_muldiv_result <=
-      -- TODO(m): Move this into a dedicated muldiv entity and support more ops.
-      s_mulu_result(C_WORD_SIZE-1 downto 0) when OP_MUL,
-      s_mulu_result(C_WORD_SIZE*2-1 downto C_WORD_SIZE) when OP_MULHIU,
-      (others => '0') when others;
 
   -- Multicycle operation.
   s_start_multicycle_op <= i_muldiv_en and not s_prev_stall_for_multicycle_op;
-  s_start_mulu_op <= s_start_multicycle_op and i_muldiv_en;
-  s_stall_for_multicycle_op <= s_stall_for_mulu;
-  s_multicycle_op_finished <= s_mulu_result_ready;
+  s_start_muldiv_op <= s_start_multicycle_op and i_muldiv_en;
+  s_stall_for_multicycle_op <= s_stall_for_muldiv;
+  s_multicycle_op_finished <= s_muldiv_result_ready;
 
   -- TODO(m): Prepare halfword and byte operations (mask, shift, ...) for the MEM stage.
 
