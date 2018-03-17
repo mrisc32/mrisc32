@@ -57,6 +57,8 @@ So far, the following components have been implemented:
 
 * The integer ALU.
   - All single-cycle integer operations are supported.
+* A multi-cycle multiply unit.
+  - Supports MUL and MULHIU.
 * The scalar register file.
   - There are three read ports and one write port.
 * A basic 5-stage pipeline.
@@ -68,7 +70,7 @@ So far, the following components have been implemented:
   - Register write-back.
   - Operand forwarding.
 
-**TODO**: Caches, vector logic, vector register file, multiply and divide, FPU, etc.
+**TODO**: Caches, vector logic, vector register file, divide and signed multiply, FPU, etc.
 
 # Goals
 

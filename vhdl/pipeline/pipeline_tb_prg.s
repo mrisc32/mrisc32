@@ -10,6 +10,7 @@ main:
     LDI   S9, 4           ; Loop count.
     LDI   S1, 0x1234
     LDI   S2, 0x1111
+    MUL   S5, S2, S1
 .loop:
     BEQ   S1, .dont_go_here
     BNE   Z, .dont_go_here

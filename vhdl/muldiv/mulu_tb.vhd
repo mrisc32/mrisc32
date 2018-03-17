@@ -27,6 +27,7 @@ end mulu_tb;
 architecture behavioral of mulu_tb is
   signal s_clk : std_logic;
   signal s_rst : std_logic;
+  signal s_stall_requested : std_logic;
   signal s_src_a : std_logic_vector(3 downto 0);
   signal s_src_b : std_logic_vector(3 downto 0);
   signal s_start_op : std_logic;
@@ -40,6 +41,8 @@ begin
     port map (
       i_clk => s_clk,
       i_rst => s_rst,
+      i_stall => '0',  -- TODO(m): Test this too!
+      o_stall => s_stall_requested,
       i_src_a => s_src_a,
       i_src_b => s_src_b,
       i_start_op => s_start_op,
@@ -57,45 +60,41 @@ begin
 
       -- Expected outputs
       result : std_logic_vector(7 downto 0);
+      stall_requested : std_logic;
       result_ready : std_logic;
     end record;
     type pattern_array is array (natural range <>) of pattern_type;
     constant patterns : pattern_array := (
         -- 1 x 1 = 1
-        ('1', "0001", "0001", "00000000", '0'),
-        ('0', "0001", "0001", "00000001", '1'),
+        ('1', "0001", "0001", "00000001", '0', '1'),
 
         -- 3 x 10 = 30
-        ('1', "0011", "1010", "00000001", '0'),
-        ('0', "0011", "1010", "00000000", '0'),
-        ('0', "0011", "1010", "00000110", '0'),
-        ('0', "0011", "1010", "00000110", '0'),
-        ('0', "0011", "1010", "00011110", '1'),
+        ('1', "0011", "1010", "00000000", '1', '0'),
+        ('0', "0011", "1010", "00000110", '1', '0'),
+        ('0', "0011", "1010", "00000110", '1', '0'),
+        ('0', "0011", "1010", "00011110", '0', '1'),
 
         -- 1 x 0 = 0
-        ('1', "0001", "0000", "00011110", '0'),
-        ('0', "0001", "0000", "00000000", '1'),
+        ('1', "0001", "0000", "00000000", '0', '1'),
 
         -- 10 x 3 = 30
-        ('1', "1010", "0011", "00000000", '0'),
-        ('0', "1010", "0011", "00001010", '0'),
-        ('0', "1010", "0011", "00011110", '1'),
+        ('1', "1010", "0011", "00001010", '1', '0'),
+        ('0', "1010", "0011", "00011110", '0', '1'),
 
         -- No operation
-        ('0', "0010", "0010", "00011110", '0'),
-        ('0', "0010", "0010", "00011110", '0'),
-        ('0', "0010", "0010", "00011110", '0'),
-        ('0', "0010", "0010", "00011110", '0'),
-        ('0', "0010", "0010", "00011110", '0'),
-        ('0', "0010", "0010", "00011110", '0'),
-        ('0', "0010", "0010", "00011110", '0'),
+        ('0', "0010", "0010", "00011110", '0', '0'),
+        ('0', "0010", "0010", "00011110", '0', '0'),
+        ('0', "0010", "0010", "00011110", '0', '0'),
+        ('0', "0010", "0010", "00011110", '0', '0'),
+        ('0', "0010", "0010", "00011110", '0', '0'),
+        ('0', "0010", "0010", "00011110", '0', '0'),
+        ('0', "0010", "0010", "00011110", '0', '0'),
 
         -- 15 x 15 = 225
-        ('1', "1111", "1111", "00011110", '0'),
-        ('0', "0000", "0000", "00001111", '0'),
-        ('0', "0000", "0000", "00101101", '0'),
-        ('0', "0000", "0000", "01101001", '0'),
-        ('0', "0000", "0000", "11100001", '1')
+        ('1', "1111", "1111", "00001111", '1', '0'),
+        ('0', "0000", "0000", "00101101", '1', '0'),
+        ('0', "0000", "0000", "01101001", '1', '0'),
+        ('0', "0000", "0000", "11100001", '0', '1')
       );
   begin
     -- Start by resetting the entity.
@@ -110,6 +109,7 @@ begin
     s_rst <= '0';
     s_clk <= '0';
     wait for 1 ns;
+    s_clk <= '1';
 
     -- Test all the patterns in the pattern array.
     for i in patterns'range loop
@@ -118,10 +118,7 @@ begin
       s_src_a <= patterns(i).src_a;
       s_src_b <= patterns(i).src_b;
 
-      -- Tick the clock.
-      s_clk <= '1';
-      wait for 1 ns;
-      s_clk <= '0';
+      -- Wait for the result to be produced.
       wait for 1 ns;
 
       --  Check the outputs.
@@ -131,10 +128,19 @@ begin
             "  b=" & to_string(s_src_b) & lf &
             "  r=" & to_string(s_result) & " (expected " & to_string(patterns(i).result) & ")"
             severity error;
+      assert s_stall_requested = patterns(i).stall_requested
+        report "Bad stall signal (" & integer'image(i) & "):" & lf &
+            "  r=" & to_string(s_stall_requested) & " (expected " & to_string(patterns(i).stall_requested) & ")"
+            severity error;
       assert s_result_ready = patterns(i).result_ready
-        report "Bad result ready (" & integer'image(i) & "):" & lf &
+        report "Bad result ready signal (" & integer'image(i) & "):" & lf &
             "  r=" & to_string(s_result_ready) & " (expected " & to_string(patterns(i).result_ready) & ")"
             severity error;
+
+      -- Tick the clock.
+      s_clk <= '0';
+      wait for 1 ns;
+      s_clk <= '1';
     end loop;
     assert false report "End of test" severity note;
     --  Wait forever; this will finish the simulation.

@@ -69,13 +69,17 @@ entity decode is
       o_branch_is_taken : out std_logic;
 
       -- To the EX stage (sync).
-      o_alu_op : out T_ALU_OP;
       o_src_a : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_src_b : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_src_c : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_mem_op : out T_MEM_OP;
       o_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-      o_writes_to_reg : out std_logic
+      o_writes_to_reg : out std_logic;
+      o_alu_op : out T_ALU_OP;
+      o_muldiv_op : out T_MULDIV_OP;
+      o_mem_op : out T_MEM_OP;
+      o_alu_en : out std_logic;
+      o_muldiv_en : out std_logic;
+      o_mem_en : out std_logic
     );
 end decode;
 
@@ -101,6 +105,8 @@ architecture rtl of decode is
   signal s_mem_op_type : std_logic_vector(1 downto 0);
   signal s_is_mem_op : std_logic;
   signal s_is_mem_store : std_logic;
+
+  signal s_is_muldiv_op : std_logic;
 
   signal s_is_ldhi : std_logic;
   signal s_is_ldhio : std_logic;
@@ -131,13 +137,17 @@ architecture rtl of decode is
   signal s_reg_c_required : std_logic;
 
   -- Signals to the EX stage.
-  signal s_alu_op : T_ALU_OP;
   signal s_src_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_src_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_src_c : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_mem_op : T_MEM_OP;
   signal s_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_writes_to_reg : std_logic;
+  signal s_alu_op : T_ALU_OP;
+  signal s_muldiv_op : T_MULDIV_OP;
+  signal s_mem_op : T_MEM_OP;
+  signal s_alu_en : std_logic;
+  signal s_muldiv_en : std_logic;
+  signal s_mem_en : std_logic;
 
   -- Operand forwarding signals.
   signal s_reg_a_data_or_fwd : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -147,9 +157,13 @@ architecture rtl of decode is
 
   -- Signals for handling discarding of the current operation (i.e. bubble).
   signal s_discard_operation : std_logic;
-  signal s_alu_op_masked : T_ALU_OP;
-  signal s_mem_op_masked : T_MEM_OP;
   signal s_dst_reg_masked : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_alu_op_masked : T_ALU_OP;
+  signal s_muldiv_op_masked : T_MULDIV_OP;
+  signal s_mem_op_masked : T_MEM_OP;
+  signal s_alu_en_masked : std_logic;
+  signal s_muldiv_en_masked : std_logic;
+  signal s_mem_en_masked : std_logic;
 begin
   -- Extract operation codes.
   s_op_high <= i_instr(29 downto 24);
@@ -273,6 +287,9 @@ begin
   s_is_ldhio <= '1' when s_op_high = "110111" else '0';
   s_is_ldi   <= '1' when s_op_high = "111110" else '0';
 
+  -- Is this a MULDIV op?
+  s_is_muldiv_op <= '1' when (s_is_type_a = '1' and s_op_low(8 downto 3) = "000110") else '0';
+
   -- Is this a SEL operation (0x040)?
   s_is_sel <= s_is_type_a when s_op_low = "001000000" else '0';
 
@@ -302,8 +319,16 @@ begin
                s_reg_c when (s_is_mem_store or s_is_branch) = '0' else
                (others => '0');
 
+  -- What pipeline units should be enabled?
+  s_alu_en <= not s_is_muldiv_op;
+  s_muldiv_en <= s_is_muldiv_op;
+  s_mem_en <= s_is_mem_op;
+
   -- Select ALU operation.
   s_alu_op <=
+      -- If this is not an ALU operation, disable the ALU.
+      OP_CPUID when s_alu_en = '0' else
+
       -- Use the ALU to calculate the memory/return address.
       OP_ADD when (s_is_mem_op or s_is_taken_link_branch ) = '1' else
 
@@ -325,6 +350,14 @@ begin
       -- Map the high order opcode directly to the ALU.
       ("000" & s_op_high);
 
+  -- Select MULDIV operation.
+  s_muldiv_op <=
+      -- If this is not a mul/div operation, disable the muldiv unit.
+      (others => '0') when s_muldiv_en = '0' else
+
+      -- Map the low order opcode directly to the muldiv unit.
+      s_op_low;
+
   -- Are we missing any fwd operation that has not yet been produced by the pipeline?
   s_missing_fwd_operand <=
       (s_is_branch and (i_branch_fwd_use_value and not i_branch_fwd_value_ready)) or
@@ -332,12 +365,16 @@ begin
       (s_reg_b_required and (i_reg_b_fwd_use_value and not i_reg_b_fwd_value_ready)) or
       (s_reg_c_required and (i_reg_c_fwd_use_value and not i_reg_c_fwd_value_ready));
 
-  -- Should we discard the operation?
+  -- Should we discard the operation (i.e. send a bubble down the pipeline)?
   -- TODO(m): There are more things to consider (e.g. non-taken BL[cc] branches, ...).
   s_discard_operation <= i_bubble or s_missing_fwd_operand;
-  s_alu_op_masked <= s_alu_op when s_discard_operation = '0' else (others => '0');
-  s_mem_op_masked <= s_mem_op when s_discard_operation = '0' else (others => '0');
   s_dst_reg_masked <= s_dst_reg when s_discard_operation = '0' else (others => '0');
+  s_alu_op_masked <= s_alu_op when s_discard_operation = '0' else (others => '0');
+  s_muldiv_op_masked <= s_muldiv_op when s_discard_operation = '0' else (others => '0');
+  s_mem_op_masked <= s_mem_op when s_discard_operation = '0' else (others => '0');
+  s_alu_en_masked <= s_alu_en and not s_discard_operation;
+  s_muldiv_en_masked <= s_muldiv_en and not s_discard_operation;
+  s_mem_en_masked <= s_mem_en and not s_discard_operation;
 
   -- Will this instruction write to a register?
   s_writes_to_reg <= '1' when ((s_dst_reg_masked /= to_vector(C_Z_REG, C_LOG2_NUM_REGS)) and
@@ -347,22 +384,30 @@ begin
   process(i_clk, i_rst)
   begin
     if i_rst = '1' then
-      o_alu_op <= (others => '0');
       o_src_a <= (others => '0');
       o_src_b <= (others => '0');
       o_src_c <= (others => '0');
-      o_mem_op <= (others => '0');
       o_dst_reg <= (others => '0');
       o_writes_to_reg <= '0';
+      o_alu_op <= (others => '0');
+      o_muldiv_op <= (others => '0');
+      o_mem_op <= (others => '0');
+      o_alu_en <= '0';
+      o_muldiv_en <= '0';
+      o_mem_en <= '0';
     elsif rising_edge(i_clk) then
       if i_stall = '0' then
-        o_alu_op <= s_alu_op_masked;
         o_src_a <= s_src_a;
         o_src_b <= s_src_b;
         o_src_c <= s_src_c;
-        o_mem_op <= s_mem_op_masked;
         o_dst_reg <= s_dst_reg_masked;
         o_writes_to_reg <= s_writes_to_reg;
+        o_alu_op <= s_alu_op_masked;
+        o_muldiv_op <= s_muldiv_op_masked;
+        o_mem_op <= s_mem_op_masked;
+        o_alu_en <= s_alu_en_masked;
+        o_muldiv_en <= s_muldiv_en_masked;
+        o_mem_en <= s_mem_en_masked;
       end if;
     end if;
   end process;

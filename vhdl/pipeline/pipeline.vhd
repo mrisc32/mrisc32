@@ -63,25 +63,29 @@ architecture rtl of pipeline is
   signal s_id_branch_is_reg : std_logic;
   signal s_id_branch_is_taken : std_logic;
 
-  signal s_id_alu_op : T_ALU_OP;
   signal s_id_src_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_id_src_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_id_src_c : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_id_mem_op : T_MEM_OP;
   signal s_id_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_id_writes_to_reg : std_logic;
+  signal s_id_alu_op : T_ALU_OP;
+  signal s_id_muldiv_op : T_MULDIV_OP;
+  signal s_id_mem_op : T_MEM_OP;
+  signal s_id_alu_en : std_logic;
+  signal s_id_muldiv_en : std_logic;
+  signal s_id_mem_en : std_logic;
 
   -- From EX.
   signal s_ex_stall : std_logic;
 
   signal s_ex_mem_op : T_MEM_OP;
   signal s_ex_mem_enable : std_logic;
-  signal s_ex_alu_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_ex_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ex_store_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ex_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_ex_writes_to_reg : std_logic;
 
-  signal s_ex_next_alu_result : std_logic_vector(C_WORD_SIZE-1 downto 0);  -- Async.
+  signal s_ex_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);  -- Async.
   signal s_ex_next_result_ready : std_logic;  -- Async.
 
   -- From MEM.
@@ -189,13 +193,17 @@ begin
       o_branch_is_taken => s_id_branch_is_taken,
 
       -- To the EX stage (sync).
-      o_alu_op => s_id_alu_op,
       o_src_a => s_id_src_a,
       o_src_b => s_id_src_b,
       o_src_c => s_id_src_c,
-      o_mem_op => s_id_mem_op,
       o_dst_reg => s_id_dst_reg,
-      o_writes_to_reg => s_id_writes_to_reg
+      o_writes_to_reg => s_id_writes_to_reg,
+      o_alu_op => s_id_alu_op,
+      o_muldiv_op => s_id_muldiv_op,
+      o_mem_op => s_id_mem_op,
+      o_alu_en => s_id_alu_en,
+      o_muldiv_en => s_id_muldiv_en,
+      o_mem_en => s_id_mem_en
     );
 
   execute_0: entity work.execute
@@ -207,24 +215,28 @@ begin
       o_stall => s_ex_stall,
 
       -- From ID stage (sync).
-      i_alu_op => s_id_alu_op,
       i_src_a => s_id_src_a,
       i_src_b => s_id_src_b,
       i_src_c => s_id_src_c,
-      i_mem_op => s_id_mem_op,
       i_dst_reg => s_id_dst_reg,
       i_writes_to_reg => s_id_writes_to_reg,
+      i_alu_op => s_id_alu_op,
+      i_muldiv_op => s_id_muldiv_op,
+      i_mem_op => s_id_mem_op,
+      i_alu_en => s_id_alu_en,
+      i_muldiv_en => s_id_muldiv_en,
+      i_mem_en => s_id_mem_en,
 
       -- To MEM stage (sync).
       o_mem_op => s_ex_mem_op,
       o_mem_enable => s_ex_mem_enable,
-      o_alu_result => s_ex_alu_result,
+      o_result => s_ex_result,
       o_store_data => s_ex_store_data,
       o_dst_reg => s_ex_dst_reg,
       o_writes_to_reg => s_ex_writes_to_reg,
 
       -- To operand forwarding (async).
-      o_next_alu_result => s_ex_next_alu_result,
+      o_next_result => s_ex_next_result,
       o_next_result_ready => s_ex_next_result_ready
     );
 
@@ -237,7 +249,7 @@ begin
       -- From EX stage (sync).
       i_mem_op => s_ex_mem_op,
       i_mem_enable => s_ex_mem_enable,
-      i_alu_result => s_ex_alu_result,
+      i_ex_result => s_ex_result,
       i_store_data => s_ex_store_data,
       i_dst_reg => s_ex_dst_reg,
       i_writes_to_reg => s_ex_writes_to_reg,
@@ -280,7 +292,7 @@ begin
       -- From EX (sync).
       i_ex_writes_to_reg => s_ex_writes_to_reg,
       i_dst_reg_from_ex => s_ex_dst_reg,
-      i_value_from_ex => s_ex_alu_result,
+      i_value_from_ex => s_ex_result,
       i_ready_from_ex => s_value_ready_from_ex,
 
       -- From MEM (sync).
@@ -302,7 +314,7 @@ begin
       -- From EX input (async).
       i_ex_writes_to_reg => s_id_writes_to_reg,
       i_dst_reg_from_ex => s_id_dst_reg,
-      i_value_from_ex => s_ex_next_alu_result,
+      i_value_from_ex => s_ex_next_result,
       i_ready_from_ex => s_ex_next_result_ready,
 
       -- From MEM input (async).
@@ -329,7 +341,7 @@ begin
       -- From EX input (async).
       i_ex_writes_to_reg => s_id_writes_to_reg,
       i_dst_reg_from_ex => s_id_dst_reg,
-      i_value_from_ex => s_ex_next_alu_result,
+      i_value_from_ex => s_ex_next_result,
       i_ready_from_ex => s_ex_next_result_ready,
 
       -- From MEM input (async).
@@ -356,7 +368,7 @@ begin
       -- From EX input (async).
       i_ex_writes_to_reg => s_id_writes_to_reg,
       i_dst_reg_from_ex => s_id_dst_reg,
-      i_value_from_ex => s_ex_next_alu_result,
+      i_value_from_ex => s_ex_next_result,
       i_ready_from_ex => s_ex_next_result_ready,
 
       -- From MEM input (async).
