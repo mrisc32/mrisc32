@@ -35,7 +35,7 @@ entity memory is
       -- From EX stage (sync).
       i_mem_op : in T_MEM_OP;
       i_mem_enable : in std_logic;
-      i_alu_result : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_ex_result : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_store_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_dst_reg : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
       i_writes_to_reg : in std_logic;
@@ -71,11 +71,11 @@ begin
   o_dcache_req <= i_mem_enable;
   o_dcache_we <= s_dcache_we;
   o_dcache_size <= i_mem_op(1 downto 0);
-  o_dcache_addr <= i_alu_result;
+  o_dcache_addr <= i_ex_result;
   o_dcache_write_data <= i_store_data;
 
   -- Prepare signals for the WB stage.
-  s_data <= i_dcache_read_data when i_mem_enable = '1' else i_alu_result;
+  s_data <= i_dcache_read_data when i_mem_enable = '1' else i_ex_result;
 
   -- Outputs to the WB stage.
   process(i_clk, i_rst)
