@@ -41,6 +41,9 @@ public:
   /// @brief Dump CPU stats from the last run.
   void dump_stats();
 
+  /// @brief Dump RAM contents.
+  void dump_ram(const uint32_t begin, const uint32_t end, const std::string& file_name);
+
 protected:
   // This constructor is called from derived classes.
   cpu_t(ram_t& ram);

@@ -117,6 +117,9 @@ int main(const int argc, const char** argv) {
     // Show some stats.
     cpu.dump_stats();
 
+    // Dump some RAM (we use the same range as the VHDL testbench).
+    cpu.dump_ram(0x00000000, 0x00020000, "/tmp/mrisc32_sim_ram.bin");
+
     std::exit(exit_code);
   } catch (std::exception& e) {
     std::cerr << "Error: " << e.what() << "\n";

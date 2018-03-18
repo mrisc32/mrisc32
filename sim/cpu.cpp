@@ -20,6 +20,7 @@
 #include "cpu.hpp"
 
 #include <algorithm>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <cstdio>
@@ -65,6 +66,16 @@ void cpu_t::dump_stats() {
             << ihit_ratio << "%)\n";
   std::cout << " DCACHE: " << m_dcache.accesses() << " accesses " << m_dcache.hits() << " hits ("
             << dhit_ratio << "%)\n";
+}
+
+void cpu_t::dump_ram(const uint32_t begin, const uint32_t end, const std::string& file_name) {
+  std::ofstream file;
+  file.open(file_name, std::ios::out | std::ios::binary);
+  for (uint32_t addr = begin; addr < end; addr += ram_t::LINE_WIDTH) {
+    const ram_t::line_t& line = m_ram.at(addr);
+    file.write(reinterpret_cast<const char*>(&line[0]), ram_t::LINE_WIDTH);
+  }
+  file.close();
 }
 
 void cpu_t::call_sim_routine(const uint32_t routine_no) {
