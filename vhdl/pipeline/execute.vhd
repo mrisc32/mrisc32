@@ -79,6 +79,13 @@ architecture rtl of execute is
   signal s_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_next_result_ready : std_logic;
 
+  -- Signals for handling bubbling.
+  signal s_bubble : std_logic;
+  signal s_mem_op_masked : T_MEM_OP;
+  signal s_mem_en_masked : std_logic;
+  signal s_dst_reg_masked : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_writes_to_reg_masked : std_logic;
+
   constant C_MULDIV_ZERO : T_MULDIV_OP := (others => '0');
 begin
   -- Instantiate the ALU.
@@ -122,6 +129,13 @@ begin
 
   s_next_result_ready <= (i_alu_en and (not i_mem_en)) or s_multicycle_op_finished;
 
+  -- Should we send a bubble down the pipeline?
+  s_bubble <= s_stall_for_multicycle_op;
+  s_mem_op_masked <= i_mem_op when s_bubble = '0' else (others => '0');
+  s_mem_en_masked <= i_mem_en and not s_bubble;
+  s_dst_reg_masked <= i_dst_reg when s_bubble = '0' else (others => '0');
+  s_writes_to_reg_masked <= i_writes_to_reg and not s_bubble;
+
   -- Internal state.
   process(i_clk, i_rst)
   begin
@@ -146,12 +160,12 @@ begin
       o_writes_to_reg <= '0';
     elsif rising_edge(i_clk) then
       if i_stall = '0' then
-        o_mem_op <= i_mem_op;
-        o_mem_enable <= i_mem_en;
-        o_result <= s_alu_result;
+        o_mem_op <= s_mem_op_masked;
+        o_mem_enable <= s_mem_en_masked;
+        o_result <= s_next_result;
         o_store_data <= i_src_c;
-        o_dst_reg <= i_dst_reg;
-        o_writes_to_reg <= i_writes_to_reg;
+        o_dst_reg <= s_dst_reg_masked;
+        o_writes_to_reg <= s_writes_to_reg_masked;
       end if;
     end if;
   end process;

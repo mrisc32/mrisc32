@@ -156,7 +156,8 @@ architecture rtl of decode is
   signal s_missing_fwd_operand : std_logic;
 
   -- Signals for handling discarding of the current operation (i.e. bubble).
-  signal s_discard_operation : std_logic;
+  signal s_bubble : std_logic;
+  signal s_writes_to_reg_masked : std_logic;
   signal s_dst_reg_masked : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_alu_op_masked : T_ALU_OP;
   signal s_muldiv_op_masked : T_MULDIV_OP;
@@ -367,14 +368,15 @@ begin
 
   -- Should we discard the operation (i.e. send a bubble down the pipeline)?
   -- TODO(m): There are more things to consider (e.g. non-taken BL[cc] branches, ...).
-  s_discard_operation <= i_bubble or s_missing_fwd_operand;
-  s_dst_reg_masked <= s_dst_reg when s_discard_operation = '0' else (others => '0');
-  s_alu_op_masked <= s_alu_op when s_discard_operation = '0' else (others => '0');
-  s_muldiv_op_masked <= s_muldiv_op when s_discard_operation = '0' else (others => '0');
-  s_mem_op_masked <= s_mem_op when s_discard_operation = '0' else (others => '0');
-  s_alu_en_masked <= s_alu_en and not s_discard_operation;
-  s_muldiv_en_masked <= s_muldiv_en and not s_discard_operation;
-  s_mem_en_masked <= s_mem_en and not s_discard_operation;
+  s_bubble <= i_bubble or s_missing_fwd_operand;
+  s_dst_reg_masked <= s_dst_reg when s_bubble = '0' else (others => '0');
+  s_writes_to_reg_masked <= s_writes_to_reg and not s_bubble;
+  s_alu_op_masked <= s_alu_op when s_bubble = '0' else (others => '0');
+  s_muldiv_op_masked <= s_muldiv_op when s_bubble = '0' else (others => '0');
+  s_mem_op_masked <= s_mem_op when s_bubble = '0' else (others => '0');
+  s_alu_en_masked <= s_alu_en and not s_bubble;
+  s_muldiv_en_masked <= s_muldiv_en and not s_bubble;
+  s_mem_en_masked <= s_mem_en and not s_bubble;
 
   -- Will this instruction write to a register?
   s_writes_to_reg <= '1' when ((s_dst_reg_masked /= to_vector(C_Z_REG, C_LOG2_NUM_REGS)) and
@@ -401,7 +403,7 @@ begin
         o_src_b <= s_src_b;
         o_src_c <= s_src_c;
         o_dst_reg <= s_dst_reg_masked;
-        o_writes_to_reg <= s_writes_to_reg;
+        o_writes_to_reg <= s_writes_to_reg_masked;
         o_alu_op <= s_alu_op_masked;
         o_muldiv_op <= s_muldiv_op_masked;
         o_mem_op <= s_mem_op_masked;
