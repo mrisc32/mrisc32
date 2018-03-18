@@ -4,7 +4,7 @@
 
 boot:
     ; Start by setting up the stack.
-    LDI   SP, 0x00010000  ; We grow down from 64KB.
+    LDI   SP, 0x00020000  ; We grow down from 128KB.
 
 main:
     LDI   S9, 4           ; Loop count.
