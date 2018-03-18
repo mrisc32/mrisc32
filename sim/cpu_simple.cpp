@@ -167,9 +167,8 @@ uint32_t cpu_simple_t::cpuid(const uint32_t a, const uint32_t b) {
   return 0u;
 }
 
-uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
-  m_regs[REG_PC] = addr;
-  m_regs[REG_SP] = sp;
+uint32_t cpu_simple_t::run() {
+  m_regs[REG_PC] = RESET_PC;
   m_terminate = false;
   m_exit_code = 0u;
   m_fetched_instr_count = 0u;
@@ -210,6 +209,12 @@ uint32_t cpu_simple_t::run(const uint32_t addr, const uint32_t sp) {
         uint32_t cache_cycles;
         id_in.instr = m_icache.read32(instr_pc, cache_cycles);
         instr_cycles += cache_cycles;
+
+        // We terminate the simulation when we encounter an unconditional branch to the same PC
+        // (i.e. infinite loop).
+        if (id_in.instr == 0x30000000) {
+          m_terminate = true;
+        }
 
         ++m_fetched_instr_count;
       }

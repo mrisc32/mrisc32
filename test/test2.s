@@ -2,6 +2,10 @@
 ; Test the performance of vector vs scalar.
 ;-------------------------------------------------------------------------------
 
+boot:
+  ; Start by setting up the stack.
+  ldi     sp, 0x00020000  ; We grow down from 128KB.
+
 main:
   ldi     s4, 1000
   lsl     s9, s4, 2

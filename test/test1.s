@@ -1,5 +1,9 @@
 // This is a test program.
 
+boot:
+  ; Start by setting up the stack.
+  ldi    sp, 0x00020000  ; We grow down from 128KB.
+
 main:
   ldi    s16, 0         ; s16 is the return code (0 = success, 1 = fail)
 

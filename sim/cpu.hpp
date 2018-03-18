@@ -35,10 +35,8 @@ public:
   void reset();
 
   /// @brief Start running code at a given memory address.
-  /// @param addr Start of the program.
-  /// @param sp Stack pointer.
   /// @returns The program return code (the argument to exit()).
-  virtual uint32_t run(const uint32_t addr, const uint32_t sp) = 0;
+  virtual uint32_t run() = 0;
 
   /// @brief Dump CPU stats from the last run.
   void dump_stats();
@@ -52,6 +50,9 @@ protected:
   static const uint32_t LOG2_NUM_VECTOR_ELEMENTS = 5u;  // Must be at least 2
   static const uint32_t NUM_VECTOR_ELEMENTS = 1u << LOG2_NUM_VECTOR_ELEMENTS;
   static const uint32_t NUM_VECTOR_REGS = 32u;
+
+  // Reset start address.
+  static const uint32_t RESET_PC = 0x00000200u;
 
   // Named registers.
   static const uint32_t REG_Z = 0u;
