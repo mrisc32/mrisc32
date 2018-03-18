@@ -58,13 +58,15 @@ main:
     STB   S9, S14, 0
     ADD   S14, S14, 1
 
+    ; Increment along the x axis.
     ADD   S15, S15, -1
     ADD   S1, S1, S13     ; re(c) = re(c) + coord_step
-    BLT   S15, .outer_loop_x
+    BGT   S15, .outer_loop_x
 
+    ; Increment along the y axis.
     ADD   S16, S16, -1
-    ADD   S2, S2, S13     ; re(c) = re(c) + coord_step
-    BLT   S16, .outer_loop_y
+    ADD   S2, S2, S13     ; im(c) = im(c) + coord_step
+    BGT   S16, .outer_loop_y
 
 .done:
     B     .done
