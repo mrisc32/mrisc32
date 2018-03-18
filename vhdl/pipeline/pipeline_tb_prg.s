@@ -14,7 +14,7 @@ main:
     LDI   S17, 100        ; S17 = max_num_iterations
     LDI   S18, 16384      ; S18 = max_distance^2 = 4.0
 
-    LEA   S14, .pixels    ; S14 = .pixels
+    LDI   S14, 0x00008000 ; S14 = pixel_data (NOTE: must be after the program)
 
     OR    S2, S12, Z      ; S2 = im(c) = -2.0
     LDI   S16, 256        ; S16 = loop counter for y
@@ -70,8 +70,4 @@ main:
 
 .done:
     B     .done
-
-
-.pixels:
-    .space 65536
 
