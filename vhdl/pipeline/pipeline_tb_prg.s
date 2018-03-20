@@ -6,7 +6,6 @@ boot:
     ; Start by setting up the stack.
     LDI   SP, 0x00020000  ; We grow down from 128KB.
 
-
 main:
     LDI   S12, -2
     LSL   S12, S12, 12    ; S12 = start_coord = -2.0
@@ -55,7 +54,9 @@ main:
     SUB   S9, S17, S9     ; S9 = max_num_iterations - num_iterations = color
 
     ; Write color to pixel matrix.
-    STB   S9, S14, 0
+    BIC   S20, S14, 3
+    STW   S9, S20, 0
+    ;STB   S9, S14, 0
     ADD   S14, S14, 1
 
     ; Increment along the x axis.
