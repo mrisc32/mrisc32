@@ -25,7 +25,7 @@ GHDLWARNINGS = \
     --warn-library \
     --warn-specs \
     --warn-unused
-GHDLFLAGS = --std=93 --work=work $(GHDLWARNINGS)
+GHDLFLAGS = --std=08 --work=work $(GHDLWARNINGS)
 ASM = ../asm/asm.py
 
 .PHONY: all clean
