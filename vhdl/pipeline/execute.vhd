@@ -49,6 +49,7 @@ entity execute is
     -- To MEM stage (sync).
     o_mem_op : out T_MEM_OP;
     o_mem_enable : out std_logic;
+    o_mem_byte_mask : out std_logic_vector(C_WORD_SIZE/8-1 downto 0);
     o_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
     o_store_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
     o_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
@@ -74,10 +75,13 @@ architecture rtl of execute is
   signal s_multicycle_op_finished : std_logic;
   signal s_prev_stall_for_multicycle_op : std_logic;
 
-  signal s_mem_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
-
   signal s_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_next_result_ready : std_logic;
+
+  -- Signals related to memory I/O.
+  signal s_mem_byte_mask_unshifted : std_logic_vector(C_WORD_SIZE/8-1 downto 0);
+  signal s_mem_byte_mask : std_logic_vector(C_WORD_SIZE/8-1 downto 0);
+  signal s_mem_store_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
   -- Signals for handling bubbling.
   signal s_bubble : std_logic;
@@ -119,7 +123,27 @@ begin
   s_stall_for_multicycle_op <= s_stall_for_muldiv;
   s_multicycle_op_finished <= s_muldiv_result_ready;
 
-  -- TODO(m): Prepare halfword and byte operations (mask, shift, ...) for the MEM stage.
+  -- Prepare the byte mask for the MEM stage.
+  ByteMaskMux: with i_mem_op(1 downto 0) select
+    s_mem_byte_mask_unshifted <=
+      "0001" when "01",    -- byte
+      "0011" when "10",    -- halfword
+      "1111" when others;  -- word (11) and undefined (00)
+
+  ByteMaskShiftMux: with s_alu_result(1 downto 0) select
+    s_mem_byte_mask <=
+      s_mem_byte_mask_unshifted(3 downto 0)         when "00",
+      s_mem_byte_mask_unshifted(2 downto 0) & "0"   when "01",
+      s_mem_byte_mask_unshifted(1 downto 0) & "00"  when "10",
+      s_mem_byte_mask_unshifted(0 downto 0) & "000" when others;  -- "11"
+
+  -- Prepare the store data for the MEM stage (shift it into position).
+  StoreDataShiftMux: with s_alu_result(1 downto 0) select
+    s_mem_store_data <=
+      i_src_c(31 downto 0)             when "00",
+      i_src_c(23 downto 0) & X"00"     when "01",
+      i_src_c(15 downto 0) & X"0000"   when "10",
+      i_src_c(7 downto 0)  & X"000000" when others;  -- "11"
 
   -- Select the output.
   s_next_result <=
@@ -154,6 +178,7 @@ begin
     if i_rst = '1' then
       o_mem_op <= (others => '0');
       o_mem_enable <= '0';
+      o_mem_byte_mask <= (others => '0');
       o_result <= (others => '0');
       o_store_data <= (others => '0');
       o_dst_reg <= (others => '0');
@@ -162,8 +187,9 @@ begin
       if i_stall = '0' then
         o_mem_op <= s_mem_op_masked;
         o_mem_enable <= s_mem_en_masked;
+        o_mem_byte_mask <= s_mem_byte_mask;
         o_result <= s_next_result;
-        o_store_data <= i_src_c;
+        o_store_data <= s_mem_store_data;
         o_dst_reg <= s_dst_reg_masked;
         o_writes_to_reg <= s_writes_to_reg_masked;
       end if;
