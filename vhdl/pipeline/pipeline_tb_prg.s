@@ -68,6 +68,17 @@ main:
     ADD   S2, S2, S13     ; im(c) = im(c) + coord_step
     BGT   S16, .outer_loop_y
 
+    ; Flush the pipeline.
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+
+    ; End the simulation.
 .done:
     B     .done
 

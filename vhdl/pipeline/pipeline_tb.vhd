@@ -155,6 +155,10 @@ begin
       else
         v_data := X"00000000";  -- NOP
       end if;
+      if v_data = X"30000000" then  -- Infinite branch-to-same-PC loop => exit.
+        report "Simulation finished after " & integer'image(i) & " cycles.";
+        exit;
+      end if;
       s_icache_data <= v_data;
       s_icache_data_ready <= '1';
 
