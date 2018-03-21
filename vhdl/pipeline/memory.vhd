@@ -35,6 +35,8 @@ entity memory is
       -- From EX stage (sync).
       i_mem_op : in T_MEM_OP;
       i_mem_enable : in std_logic;
+      i_mem_we : in std_logic;
+      i_mem_byte_mask : in std_logic_vector(C_WORD_SIZE/8-1 downto 0);
       i_ex_result : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_store_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_dst_reg : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
@@ -43,8 +45,8 @@ entity memory is
       -- DCache interface.
       o_dcache_req : out std_logic;  -- 1 = request, 0 = nop
       o_dcache_we : out std_logic;   -- 1 = write, 0 = read
-      o_dcache_size : out std_logic_vector(1 downto 0);
-      o_dcache_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_dcache_byte_mask : out std_logic_vector(C_WORD_SIZE/8-1 downto 0);
+      o_dcache_addr : out std_logic_vector(C_WORD_SIZE-1 downto 2);
       o_dcache_write_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_dcache_read_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_dcache_read_data_ready : in std_logic;
@@ -62,16 +64,13 @@ entity memory is
 end memory;
 
 architecture rtl of memory is
-  signal s_dcache_we : std_logic;
   signal s_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
 begin
-  s_dcache_we <= i_mem_op(3);
-
   -- Outputs to the data cache.
   o_dcache_req <= i_mem_enable;
-  o_dcache_we <= s_dcache_we;
-  o_dcache_size <= i_mem_op(1 downto 0);
-  o_dcache_addr <= i_ex_result;
+  o_dcache_we <= i_mem_we;
+  o_dcache_byte_mask <= i_mem_byte_mask;
+  o_dcache_addr <= i_ex_result(C_WORD_SIZE-1 downto 2);
   o_dcache_write_data <= i_store_data;
 
   -- Prepare signals for the WB stage.
@@ -95,6 +94,6 @@ begin
   o_next_data <= s_data;
 
   -- Do we need to stall the pipeline (async)?
-  o_stall <= i_mem_enable and (not s_dcache_we) and (not i_dcache_read_data_ready);
+  o_stall <= i_mem_enable and (not i_mem_we) and (not i_dcache_read_data_ready);
 end rtl;
 

@@ -40,8 +40,8 @@ entity pipeline is
       -- DCache interface.
       o_dcache_req : out std_logic;  -- 1 = request, 0 = nop
       o_dcache_we : out std_logic;   -- 1 = write, 0 = read
-      o_dcache_size : out std_logic_vector(1 downto 0);
-      o_dcache_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_dcache_byte_mask : out std_logic_vector(C_WORD_SIZE/8-1 downto 0);
+      o_dcache_addr : out std_logic_vector(C_WORD_SIZE-1 downto 2);
       o_dcache_write_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_dcache_read_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_dcache_read_data_ready : in std_logic
@@ -80,6 +80,8 @@ architecture rtl of pipeline is
 
   signal s_ex_mem_op : T_MEM_OP;
   signal s_ex_mem_enable : std_logic;
+  signal s_ex_mem_we : std_logic;
+  signal s_ex_mem_byte_mask : std_logic_vector(C_WORD_SIZE/8-1 downto 0);
   signal s_ex_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ex_store_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ex_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
@@ -230,6 +232,8 @@ begin
       -- To MEM stage (sync).
       o_mem_op => s_ex_mem_op,
       o_mem_enable => s_ex_mem_enable,
+      o_mem_we => s_ex_mem_we,
+      o_mem_byte_mask => s_ex_mem_byte_mask,
       o_result => s_ex_result,
       o_store_data => s_ex_store_data,
       o_dst_reg => s_ex_dst_reg,
@@ -249,6 +253,8 @@ begin
       -- From EX stage (sync).
       i_mem_op => s_ex_mem_op,
       i_mem_enable => s_ex_mem_enable,
+      i_mem_we => s_ex_mem_we,
+      i_mem_byte_mask => s_ex_mem_byte_mask,
       i_ex_result => s_ex_result,
       i_store_data => s_ex_store_data,
       i_dst_reg => s_ex_dst_reg,
@@ -257,7 +263,7 @@ begin
       -- DCache interface.
       o_dcache_req => o_dcache_req,
       o_dcache_we => o_dcache_we,
-      o_dcache_size => o_dcache_size,
+      o_dcache_byte_mask => o_dcache_byte_mask,
       o_dcache_addr => o_dcache_addr,
       o_dcache_write_data => o_dcache_write_data,
       i_dcache_read_data => i_dcache_read_data,

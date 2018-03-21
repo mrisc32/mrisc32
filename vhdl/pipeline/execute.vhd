@@ -49,6 +49,7 @@ entity execute is
     -- To MEM stage (sync).
     o_mem_op : out T_MEM_OP;
     o_mem_enable : out std_logic;
+    o_mem_we : out std_logic;
     o_mem_byte_mask : out std_logic_vector(C_WORD_SIZE/8-1 downto 0);
     o_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
     o_store_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -178,6 +179,7 @@ begin
     if i_rst = '1' then
       o_mem_op <= (others => '0');
       o_mem_enable <= '0';
+      o_mem_we <= '0';
       o_mem_byte_mask <= (others => '0');
       o_result <= (others => '0');
       o_store_data <= (others => '0');
@@ -187,6 +189,7 @@ begin
       if i_stall = '0' then
         o_mem_op <= s_mem_op_masked;
         o_mem_enable <= s_mem_en_masked;
+        o_mem_we <= s_mem_op_masked(3);
         o_mem_byte_mask <= s_mem_byte_mask;
         o_result <= s_next_result;
         o_store_data <= s_mem_store_data;
