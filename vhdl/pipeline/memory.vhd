@@ -64,19 +64,66 @@ entity memory is
 end memory;
 
 architecture rtl of memory is
+  signal s_mem_is_signed : std_logic;
+  signal s_mem_size : std_logic_vector(1 downto 0);
+
+  signal s_shifted_read_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_sign_bit : std_logic;
+  signal s_extend_bit : std_logic;
+  signal s_adjusted_read_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
 begin
+  ------------------------------------------------------------------------------
   -- Outputs to the data cache.
+  ------------------------------------------------------------------------------
+
   o_dcache_req <= i_mem_enable;
   o_dcache_we <= i_mem_we;
   o_dcache_byte_mask <= i_mem_byte_mask;
   o_dcache_addr <= i_ex_result(C_WORD_SIZE-1 downto 2);
   o_dcache_write_data <= i_store_data;
 
-  -- Prepare signals for the WB stage.
-  s_data <= i_dcache_read_data when i_mem_enable = '1' else i_ex_result;
+  ------------------------------------------------------------------------------
+  -- Handle data type transformations (shifting and sign extension).
+  ------------------------------------------------------------------------------
 
+  -- Decode the memory operation.
+  s_mem_is_signed <= not i_mem_op(2);
+  s_mem_size <= i_mem_op(1 downto 0);
+
+  -- Shift the read data according to the memory address LSBs.
+  ShiftMux: with i_ex_result(1 downto 0) select
+    s_shifted_read_data <=
+      X"00" & i_dcache_read_data(31 downto 8) when "01",
+      X"0000" & i_dcache_read_data(31 downto 16) when "10",
+      X"000000" & i_dcache_read_data(31 downto 24) when "11",
+      i_dcache_read_data when others;
+
+  -- Determine the sign extension bit.
+  SignMux: with s_mem_size select
+    s_sign_bit <=
+      s_shifted_read_data(7) when "01",   -- byte
+      s_shifted_read_data(15) when "10",  -- halfword
+      '0' when others;
+
+  s_extend_bit <= s_sign_bit and s_mem_is_signed;
+
+  -- Perform the sign extension.
+  s_adjusted_read_data(31 downto 16) <=
+    (others => s_extend_bit) when s_mem_size(1) /= s_mem_size(0)
+    else s_shifted_read_data(31 downto 16);
+
+  s_adjusted_read_data(15 downto 8) <=
+    (others => s_extend_bit) when s_mem_size = "01"
+    else s_shifted_read_data(15 downto 8);
+
+  ------------------------------------------------------------------------------
   -- Outputs to the WB stage.
+  ------------------------------------------------------------------------------
+
+  -- Prepare signals for the WB stage.
+  s_data <= s_adjusted_read_data when i_mem_enable = '1' else i_ex_result;
+
   process(i_clk, i_rst)
   begin
     if i_rst = '1' then
