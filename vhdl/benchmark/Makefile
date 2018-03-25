@@ -17,45 +17,8 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ####################################################################################################
 
-WORKDIR = out
+BENCHMARK_PATH = benchmark
 
-GHDL = ghdl
-GHDLWARNINGS = \
-    -Wbinding \
-    -Wreserved \
-    -Wlibrary \
-    -Wvital-generic \
-    -Wbody \
-    -Wspecs \
-    -Wunused \
-    -Werror
-GHDLFLAGS = --std=08 --work=work --workdir=$(WORKDIR) $(GHDLWARNINGS)
-ASM = ../asm/asm.py
-
-.PHONY: all clean
-
-default: all
-
-SRCS =
-TESTS =
-
-include common/Makefile
-include alu/Makefile
-include muldiv/Makefile
-include cache/Makefile
-include pipeline/Makefile
-include benchmark/Makefile
-
-all: $(TESTS)
-
-$(TESTS): $(WORKDIR)/work-obj93.cf $(SRCS)
-	$(GHDL) -m $(GHDLFLAGS) $@
-	$(GHDL) -r $(GHDLFLAGS) $@
-
-clean:
-	$(GHDL) --clean
-	rm -rf $(WORKDIR)/*.o $(WORKDIR)/*.cf $(WORKDIR)/*_tb $(WORKDIR)/*.vcd
-
-$(WORKDIR)/work-obj93.cf: $(SRCS)
-	$(GHDL) -i $(GHDLFLAGS) $(SRCS)
+SRCS += \
+    $(BENCHMARK_PATH)/mul32_bench.vhd
 
