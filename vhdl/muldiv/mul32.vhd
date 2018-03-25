@@ -19,6 +19,7 @@
 
 ----------------------------------------------------------------------------------------------------
 -- This is a single-cycle 32-bit multiplier for signed or unsigned integers.
+-- TODO(m): Turn this into a pipelined multi-cycle operation.
 ----------------------------------------------------------------------------------------------------
 
 library ieee;
