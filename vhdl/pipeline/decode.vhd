@@ -160,7 +160,6 @@ architecture rtl of decode is
   signal s_writes_to_reg_masked : std_logic;
   signal s_dst_reg_masked : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_alu_op_masked : T_ALU_OP;
-  signal s_muldiv_op_masked : T_MULDIV_OP;
   signal s_mem_op_masked : T_MEM_OP;
   signal s_alu_en_masked : std_logic;
   signal s_muldiv_en_masked : std_logic;
@@ -356,8 +355,8 @@ begin
       -- If this is not a mul/div operation, disable the muldiv unit.
       (others => '0') when s_muldiv_en = '0' else
 
-      -- Map the low order opcode directly to the muldiv unit.
-      s_op_low;
+      -- Map the 3 low bits of the low order opcode directly to the muldiv unit.
+      s_op_low(2 downto 0);
 
   -- Are we missing any fwd operation that has not yet been produced by the pipeline?
   s_missing_fwd_operand <=
@@ -372,7 +371,6 @@ begin
   s_dst_reg_masked <= s_dst_reg when s_bubble = '0' else (others => '0');
   s_writes_to_reg_masked <= s_writes_to_reg and not s_bubble;
   s_alu_op_masked <= s_alu_op when s_bubble = '0' else (others => '0');
-  s_muldiv_op_masked <= s_muldiv_op when s_bubble = '0' else (others => '0');
   s_mem_op_masked <= s_mem_op when s_bubble = '0' else (others => '0');
   s_alu_en_masked <= s_alu_en and not s_bubble;
   s_muldiv_en_masked <= s_muldiv_en and not s_bubble;
@@ -405,7 +403,7 @@ begin
         o_dst_reg <= s_dst_reg_masked;
         o_writes_to_reg <= s_writes_to_reg_masked;
         o_alu_op <= s_alu_op_masked;
-        o_muldiv_op <= s_muldiv_op_masked;
+        o_muldiv_op <= s_muldiv_op;
         o_mem_op <= s_mem_op_masked;
         o_alu_en <= s_alu_en_masked;
         o_muldiv_en <= s_muldiv_en_masked;

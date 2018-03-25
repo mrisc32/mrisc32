@@ -56,6 +56,8 @@ begin
   s_result_wide <= signed(s_src_a_wide) * signed(s_src_b_wide);
 
   -- Asynchronous outputs.
+  -- TODO(m): We should use registered outputs to get the maxium performance out of FPGA DSP
+  -- blocks.
   o_result <= std_logic_vector(s_result_wide(63 downto 0));
 end rtl;
 

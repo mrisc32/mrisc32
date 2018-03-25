@@ -90,16 +90,16 @@ package common is
   constant OP_EXTH   : T_ALU_OP := "001000100";
 
   -- MUL/DIV operations.
-  constant C_MULDIV_OP_SIZE : integer := 9;
+  constant C_MULDIV_OP_SIZE : integer := 3;
   subtype T_MULDIV_OP is std_logic_vector(C_MULDIV_OP_SIZE-1 downto 0);
 
-  constant OP_MUL    : T_MULDIV_OP := "000110000";
-  constant OP_MULHI  : T_MULDIV_OP := "000110010";
-  constant OP_MULHIU : T_MULDIV_OP := "000110011";
-  constant OP_DIV    : T_MULDIV_OP := "000110100";
-  constant OP_DIVU   : T_MULDIV_OP := "000110101";
-  constant OP_REM    : T_MULDIV_OP := "000110110";
-  constant OP_REMU   : T_MULDIV_OP := "000110111";
+  constant C_MULDIV_MUL    : T_MULDIV_OP := "000";
+  constant C_MULDIV_MULHI  : T_MULDIV_OP := "010";
+  constant C_MULDIV_MULHIU : T_MULDIV_OP := "011";
+  constant C_MULDIV_DIV    : T_MULDIV_OP := "100";
+  constant C_MULDIV_DIVU   : T_MULDIV_OP := "101";
+  constant C_MULDIV_REM    : T_MULDIV_OP := "110";
+  constant C_MULDIV_REMU   : T_MULDIV_OP := "111";
 
   -- FPU operations.
   constant C_FPU_OP_SIZE : integer := 9;

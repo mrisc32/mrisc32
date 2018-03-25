@@ -42,27 +42,33 @@ entity muldiv is
 end muldiv;
 
 architecture rtl of muldiv is
+  signal s_is_signed : std_logic;
+
   -- Multiply signals.
-  signal s_signed_mul : std_logic;
   signal s_mul_result : std_logic_vector(2*C_WORD_SIZE-1 downto 0);
 
   signal s_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
 begin
+  -- Decode the muldiv operation.
+  s_is_signed <= not i_op(0);  -- MUL, MULHI, DIV, REM
+
   -- Instantiate a multiply unit.
-  s_signed_mul <= '1' when i_op = OP_MULHI else '0';
   mul32_1: entity work.mul32
     port map (
       i_src_a => i_src_a,
       i_src_b => i_src_b,
-      i_signed_op => s_signed_mul,
+      i_signed_op => s_is_signed,
       o_result => s_mul_result
     );
 
+  -- Select which result to use.
   MuldivMux: with i_op select
     s_result <=
-      -- TODO(m): Support more ops.
-      s_mul_result(C_WORD_SIZE-1 downto 0) when OP_MUL,
-      s_mul_result(C_WORD_SIZE*2-1 downto C_WORD_SIZE) when OP_MULHIU | OP_MULHI,
+      -- Multiplication opertations.
+      s_mul_result(C_WORD_SIZE-1 downto 0) when C_MULDIV_MUL,
+      s_mul_result(C_WORD_SIZE*2-1 downto C_WORD_SIZE) when C_MULDIV_MULHIU | C_MULDIV_MULHI,
+
+      -- TODO(m): Support division operations.
       (others => '0') when others;
 
   -- Outputs.
