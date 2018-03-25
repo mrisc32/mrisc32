@@ -17,15 +17,19 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ####################################################################################################
 
+WORKDIR = out
+
 GHDL = ghdl
 GHDLWARNINGS = \
-    --warn-reserved \
-    --warn-default-binding \
-    --warn-binding \
-    --warn-library \
-    --warn-specs \
-    --warn-unused
-GHDLFLAGS = --std=08 --work=work $(GHDLWARNINGS)
+    -Wbinding \
+    -Wreserved \
+    -Wlibrary \
+    -Wvital-generic \
+    -Wbody \
+    -Wspecs \
+    -Wunused \
+    -Werror
+GHDLFLAGS = --std=08 --work=work --workdir=$(WORKDIR) $(GHDLWARNINGS)
 ASM = ../asm/asm.py
 
 .PHONY: all clean
@@ -43,14 +47,14 @@ include pipeline/Makefile
 
 all: $(TESTS)
 
-$(TESTS): work-obj93.cf $(SRCS)
+$(TESTS): $(WORKDIR)/work-obj93.cf $(SRCS)
 	$(GHDL) -m $(GHDLFLAGS) $@
 	$(GHDL) -r $(GHDLFLAGS) $@
 
 clean:
 	$(GHDL) --clean
-	rm -rf *.o *.cf *_tb *.vcd
+	rm -rf $(WORKDIR)/*.o $(WORKDIR)/*.cf $(WORKDIR)/*_tb $(WORKDIR)/*.vcd
 
-work-obj93.cf: $(SRCS)
+$(WORKDIR)/work-obj93.cf: $(SRCS)
 	$(GHDL) -i $(GHDLFLAGS) $(SRCS)
 
