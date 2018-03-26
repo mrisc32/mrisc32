@@ -54,7 +54,7 @@ $(TESTS): $(WORKDIR)/work-obj93.cf $(SRCS)
 
 clean:
 	$(GHDL) --clean
-	rm -rf $(WORKDIR)/*.o $(WORKDIR)/*.cf $(WORKDIR)/*_tb $(WORKDIR)/*.vcd
+	rm -rf *.o *_tb *.vcd $(WORKDIR)/*.o $(WORKDIR)/*.cf $(WORKDIR)/*_tb $(WORKDIR)/*.vcd
 
 $(WORKDIR)/work-obj93.cf: $(SRCS)
 	$(GHDL) -i $(GHDLFLAGS) $(SRCS)

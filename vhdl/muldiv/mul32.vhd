@@ -18,8 +18,10 @@
 ----------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------
--- This is a single-cycle 32-bit multiplier for signed or unsigned integers.
--- TODO(m): Turn this into a pipelined multi-cycle operation.
+-- This is a two-cycle 32-bit multiplier for signed or unsigned integers.
+--
+-- It can easily be turned into a pipelined multiplier that can start one multiplication per cycle,
+-- but right now it is blocking (since that is the expected behavior in the EX stage).
 ----------------------------------------------------------------------------------------------------
 
 library ieee;
@@ -29,13 +31,21 @@ use work.common.all;
 
 entity mul32 is
   port(
+    -- Control signals.
+    i_clk : in std_logic;
+    i_rst : in std_logic;
+    i_stall : in std_logic;
+    o_stall : out std_logic;
+
     -- Inputs.
+    i_start_op : in std_logic;
     i_src_a : in std_logic_vector(31 downto 0);
     i_src_b : in std_logic_vector(31 downto 0);
     i_signed_op : in std_logic;
 
     -- Outputs (async).
-    o_result : out std_logic_vector(63 downto 0)
+    o_result : out std_logic_vector(63 downto 0);
+    o_result_ready : out std_logic
   );
 end mul32;
 
@@ -44,20 +54,43 @@ architecture rtl of mul32 is
   signal s_src_a_wide : std_logic_vector(32 downto 0);
   signal s_src_b_wide : std_logic_vector(32 downto 0);
 
-  signal s_result_wide : signed(65 downto 0);
+  signal s_next_result : signed(65 downto 0);
+  signal s_result : std_logic_vector(63 downto 0);
+
+  signal s_next_result_ready : std_logic;
+  signal s_result_ready : std_logic;
 begin
-  -- Widen the input signals.
+  -- Widen the input signals (extend with a sign-bit for signed operations, or zero for unsigned
+  -- operations).
   s_src_a_wide(31 downto 0) <= i_src_a;
   s_src_a_wide(32) <= i_src_a(31) and i_signed_op;
   s_src_b_wide(31 downto 0) <= i_src_b;
   s_src_b_wide(32) <= i_src_b(31) and i_signed_op;
 
   -- Perform the multiplication.
-  s_result_wide <= signed(s_src_a_wide) * signed(s_src_b_wide);
+  s_next_result <= signed(s_src_a_wide) * signed(s_src_b_wide);
+  s_next_result_ready <= i_start_op;
+
+  -- Registers.
+  -- NOTE: These registers ensure that we utilize hardened DSP blocks optimally in FPGAs. Also, they
+  -- give us some extra headroom for operand forwarding.
+  process(i_clk, i_rst)
+  begin
+    if i_rst = '1' then
+      s_result <= (others => '0');
+      s_result_ready <= '0';
+    elsif rising_edge(i_clk) then
+      if i_stall = '0' then
+        s_result <= std_logic_vector(s_next_result(63 downto 0));
+        s_result_ready <= s_next_result_ready;
+      end if;
+    end if;
+  end process;
+
+  -- We stall the pipeline for one cycle after we have start the operation.
+  o_stall <= i_start_op;
 
   -- Asynchronous outputs.
-  -- TODO(m): We should use registered outputs to get the maxium performance out of FPGA DSP
-  -- blocks.
-  o_result <= std_logic_vector(s_result_wide(63 downto 0));
+  o_result <= s_result;
+  o_result_ready <= s_result_ready;
 end rtl;
-

@@ -110,6 +110,7 @@ begin
       i_rst => i_rst,
       i_stall => i_stall,
       o_stall => s_stall_for_muldiv,
+      i_enable => i_muldiv_en,
       i_op => i_muldiv_op,
       i_src_a => i_src_a,
       i_src_b => i_src_b,

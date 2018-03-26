@@ -30,6 +30,7 @@ entity muldiv is
     o_stall : out std_logic;
 
     -- Inputs.
+    i_enable : in std_logic;
     i_op : in T_MULDIV_OP;
     i_src_a : in std_logic_vector(C_WORD_SIZE-1 downto 0);
     i_src_b : in std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -42,23 +43,41 @@ entity muldiv is
 end muldiv;
 
 architecture rtl of muldiv is
+  -- Decoded muldiv operation.
   signal s_is_signed : std_logic;
+  signal s_is_mul : std_logic;
 
   -- Multiply signals.
+  signal s_start_mul : std_logic;
+  signal s_stall_from_mul : std_logic;
   signal s_mul_result : std_logic_vector(2*C_WORD_SIZE-1 downto 0);
+  signal s_mul_result_ready : std_logic;
 
+  -- Outputs.
   signal s_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_result_ready : std_logic;
+  signal s_request_stall : std_logic;
 begin
   -- Decode the muldiv operation.
   s_is_signed <= not i_op(0);  -- MUL, MULHI, DIV, REM
+  s_is_mul <= not i_op(2);     -- MUL, MULHI, MULHIU
+
+  -- Start a new operation?
+  s_start_mul <= i_enable and s_is_mul;
 
   -- Instantiate a multiply unit.
   mul32_1: entity work.mul32
     port map (
+      i_clk => i_clk,
+      i_rst => i_rst,
+      i_stall => i_stall,
+      o_stall => s_stall_from_mul,
+      i_start_op => s_start_mul,
       i_src_a => i_src_a,
       i_src_b => i_src_b,
       i_signed_op => s_is_signed,
-      o_result => s_mul_result
+      o_result => s_mul_result,
+      o_result_ready => s_mul_result_ready
     );
 
   -- Select which result to use.
@@ -71,9 +90,14 @@ begin
       -- TODO(m): Support division operations.
       (others => '0') when others;
 
+  -- Control/ready signals.
+  -- TODO(m): Support division operations.
+  s_result_ready <= s_mul_result_ready;
+  s_request_stall <= s_stall_from_mul;
+
   -- Outputs.
   o_result <= s_result;
-  o_result_ready <= '1';
-  o_stall <= '0';
+  o_result_ready <= s_result_ready;
+  o_stall <= s_request_stall;
 end rtl;
 
