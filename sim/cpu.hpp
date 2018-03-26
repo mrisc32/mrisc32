@@ -151,6 +151,9 @@ protected:
   uint32_t m_fetched_instr_count;
   uint32_t m_vector_loop_count;
   uint32_t m_total_cycle_count;
+
+private:
+  virtual void flush_caches() = 0;
 };
 
 #endif  // SIM_CPU_HPP_

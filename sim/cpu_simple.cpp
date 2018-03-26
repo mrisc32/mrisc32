@@ -627,3 +627,8 @@ uint32_t cpu_simple_t::run() {
 
   return m_exit_code;
 }
+
+void cpu_simple_t::flush_caches()
+{
+  m_dcache.flush();
+}

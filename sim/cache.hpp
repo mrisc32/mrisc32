@@ -51,7 +51,15 @@ public:
 
   /// @brief Flush all lines in the cache.
   void flush() {
-    // TODO(m): Implement me!
+    for (uint32_t line_no = 0; line_no < NUM_LINES; ++line_no) {
+      auto& tag = m_tags[line_no];
+      if (((tag & TAG_BIT_VALID) != 0u) && ((tag & TAG_BIT_MODIFIED) != 0u)) {
+        auto& line = m_lines[line_no];
+        const uint32_t addr = (tag >> NUM_TAG_STATUS_BITS) * NUM_LINES * LINE_SIZE;
+        cache_to_ram(addr, line);
+        tag = tag & ~TAG_BIT_MODIFIED;
+      }
+    }
   }
 
   void write8(const uint32_t addr, const uint8_t value, uint32_t& extra_cycles) {

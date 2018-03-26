@@ -36,6 +36,8 @@ public:
   uint32_t run() override;
 
 private:
+  void flush_caches() override;
+
   uint32_t cpuid(const uint32_t a, const uint32_t b);
 };
 

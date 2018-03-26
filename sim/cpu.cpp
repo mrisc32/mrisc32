@@ -69,6 +69,7 @@ void cpu_t::dump_stats() {
 }
 
 void cpu_t::dump_ram(const uint32_t begin, const uint32_t end, const std::string& file_name) {
+  flush_caches();
   std::ofstream file;
   file.open(file_name, std::ios::out | std::ios::binary);
   for (uint32_t addr = begin; addr < end; addr += ram_t::LINE_WIDTH) {
