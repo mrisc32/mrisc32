@@ -366,7 +366,6 @@ begin
       (s_reg_c_required and (i_reg_c_fwd_use_value and not i_reg_c_fwd_value_ready));
 
   -- Should we discard the operation (i.e. send a bubble down the pipeline)?
-  -- TODO(m): There are more things to consider (e.g. non-taken BL[cc] branches, ...).
   s_bubble <= i_bubble or s_missing_fwd_operand;
   s_dst_reg_masked <= s_dst_reg when s_bubble = '0' else (others => '0');
   s_writes_to_reg_masked <= s_writes_to_reg and not s_bubble;
