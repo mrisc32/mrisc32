@@ -63,7 +63,7 @@ begin
   s_is_mul <= not i_op(2);     -- MUL, MULHI, MULHIU
 
   -- Start a new operation?
-  s_start_mul <= i_enable and s_is_mul;
+  s_start_mul <= i_enable and i_start_op and s_is_mul;
 
   -- Instantiate a multiply unit.
   mul32_1: entity work.mul32
