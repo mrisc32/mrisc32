@@ -22,7 +22,7 @@
 --
 -- A major part of this stage is the branch logic (PC prediction and correction). This relies on
 -- a few different concepts:
---   * A branch target cache provides information about historical branch events.
+--   * A branch target buffer provides information about historical branch events.
 --   * A simple predictor (PC + 4) is used when no branch was predicted taken.
 --   * Information from the ID stage (which evaluates branch instructions) is used for detecting
 --     mispredictions and correcting the PC.
@@ -71,10 +71,10 @@ architecture rtl of fetch is
   signal s_next_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);  -- Next IF PC.
   signal s_id_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);    -- Current ID PC.
 
-  -- Branch target cache signals.
-  signal s_btc_taken : std_logic;
-  signal s_btc_target : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_prev_btc_taken : std_logic;
+  -- Branch target buffer signals.
+  signal s_btb_taken : std_logic;
+  signal s_btb_target : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_prev_btb_taken : std_logic;
 
   -- Branch prediction signals.
   signal s_pc_plus_4 : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -94,15 +94,15 @@ begin
   o_icache_req <= '1';  -- We always read from the cache.
   o_icache_addr <= s_pc;
 
-  -- Branch target cache.
-  BTC: entity work.branch_target_cache
+  -- Branch target buffer.
+  BTB: entity work.branch_target_buffer
     port map (
       i_clk => i_clk,
       i_rst => i_rst,
       i_invalidate => '0',
-      i_read_pc => s_pc,
-      o_predict_taken => s_btc_taken,
-      o_predict_target => s_btc_target,
+      i_read_pc => s_next_pc,
+      o_predict_taken => s_btb_taken,
+      o_predict_target => s_btb_target,
       i_write_pc => s_id_pc,
       i_write_is_branch => i_branch_is_branch,
       i_write_is_taken => i_branch_is_taken,
@@ -115,7 +115,7 @@ begin
       i_pc => s_pc,
       o_result => s_pc_plus_4
     );
-  s_predicted_pc <= s_btc_target when s_btc_taken = '1' else s_pc_plus_4;
+  s_predicted_pc <= s_btb_target when s_btb_taken = '1' else s_pc_plus_4;
 
   -- Select the corrected PC for the current cycle (based on the decoded branch
   -- info from the ID stage), if the previous instruction was a branch.
@@ -124,7 +124,7 @@ begin
   -- Determine if we had a branch misprediction in the previous cycle.
   s_reg_branch_mispredicted <= to_std_logic(s_pc /= i_branch_reg_addr) and i_branch_is_reg;
   s_offset_branch_mispredicted <= i_branch_is_branch and (not i_branch_is_reg) and
-                                  (s_prev_btc_taken xor i_branch_is_taken);
+                                  (s_prev_btb_taken xor i_branch_is_taken);
   s_branch_mispredicted <= s_reg_branch_mispredicted or s_offset_branch_mispredicted;
 
   -- Select the corrected or the predicted PC for the next IF cycle.
@@ -142,12 +142,12 @@ begin
     if i_rst = '1' then
       s_pc <= C_RESET_PC;
       s_id_pc <= (others => '0');
-      s_prev_btc_taken <= '0';
+      s_prev_btb_taken <= '0';
     elsif rising_edge(i_clk) then
       if s_stall = '0' then
         s_pc <= s_next_pc;
         s_id_pc <= s_pc;
-        s_prev_btc_taken <= s_btc_taken;
+        s_prev_btb_taken <= s_btb_taken;
       end if;
     end if;
   end process;

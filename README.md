@@ -18,7 +18,7 @@ This is an experimental, custom 32-bit RISC/Vector CPU.
   - There are only three basic types of instruction encodings.
   - There is room for 512 register-based and 62 immediate-based instructions.
   - Space has been reserved for future double-word instruction encodings, for an additional 8192 register + 8192 immediate instructions (or more).
-* Branches can be executed in the ID (instruction decode) step, which gives a low branch misprediction penalty.
+* Branches can be executed during instruction decode, which gives a low branch misprediction penalty.
 * All conditionals (branches etc) are based on register content (not condition code flags).
 * There are no condition code flags (carry, overflow, ...).
 * Unlike early RISC architectures, there are *no* delay slots.
@@ -57,12 +57,12 @@ So far, the following components have been implemented:
 
 * The integer ALU.
   - All single-cycle integer operations are supported.
-* A multi-cycle multiply unit.
-  - Supports MUL and MULHIU.
+* A two-cycle multiply unit.
+  - Supports all multiplication operations.
 * The scalar register file.
   - There are three read ports and one write port.
 * A basic 5-stage pipeline.
-  - PC and branching logic (no branch target buffer yet).
+  - PC and branching logic.
   - Instruction fetch.
   - Decode.
   - Execute.
@@ -70,7 +70,7 @@ So far, the following components have been implemented:
   - Register write-back.
   - Operand forwarding.
 
-**TODO**: Caches, vector logic, vector register file, divide and signed multiply, FPU, etc.
+**TODO**: Caches, vector logic, vector register file, divide, FPU, etc.
 
 # Goals
 

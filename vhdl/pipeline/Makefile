@@ -26,7 +26,7 @@ SRCS += \
     $(PIPELINE_PATH)/regs_scalar_tb.vhd \
     $(PIPELINE_PATH)/pc_plus_4.vhd \
     $(PIPELINE_PATH)/pc_plus_offset.vhd \
-    $(PIPELINE_PATH)/branch_target_cache.vhd \
+    $(PIPELINE_PATH)/branch_target_buffer.vhd \
     $(PIPELINE_PATH)/fetch.vhd \
     $(PIPELINE_PATH)/decode.vhd \
     $(PIPELINE_PATH)/execute.vhd \
