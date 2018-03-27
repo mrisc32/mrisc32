@@ -53,6 +53,7 @@ main:
 
 .inner_loop_done:
     SUB   S9, S17, S9     ; S9 = max_num_iterations - num_iterations = color
+    LSL   S9, S9, 1       ; x2 for more intense levels
 
     ; Write color to pixel matrix.
     STB   S9, S14, 0
