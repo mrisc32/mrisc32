@@ -90,22 +90,22 @@ begin
   -- Bitwise operations
   ------------------------------------------------------------------------------------------------
 
-  -- OP_OR
+  -- C_ALU_OR
   s_or_res <= i_src_a or i_src_b;
 
-  -- OP_NOR
+  -- C_ALU_NOR
   s_nor_res <= not s_or_res;
 
-  -- OP_AND
+  -- C_ALU_AND
   s_and_res <= i_src_a and i_src_b;
 
-  -- OP_BIC
+  -- C_ALU_BIC
   s_bic_res <= i_src_a and (not i_src_b);
 
-  -- OP_XOR
+  -- C_ALU_XOR
   s_xor_res <= i_src_a xor i_src_b;
 
-  -- OP_SEL
+  -- C_ALU_SEL
   s_sel_res <= (i_src_a and i_src_c) or (i_src_b and (not i_src_c));
 
 
@@ -113,7 +113,7 @@ begin
   -- Bit, byte and word shuffling
   ------------------------------------------------------------------------------------------------
 
-  -- OP_SHUF
+  -- C_ALU_SHUF
   ShufMux1: with i_src_b(2 downto 0) select
     s_shuf_res(7 downto 0) <=
       i_src_a(7 downto 0) when "000",
@@ -143,24 +143,24 @@ begin
       i_src_a(31 downto 24) when "011",
       (others => '0') when others;
 
-  -- OP_REV
+  -- C_ALU_REV
   RevGen: for k in 0 to C_WORD_SIZE-1 generate
     s_rev_res(k) <= i_src_a(C_WORD_SIZE-1-k);
   end generate;
 
-  -- OP_EXTB
+  -- C_ALU_EXTB
   s_extb_res(C_WORD_SIZE-1 downto 8) <= (others => i_src_a(7));
   s_extb_res(7 downto 0) <= i_src_a(7 downto 0);
 
-  -- OP_EXTH
+  -- C_ALU_EXTH
   s_exth_res(C_WORD_SIZE-1 downto 16) <= (others => i_src_a(15));
   s_exth_res(15 downto 0) <= i_src_a(15 downto 0);
 
-  -- OP_LDHI, OP_LDHIO
+  -- C_ALU_LDHI, C_ALU_LDHIO
   s_ldhi_res(C_WORD_SIZE-1 downto C_WORD_SIZE-19) <= i_src_a(18 downto 0);
-  s_ldhi_res(C_WORD_SIZE-20 downto 0) <= (others => i_op(1));  -- OP_LDHI="000000001", OP_LDHIO="000000010"
+  s_ldhi_res(C_WORD_SIZE-20 downto 0) <= (others => i_op(1));  -- C_ALU_LDHI="000000001", C_ALU_LDHIO="000000010"
 
-  -- OP_CLZ
+  -- C_ALU_CLZ
   AluCLZ32: entity work.clz32
     port map (
       i_src => i_src_a,
@@ -199,7 +199,7 @@ begin
   -- Select if we're doing addition or subtraction.
   NegAdderAMux: with i_op select
     s_adder_subtract <=
-      '1' when OP_SUB | OP_SLT | OP_SLTU | OP_CEQ | OP_CLT | OP_CLTU | OP_CLE | OP_CLEU,
+      '1' when C_ALU_SUB | C_ALU_SLT | C_ALU_SLTU | C_ALU_CEQ | C_ALU_CLT | C_ALU_CLTU | C_ALU_CLE | C_ALU_CLEU,
       '0' when others;
 
   -- Unsigned comparator results.
@@ -208,16 +208,16 @@ begin
 
   -- Set operations.
   s_slt_res(C_WORD_SIZE-1 downto 1) <= (others => '0');
-  s_slt_res(0) <= s_comparator_ltu when i_op = OP_SLTU else s_comparator_lt;
+  s_slt_res(0) <= s_comparator_ltu when i_op = C_ALU_SLTU else s_comparator_lt;
 
   -- Compare operations.
   CmpMux: with i_op select
     s_cmp_bit <=
-      s_comparator_eq when OP_CEQ,
-      s_comparator_lt when OP_CLT,
-      s_comparator_ltu when OP_CLTU,
-      s_comparator_le when OP_CLE,
-      s_comparator_leu when OP_CLEU,
+      s_comparator_eq when C_ALU_CEQ,
+      s_comparator_lt when C_ALU_CLT,
+      s_comparator_ltu when C_ALU_CLTU,
+      s_comparator_le when C_ALU_CLE,
+      s_comparator_leu when C_ALU_CLEU,
       '0' when others;
   s_cmp_res <= (others => s_cmp_bit);
 
@@ -228,8 +228,8 @@ begin
 
   AluShifter: entity work.shift32
     port map (
-      i_right => i_op(1),       -- '1' for OP_LSR and OP_ASR, '0' for OP_LSL
-      i_arithmetic => i_op(0),  -- '1' for OP_ASR, '0' for OP_LSR and OP_LSL
+      i_right => i_op(1),       -- '1' for C_ALU_LSR and C_ALU_ASR, '0' for C_ALU_LSL
+      i_arithmetic => i_op(0),  -- '1' for C_ALU_ASR, '0' for C_ALU_LSR and C_ALU_LSL
       i_src => i_src_a,
       i_shift => i_src_b(4 downto 0),
       o_result => s_shifter_res
@@ -242,23 +242,23 @@ begin
 
   AluMux: with i_op select
     o_result <=
-        s_cpuid_res when OP_CPUID,
-        s_or_res when OP_OR,
-        s_nor_res when OP_NOR,
-        s_and_res when OP_AND,
-        s_bic_res when OP_BIC,
-        s_xor_res when OP_XOR,
-        s_sel_res when OP_SEL,
-        s_adder_result when OP_ADD | OP_SUB,
-        s_slt_res when OP_SLT | OP_SLTU,
-        s_cmp_res when OP_CEQ | OP_CLT | OP_CLTU | OP_CLE | OP_CLEU,
-        s_shifter_res when OP_LSR | OP_ASR | OP_LSL,
-        s_shuf_res when OP_SHUF,
-        s_clz_res when OP_CLZ,
-        s_rev_res when OP_REV,
-        s_extb_res when OP_EXTB,
-        s_exth_res when OP_EXTH,
-        s_ldhi_res when OP_LDHI | OP_LDHIO,
+        s_cpuid_res when C_ALU_CPUID,
+        s_or_res when C_ALU_OR,
+        s_nor_res when C_ALU_NOR,
+        s_and_res when C_ALU_AND,
+        s_bic_res when C_ALU_BIC,
+        s_xor_res when C_ALU_XOR,
+        s_sel_res when C_ALU_SEL,
+        s_adder_result when C_ALU_ADD | C_ALU_SUB,
+        s_slt_res when C_ALU_SLT | C_ALU_SLTU,
+        s_cmp_res when C_ALU_CEQ | C_ALU_CLT | C_ALU_CLTU | C_ALU_CLE | C_ALU_CLEU,
+        s_shifter_res when C_ALU_LSR | C_ALU_ASR | C_ALU_LSL,
+        s_shuf_res when C_ALU_SHUF,
+        s_clz_res when C_ALU_CLZ,
+        s_rev_res when C_ALU_REV,
+        s_extb_res when C_ALU_EXTB,
+        s_exth_res when C_ALU_EXTH,
+        s_ldhi_res when C_ALU_LDHI | C_ALU_LDHIO,
         (others => '0') when others;
 
 end rtl;

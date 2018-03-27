@@ -327,36 +327,36 @@ begin
   -- Select ALU operation.
   s_alu_op <=
       -- If this is not an ALU operation, disable the ALU.
-      OP_CPUID when s_alu_en = '0' else
+      C_ALU_CPUID when s_alu_en = '0' else
 
       -- Use the ALU to calculate the memory/return address.
-      OP_ADD when (s_is_mem_op or s_is_taken_link_branch ) = '1' else
+      C_ALU_ADD when (s_is_mem_op or s_is_taken_link_branch ) = '1' else
 
       -- Use NOP for non-linking branches (they do not produce any result).
-      OP_CPUID when s_is_branch = '1' else
+      C_ALU_CPUID when s_is_branch = '1' else
 
       -- LDHI has a special ALU op.
-      OP_LDHI when s_is_ldhi = '1' else
+      C_ALU_LDHI when s_is_ldhi = '1' else
 
       -- LDHIO has a special ALU op.
-      OP_LDHIO when s_is_ldhio = '1' else
+      C_ALU_LDHIO when s_is_ldhio = '1' else
 
       -- LDI can use the OR operator (i.e. just move the immediate value to the target reg).
-      OP_OR when s_is_ldi = '1' else
+      C_ALU_OR when s_is_ldi = '1' else
 
-      -- Map the low order opcode directly to the ALU.
-      s_op_low when s_is_type_a = '1' else
+      -- Map the low order bits of the low order opcode directly to the ALU.
+      s_op_low(C_ALU_OP_SIZE-1 downto 0) when s_is_type_a = '1' else
 
       -- Map the high order opcode directly to the ALU.
-      ("000" & s_op_high);
+      s_op_high;
 
   -- Select MULDIV operation.
   s_muldiv_op <=
       -- If this is not a mul/div operation, disable the muldiv unit.
       (others => '0') when s_muldiv_en = '0' else
 
-      -- Map the 3 low bits of the low order opcode directly to the muldiv unit.
-      s_op_low(2 downto 0);
+      -- Map the low order bits of the low order opcode directly to the muldiv unit.
+      s_op_low(C_MULDIV_OP_SIZE-1 downto 0);
 
   -- Are we missing any fwd operation that has not yet been produced by the pipeline?
   s_missing_fwd_operand <=
