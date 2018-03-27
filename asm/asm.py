@@ -297,48 +297,6 @@ _OPCODES = {
                    [0x21000000, _REG1, _REG2, _IMM14],
                    [0xa1000000, _VREG1, _VREG2, _IMM14]],
 
-        # Integer mul/div.
-        'MUL':    [[0x00000030, _REG1, _REG2, _REG3],
-                   [0x80000030, _VREG1, _VREG2, _REG3],
-                   [0xc0000030, _VREG1, _VREG2, _VREG3]],
-        # Note: MUL works for both signed and unsigned so no MULU is required.
-        'MULHI':  [[0x00000032, _REG1, _REG2, _REG3],
-                   [0x80000032, _VREG1, _VREG2, _REG3],
-                   [0xc0000032, _VREG1, _VREG2, _VREG3]],
-        'MULHIU': [[0x00000033, _REG1, _REG2, _REG3],
-                   [0x80000033, _VREG1, _VREG2, _REG3],
-                   [0xc0000033, _VREG1, _VREG2, _VREG3]],
-        'DIV':    [[0x00000034, _REG1, _REG2, _REG3],
-                   [0x80000034, _VREG1, _VREG2, _REG3],
-                   [0xc0000034, _VREG1, _VREG2, _VREG3]],
-        'DIVU':   [[0x00000035, _REG1, _REG2, _REG3],
-                   [0x80000035, _VREG1, _VREG2, _REG3],
-                   [0xc0000035, _VREG1, _VREG2, _VREG3]],
-        'REM':    [[0x00000036, _REG1, _REG2, _REG3],
-                   [0x80000036, _VREG1, _VREG2, _REG3],
-                   [0xc0000036, _VREG1, _VREG2, _VREG3]],
-        'REMU':   [[0x00000037, _REG1, _REG2, _REG3],
-                   [0x80000037, _VREG1, _VREG2, _REG3],
-                   [0xc0000037, _VREG1, _VREG2, _VREG3]],
-
-        # FP arithmetic.
-        'ITOF':   [[0x00000038, _REG1, _REG2],     # Cast int->float (reg3 = z)
-                   [0x80000038, _VREG1, _VREG2]],
-        'FTOI':   [[0x00000039, _REG1, _REG2],     # Cast float->int (reg3 = z)
-                   [0x80000039, _VREG1, _VREG2]],
-        'FADD':   [[0x0000003a, _REG1, _REG2, _REG3],
-                   [0x8000003a, _VREG1, _VREG2, _REG3],
-                   [0xc000003a, _VREG1, _VREG2, _VREG3]],
-        'FSUB':   [[0x0000003b, _REG1, _REG2, _REG3],
-                   [0x8000003b, _VREG1, _VREG2, _REG3],
-                   [0xc000003b, _VREG1, _VREG2, _VREG3]],
-        'FMUL':   [[0x0000003c, _REG1, _REG2, _REG3],
-                   [0x8000003c, _VREG1, _VREG2, _REG3],
-                   [0xc000003c, _VREG1, _VREG2, _VREG3]],
-        'FDIV':   [[0x0000003d, _REG1, _REG2, _REG3],
-                   [0x8000003d, _VREG1, _VREG2, _REG3],
-                   [0xc000003d, _VREG1, _VREG2, _VREG3]],
-
         # Bit handling and byte/halfword/word shuffling.
         'SEL':    [[0x00000040, _REG1, _REG2, _REG3],
                    [0x80000040, _VREG1, _VREG2, _REG3],
@@ -359,9 +317,50 @@ _OPCODES = {
         'MVS':    [[0x00000053, _REG1, _VREG2, _REG3]],  # Move vector element->scalar
 
         # Jump to register address.
-        'J':      [[0x00000080, _REG1]],           # 2nd & 3rd regs are always z
-        'JL':     [[0x00000081, _REG1]],           # 2nd & 3rd regs are always z
+        'J':      [[0x00000070, _REG1]],           # 2nd & 3rd regs are always z
+        'JL':     [[0x00000071, _REG1]],           # 2nd & 3rd regs are always z
 
+        # Integer mul/div.
+        'MUL':    [[0x00000080, _REG1, _REG2, _REG3],
+                   [0x80000080, _VREG1, _VREG2, _REG3],
+                   [0xc0000080, _VREG1, _VREG2, _VREG3]],
+        # Note: MUL works for both signed and unsigned so no MULU is required.
+        'MULHI':  [[0x00000082, _REG1, _REG2, _REG3],
+                   [0x80000082, _VREG1, _VREG2, _REG3],
+                   [0xc0000082, _VREG1, _VREG2, _VREG3]],
+        'MULHIU': [[0x00000083, _REG1, _REG2, _REG3],
+                   [0x80000083, _VREG1, _VREG2, _REG3],
+                   [0xc0000083, _VREG1, _VREG2, _VREG3]],
+        'DIV':    [[0x00000084, _REG1, _REG2, _REG3],
+                   [0x80000084, _VREG1, _VREG2, _REG3],
+                   [0xc0000084, _VREG1, _VREG2, _VREG3]],
+        'DIVU':   [[0x00000085, _REG1, _REG2, _REG3],
+                   [0x80000085, _VREG1, _VREG2, _REG3],
+                   [0xc0000085, _VREG1, _VREG2, _VREG3]],
+        'REM':    [[0x00000086, _REG1, _REG2, _REG3],
+                   [0x80000086, _VREG1, _VREG2, _REG3],
+                   [0xc0000086, _VREG1, _VREG2, _VREG3]],
+        'REMU':   [[0x00000087, _REG1, _REG2, _REG3],
+                   [0x80000087, _VREG1, _VREG2, _REG3],
+                   [0xc0000087, _VREG1, _VREG2, _VREG3]],
+
+        # FP arithmetic.
+        'ITOF':   [[0x00000090, _REG1, _REG2],     # Cast int->float (reg3 = z)
+                   [0x80000090, _VREG1, _VREG2]],
+        'FTOI':   [[0x00000091, _REG1, _REG2],     # Cast float->int (reg3 = z)
+                   [0x80000091, _VREG1, _VREG2]],
+        'FADD':   [[0x00000092, _REG1, _REG2, _REG3],
+                   [0x80000092, _VREG1, _VREG2, _REG3],
+                   [0xc0000092, _VREG1, _VREG2, _VREG3]],
+        'FSUB':   [[0x00000093, _REG1, _REG2, _REG3],
+                   [0x80000093, _VREG1, _VREG2, _REG3],
+                   [0xc0000093, _VREG1, _VREG2, _VREG3]],
+        'FMUL':   [[0x00000094, _REG1, _REG2, _REG3],
+                   [0x80000094, _VREG1, _VREG2, _REG3],
+                   [0xc0000094, _VREG1, _VREG2, _VREG3]],
+        'FDIV':   [[0x00000095, _REG1, _REG2, _REG3],
+                   [0x80000095, _VREG1, _VREG2, _REG3],
+                   [0xc0000095, _VREG1, _VREG2, _VREG3]],
 
         # == C ==
 

@@ -268,7 +268,7 @@ uint32_t cpu_simple_t::run() {
 
       const bool is_bcc = ((sclar_instr & 0x30000000u) == 0x30000000u) &&
                           ((sclar_instr & 0x06000000u) != 0x06000000u);
-      const bool is_j = ((sclar_instr & 0x3f0001f0u) == 0x00000080u);
+      const bool is_j = ((sclar_instr & 0x3f0001feu) == 0x00000070u);
       const bool is_branch = is_bcc || is_j;
       const bool is_subroutine_branch =
           is_branch && (((sclar_instr & 0x10000001u) == 0x00000001u) ||  // jl
@@ -338,7 +338,7 @@ uint32_t cpu_simple_t::run() {
       const bool is_mem_op = (is_mem_load || is_mem_store);
 
       // Is this an instruction with one destination register and three source registers?
-      const bool is_sel = ((sclar_instr & 0x3f0001ffu) == 0x00000040u);
+      const bool is_sel = ((sclar_instr & 0x3f0001ffu) == EX_OP_SEL);
       const bool is_1d_3s = is_sel;
 
       // Should we use reg1 as a source (special case)?

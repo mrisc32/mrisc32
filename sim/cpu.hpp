@@ -91,26 +91,26 @@ protected:
   static const uint32_t EX_OP_LSL = 0x20u;
   static const uint32_t EX_OP_SHUF = 0x21u;
 
-  static const uint32_t EX_OP_MUL = 0x30u;
-  static const uint32_t EX_OP_MULHI = 0x32u;
-  static const uint32_t EX_OP_MULHIU = 0x33u;
-  static const uint32_t EX_OP_DIV = 0x34u;
-  static const uint32_t EX_OP_DIVU = 0x35u;
-  static const uint32_t EX_OP_REM = 0x36u;
-  static const uint32_t EX_OP_REMU = 0x37u;
-
-  static const uint32_t EX_OP_ITOF = 0x38u;
-  static const uint32_t EX_OP_FTOI = 0x39u;
-  static const uint32_t EX_OP_FADD = 0x3au;
-  static const uint32_t EX_OP_FSUB = 0x3bu;
-  static const uint32_t EX_OP_FMUL = 0x3cu;
-  static const uint32_t EX_OP_FDIV = 0x3du;
-
   static const uint32_t EX_OP_SEL = 0x40u;
   static const uint32_t EX_OP_CLZ = 0x41u;
   static const uint32_t EX_OP_REV = 0x42u;
   static const uint32_t EX_OP_EXTB = 0x43u;
   static const uint32_t EX_OP_EXTH = 0x44u;
+
+  static const uint32_t EX_OP_MUL = 0x80u;
+  static const uint32_t EX_OP_MULHI = 0x82u;
+  static const uint32_t EX_OP_MULHIU = 0x83u;
+  static const uint32_t EX_OP_DIV = 0x84u;
+  static const uint32_t EX_OP_DIVU = 0x85u;
+  static const uint32_t EX_OP_REM = 0x86u;
+  static const uint32_t EX_OP_REMU = 0x87u;
+
+  static const uint32_t EX_OP_ITOF = 0x90u;
+  static const uint32_t EX_OP_FTOI = 0x91u;
+  static const uint32_t EX_OP_FADD = 0x92u;
+  static const uint32_t EX_OP_FSUB = 0x93u;
+  static const uint32_t EX_OP_FMUL = 0x94u;
+  static const uint32_t EX_OP_FDIV = 0x95u;
 
   // Memory operations.
   static const uint32_t MEM_OP_NONE = 0x0u;

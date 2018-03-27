@@ -208,7 +208,7 @@ begin
   --------------------------------------------------------------------------------------------------
 
   -- Is this a branch?
-  s_is_reg_branch <= (s_is_type_a and not i_bubble) when s_op_low(8 downto 1) = "01000000" else '0';  -- J, JL
+  s_is_reg_branch <= (s_is_type_a and not i_bubble) when s_op_low(8 downto 1) = "00111000" else '0';  -- J, JL
 
   IsOffsetBranchMux: with s_op_high select
     s_is_offset_branch <=
@@ -288,7 +288,7 @@ begin
   s_is_ldi   <= '1' when s_op_high = "111110" else '0';
 
   -- Is this a MULDIV op?
-  s_is_muldiv_op <= '1' when (s_is_type_a = '1' and s_op_low(8 downto 3) = "000110") else '0';
+  s_is_muldiv_op <= '1' when (s_is_type_a = '1' and s_op_low(8 downto 3) = "010000") else '0';
 
   -- Is this a SEL operation (0x040)?
   s_is_sel <= s_is_type_a when s_op_low = "001000000" else '0';
