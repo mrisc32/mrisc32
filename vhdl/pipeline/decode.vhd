@@ -290,8 +290,8 @@ begin
   -- Is this a MULDIV op?
   s_is_muldiv_op <= '1' when (s_is_type_a = '1' and s_op_low(8 downto 3) = "010000") else '0';
 
-  -- Is this a SEL operation (0x040)?
-  s_is_sel <= s_is_type_a when s_op_low = "001000000" else '0';
+  -- Is this a SEL operation (0x030)?
+  s_is_sel <= s_is_type_a when s_op_low = "000110000" else '0';
 
   -- What source registers are required for this operation?
   s_reg_a_required <= not s_is_type_c;

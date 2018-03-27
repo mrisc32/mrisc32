@@ -83,11 +83,11 @@ package common is
 
   constant OP_SHUF   : T_ALU_OP := "000100001";
 
-  constant OP_SEL    : T_ALU_OP := "001000000";
-  constant OP_CLZ    : T_ALU_OP := "001000001";
-  constant OP_REV    : T_ALU_OP := "001000010";
-  constant OP_EXTB   : T_ALU_OP := "001000011";
-  constant OP_EXTH   : T_ALU_OP := "001000100";
+  constant OP_SEL    : T_ALU_OP := "000110000";
+  constant OP_CLZ    : T_ALU_OP := "000110001";
+  constant OP_REV    : T_ALU_OP := "000110010";
+  constant OP_EXTB   : T_ALU_OP := "000110011";
+  constant OP_EXTH   : T_ALU_OP := "000110100";
 
   -- MUL/DIV operations.
   constant C_MULDIV_OP_SIZE : integer := 3;

@@ -298,17 +298,20 @@ _OPCODES = {
                    [0xa1000000, _VREG1, _VREG2, _IMM14]],
 
         # Bit handling and byte/halfword/word shuffling.
-        'SEL':    [[0x00000040, _REG1, _REG2, _REG3],
-                   [0x80000040, _VREG1, _VREG2, _REG3],
-                   [0xc0000040, _VREG1, _VREG2, _VREG3]],
-        'CLZ':    [[0x00000041, _REG1, _REG2],          # 3rd reg is always z
-                   [0x80000041, _VREG1, _VREG2]],
-        'REV':    [[0x00000042, _REG1, _REG2],          # 3rd reg is always z
-                   [0x80000042, _VREG1, _VREG2]],
-        'EXTB':   [[0x00000043, _REG1, _REG2],          # 3rd reg is always z
-                   [0x80000043, _VREG1, _VREG2]],
-        'EXTH':   [[0x00000044, _REG1, _REG2],          # 3rd reg is always z
-                   [0x80000044, _VREG1, _VREG2]],
+        # Note: These op-codes are put in the 0x30+ range since they are not
+        # very useful with immediate operands (to leave space for new immediate
+        # type instructions).
+        'SEL':    [[0x00000030, _REG1, _REG2, _REG3],
+                   [0x80000030, _VREG1, _VREG2, _REG3],
+                   [0xc0000030, _VREG1, _VREG2, _VREG3]],
+        'CLZ':    [[0x00000031, _REG1, _REG2],          # 3rd reg is always z
+                   [0x80000031, _VREG1, _VREG2]],
+        'REV':    [[0x00000032, _REG1, _REG2],          # 3rd reg is always z
+                   [0x80000032, _VREG1, _VREG2]],
+        'EXTB':   [[0x00000033, _REG1, _REG2],          # 3rd reg is always z
+                   [0x80000033, _VREG1, _VREG2]],
+        'EXTH':   [[0x00000034, _REG1, _REG2],          # 3rd reg is always z
+                   [0x80000034, _VREG1, _VREG2]],
 
         # Special move/load/store instructions.
         'MSX':    [[0x00000050, _XREG1, _REG2]],         # Move scalar->auxiliary (reg3 = z)
