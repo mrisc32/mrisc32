@@ -127,6 +127,8 @@ begin
   -- Pipeline stages.
   --------------------------------------------------------------------------------------------------
 
+  -- IF: Instruction fetch.
+
   fetch_0: entity work.fetch
     port map (
       i_clk => i_clk,
@@ -152,6 +154,9 @@ begin
       o_instr => s_if_instr,
       o_bubble => s_if_bubble
     );
+
+
+  -- ID: Instruction decode.
 
   decode_0: entity work.decode
     port map (
@@ -208,6 +213,9 @@ begin
       o_mem_en => s_id_mem_en
     );
 
+
+  -- EX: Execute.
+
   execute_0: entity work.execute
     port map (
       i_clk => i_clk,
@@ -243,6 +251,9 @@ begin
       o_next_result => s_ex_next_result,
       o_next_result_ready => s_ex_next_result_ready
     );
+
+
+  -- MEM: Memory.
 
   memory_0: entity work.memory
     port map (
