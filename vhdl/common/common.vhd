@@ -80,8 +80,9 @@ package common is
   constant C_ALU_ASR   : T_ALU_OP := "011111";
   constant C_ALU_LSL   : T_ALU_OP := "100000";
   constant C_ALU_SHUF  : T_ALU_OP := "100001";
+  constant C_ALU_MIN   : T_ALU_OP := "100010";
+  constant C_ALU_MAX   : T_ALU_OP := "100011";
 
-  constant C_ALU_SEL   : T_ALU_OP := "110000";
   constant C_ALU_CLZ   : T_ALU_OP := "110001";
   constant C_ALU_REV   : T_ALU_OP := "110010";
   constant C_ALU_EXTB  : T_ALU_OP := "110011";

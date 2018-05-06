@@ -296,14 +296,21 @@ _OPCODES = {
                    [0xc0000021, _VREG1, _VREG2, _VREG3],
                    [0x21000000, _REG1, _REG2, _IMM14],
                    [0xa1000000, _VREG1, _VREG2, _IMM14]],
+        'MIN':    [[0x00000022, _REG1, _REG2, _REG3],
+                   [0x80000022, _VREG1, _VREG2, _REG3],
+                   [0xc0000022, _VREG1, _VREG2, _VREG3],
+                   [0x22000000, _REG1, _REG2, _IMM14],
+                   [0xa2000000, _VREG1, _VREG2, _IMM14]],
+        'MAX':    [[0x00000023, _REG1, _REG2, _REG3],
+                   [0x80000023, _VREG1, _VREG2, _REG3],
+                   [0xc0000023, _VREG1, _VREG2, _VREG3],
+                   [0x23000000, _REG1, _REG2, _IMM14],
+                   [0xa3000000, _VREG1, _VREG2, _IMM14]],
 
         # Bit handling and byte/halfword/word shuffling.
         # Note: These op-codes are put in the 0x30+ range since they are not
         # very useful with immediate operands (to leave space for new immediate
         # type instructions).
-        'SEL':    [[0x00000030, _REG1, _REG2, _REG3],
-                   [0x80000030, _VREG1, _VREG2, _REG3],
-                   [0xc0000030, _VREG1, _VREG2, _VREG3]],
         'CLZ':    [[0x00000031, _REG1, _REG2],          # 3rd reg is always z
                    [0x80000031, _VREG1, _VREG2]],
         'REV':    [[0x00000032, _REG1, _REG2],          # 3rd reg is always z

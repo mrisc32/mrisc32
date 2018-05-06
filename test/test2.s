@@ -46,8 +46,7 @@ abs_diff_vectors:
   lsl     s12, s11, 2  ; s12 is the memory increment per vector operation
 
 .loop:
-  clt     vl, s4, s11
-  sel     vl, s4, s11  ; VL = min(s4, s11)
+  min     vl, s4, s11  ; VL = min(s4, s11)
 
   sub     s4, s4, s11  ; Decrement the loop counter
 

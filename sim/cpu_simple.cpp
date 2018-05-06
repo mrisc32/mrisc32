@@ -337,12 +337,8 @@ uint32_t cpu_simple_t::run() {
       const bool is_mem_store = is_stx || is_st;
       const bool is_mem_op = (is_mem_load || is_mem_store);
 
-      // Is this an instruction with one destination register and three source registers?
-      const bool is_sel = ((sclar_instr & 0x3f0001ffu) == EX_OP_SEL);
-      const bool is_1d_3s = is_sel;
-
       // Should we use reg1 as a source (special case)?
-      const bool reg1_is_src = is_mem_store || is_branch || is_1d_3s;
+      const bool reg1_is_src = is_mem_store || is_branch;
 
       // Should we use reg2 as a source?
       const bool reg2_is_src = op_class_A || op_class_B;
@@ -351,7 +347,7 @@ uint32_t cpu_simple_t::run() {
       const bool reg3_is_src = op_class_A;
 
       // Should we use reg1 as a destination?
-      const bool reg1_is_dst = is_1d_3s || !reg1_is_src;
+      const bool reg1_is_dst = !reg1_is_src;
 
       // Determine the source & destination register numbers (zero for none).
       const uint32_t src_reg_a = is_subroutine_branch ? REG_PC : (reg2_is_src ? reg2 : REG_Z);
@@ -493,8 +489,13 @@ uint32_t cpu_simple_t::run() {
         case EX_OP_LSL:
           ex_result = ex_in.src_a << ex_in.src_b;
           break;
-        case EX_OP_SEL:
-          ex_result = (ex_in.src_a & ex_in.src_c) | (ex_in.src_b & ~ex_in.src_c);
+        case EX_OP_MIN:
+          ex_result = static_cast<uint32_t>(std::min(static_cast<int32_t>(ex_in.src_a),
+                                            static_cast<int32_t>(ex_in.src_b)));
+          break;
+        case EX_OP_MAX:
+          ex_result = static_cast<uint32_t>(std::max(static_cast<int32_t>(ex_in.src_a),
+                                            static_cast<int32_t>(ex_in.src_b)));
           break;
         case EX_OP_CLZ:
           ex_result = clz32(ex_in.src_a);

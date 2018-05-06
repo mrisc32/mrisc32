@@ -90,8 +90,9 @@ protected:
   static const uint32_t EX_OP_ASR = 0x1fu;
   static const uint32_t EX_OP_LSL = 0x20u;
   static const uint32_t EX_OP_SHUF = 0x21u;
+  static const uint32_t EX_OP_MIN = 0x22u;
+  static const uint32_t EX_OP_MAX = 0x23u;
 
-  static const uint32_t EX_OP_SEL = 0x30u;
   static const uint32_t EX_OP_CLZ = 0x31u;
   static const uint32_t EX_OP_REV = 0x32u;
   static const uint32_t EX_OP_EXTB = 0x33u;

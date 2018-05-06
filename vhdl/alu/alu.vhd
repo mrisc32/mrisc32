@@ -40,7 +40,7 @@ architecture rtl of alu is
   signal s_and_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_bic_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_xor_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_sel_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_minmax_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_slt_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_cmp_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_shuf_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -62,6 +62,7 @@ architecture rtl of alu is
   signal s_comparator_ltu : std_logic;
   signal s_comparator_leu : std_logic;
   signal s_cmp_bit : std_logic;
+  signal s_is_max_op : std_logic;
 
   -- Signals for the shifter.
   signal s_shifter_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -104,9 +105,6 @@ begin
 
   -- C_ALU_XOR
   s_xor_res <= i_src_a xor i_src_b;
-
-  -- C_ALU_SEL
-  s_sel_res <= (i_src_a and i_src_c) or (i_src_b and (not i_src_c));
 
 
   ------------------------------------------------------------------------------------------------
@@ -199,7 +197,7 @@ begin
   -- Select if we're doing addition or subtraction.
   NegAdderAMux: with i_op select
     s_adder_subtract <=
-      '1' when C_ALU_SUB | C_ALU_SLT | C_ALU_SLTU | C_ALU_CEQ | C_ALU_CLT | C_ALU_CLTU | C_ALU_CLE | C_ALU_CLEU,
+      '1' when C_ALU_SUB | C_ALU_SLT | C_ALU_SLTU | C_ALU_CEQ | C_ALU_CLT | C_ALU_CLTU | C_ALU_CLE | C_ALU_CLEU | C_ALU_MIN | C_ALU_MAX,
       '0' when others;
 
   -- Unsigned comparator results.
@@ -209,6 +207,11 @@ begin
   -- Set operations.
   s_slt_res(C_WORD_SIZE-1 downto 1) <= (others => '0');
   s_slt_res(0) <= s_comparator_ltu when i_op = C_ALU_SLTU else s_comparator_lt;
+
+  -- Min/Max operations.
+  s_is_max_op <= '1' when i_op = C_ALU_MAX else '0';
+  s_minmax_res <= i_src_a when s_comparator_lt = s_is_max_op else i_src_b;
+
 
   -- Compare operations.
   CmpMux: with i_op select
@@ -248,7 +251,7 @@ begin
         s_and_res when C_ALU_AND,
         s_bic_res when C_ALU_BIC,
         s_xor_res when C_ALU_XOR,
-        s_sel_res when C_ALU_SEL,
+        s_minmax_res when C_ALU_MIN | C_ALU_MAX,
         s_adder_result when C_ALU_ADD | C_ALU_SUB,
         s_slt_res when C_ALU_SLT | C_ALU_SLTU,
         s_cmp_res when C_ALU_CEQ | C_ALU_CLT | C_ALU_CLTU | C_ALU_CLE | C_ALU_CLEU,
