@@ -99,7 +99,6 @@ begin
       i_op => i_alu_op,
       i_src_a => i_src_a,
       i_src_b => i_src_b,
-      i_src_c => i_src_c,
       o_result => s_alu_result
     );
 

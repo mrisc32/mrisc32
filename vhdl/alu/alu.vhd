@@ -27,7 +27,6 @@ entity alu is
       i_op : in T_ALU_OP;                                      -- Operation
       i_src_a : in std_logic_vector(C_WORD_SIZE-1 downto 0);   -- Source operand A
       i_src_b : in std_logic_vector(C_WORD_SIZE-1 downto 0);   -- Source operand B
-      i_src_c : in std_logic_vector(C_WORD_SIZE-1 downto 0);   -- Source operand C
       o_result : out std_logic_vector(C_WORD_SIZE-1 downto 0)  -- ALU result
     );
 end;
