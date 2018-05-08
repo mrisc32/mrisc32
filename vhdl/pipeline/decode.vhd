@@ -111,7 +111,6 @@ architecture rtl of decode is
   signal s_is_ldhi : std_logic;
   signal s_is_ldhio : std_logic;
   signal s_is_ldi : std_logic;
-  signal s_is_sel : std_logic;
 
   -- Branch condition signals.
   signal s_branch_cond_eq : std_logic;
@@ -290,13 +289,10 @@ begin
   -- Is this a MULDIV op?
   s_is_muldiv_op <= '1' when (s_is_type_a = '1' and s_op_low(8 downto 3) = "010000") else '0';
 
-  -- Is this a SEL operation (0x030)?
-  s_is_sel <= s_is_type_a when s_op_low = "000110000" else '0';
-
   -- What source registers are required for this operation?
   s_reg_a_required <= not s_is_type_c;
   s_reg_b_required <= s_is_type_a;
-  s_reg_c_required <= s_is_mem_store or s_is_sel;
+  s_reg_c_required <= s_is_mem_store;
 
   -- Select data from the register file or operand forwarding.
   s_reg_a_data_or_fwd <= i_reg_a_fwd_value when i_reg_a_fwd_use_value = '1' else s_reg_a_data;
