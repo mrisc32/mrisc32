@@ -101,13 +101,16 @@ begin
       i_rst => i_rst,
       i_invalidate => '0',
       i_read_pc => s_next_pc,
-      o_predict_taken => s_btb_taken,
+      -- o_predict_taken => s_btb_taken,
       o_predict_target => s_btb_target,
       i_write_pc => s_id_pc,
       i_write_is_branch => i_branch_is_branch,
       i_write_is_taken => i_branch_is_taken,
       i_write_target => s_branch_target
     );
+
+  -- TODO(m): The branch logic is broken so we temporarily disable the prediction signal.
+  s_btb_taken <= '0';
 
   -- Predict the next PC.
   pc_plus_4_0: entity work.pc_plus_4
