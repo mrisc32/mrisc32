@@ -88,6 +88,7 @@ architecture rtl of pipeline is
   signal s_ex_pccorr_is_branch : std_logic;
   signal s_ex_pccorr_is_taken : std_logic;
   signal s_ex_pccorr_adjust : std_logic;
+  signal s_ex_pccorr_adjusted_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
   signal s_ex_mem_op : T_MEM_OP;
   signal s_ex_mem_enable : std_logic;
@@ -146,6 +147,7 @@ begin
   s_ex_pccorr_is_branch <= '0';
   s_ex_pccorr_is_taken <= '0';
   s_ex_pccorr_adjust <= '0';
+  s_ex_pccorr_adjusted_pc <= (others => '0');
 
 
   -- PC: Program counter.
@@ -162,6 +164,7 @@ begin
       i_pccorr_is_branch => s_ex_pccorr_is_branch,
       i_pccorr_is_taken => s_ex_pccorr_is_taken,
       i_pccorr_adjust => s_ex_pccorr_adjust,
+      i_pccorr_adjusted_pc => s_ex_pccorr_adjusted_pc,
 
       -- To IF stage (sync).
       o_pc => s_pc_pc

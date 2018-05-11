@@ -39,6 +39,7 @@ entity program_counter is
       i_pccorr_is_branch : in std_logic;
       i_pccorr_is_taken : in std_logic;
       i_pccorr_adjust : in std_logic;  -- 1 if the PC correction needs to be applied.
+      i_pccorr_adjusted_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
 
       -- To IF stage (sync).
       o_pc : out std_logic_vector(C_WORD_SIZE-1 downto 0)
@@ -86,7 +87,7 @@ begin
   s_predicted_pc <= s_btb_target when s_btb_taken = '1' else s_pc_plus_4;
 
   -- Select the corrected or the predicted PC for the next IF cycle.
-  s_pc <= i_pccorr_target when i_pccorr_adjust = '1' else s_predicted_pc;
+  s_pc <= i_pccorr_adjusted_pc when i_pccorr_adjust = '1' else s_predicted_pc;
 
   -- Select the corrected or the predicted PC for the next IF cycle.
   s_btb_read_pc <= s_prev_pc when i_stall = '1' else s_pc;

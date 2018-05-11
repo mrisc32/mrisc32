@@ -33,6 +33,7 @@ architecture behavioral of program_counter_tb is
   signal s_pccorr_is_branch : std_logic;
   signal s_pccorr_is_taken : std_logic;
   signal s_pccorr_adjust : std_logic;
+  signal s_pccorr_adjusted_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
 begin
   program_counter_0: entity work.program_counter
@@ -45,6 +46,7 @@ begin
       i_pccorr_is_branch => s_pccorr_is_branch,
       i_pccorr_is_taken => s_pccorr_is_taken,
       i_pccorr_adjust => s_pccorr_adjust,
+      i_pccorr_adjusted_pc => s_pccorr_adjusted_pc,
       o_pc => s_pc
     );
 
@@ -58,6 +60,7 @@ begin
       pccorr_is_branch : std_logic;
       pccorr_is_taken : std_logic;
       pccorr_adjust : std_logic;
+      pccorr_adjusted_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
       -- Expected outputs
       pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -65,29 +68,39 @@ begin
     type pattern_array is array (natural range <>) of pattern_type;
     constant patterns : pattern_array := (
         -- After reset, the PC should be 0x00000200, and increment by +4 at each cycle.
-        ('0', X"00000000", X"00000000", '0', '0', '0', X"00000200"),
-        ('0', X"00000000", X"00000000", '0', '0', '0', X"00000204"),
-        ('0', X"00000000", X"00000000", '0', '0', '0', X"00000208"),
-        ('0', X"00000000", X"00000000", '0', '0', '0', X"0000020C"),
-        ('0', X"00000000", X"00000000", '0', '0', '0', X"00000210"),
+        ('0', X"00000000", X"00000000", '0', '0', '0', X"00000000", X"00000200"),
+        ('0', X"00000000", X"00000000", '0', '0', '0', X"00000000", X"00000204"),
+        ('0', X"00000000", X"00000000", '0', '0', '0', X"00000000", X"00000208"),
+        ('0', X"00000000", X"00000000", '0', '0', '0', X"00000000", X"0000020C"),
+        ('0', X"00000000", X"00000000", '0', '0', '0', X"00000000", X"00000210"),
 
         -- Inject a branch correction.
-        ('0', X"0000020C", X"00000204", '1', '1', '1', X"00000214"),
-        ('0', X"00000000", X"00000000", '0', '0', '0', X"00000204"),
-        ('0', X"00000000", X"00000000", '0', '0', '0', X"00000208"),
-        ('0', X"00000000", X"00000000", '0', '0', '0', X"0000020C"),
+        ('0', X"0000020C", X"00000204", '1', '1', '1', X"00000204", X"00000214"),
+        ('0', X"00000000", X"00000000", '0', '0', '0', X"00000000", X"00000204"),
+        ('0', X"00000000", X"00000000", '0', '0', '0', X"00000000", X"00000208"),
+        ('0', X"00000000", X"00000000", '0', '0', '0', X"00000000", X"0000020C"),
 
         -- At this point the branch prediction should give the right suggestion.
-        ('0', X"00000000", X"00000000", '0', '0', '0', X"00000204"),
+        ('0', X"00000000", X"00000000", '0', '0', '0', X"00000000", X"00000204"),
 
         -- And we should get a confirmation that it's a branch, but without correction.
-        ('0', X"0000020C", X"00000204", '1', '1', '0', X"00000208"),
+        ('0', X"0000020C", X"00000204", '1', '1', '0', X"00000204", X"00000208"),
 
-        -- Inject a stall.
-        ('1', X"00000000", X"00000000", '0', '0', '0', X"0000020C"),
-        ('1', X"00000000", X"00000000", '0', '0', '0', X"0000020C"),
-        ('0', X"00000000", X"00000000", '0', '0', '0', X"0000020C"),
-        ('0', X"00000000", X"00000000", '0', '0', '0', X"00000204")
+        -- Inject stalls.
+        ('1', X"00000000", X"00000000", '0', '0', '0', X"00000000", X"0000020C"),
+        ('1', X"00000000", X"00000000", '0', '0', '0', X"00000000", X"0000020C"),
+        ('0', X"00000000", X"00000000", '0', '0', '0', X"00000000", X"0000020C"),
+        ('0', X"00000000", X"00000000", '0', '0', '0', X"00000000", X"00000204"),
+        ('1', X"0000020C", X"00000204", '1', '1', '0', X"00000204", X"00000208"),
+        ('0', X"0000020C", X"00000204", '1', '1', '0', X"00000204", X"00000208"),
+        ('0', X"00000000", X"00000000", '0', '0', '0', X"00000000", X"0000020C"),
+        ('0', X"00000000", X"00000000", '0', '0', '0', X"00000000", X"00000204"),
+
+        -- Let the branch be un-taken, so correction is needed.
+        ('0', X"0000020C", X"00000204", '1', '0', '1', X"00000210", X"00000208"),
+        ('0', X"00000000", X"00000000", '0', '0', '0', X"00000000", X"00000210"),
+        ('0', X"00000000", X"00000000", '0', '0', '0', X"00000000", X"00000214"),
+        ('0', X"00000000", X"00000000", '0', '0', '0', X"00000000", X"00000218")
       );
   begin
     -- Start by resetting the input signals.
@@ -99,6 +112,7 @@ begin
     s_pccorr_is_branch <= '0';
     s_pccorr_is_taken <= '0';
     s_pccorr_adjust <= '0';
+    s_pccorr_adjusted_pc <= (others => '0');
 
     wait for 1 ns;
     s_clk <= '1';
@@ -119,6 +133,7 @@ begin
       s_pccorr_is_branch <= patterns(i).pccorr_is_branch;
       s_pccorr_is_taken <= patterns(i).pccorr_is_taken;
       s_pccorr_adjust <= patterns(i).pccorr_adjust;
+      s_pccorr_adjusted_pc <= patterns(i).pccorr_adjusted_pc;
 
       -- Wait for the result to be produced.
       wait for 1 ns;
