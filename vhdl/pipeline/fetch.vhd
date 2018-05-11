@@ -18,7 +18,7 @@
 ----------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------
--- Pipeline Stage 1: Instruction Fetch (IF)
+-- Pipeline Stage 2: Instruction Fetch (IF)
 --
 -- A major part of this stage is the branch logic (PC prediction and correction). This relies on
 -- a few different concepts:

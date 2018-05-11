@@ -49,7 +49,12 @@ entity pipeline is
 end pipeline;
 
 architecture rtl of pipeline is
+  -- From PC.
+  signal s_pc_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
+
   -- From IF.
+  signal s_if_stall : std_logic;
+
   signal s_if_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_if_instr : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_if_bubble : std_logic;
@@ -77,6 +82,12 @@ architecture rtl of pipeline is
 
   -- From EX.
   signal s_ex_stall : std_logic;
+
+  signal s_ex_pccorr_target : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_ex_pccorr_source : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_ex_pccorr_is_branch : std_logic;
+  signal s_ex_pccorr_is_taken : std_logic;
+  signal s_ex_pccorr_adjust : std_logic;
 
   signal s_ex_mem_op : T_MEM_OP;
   signal s_ex_mem_enable : std_logic;
@@ -119,6 +130,7 @@ architecture rtl of pipeline is
   signal s_reg_c_fwd_value_ready : std_logic;
 
   -- Stall logic.
+  signal s_stall_pc : std_logic;
   signal s_stall_if : std_logic;
   signal s_stall_id : std_logic;
   signal s_stall_ex : std_logic;
@@ -126,6 +138,35 @@ begin
   --------------------------------------------------------------------------------------------------
   -- Pipeline stages.
   --------------------------------------------------------------------------------------------------
+
+  -- TODO(m): Hook these signals up properly!
+  s_if_stall <= '0';
+  s_ex_pccorr_target <= (others => '0');
+  s_ex_pccorr_source <= (others => '0');
+  s_ex_pccorr_is_branch <= '0';
+  s_ex_pccorr_is_taken <= '0';
+  s_ex_pccorr_adjust <= '0';
+
+
+  -- PC: Program counter.
+
+  program_counter_0: entity work.program_counter
+    port map (
+      i_clk => i_clk,
+      i_rst => i_rst,
+      i_stall => s_stall_pc,
+
+      -- Results from the branch/PC correction unit in the EX stage (async).
+      i_pccorr_source => s_ex_pccorr_source,
+      i_pccorr_target => s_ex_pccorr_target,
+      i_pccorr_is_branch => s_ex_pccorr_is_branch,
+      i_pccorr_is_taken => s_ex_pccorr_is_taken,
+      i_pccorr_adjust => s_ex_pccorr_adjust,
+
+      -- To IF stage (sync).
+      o_pc => s_pc_pc
+    );
+
 
   -- IF: Instruction fetch.
 
@@ -413,4 +454,5 @@ begin
   s_stall_ex <= s_mem_stall;
   s_stall_id <= s_ex_stall or s_stall_ex;
   s_stall_if <= s_id_stall or s_stall_id;
+  s_stall_pc <= s_if_stall or s_stall_if;
 end rtl;
