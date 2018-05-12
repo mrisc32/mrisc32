@@ -61,7 +61,7 @@ entity decode is
       i_wb_data_w : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_wb_sel_w : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
 
-      -- Branch results to the IF stage (async).
+      -- Branch results to the EX stage (sync).
       o_branch_reg_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_branch_offset_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_branch_is_branch : out std_logic;
@@ -258,13 +258,6 @@ begin
 
   s_is_taken_link_branch <= s_is_link_branch and s_branch_is_taken;
 
-  -- Async outputs to the IF stage (branch logic).
-  o_branch_reg_addr <= s_branch_reg_data;
-  o_branch_offset_addr <= s_branch_offset_addr;
-  o_branch_is_branch <= s_is_branch;
-  o_branch_is_reg <= s_is_reg_branch;
-  o_branch_is_taken <= s_branch_is_taken;
-
 
   --------------------------------------------------------------------------------------------------
   -- Prepare data for the EX stage.
@@ -390,6 +383,12 @@ begin
       o_alu_en <= '0';
       o_muldiv_en <= '0';
       o_mem_en <= '0';
+
+      o_branch_reg_addr <= (others => '0');
+      o_branch_offset_addr <= (others => '0');
+      o_branch_is_branch <= '0';
+      o_branch_is_reg <= '0';
+      o_branch_is_taken <= '0';
     elsif rising_edge(i_clk) then
       if i_stall = '0' then
         o_src_a <= s_src_a;
@@ -403,6 +402,12 @@ begin
         o_alu_en <= s_alu_en_masked;
         o_muldiv_en <= s_muldiv_en_masked;
         o_mem_en <= s_mem_en_masked;
+
+        o_branch_reg_addr <= s_branch_reg_data;
+        o_branch_offset_addr <= s_branch_offset_addr;
+        o_branch_is_branch <= s_is_branch;
+        o_branch_is_reg <= s_is_reg_branch;
+        o_branch_is_taken <= s_branch_is_taken;
       end if;
     end if;
   end process;

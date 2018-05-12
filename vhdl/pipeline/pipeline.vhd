@@ -237,7 +237,7 @@ begin
       i_wb_sel_w => s_mem_dst_reg,
       i_wb_we => s_mem_writes_to_reg,
 
-      -- Branch results to the IF stage (async).
+      -- Branch results to the EX stage (sync).
       o_branch_reg_addr => s_id_branch_reg_addr,
       o_branch_offset_addr => s_id_branch_offset_addr,
       o_branch_is_branch => s_id_branch_is_branch,
