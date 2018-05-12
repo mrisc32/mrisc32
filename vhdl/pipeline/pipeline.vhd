@@ -130,6 +130,9 @@ architecture rtl of pipeline is
   signal s_reg_c_fwd_use_value : std_logic;
   signal s_reg_c_fwd_value_ready : std_logic;
 
+  -- Signal for cancelling speculative instructions in IF and ID.
+  signal s_cancel_speculative_instructions : std_logic;
+
   -- Stall logic.
   signal s_stall_pc : std_logic;
   signal s_stall_if : std_logic;
@@ -156,6 +159,7 @@ begin
     port map (
       i_clk => i_clk,
       i_rst => i_rst,
+
       i_stall => s_stall_pc,
 
       -- Results from the branch/PC correction unit in the EX stage (async).
@@ -179,13 +183,10 @@ begin
       i_rst => i_rst,
 
       i_stall => s_stall_if,
+      i_cancel => s_cancel_speculative_instructions,
 
-      -- Branch results from the ID stage (async).
-      i_branch_reg_addr => s_id_branch_reg_addr,
-      i_branch_offset_addr => s_id_branch_offset_addr,
-      i_branch_is_branch => s_id_branch_is_branch,
-      i_branch_is_reg => s_id_branch_is_reg,
-      i_branch_is_taken => s_id_branch_is_taken,
+      -- Signals from the PC stage.
+      i_pc => s_pc_pc,
 
       -- ICache interface.
       o_icache_req => o_icache_req,
@@ -450,8 +451,11 @@ begin
 
 
   --------------------------------------------------------------------------------------------------
-  -- Pipeline stall logic.
+  -- Pipeline control logic.
   --------------------------------------------------------------------------------------------------
+
+  -- Determine if we need to cancel speculative instructions.
+  s_cancel_speculative_instructions <= s_ex_pccorr_adjust;
 
   -- Determine which pipeline stages need to be stalled during the next cycle.
   s_stall_ex <= s_mem_stall;
