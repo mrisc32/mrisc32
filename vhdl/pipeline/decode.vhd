@@ -100,7 +100,6 @@ architecture rtl of decode is
   signal s_is_offset_branch : std_logic;
   signal s_is_branch : std_logic;
   signal s_is_link_branch : std_logic;
-  signal s_is_taken_link_branch : std_logic;
 
   signal s_mem_op_type : std_logic_vector(1 downto 0);
   signal s_is_mem_op : std_logic;
@@ -256,8 +255,6 @@ begin
 
   s_branch_is_taken <= s_is_reg_branch or (s_is_offset_branch and s_branch_cond_true);
 
-  s_is_taken_link_branch <= s_is_link_branch and s_branch_is_taken;
-
 
   --------------------------------------------------------------------------------------------------
   -- Prepare data for the EX stage.
@@ -304,7 +301,7 @@ begin
 
   -- Select destination register.
   -- Note: For linking branches we set the target register to LR.
-  s_dst_reg <= to_vector(C_LR_REG, C_LOG2_NUM_REGS) when s_is_taken_link_branch = '1' else
+  s_dst_reg <= to_vector(C_LR_REG, C_LOG2_NUM_REGS) when s_is_link_branch = '1' else
                s_reg_c when (s_is_mem_store or s_is_branch) = '0' else
                (others => '0');
 
@@ -319,7 +316,7 @@ begin
       C_ALU_CPUID when s_alu_en = '0' else
 
       -- Use the ALU to calculate the memory/return address.
-      C_ALU_ADD when (s_is_mem_op or s_is_taken_link_branch ) = '1' else
+      C_ALU_ADD when (s_is_mem_op or s_is_link_branch) = '1' else
 
       -- Use NOP for non-linking branches (they do not produce any result).
       C_ALU_CPUID when s_is_branch = '1' else

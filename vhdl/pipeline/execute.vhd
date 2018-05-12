@@ -46,6 +46,21 @@ entity execute is
     i_muldiv_en : in std_logic;
     i_mem_en : in std_logic;
 
+    -- Branch signals from ID (sync).
+    i_branch_reg_addr : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+    i_branch_offset_addr : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+    i_branch_is_branch : in std_logic;
+    i_branch_is_reg : in std_logic;  -- 1 for register branches, 0 for all other instructions.
+    i_branch_is_taken : in std_logic;
+
+    -- Branch signals to PC (async).
+    o_pccorr_target : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+    o_pccorr_source : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+    o_pccorr_is_branch : out std_logic;
+    o_pccorr_is_taken : out std_logic;
+    o_pccorr_adjust : out std_logic;
+    o_pccorr_adjusted_pc : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+
     -- To MEM stage (sync).
     o_mem_op : out T_MEM_OP;
     o_mem_enable : out std_logic;
@@ -93,6 +108,15 @@ architecture rtl of execute is
 
   constant C_MULDIV_ZERO : T_MULDIV_OP := (others => '0');
 begin
+  -- Branch logic.
+  -- TODO(m): Implement me!
+  o_pccorr_target <= (others => '0');
+  o_pccorr_source <= (others => '0');
+  o_pccorr_is_branch <= '0';
+  o_pccorr_is_taken <= '0';
+  o_pccorr_adjust <= '0';
+  o_pccorr_adjusted_pc <= (others => '0');
+
   -- Instantiate the ALU.
   alu_1: entity work.alu
     port map (
@@ -155,6 +179,8 @@ begin
   s_next_result_ready <= (i_alu_en and (not i_mem_en)) or s_multicycle_op_finished;
 
   -- Should we send a bubble down the pipeline?
+  -- TODO(m): We also need to bubble if there was a branch misprediction (important for not
+  -- writing to LR for conditional link branches)!
   s_bubble <= s_stall_for_multicycle_op;
   s_mem_op_masked <= i_mem_op when s_bubble = '0' else (others => '0');
   s_mem_en_masked <= i_mem_en and not s_bubble;

@@ -145,12 +145,6 @@ begin
 
   -- TODO(m): Hook these signals up properly!
   s_if_stall <= '0';
-  s_ex_pccorr_target <= (others => '0');
-  s_ex_pccorr_source <= (others => '0');
-  s_ex_pccorr_is_branch <= '0';
-  s_ex_pccorr_is_taken <= '0';
-  s_ex_pccorr_adjust <= '0';
-  s_ex_pccorr_adjusted_pc <= (others => '0');
 
 
   -- PC: Program counter.
@@ -281,6 +275,21 @@ begin
       i_alu_en => s_id_alu_en,
       i_muldiv_en => s_id_muldiv_en,
       i_mem_en => s_id_mem_en,
+
+      -- Branch results from the ID stage (sync).
+      i_branch_reg_addr => s_id_branch_reg_addr,
+      i_branch_offset_addr => s_id_branch_offset_addr,
+      i_branch_is_branch => s_id_branch_is_branch,
+      i_branch_is_reg => s_id_branch_is_reg,
+      i_branch_is_taken => s_id_branch_is_taken,
+
+      -- Branch PC correction to the PC stage (async).
+      o_pccorr_target => s_ex_pccorr_target,
+      o_pccorr_source => s_ex_pccorr_source,
+      o_pccorr_is_branch => s_ex_pccorr_is_branch,
+      o_pccorr_is_taken => s_ex_pccorr_is_taken,
+      o_pccorr_adjust => s_ex_pccorr_adjust,
+      o_pccorr_adjusted_pc => s_ex_pccorr_adjusted_pc,
 
       -- To MEM stage (sync).
       o_mem_op => s_ex_mem_op,
