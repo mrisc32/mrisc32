@@ -143,10 +143,6 @@ begin
   -- Pipeline stages.
   --------------------------------------------------------------------------------------------------
 
-  -- TODO(m): Hook these signals up properly!
-  s_if_stall <= '0';
-
-
   -- PC: Program counter.
 
   program_counter_0: entity work.program_counter
@@ -177,6 +173,7 @@ begin
       i_rst => i_rst,
 
       i_stall => s_stall_if,
+      o_stall => s_if_stall,
       i_cancel => s_cancel_speculative_instructions,
 
       -- Signals from the PC stage.

@@ -32,6 +32,7 @@ entity fetch is
       i_clk : in std_logic;
       i_rst : in std_logic;
       i_stall : in std_logic;
+      o_stall : out std_logic;
       i_cancel : in std_logic;
 
       -- Signals from the PC stage.
@@ -85,4 +86,7 @@ begin
       o_bubble <= s_bubble;
     end if;
   end process;
+
+  -- Should we stall previous stages in the pipeline?
+  o_stall <= not i_icache_data_ready;
 end rtl;
