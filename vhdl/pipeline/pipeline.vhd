@@ -68,6 +68,7 @@ architecture rtl of pipeline is
   signal s_id_branch_is_reg : std_logic;
   signal s_id_branch_is_taken : std_logic;
 
+  signal s_id_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_id_src_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_id_src_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_id_src_c : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -201,6 +202,7 @@ begin
 
       i_stall => s_stall_id,
       o_stall => s_id_stall,
+      i_cancel => s_cancel_speculative_instructions,
 
       -- From the IF stage (sync).
       i_pc => s_if_pc,
@@ -236,6 +238,7 @@ begin
       o_branch_is_taken => s_id_branch_is_taken,
 
       -- To the EX stage (sync).
+      o_pc => s_id_pc,
       o_src_a => s_id_src_a,
       o_src_b => s_id_src_b,
       o_src_c => s_id_src_c,
@@ -261,6 +264,7 @@ begin
       o_stall => s_ex_stall,
 
       -- From ID stage (sync).
+      i_pc => s_id_pc,
       i_src_a => s_id_src_a,
       i_src_b => s_id_src_b,
       i_src_c => s_id_src_c,
@@ -272,6 +276,9 @@ begin
       i_alu_en => s_id_alu_en,
       i_muldiv_en => s_id_muldiv_en,
       i_mem_en => s_id_mem_en,
+
+      -- PC signal from IF (sync).
+      i_if_pc => s_if_pc,
 
       -- Branch results from the ID stage (sync).
       i_branch_reg_addr => s_id_branch_reg_addr,

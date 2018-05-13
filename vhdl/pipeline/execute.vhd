@@ -34,6 +34,7 @@ entity execute is
     o_stall : out std_logic;
 
     -- From ID stage (sync).
+    i_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
     i_src_a : in std_logic_vector(C_WORD_SIZE-1 downto 0);
     i_src_b : in std_logic_vector(C_WORD_SIZE-1 downto 0);
     i_src_c : in std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -45,6 +46,9 @@ entity execute is
     i_alu_en : in std_logic;
     i_muldiv_en : in std_logic;
     i_mem_en : in std_logic;
+
+    -- PC signal from IF (sync).
+    i_if_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
 
     -- Branch signals from ID (sync).
     i_branch_reg_addr : in std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -106,14 +110,26 @@ architecture rtl of execute is
   signal s_dst_reg_masked : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_writes_to_reg_masked : std_logic;
 
+  -- Branch/PC correction signals.
+  signal s_branch_target : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_pc_plus_4 : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_mispredicted_pc : std_logic;
+
   constant C_MULDIV_ZERO : T_MULDIV_OP := (others => '0');
 begin
   -- Branch logic.
+  pc_plus_4_0: entity work.pc_plus_4
+    port map (
+      i_pc => i_pc,
+      o_result => s_pc_plus_4
+    );
+
   -- TODO(m): Implement me!
-  o_pccorr_target <= (others => '0');
-  o_pccorr_source <= (others => '0');
-  o_pccorr_is_branch <= '0';
-  o_pccorr_is_taken <= '0';
+  s_branch_target <= i_branch_reg_addr when i_branch_is_reg = '1' else i_branch_offset_addr;
+  o_pccorr_target <= s_branch_target;
+  o_pccorr_source <= i_pc;
+  o_pccorr_is_branch <= i_branch_is_branch;
+  o_pccorr_is_taken <= i_branch_is_taken;
   o_pccorr_adjust <= '0';
   o_pccorr_adjusted_pc <= (others => '0');
 

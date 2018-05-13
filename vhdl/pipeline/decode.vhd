@@ -34,6 +34,7 @@ entity decode is
       i_rst : in std_logic;
       i_stall : in std_logic;
       o_stall : out std_logic;
+      i_cancel : in std_logic;
 
       -- From the IF stage (sync).
       i_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -69,6 +70,7 @@ entity decode is
       o_branch_is_taken : out std_logic;
 
       -- To the EX stage (sync).
+      o_pc : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_src_a : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_src_b : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_src_c : out std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -162,6 +164,7 @@ architecture rtl of decode is
   signal s_alu_en_masked : std_logic;
   signal s_muldiv_en_masked : std_logic;
   signal s_mem_en_masked : std_logic;
+  signal s_is_branch_masked : std_logic;
 begin
   -- Extract operation codes.
   s_op_high <= i_instr(29 downto 24);
@@ -352,7 +355,7 @@ begin
       (s_reg_c_required and (i_reg_c_fwd_use_value and not i_reg_c_fwd_value_ready));
 
   -- Should we discard the operation (i.e. send a bubble down the pipeline)?
-  s_bubble <= i_bubble or s_missing_fwd_operand;
+  s_bubble <= i_bubble or i_cancel or s_missing_fwd_operand;
   s_dst_reg_masked <= s_dst_reg when s_bubble = '0' else (others => '0');
   s_writes_to_reg_masked <= s_writes_to_reg and not s_bubble;
   s_alu_op_masked <= s_alu_op when s_bubble = '0' else (others => '0');
@@ -360,6 +363,7 @@ begin
   s_alu_en_masked <= s_alu_en and not s_bubble;
   s_muldiv_en_masked <= s_muldiv_en and not s_bubble;
   s_mem_en_masked <= s_mem_en and not s_bubble;
+  s_is_branch_masked <= s_is_branch and not s_bubble;
 
   -- Will this instruction write to a register?
   s_writes_to_reg <= '1' when ((s_dst_reg_masked /= to_vector(C_Z_REG, C_LOG2_NUM_REGS)) and
@@ -388,6 +392,7 @@ begin
       o_branch_is_taken <= '0';
     elsif rising_edge(i_clk) then
       if i_stall = '0' then
+        o_pc <= i_pc;
         o_src_a <= s_src_a;
         o_src_b <= s_src_b;
         o_src_c <= s_src_c;
@@ -402,7 +407,7 @@ begin
 
         o_branch_reg_addr <= s_branch_reg_data;
         o_branch_offset_addr <= s_branch_offset_addr;
-        o_branch_is_branch <= s_is_branch;
+        o_branch_is_branch <= s_is_branch_masked;
         o_branch_is_reg <= s_is_reg_branch;
         o_branch_is_taken <= s_branch_is_taken;
       end if;
