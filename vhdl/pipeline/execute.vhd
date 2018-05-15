@@ -113,25 +113,41 @@ architecture rtl of execute is
   -- Branch/PC correction signals.
   signal s_branch_target : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_pc_plus_4 : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_actual_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_mispredicted_pc : std_logic;
 
   constant C_MULDIV_ZERO : T_MULDIV_OP := (others => '0');
 begin
+  --------------------------------------------------------------------------------------------------
   -- Branch logic.
+  --------------------------------------------------------------------------------------------------
+
+  -- Calculate the expected PC if no branch is taken (i.e. PC + 4).
+  -- NOTE(m): We could perform this addition in the ID stage instead to save in on gate
+  -- delay, at the cost of more registers.
   pc_plus_4_0: entity work.pc_plus_4
     port map (
       i_pc => i_pc,
       o_result => s_pc_plus_4
     );
 
-  -- TODO(m): Implement me!
+  -- Check if the PC was correctly predicted by the PC stage.
   s_branch_target <= i_branch_reg_addr when i_branch_is_reg = '1' else i_branch_offset_addr;
+  s_actual_pc <= s_branch_target when (i_branch_is_branch and i_branch_is_taken) = '1' else s_pc_plus_4;
+  s_mispredicted_pc <= '0' when s_actual_pc = i_if_pc else i_branch_is_branch;
+
+  -- Branch/PC correction signals to the PC stage.
   o_pccorr_target <= s_branch_target;
   o_pccorr_source <= i_pc;
   o_pccorr_is_branch <= i_branch_is_branch;
   o_pccorr_is_taken <= i_branch_is_taken;
-  o_pccorr_adjust <= '0';
-  o_pccorr_adjusted_pc <= (others => '0');
+  o_pccorr_adjust <= s_mispredicted_pc;
+  o_pccorr_adjusted_pc <= s_actual_pc;
+
+
+  --------------------------------------------------------------------------------------------------
+  -- Execution units.
+  --------------------------------------------------------------------------------------------------
 
   -- Instantiate the ALU.
   alu_1: entity work.alu
