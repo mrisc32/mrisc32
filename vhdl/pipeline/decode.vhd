@@ -18,7 +18,7 @@
 ----------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------
--- Pipeline Stage 2: Instruction Decode (ID)
+-- Pipeline Stage 3: Instruction Decode (ID)
 --
 -- Note: This entity also implements the WB stage (stage 5), since the register files live here.
 ----------------------------------------------------------------------------------------------------
@@ -34,6 +34,7 @@ entity decode is
       i_rst : in std_logic;
       i_stall : in std_logic;
       o_stall : out std_logic;
+      i_cancel : in std_logic;
 
       -- From the IF stage (sync).
       i_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -61,7 +62,7 @@ entity decode is
       i_wb_data_w : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_wb_sel_w : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
 
-      -- Branch results to the IF stage (async).
+      -- Branch results to the EX stage (sync).
       o_branch_reg_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_branch_offset_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_branch_is_branch : out std_logic;
@@ -69,6 +70,7 @@ entity decode is
       o_branch_is_taken : out std_logic;
 
       -- To the EX stage (sync).
+      o_pc : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_src_a : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_src_b : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_src_c : out std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -100,7 +102,6 @@ architecture rtl of decode is
   signal s_is_offset_branch : std_logic;
   signal s_is_branch : std_logic;
   signal s_is_link_branch : std_logic;
-  signal s_is_taken_link_branch : std_logic;
 
   signal s_mem_op_type : std_logic_vector(1 downto 0);
   signal s_is_mem_op : std_logic;
@@ -163,6 +164,7 @@ architecture rtl of decode is
   signal s_alu_en_masked : std_logic;
   signal s_muldiv_en_masked : std_logic;
   signal s_mem_en_masked : std_logic;
+  signal s_is_branch_masked : std_logic;
 begin
   -- Extract operation codes.
   s_op_high <= i_instr(29 downto 24);
@@ -256,15 +258,6 @@ begin
 
   s_branch_is_taken <= s_is_reg_branch or (s_is_offset_branch and s_branch_cond_true);
 
-  s_is_taken_link_branch <= s_is_link_branch and s_branch_is_taken;
-
-  -- Async outputs to the IF stage (branch logic).
-  o_branch_reg_addr <= s_branch_reg_data;
-  o_branch_offset_addr <= s_branch_offset_addr;
-  o_branch_is_branch <= s_is_branch;
-  o_branch_is_reg <= s_is_reg_branch;
-  o_branch_is_taken <= s_branch_is_taken;
-
 
   --------------------------------------------------------------------------------------------------
   -- Prepare data for the EX stage.
@@ -311,7 +304,7 @@ begin
 
   -- Select destination register.
   -- Note: For linking branches we set the target register to LR.
-  s_dst_reg <= to_vector(C_LR_REG, C_LOG2_NUM_REGS) when s_is_taken_link_branch = '1' else
+  s_dst_reg <= to_vector(C_LR_REG, C_LOG2_NUM_REGS) when s_is_link_branch = '1' else
                s_reg_c when (s_is_mem_store or s_is_branch) = '0' else
                (others => '0');
 
@@ -326,7 +319,7 @@ begin
       C_ALU_CPUID when s_alu_en = '0' else
 
       -- Use the ALU to calculate the memory/return address.
-      C_ALU_ADD when (s_is_mem_op or s_is_taken_link_branch ) = '1' else
+      C_ALU_ADD when (s_is_mem_op or s_is_link_branch) = '1' else
 
       -- Use NOP for non-linking branches (they do not produce any result).
       C_ALU_CPUID when s_is_branch = '1' else
@@ -362,7 +355,7 @@ begin
       (s_reg_c_required and (i_reg_c_fwd_use_value and not i_reg_c_fwd_value_ready));
 
   -- Should we discard the operation (i.e. send a bubble down the pipeline)?
-  s_bubble <= i_bubble or s_missing_fwd_operand;
+  s_bubble <= i_bubble or i_cancel or s_missing_fwd_operand;
   s_dst_reg_masked <= s_dst_reg when s_bubble = '0' else (others => '0');
   s_writes_to_reg_masked <= s_writes_to_reg and not s_bubble;
   s_alu_op_masked <= s_alu_op when s_bubble = '0' else (others => '0');
@@ -370,6 +363,7 @@ begin
   s_alu_en_masked <= s_alu_en and not s_bubble;
   s_muldiv_en_masked <= s_muldiv_en and not s_bubble;
   s_mem_en_masked <= s_mem_en and not s_bubble;
+  s_is_branch_masked <= s_is_branch and not s_bubble;
 
   -- Will this instruction write to a register?
   s_writes_to_reg <= '1' when ((s_dst_reg_masked /= to_vector(C_Z_REG, C_LOG2_NUM_REGS)) and
@@ -390,8 +384,15 @@ begin
       o_alu_en <= '0';
       o_muldiv_en <= '0';
       o_mem_en <= '0';
+
+      o_branch_reg_addr <= (others => '0');
+      o_branch_offset_addr <= (others => '0');
+      o_branch_is_branch <= '0';
+      o_branch_is_reg <= '0';
+      o_branch_is_taken <= '0';
     elsif rising_edge(i_clk) then
       if i_stall = '0' then
+        o_pc <= i_pc;
         o_src_a <= s_src_a;
         o_src_b <= s_src_b;
         o_src_c <= s_src_c;
@@ -403,6 +404,12 @@ begin
         o_alu_en <= s_alu_en_masked;
         o_muldiv_en <= s_muldiv_en_masked;
         o_mem_en <= s_mem_en_masked;
+
+        o_branch_reg_addr <= s_branch_reg_data;
+        o_branch_offset_addr <= s_branch_offset_addr;
+        o_branch_is_branch <= s_is_branch_masked;
+        o_branch_is_reg <= s_is_reg_branch;
+        o_branch_is_taken <= s_branch_is_taken;
       end if;
     end if;
   end process;

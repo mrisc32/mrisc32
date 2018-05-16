@@ -18,7 +18,7 @@
 ----------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------
--- Pipeline Stage 3: Execute (EX)
+-- Pipeline Stage 4: Execute (EX)
 ----------------------------------------------------------------------------------------------------
 
 library ieee;
@@ -34,6 +34,7 @@ entity execute is
     o_stall : out std_logic;
 
     -- From ID stage (sync).
+    i_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
     i_src_a : in std_logic_vector(C_WORD_SIZE-1 downto 0);
     i_src_b : in std_logic_vector(C_WORD_SIZE-1 downto 0);
     i_src_c : in std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -45,6 +46,24 @@ entity execute is
     i_alu_en : in std_logic;
     i_muldiv_en : in std_logic;
     i_mem_en : in std_logic;
+
+    -- PC signal from IF (sync).
+    i_if_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+
+    -- Branch signals from ID (sync).
+    i_branch_reg_addr : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+    i_branch_offset_addr : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+    i_branch_is_branch : in std_logic;
+    i_branch_is_reg : in std_logic;  -- 1 for register branches, 0 for all other instructions.
+    i_branch_is_taken : in std_logic;
+
+    -- Branch signals to PC (async).
+    o_pccorr_target : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+    o_pccorr_source : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+    o_pccorr_is_branch : out std_logic;
+    o_pccorr_is_taken : out std_logic;
+    o_pccorr_adjust : out std_logic;
+    o_pccorr_adjusted_pc : out std_logic_vector(C_WORD_SIZE-1 downto 0);
 
     -- To MEM stage (sync).
     o_mem_op : out T_MEM_OP;
@@ -91,8 +110,45 @@ architecture rtl of execute is
   signal s_dst_reg_masked : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_writes_to_reg_masked : std_logic;
 
+  -- Branch/PC correction signals.
+  signal s_branch_target : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_pc_plus_4 : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_actual_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_mispredicted_pc : std_logic;
+
   constant C_MULDIV_ZERO : T_MULDIV_OP := (others => '0');
 begin
+  --------------------------------------------------------------------------------------------------
+  -- Branch logic.
+  --------------------------------------------------------------------------------------------------
+
+  -- Calculate the expected PC if no branch is taken (i.e. PC + 4).
+  -- NOTE(m): We could perform this addition in the ID stage instead to save in on gate
+  -- delay, at the cost of more registers.
+  pc_plus_4_0: entity work.pc_plus_4
+    port map (
+      i_pc => i_pc,
+      o_result => s_pc_plus_4
+    );
+
+  -- Check if the PC was correctly predicted by the PC stage.
+  s_branch_target <= i_branch_reg_addr when i_branch_is_reg = '1' else i_branch_offset_addr;
+  s_actual_pc <= s_branch_target when (i_branch_is_branch and i_branch_is_taken) = '1' else s_pc_plus_4;
+  s_mispredicted_pc <= '0' when s_actual_pc = i_if_pc else i_branch_is_branch;
+
+  -- Branch/PC correction signals to the PC stage.
+  o_pccorr_target <= s_branch_target;
+  o_pccorr_source <= i_pc;
+  o_pccorr_is_branch <= i_branch_is_branch;
+  o_pccorr_is_taken <= i_branch_is_taken;
+  o_pccorr_adjust <= s_mispredicted_pc;
+  o_pccorr_adjusted_pc <= s_actual_pc;
+
+
+  --------------------------------------------------------------------------------------------------
+  -- Execution units.
+  --------------------------------------------------------------------------------------------------
+
   -- Instantiate the ALU.
   alu_1: entity work.alu
     port map (
@@ -155,6 +211,8 @@ begin
   s_next_result_ready <= (i_alu_en and (not i_mem_en)) or s_multicycle_op_finished;
 
   -- Should we send a bubble down the pipeline?
+  -- TODO(m): We also need to bubble if there was a branch misprediction (important for not
+  -- writing to LR for conditional link branches)!
   s_bubble <= s_stall_for_multicycle_op;
   s_mem_op_masked <= i_mem_op when s_bubble = '0' else (others => '0');
   s_mem_en_masked <= i_mem_en and not s_bubble;

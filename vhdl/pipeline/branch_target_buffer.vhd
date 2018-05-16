@@ -126,9 +126,7 @@ begin
   s_got_match <= '1' when s_prev_read_pc(C_WORD_SIZE-1 downto C_LOG2_ENTRIES) = s_tag_read_data else '0';
 
   -- Determine if we should take the branch.
-  -- TODO(m): The branch logic is broken so we temporarily disable the prediction signal.
-  -- o_predict_taken <= s_got_match and s_got_branch and s_got_taken;
-  o_predict_taken <= '0';
+  o_predict_taken <= s_got_match and s_got_branch and s_got_taken;
 
 
   --------------------------------------------------------------------------------------------------

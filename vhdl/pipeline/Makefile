@@ -27,6 +27,8 @@ SRCS += \
     $(PIPELINE_PATH)/pc_plus_4.vhd \
     $(PIPELINE_PATH)/pc_plus_offset.vhd \
     $(PIPELINE_PATH)/branch_target_buffer.vhd \
+    $(PIPELINE_PATH)/program_counter.vhd \
+    $(PIPELINE_PATH)/program_counter_tb.vhd \
     $(PIPELINE_PATH)/fetch.vhd \
     $(PIPELINE_PATH)/decode.vhd \
     $(PIPELINE_PATH)/execute.vhd \
@@ -39,6 +41,7 @@ SRCS += \
 TESTS += \
     reg_tb \
     regs_scalar_tb \
+    program_counter_tb \
     pipeline_tb
 
 $(PIPELINE_PATH)/pipeline_tb_prg.bin: $(PIPELINE_PATH)/pipeline_tb_prg.s

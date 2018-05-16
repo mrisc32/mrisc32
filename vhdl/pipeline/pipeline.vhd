@@ -49,7 +49,12 @@ entity pipeline is
 end pipeline;
 
 architecture rtl of pipeline is
+  -- From PC.
+  signal s_pc_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
+
   -- From IF.
+  signal s_if_stall : std_logic;
+
   signal s_if_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_if_instr : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_if_bubble : std_logic;
@@ -63,6 +68,7 @@ architecture rtl of pipeline is
   signal s_id_branch_is_reg : std_logic;
   signal s_id_branch_is_taken : std_logic;
 
+  signal s_id_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_id_src_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_id_src_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_id_src_c : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -77,6 +83,13 @@ architecture rtl of pipeline is
 
   -- From EX.
   signal s_ex_stall : std_logic;
+
+  signal s_ex_pccorr_target : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_ex_pccorr_source : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_ex_pccorr_is_branch : std_logic;
+  signal s_ex_pccorr_is_taken : std_logic;
+  signal s_ex_pccorr_adjust : std_logic;
+  signal s_ex_pccorr_adjusted_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
   signal s_ex_mem_op : T_MEM_OP;
   signal s_ex_mem_enable : std_logic;
@@ -118,7 +131,11 @@ architecture rtl of pipeline is
   signal s_reg_c_fwd_use_value : std_logic;
   signal s_reg_c_fwd_value_ready : std_logic;
 
+  -- Signal for cancelling speculative instructions in IF and ID.
+  signal s_cancel_speculative_instructions : std_logic;
+
   -- Stall logic.
+  signal s_stall_pc : std_logic;
   signal s_stall_if : std_logic;
   signal s_stall_id : std_logic;
   signal s_stall_ex : std_logic;
@@ -126,6 +143,28 @@ begin
   --------------------------------------------------------------------------------------------------
   -- Pipeline stages.
   --------------------------------------------------------------------------------------------------
+
+  -- PC: Program counter.
+
+  program_counter_0: entity work.program_counter
+    port map (
+      i_clk => i_clk,
+      i_rst => i_rst,
+
+      i_stall => s_stall_pc,
+
+      -- Results from the branch/PC correction unit in the EX stage (async).
+      i_pccorr_source => s_ex_pccorr_source,
+      i_pccorr_target => s_ex_pccorr_target,
+      i_pccorr_is_branch => s_ex_pccorr_is_branch,
+      i_pccorr_is_taken => s_ex_pccorr_is_taken,
+      i_pccorr_adjust => s_ex_pccorr_adjust,
+      i_pccorr_adjusted_pc => s_ex_pccorr_adjusted_pc,
+
+      -- To IF stage (sync).
+      o_pc => s_pc_pc
+    );
+
 
   -- IF: Instruction fetch.
 
@@ -135,13 +174,11 @@ begin
       i_rst => i_rst,
 
       i_stall => s_stall_if,
+      o_stall => s_if_stall,
+      i_cancel => s_cancel_speculative_instructions,
 
-      -- Branch results from the ID stage (async).
-      i_branch_reg_addr => s_id_branch_reg_addr,
-      i_branch_offset_addr => s_id_branch_offset_addr,
-      i_branch_is_branch => s_id_branch_is_branch,
-      i_branch_is_reg => s_id_branch_is_reg,
-      i_branch_is_taken => s_id_branch_is_taken,
+      -- Signals from the PC stage.
+      i_pc => s_pc_pc,
 
       -- ICache interface.
       o_icache_req => o_icache_req,
@@ -165,6 +202,7 @@ begin
 
       i_stall => s_stall_id,
       o_stall => s_id_stall,
+      i_cancel => s_cancel_speculative_instructions,
 
       -- From the IF stage (sync).
       i_pc => s_if_pc,
@@ -192,7 +230,7 @@ begin
       i_wb_sel_w => s_mem_dst_reg,
       i_wb_we => s_mem_writes_to_reg,
 
-      -- Branch results to the IF stage (async).
+      -- Branch results to the EX stage (sync).
       o_branch_reg_addr => s_id_branch_reg_addr,
       o_branch_offset_addr => s_id_branch_offset_addr,
       o_branch_is_branch => s_id_branch_is_branch,
@@ -200,6 +238,7 @@ begin
       o_branch_is_taken => s_id_branch_is_taken,
 
       -- To the EX stage (sync).
+      o_pc => s_id_pc,
       o_src_a => s_id_src_a,
       o_src_b => s_id_src_b,
       o_src_c => s_id_src_c,
@@ -225,6 +264,7 @@ begin
       o_stall => s_ex_stall,
 
       -- From ID stage (sync).
+      i_pc => s_id_pc,
       i_src_a => s_id_src_a,
       i_src_b => s_id_src_b,
       i_src_c => s_id_src_c,
@@ -236,6 +276,24 @@ begin
       i_alu_en => s_id_alu_en,
       i_muldiv_en => s_id_muldiv_en,
       i_mem_en => s_id_mem_en,
+
+      -- PC signal from IF (sync).
+      i_if_pc => s_if_pc,
+
+      -- Branch results from the ID stage (sync).
+      i_branch_reg_addr => s_id_branch_reg_addr,
+      i_branch_offset_addr => s_id_branch_offset_addr,
+      i_branch_is_branch => s_id_branch_is_branch,
+      i_branch_is_reg => s_id_branch_is_reg,
+      i_branch_is_taken => s_id_branch_is_taken,
+
+      -- Branch PC correction to the PC stage (async).
+      o_pccorr_target => s_ex_pccorr_target,
+      o_pccorr_source => s_ex_pccorr_source,
+      o_pccorr_is_branch => s_ex_pccorr_is_branch,
+      o_pccorr_is_taken => s_ex_pccorr_is_taken,
+      o_pccorr_adjust => s_ex_pccorr_adjust,
+      o_pccorr_adjusted_pc => s_ex_pccorr_adjusted_pc,
 
       -- To MEM stage (sync).
       o_mem_op => s_ex_mem_op,
@@ -406,11 +464,15 @@ begin
 
 
   --------------------------------------------------------------------------------------------------
-  -- Pipeline stall logic.
+  -- Pipeline control logic.
   --------------------------------------------------------------------------------------------------
+
+  -- Determine if we need to cancel speculative instructions.
+  s_cancel_speculative_instructions <= s_ex_pccorr_adjust;
 
   -- Determine which pipeline stages need to be stalled during the next cycle.
   s_stall_ex <= s_mem_stall;
   s_stall_id <= s_ex_stall or s_stall_ex;
   s_stall_if <= s_id_stall or s_stall_id;
+  s_stall_pc <= s_if_stall or s_stall_if;
 end rtl;

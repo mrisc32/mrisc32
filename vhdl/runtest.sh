@@ -1,3 +1,5 @@
+#!/bin/bash
+
 ####################################################################################################
 # Copyright (c) 2018 Marcus Geelnard
 #
@@ -17,44 +19,13 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ####################################################################################################
 
-WORKDIR = out
+WORKDIR=out
+GHDL=ghdl
+GHDLFLAGS="--std=08 --work=work --workdir=${WORKDIR}"
 
-GHDL = ghdl
-GHDLWARNINGS = \
-    -Wbinding \
-    -Wreserved \
-    -Wlibrary \
-    -Wvital-generic \
-    -Wbody \
-    -Wspecs \
-    -Wunused \
-    -Werror
-GHDLFLAGS = --std=08 --work=work --workdir=$(WORKDIR) $(GHDLWARNINGS)
-ASM = ../asm/asm.py
-
-.PHONY: all clean
-
-default: all
-
-SRCS =
-TESTS =
-
-include common/Makefile
-include alu/Makefile
-include muldiv/Makefile
-include cache/Makefile
-include pipeline/Makefile
-include benchmark/Makefile
-
-all: $(TESTS)
-
-$(TESTS): $(WORKDIR)/work-obj93.cf $(SRCS)
-	$(GHDL) -m $(GHDLFLAGS) $@
-
-clean:
-	$(GHDL) --clean
-	rm -rf *.o *_tb *.vcd $(WORKDIR)/*.o $(WORKDIR)/*.cf $(WORKDIR)/*_tb $(WORKDIR)/*.vcd
-
-$(WORKDIR)/work-obj93.cf: $(SRCS)
-	$(GHDL) -i $(GHDLFLAGS) $(SRCS)
+for i in $*; do
+  echo "** TEST: $i"
+  ${GHDL} -r ${GHDLFLAGS} "$i" "--vcd=${WORKDIR}/$i.vcd"
+  echo ""
+done
 

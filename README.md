@@ -61,7 +61,7 @@ So far, the following components have been implemented:
   - Supports all multiplication operations.
 * The scalar register file.
   - There are three read ports and one write port.
-* A basic 5-stage pipeline.
+* A basic 6-stage pipeline.
   - PC and branching logic.
   - Instruction fetch.
   - Decode.
@@ -75,7 +75,7 @@ So far, the following components have been implemented:
 # Goals
 
 * Keep things simple - both the ISA and the architecture.
-* The ISA should map well to a [classic 5-stage RISC pipeline](https://en.wikipedia.org/wiki/Classic_RISC_pipeline).
+* The ISA should map well to a [classic RISC pipeline](https://en.wikipedia.org/wiki/Classic_RISC_pipeline).
 * The ISA should scale from small embedded to larger superscalar implementations.
 * The CPU should be easy to implement in an FPGA.
 * Create a simple baseline scalar CPU that actually works, and then experiment with optimizations.
