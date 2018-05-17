@@ -182,24 +182,16 @@ begin
       o_c_out => s_adder_carry_out
     );
 
-  AluComparator: entity work.comparator
-    generic map (
-      WIDTH => C_WORD_SIZE
-    )
-    port map (
-      i_src => s_adder_result,
-      o_eq => s_comparator_eq,
-      o_lt => s_comparator_lt,
-      o_le => s_comparator_le
-    );
-
   -- Select if we're doing addition or subtraction.
   NegAdderAMux: with i_op select
     s_adder_subtract <=
-      '1' when C_ALU_SUB | C_ALU_SLT | C_ALU_SLTU | C_ALU_CEQ | C_ALU_CLT | C_ALU_CLTU | C_ALU_CLE | C_ALU_CLEU | C_ALU_MIN | C_ALU_MAX,
+      '1' when C_ALU_SUB | C_ALU_SLT | C_ALU_SLTU | C_ALU_CLT | C_ALU_CLTU | C_ALU_CLE | C_ALU_CLEU | C_ALU_MIN | C_ALU_MAX,
       '0' when others;
 
-  -- Unsigned comparator results.
+  -- Camparison results.
+  s_comparator_eq <= '1' when i_src_a = i_src_b else '0';
+  s_comparator_lt <= s_adder_result(C_WORD_SIZE-1);
+  s_comparator_le <= s_comparator_eq or s_comparator_lt;
   s_comparator_ltu <= not s_adder_carry_out;
   s_comparator_leu <= s_comparator_eq or s_comparator_ltu;
 
