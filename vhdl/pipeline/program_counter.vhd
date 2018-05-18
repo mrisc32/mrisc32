@@ -89,7 +89,7 @@ begin
   -- Select the corrected or the predicted PC for the next IF cycle.
   s_pc <= i_pccorr_adjusted_pc when i_pccorr_adjust = '1' else s_predicted_pc;
 
-  -- Select the corrected or the predicted PC for the next IF cycle.
+  -- Select the source PC to use for the BTB.
   s_btb_read_pc <= s_prev_pc when i_stall = '1' else s_pc;
 
   -- Internal registered signals.
