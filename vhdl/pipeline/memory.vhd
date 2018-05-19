@@ -18,7 +18,7 @@
 ----------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------
--- Pipeline Stage 5: Memory (MEM)
+-- Data memory interface (part of the EX2 stage).
 ----------------------------------------------------------------------------------------------------
 
 library ieee;
@@ -28,19 +28,15 @@ use work.common.all;
 entity memory is
   port(
       -- Control signals.
-      i_clk : in std_logic;
-      i_rst : in std_logic;
       o_stall : out std_logic;
 
-      -- From EX stage (sync).
+      -- From EX1 stage (sync).
       i_mem_op : in T_MEM_OP;
       i_mem_enable : in std_logic;
       i_mem_we : in std_logic;
       i_mem_byte_mask : in std_logic_vector(C_WORD_SIZE/8-1 downto 0);
-      i_ex_result : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_mem_addr : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_store_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_dst_reg : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-      i_writes_to_reg : in std_logic;
 
       -- DCache interface.
       o_dcache_req : out std_logic;  -- 1 = request, 0 = nop
@@ -51,15 +47,8 @@ entity memory is
       i_dcache_read_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_dcache_read_data_ready : in std_logic;
 
-      -- To WB stage (sync).
-      -- NOTE: The WB stage is actually implemented in decode (where the
-      -- register files are interfaced).
-      o_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-      o_writes_to_reg : out std_logic;
-
-      -- To operand forward logic (async).
-      o_next_data : out std_logic_vector(C_WORD_SIZE-1 downto 0)
+      -- Outputs (async).
+      o_data : out std_logic_vector(C_WORD_SIZE-1 downto 0)
     );
 end memory;
 
@@ -80,7 +69,7 @@ begin
   o_dcache_req <= i_mem_enable;
   o_dcache_we <= i_mem_we;
   o_dcache_byte_mask <= i_mem_byte_mask;
-  o_dcache_addr <= i_ex_result(C_WORD_SIZE-1 downto 2);
+  o_dcache_addr <= i_mem_addr(C_WORD_SIZE-1 downto 2);
   o_dcache_write_data <= i_store_data;
 
   ------------------------------------------------------------------------------
@@ -92,7 +81,7 @@ begin
   s_mem_size <= i_mem_op(1 downto 0);
 
   -- Shift the read data according to the memory address LSBs.
-  ShiftMux: with i_ex_result(1 downto 0) select
+  ShiftMux: with i_mem_addr(1 downto 0) select
     s_shifted_read_data <=
       X"00" & i_dcache_read_data(31 downto 8) when "01",
       X"0000" & i_dcache_read_data(31 downto 16) when "10",
@@ -118,27 +107,11 @@ begin
     else s_shifted_read_data(15 downto 8);
 
   ------------------------------------------------------------------------------
-  -- Outputs to the WB stage.
+  -- Outputs.
   ------------------------------------------------------------------------------
 
-  -- Prepare signals for the WB stage.
-  s_data <= s_adjusted_read_data when i_mem_enable = '1' else i_ex_result;
-
-  process(i_clk, i_rst)
-  begin
-    if i_rst = '1' then
-      o_data <= (others => '0');
-      o_dst_reg <= (others => '0');
-      o_writes_to_reg <= '0';
-    elsif rising_edge(i_clk) then
-      o_data <= s_data;
-      o_dst_reg <= i_dst_reg;
-      o_writes_to_reg <= i_writes_to_reg;
-    end if;
-  end process;
-
-  -- Output the generated result to operand forwarding logic (async).
-  o_next_data <= s_data;
+  -- Output data signal (async).
+  o_data <= s_adjusted_read_data;
 
   -- Do we need to stall the pipeline (async)?
   o_stall <= i_mem_enable and (not i_mem_we) and (not i_dcache_read_data_ready);

@@ -18,7 +18,7 @@
 ----------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------
--- Pipeline Stage 4: Execute (EX)
+-- Pipeline Stages 4 & 5: Execute (EX1/EX2)
 ----------------------------------------------------------------------------------------------------
 
 library ieee;
@@ -30,7 +30,6 @@ entity execute is
     -- Control signals.
     i_clk : in std_logic;
     i_rst : in std_logic;
-    i_stall : in std_logic;
     o_stall : out std_logic;
 
     -- From ID stage (sync).
@@ -65,19 +64,32 @@ entity execute is
     o_pccorr_adjust : out std_logic;
     o_pccorr_adjusted_pc : out std_logic_vector(C_WORD_SIZE-1 downto 0);
 
-    -- To MEM stage (sync).
-    o_mem_op : out T_MEM_OP;
-    o_mem_enable : out std_logic;
-    o_mem_we : out std_logic;
-    o_mem_byte_mask : out std_logic_vector(C_WORD_SIZE/8-1 downto 0);
+    -- DCache interface.
+    o_dcache_req : out std_logic;  -- 1 = request, 0 = nop
+    o_dcache_we : out std_logic;   -- 1 = write, 0 = read
+    o_dcache_byte_mask : out std_logic_vector(C_WORD_SIZE/8-1 downto 0);
+    o_dcache_addr : out std_logic_vector(C_WORD_SIZE-1 downto 2);
+    o_dcache_write_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+    i_dcache_read_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+    i_dcache_read_data_ready : in std_logic;
+
+    -- To the WB stage (sync).
     o_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-    o_store_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
     o_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
     o_writes_to_reg : out std_logic;
 
     -- To operand forward logic (async).
-    o_next_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-    o_next_result_ready : out std_logic
+    o_ex1_next_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+    o_ex1_next_writes_to_reg : out std_logic;
+    o_ex1_next_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+    o_ex1_next_result_ready : out std_logic;
+    o_ex2_next_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+
+    -- To operand forward logic (sync).
+    o_ex1_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+    o_ex1_writes_to_reg : out std_logic;
+    o_ex1_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+    o_ex1_result_ready : out std_logic
   );
 end execute;
 
@@ -87,6 +99,9 @@ architecture rtl of execute is
   signal s_muldiv_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_muldiv_result_ready : std_logic;
   signal s_stall_for_muldiv : std_logic;
+
+  -- Should the EX1 stage be stalled by the EX2 stage?
+  signal s_stall_ex1 : std_logic;
 
   -- Multicycle operation handling.
   signal s_start_multicycle_op : std_logic;
@@ -115,6 +130,25 @@ architecture rtl of execute is
   signal s_pc_plus_4 : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_actual_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_mispredicted_pc : std_logic;
+
+  -- Signals from the EX1 to the EX2 stage (sync).
+  signal s_ex1_mem_op : T_MEM_OP;
+  signal s_ex1_mem_enable : std_logic;
+  signal s_ex1_mem_we : std_logic;
+  signal s_ex1_mem_byte_mask : std_logic_vector(C_WORD_SIZE/8-1 downto 0);
+  signal s_ex1_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_ex1_result_ready : std_logic;
+  signal s_ex1_store_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_ex1_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_ex1_writes_to_reg : std_logic;
+
+  -- Signals from the memory interface (async).
+  signal s_mem_stall : std_logic;
+  signal s_mem_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
+
+  -- Signals from the EX2 stage (async).
+  signal s_ex2_stall : std_logic;
+  signal s_ex2_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
   constant C_MULDIV_ZERO : T_MULDIV_OP := (others => '0');
 begin
@@ -146,8 +180,10 @@ begin
 
 
   --------------------------------------------------------------------------------------------------
-  -- Execution units.
+  -- EX1: Execution units.
   --------------------------------------------------------------------------------------------------
+
+  -- Should the EX1 stage be stalled?
 
   -- Instantiate the ALU.
   alu_1: entity work.alu
@@ -163,7 +199,7 @@ begin
     port map (
       i_clk => i_clk,
       i_rst => i_rst,
-      i_stall => i_stall,
+      i_stall => s_stall_ex1,
       o_stall => s_stall_for_muldiv,
       i_enable => i_muldiv_en,
       i_op => i_muldiv_op,
@@ -225,43 +261,106 @@ begin
     if i_rst = '1' then
       s_prev_stall_for_multicycle_op <= '0';
     elsif rising_edge(i_clk) then
-      if i_stall = '0' then
+      if s_stall_ex1 = '0' then
         s_prev_stall_for_multicycle_op <= s_stall_for_multicycle_op;
       end if;
     end if;
   end process;
 
-  -- Outputs to the MEM stage (sync).
+  -- Outputs to the EX2 stage (sync).
   process(i_clk, i_rst)
   begin
     if i_rst = '1' then
-      o_mem_op <= (others => '0');
-      o_mem_enable <= '0';
-      o_mem_we <= '0';
-      o_mem_byte_mask <= (others => '0');
-      o_result <= (others => '0');
-      o_store_data <= (others => '0');
-      o_dst_reg <= (others => '0');
-      o_writes_to_reg <= '0';
+      s_ex1_mem_op <= (others => '0');
+      s_ex1_mem_enable <= '0';
+      s_ex1_mem_we <= '0';
+      s_ex1_mem_byte_mask <= (others => '0');
+      s_ex1_result <= (others => '0');
+      s_ex1_result_ready <= '0';
+      s_ex1_store_data <= (others => '0');
+      s_ex1_dst_reg <= (others => '0');
+      s_ex1_writes_to_reg <= '0';
     elsif rising_edge(i_clk) then
-      if i_stall = '0' then
-        o_mem_op <= s_mem_op_masked;
-        o_mem_enable <= s_mem_en_masked;
-        o_mem_we <= s_mem_op_masked(3);
-        o_mem_byte_mask <= s_mem_byte_mask;
-        o_result <= s_next_result;
-        o_store_data <= s_mem_store_data;
-        o_dst_reg <= s_dst_reg_masked;
-        o_writes_to_reg <= s_writes_to_reg_masked;
+      if s_stall_ex1 = '0' then
+        s_ex1_mem_op <= s_mem_op_masked;
+        s_ex1_mem_enable <= s_mem_en_masked;
+        s_ex1_mem_we <= s_mem_op_masked(3);
+        s_ex1_mem_byte_mask <= s_mem_byte_mask;
+        s_ex1_result <= s_next_result;
+        s_ex1_result_ready <= s_next_result_ready;
+        s_ex1_store_data <= s_mem_store_data;
+        s_ex1_dst_reg <= s_dst_reg_masked;
+        s_ex1_writes_to_reg <= s_writes_to_reg_masked;
       end if;
     end if;
   end process;
 
-  -- Output the generated result to operand forwarding logic (async).
-  o_next_result <= s_next_result;
-  o_next_result_ready <= s_next_result_ready;
+  -- Output the EX1 result to operand forwarding logic.
+  -- Async:
+  o_ex1_next_dst_reg <= s_dst_reg_masked;
+  o_ex1_next_writes_to_reg <= s_writes_to_reg_masked;
+  o_ex1_next_result <= s_next_result;
+  o_ex1_next_result_ready <= s_next_result_ready;
 
-  -- Do we need to stall the pipeline (async)?
-  o_stall <= s_stall_for_multicycle_op;
+  -- Sync:
+  o_ex1_dst_reg <= s_ex1_dst_reg;
+  o_ex1_writes_to_reg <= s_ex1_writes_to_reg;
+  o_ex1_result <= s_ex1_result;
+  o_ex1_result_ready <= s_ex1_result_ready;
+
+
+  --------------------------------------------------------------------------------------------------
+  -- EX2: Memory.
+  --------------------------------------------------------------------------------------------------
+
+  memory_0: entity work.memory
+    port map (
+      o_stall => s_mem_stall,
+
+      -- From EX1 stage (sync).
+      i_mem_op => s_ex1_mem_op,
+      i_mem_enable => s_ex1_mem_enable,
+      i_mem_we => s_ex1_mem_we,
+      i_mem_byte_mask => s_ex1_mem_byte_mask,
+      i_mem_addr => s_ex1_result,
+      i_store_data => s_ex1_store_data,
+
+      -- DCache interface.
+      o_dcache_req => o_dcache_req,
+      o_dcache_we => o_dcache_we,
+      o_dcache_byte_mask => o_dcache_byte_mask,
+      o_dcache_addr => o_dcache_addr,
+      o_dcache_write_data => o_dcache_write_data,
+      i_dcache_read_data => i_dcache_read_data,
+      i_dcache_read_data_ready => i_dcache_read_data_ready,
+
+      -- Memory read data (async).
+      o_data => s_mem_data
+    );
+
+  -- Select the result from the EX2 stage.
+  s_ex2_next_result <= s_mem_data when s_ex1_mem_enable = '1' else s_ex1_result;
+
+  -- Outputs to the WB stage (sync).
+  process(i_clk, i_rst)
+  begin
+    if i_rst = '1' then
+      o_result <= (others => '0');
+      o_dst_reg <= (others => '0');
+      o_writes_to_reg <= '0';
+    elsif rising_edge(i_clk) then
+      o_result <= s_ex2_next_result;
+      o_dst_reg <= s_ex1_dst_reg;
+      o_writes_to_reg <= s_ex1_writes_to_reg;
+    end if;
+  end process;
+
+  -- Output the EX2 result to operand forwarding logic (async).
+  o_ex2_next_result <= s_ex2_next_result;
+
+  -- Stall logic (async).
+  s_ex2_stall <= s_mem_stall;
+  s_stall_ex1 <= s_ex2_stall;
+  o_stall <= s_stall_for_multicycle_op or s_stall_ex1;
 end rtl;
 
