@@ -81,36 +81,36 @@ architecture rtl of pipeline is
   signal s_id_muldiv_en : std_logic;
   signal s_id_mem_en : std_logic;
 
-  -- From EX.
-  signal s_ex_stall : std_logic;
+  -- From EX1.
+  signal s_ex1_stall : std_logic;
 
-  signal s_ex_pccorr_target : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_ex_pccorr_source : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_ex_pccorr_is_branch : std_logic;
-  signal s_ex_pccorr_is_taken : std_logic;
-  signal s_ex_pccorr_adjust : std_logic;
-  signal s_ex_pccorr_adjusted_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_ex1_pccorr_target : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_ex1_pccorr_source : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_ex1_pccorr_is_branch : std_logic;
+  signal s_ex1_pccorr_is_taken : std_logic;
+  signal s_ex1_pccorr_adjust : std_logic;
+  signal s_ex1_pccorr_adjusted_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
-  signal s_ex_mem_op : T_MEM_OP;
-  signal s_ex_mem_enable : std_logic;
-  signal s_ex_mem_we : std_logic;
-  signal s_ex_mem_byte_mask : std_logic_vector(C_WORD_SIZE/8-1 downto 0);
-  signal s_ex_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_ex_store_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_ex_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-  signal s_ex_writes_to_reg : std_logic;
+  signal s_ex1_mem_op : T_MEM_OP;
+  signal s_ex1_mem_enable : std_logic;
+  signal s_ex1_mem_we : std_logic;
+  signal s_ex1_mem_byte_mask : std_logic_vector(C_WORD_SIZE/8-1 downto 0);
+  signal s_ex1_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_ex1_store_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_ex1_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_ex1_writes_to_reg : std_logic;
 
-  signal s_ex_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);  -- Async.
-  signal s_ex_next_result_ready : std_logic;  -- Async.
+  signal s_ex1_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);  -- Async.
+  signal s_ex1_next_result_ready : std_logic;  -- Async.
 
-  -- From MEM.
-  signal s_mem_stall : std_logic;
+  -- From EX2.
+  signal s_ex2_stall : std_logic;
 
-  signal s_mem_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_mem_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-  signal s_mem_writes_to_reg : std_logic;
+  signal s_ex2_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_ex2_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_ex2_writes_to_reg : std_logic;
 
-  signal s_mem_next_data : std_logic_vector(C_WORD_SIZE-1 downto 0);  -- Async.
+  signal s_ex2_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);  -- Async.
 
   -- Operand forwarding signals.
   signal s_value_ready_from_ex : std_logic;
@@ -154,12 +154,12 @@ begin
       i_stall => s_stall_pc,
 
       -- Results from the branch/PC correction unit in the EX stage (async).
-      i_pccorr_source => s_ex_pccorr_source,
-      i_pccorr_target => s_ex_pccorr_target,
-      i_pccorr_is_branch => s_ex_pccorr_is_branch,
-      i_pccorr_is_taken => s_ex_pccorr_is_taken,
-      i_pccorr_adjust => s_ex_pccorr_adjust,
-      i_pccorr_adjusted_pc => s_ex_pccorr_adjusted_pc,
+      i_pccorr_source => s_ex1_pccorr_source,
+      i_pccorr_target => s_ex1_pccorr_target,
+      i_pccorr_is_branch => s_ex1_pccorr_is_branch,
+      i_pccorr_is_taken => s_ex1_pccorr_is_taken,
+      i_pccorr_adjust => s_ex1_pccorr_adjust,
+      i_pccorr_adjusted_pc => s_ex1_pccorr_adjusted_pc,
 
       -- To IF stage (sync).
       o_pc => s_pc_pc
@@ -225,10 +225,10 @@ begin
       i_reg_c_fwd_use_value => s_reg_c_fwd_use_value,
       i_reg_c_fwd_value_ready => s_reg_c_fwd_value_ready,
 
-      -- WB data from the MEM stage (sync).
-      i_wb_data_w => s_mem_data,
-      i_wb_sel_w => s_mem_dst_reg,
-      i_wb_we => s_mem_writes_to_reg,
+      -- WB data from the EX stage (sync).
+      i_wb_data_w => s_ex2_data,
+      i_wb_sel_w => s_ex2_dst_reg,
+      i_wb_we => s_ex2_writes_to_reg,
 
       -- Branch results to the EX stage (sync).
       o_branch_reg_addr => s_id_branch_reg_addr,
@@ -253,7 +253,7 @@ begin
     );
 
 
-  -- EX: Execute.
+  -- EX1: Execute.
 
   execute_0: entity work.execute
     port map (
@@ -261,7 +261,7 @@ begin
       i_rst => i_rst,
 
       i_stall => s_stall_ex,
-      o_stall => s_ex_stall,
+      o_stall => s_ex1_stall,
 
       -- From ID stage (sync).
       i_pc => s_id_pc,
@@ -288,46 +288,46 @@ begin
       i_branch_is_taken => s_id_branch_is_taken,
 
       -- Branch PC correction to the PC stage (async).
-      o_pccorr_target => s_ex_pccorr_target,
-      o_pccorr_source => s_ex_pccorr_source,
-      o_pccorr_is_branch => s_ex_pccorr_is_branch,
-      o_pccorr_is_taken => s_ex_pccorr_is_taken,
-      o_pccorr_adjust => s_ex_pccorr_adjust,
-      o_pccorr_adjusted_pc => s_ex_pccorr_adjusted_pc,
+      o_pccorr_target => s_ex1_pccorr_target,
+      o_pccorr_source => s_ex1_pccorr_source,
+      o_pccorr_is_branch => s_ex1_pccorr_is_branch,
+      o_pccorr_is_taken => s_ex1_pccorr_is_taken,
+      o_pccorr_adjust => s_ex1_pccorr_adjust,
+      o_pccorr_adjusted_pc => s_ex1_pccorr_adjusted_pc,
 
       -- To MEM stage (sync).
-      o_mem_op => s_ex_mem_op,
-      o_mem_enable => s_ex_mem_enable,
-      o_mem_we => s_ex_mem_we,
-      o_mem_byte_mask => s_ex_mem_byte_mask,
-      o_result => s_ex_result,
-      o_store_data => s_ex_store_data,
-      o_dst_reg => s_ex_dst_reg,
-      o_writes_to_reg => s_ex_writes_to_reg,
+      o_mem_op => s_ex1_mem_op,
+      o_mem_enable => s_ex1_mem_enable,
+      o_mem_we => s_ex1_mem_we,
+      o_mem_byte_mask => s_ex1_mem_byte_mask,
+      o_result => s_ex1_result,
+      o_store_data => s_ex1_store_data,
+      o_dst_reg => s_ex1_dst_reg,
+      o_writes_to_reg => s_ex1_writes_to_reg,
 
       -- To operand forwarding (async).
-      o_next_result => s_ex_next_result,
-      o_next_result_ready => s_ex_next_result_ready
+      o_next_result => s_ex1_next_result,
+      o_next_result_ready => s_ex1_next_result_ready
     );
 
 
-  -- MEM: Memory.
+  -- EX2: Memory.
 
   memory_0: entity work.memory
     port map (
       i_clk => i_clk,
       i_rst => i_rst,
-      o_stall => s_mem_stall,
+      o_stall => s_ex2_stall,
 
       -- From EX stage (sync).
-      i_mem_op => s_ex_mem_op,
-      i_mem_enable => s_ex_mem_enable,
-      i_mem_we => s_ex_mem_we,
-      i_mem_byte_mask => s_ex_mem_byte_mask,
-      i_ex_result => s_ex_result,
-      i_store_data => s_ex_store_data,
-      i_dst_reg => s_ex_dst_reg,
-      i_writes_to_reg => s_ex_writes_to_reg,
+      i_mem_op => s_ex1_mem_op,
+      i_mem_enable => s_ex1_mem_enable,
+      i_mem_we => s_ex1_mem_we,
+      i_mem_byte_mask => s_ex1_mem_byte_mask,
+      i_ex_result => s_ex1_result,
+      i_store_data => s_ex1_store_data,
+      i_dst_reg => s_ex1_dst_reg,
+      i_writes_to_reg => s_ex1_writes_to_reg,
 
       -- DCache interface.
       o_dcache_req => o_dcache_req,
@@ -339,12 +339,12 @@ begin
       i_dcache_read_data_ready => i_dcache_read_data_ready,
 
       -- To WB stage (sync).
-      o_data => s_mem_data,
-      o_dst_reg => s_mem_dst_reg,
-      o_writes_to_reg => s_mem_writes_to_reg,
+      o_data => s_ex2_data,
+      o_dst_reg => s_ex2_dst_reg,
+      o_writes_to_reg => s_ex2_writes_to_reg,
 
       -- To operand forwarding (async).
-      o_next_data => s_mem_next_data
+      o_next_data => s_ex2_next_result
     );
 
 
@@ -353,7 +353,7 @@ begin
   --------------------------------------------------------------------------------------------------
 
   -- Did the EX stage produce a value that is ready to use?
-  s_value_ready_from_ex <= not s_ex_mem_enable;
+  s_value_ready_from_ex <= not s_ex1_mem_enable;
 
   -- Forwarding logic for the branching logic in the ID stage (async).
   forward_to_branch_logic_0: entity work.forward_to_branch_logic
@@ -365,15 +365,15 @@ begin
       i_dst_reg_from_id => s_id_dst_reg,
 
       -- From EX (sync).
-      i_ex_writes_to_reg => s_ex_writes_to_reg,
-      i_dst_reg_from_ex => s_ex_dst_reg,
-      i_value_from_ex => s_ex_result,
+      i_ex_writes_to_reg => s_ex1_writes_to_reg,
+      i_dst_reg_from_ex => s_ex1_dst_reg,
+      i_value_from_ex => s_ex1_result,
       i_ready_from_ex => s_value_ready_from_ex,
 
       -- From MEM (sync).
-      i_mem_writes_to_reg => s_mem_writes_to_reg,
-      i_dst_reg_from_mem => s_mem_dst_reg,
-      i_value_from_mem => s_mem_data,
+      i_mem_writes_to_reg => s_ex2_writes_to_reg,
+      i_dst_reg_from_mem => s_ex2_dst_reg,
+      i_value_from_mem => s_ex2_data,
 
       -- Operand forwarding to the ID stage.
       o_value => s_branch_fwd_value,
@@ -389,18 +389,18 @@ begin
       -- From EX input (async).
       i_ex_writes_to_reg => s_id_writes_to_reg,
       i_dst_reg_from_ex => s_id_dst_reg,
-      i_value_from_ex => s_ex_next_result,
-      i_ready_from_ex => s_ex_next_result_ready,
+      i_value_from_ex => s_ex1_next_result,
+      i_ready_from_ex => s_ex1_next_result_ready,
 
       -- From MEM input (async).
-      i_mem_writes_to_reg => s_ex_writes_to_reg,
-      i_dst_reg_from_mem => s_ex_dst_reg,
-      i_value_from_mem => s_mem_next_data,
+      i_mem_writes_to_reg => s_ex1_writes_to_reg,
+      i_dst_reg_from_mem => s_ex1_dst_reg,
+      i_value_from_mem => s_ex2_next_result,
 
       -- From WB input (async).
-      i_wb_writes_to_reg => s_mem_writes_to_reg,
-      i_dst_reg_from_wb => s_mem_dst_reg,
-      i_value_from_wb => s_mem_data,
+      i_wb_writes_to_reg => s_ex2_writes_to_reg,
+      i_dst_reg_from_wb => s_ex2_dst_reg,
+      i_value_from_wb => s_ex2_data,
 
       -- Operand forwarding to the EX inputs in the ID stage.
       o_value => s_reg_a_fwd_value,
@@ -416,18 +416,18 @@ begin
       -- From EX input (async).
       i_ex_writes_to_reg => s_id_writes_to_reg,
       i_dst_reg_from_ex => s_id_dst_reg,
-      i_value_from_ex => s_ex_next_result,
-      i_ready_from_ex => s_ex_next_result_ready,
+      i_value_from_ex => s_ex1_next_result,
+      i_ready_from_ex => s_ex1_next_result_ready,
 
       -- From MEM input (async).
-      i_mem_writes_to_reg => s_ex_writes_to_reg,
-      i_dst_reg_from_mem => s_ex_dst_reg,
-      i_value_from_mem => s_mem_next_data,
+      i_mem_writes_to_reg => s_ex1_writes_to_reg,
+      i_dst_reg_from_mem => s_ex1_dst_reg,
+      i_value_from_mem => s_ex2_next_result,
 
       -- From WB input (async).
-      i_wb_writes_to_reg => s_mem_writes_to_reg,
-      i_dst_reg_from_wb => s_mem_dst_reg,
-      i_value_from_wb => s_mem_data,
+      i_wb_writes_to_reg => s_ex2_writes_to_reg,
+      i_dst_reg_from_wb => s_ex2_dst_reg,
+      i_value_from_wb => s_ex2_data,
 
       -- Operand forwarding to the EX inputs in the ID stage.
       o_value => s_reg_b_fwd_value,
@@ -443,18 +443,18 @@ begin
       -- From EX input (async).
       i_ex_writes_to_reg => s_id_writes_to_reg,
       i_dst_reg_from_ex => s_id_dst_reg,
-      i_value_from_ex => s_ex_next_result,
-      i_ready_from_ex => s_ex_next_result_ready,
+      i_value_from_ex => s_ex1_next_result,
+      i_ready_from_ex => s_ex1_next_result_ready,
 
       -- From MEM input (async).
-      i_mem_writes_to_reg => s_ex_writes_to_reg,
-      i_dst_reg_from_mem => s_ex_dst_reg,
-      i_value_from_mem => s_mem_next_data,
+      i_mem_writes_to_reg => s_ex1_writes_to_reg,
+      i_dst_reg_from_mem => s_ex1_dst_reg,
+      i_value_from_mem => s_ex2_next_result,
 
       -- From WB input (async).
-      i_wb_writes_to_reg => s_mem_writes_to_reg,
-      i_dst_reg_from_wb => s_mem_dst_reg,
-      i_value_from_wb => s_mem_data,
+      i_wb_writes_to_reg => s_ex2_writes_to_reg,
+      i_dst_reg_from_wb => s_ex2_dst_reg,
+      i_value_from_wb => s_ex2_data,
 
       -- Operand forwarding to the EX inputs in the ID stage.
       o_value => s_reg_c_fwd_value,
@@ -468,11 +468,11 @@ begin
   --------------------------------------------------------------------------------------------------
 
   -- Determine if we need to cancel speculative instructions.
-  s_cancel_speculative_instructions <= s_ex_pccorr_adjust;
+  s_cancel_speculative_instructions <= s_ex1_pccorr_adjust;
 
   -- Determine which pipeline stages need to be stalled during the next cycle.
-  s_stall_ex <= s_mem_stall;
-  s_stall_id <= s_ex_stall or s_stall_ex;
+  s_stall_ex <= s_ex2_stall;
+  s_stall_id <= s_ex1_stall or s_stall_ex;
   s_stall_if <= s_id_stall or s_stall_id;
   s_stall_pc <= s_if_stall or s_stall_if;
 end rtl;
