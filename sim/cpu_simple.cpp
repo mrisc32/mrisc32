@@ -523,6 +523,10 @@ uint32_t cpu_simple_t::run() {
           ex_result = static_cast<uint32_t>(
               (static_cast<uint64_t>(ex_in.src_a) * static_cast<uint64_t>(ex_in.src_b)) >> 32u);
           break;
+        case EX_OP_FMUL:
+          ex_result = static_cast<uint32_t>(as_u32(as_f32(ex_in.src_a) * as_f32(ex_in.src_b)));
+          break;
+
         case EX_OP_DIV:
           ex_result = static_cast<uint32_t>(static_cast<int32_t>(ex_in.src_a) /
                                             static_cast<int32_t>(ex_in.src_b));
@@ -536,6 +540,9 @@ uint32_t cpu_simple_t::run() {
         case EX_OP_REMU:
           // TODO(m): Implement me!
           throw std::runtime_error("REMU is not yet implemented.");
+        case EX_OP_FDIV:
+          ex_result = static_cast<uint32_t>(as_u32(as_f32(ex_in.src_a) / as_f32(ex_in.src_b)));
+          break;
 
         case EX_OP_ITOF:
           ex_result = as_u32(static_cast<float>(static_cast<int32_t>(ex_in.src_a)));
@@ -549,12 +556,21 @@ uint32_t cpu_simple_t::run() {
         case EX_OP_FSUB:
           ex_result = static_cast<uint32_t>(as_u32(-as_f32(ex_in.src_a) + as_f32(ex_in.src_b)));
           break;
-        case EX_OP_FMUL:
-          ex_result = static_cast<uint32_t>(as_u32(as_f32(ex_in.src_a) * as_f32(ex_in.src_b)));
-          break;
-        case EX_OP_FDIV:
-          ex_result = static_cast<uint32_t>(as_u32(as_f32(ex_in.src_a) / as_f32(ex_in.src_b)));
-          break;
+        case EX_OP_FCEQ:
+          // TODO(m): Implement me!
+          throw std::runtime_error("FCEQ is not yet implemented.");
+        case EX_OP_FCLT:
+          // TODO(m): Implement me!
+          throw std::runtime_error("FCLT is not yet implemented.");
+        case EX_OP_FCLE:
+          // TODO(m): Implement me!
+          throw std::runtime_error("FCLE is not yet implemented.");
+        case EX_OP_FMIN:
+          // TODO(m): Implement me!
+          throw std::runtime_error("FMIN is not yet implemented.");
+        case EX_OP_FMAX:
+          // TODO(m): Implement me!
+          throw std::runtime_error("FMAX is not yet implemented.");
       }
 
       mem_in.mem_addr = ex_result;
