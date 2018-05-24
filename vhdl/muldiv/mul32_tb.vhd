@@ -27,11 +27,11 @@ end mul32_tb;
 architecture behavioral of mul32_tb is
   signal s_clk : std_logic;
   signal s_rst : std_logic;
-  signal s_start_op : std_logic;
+  signal s_enable : std_logic;
+  signal s_op : T_MUL_OP;
   signal s_src_a : std_logic_vector(31 downto 0);
   signal s_src_b : std_logic_vector(31 downto 0);
-  signal s_signed_op : std_logic;
-  signal s_result : std_logic_vector(63 downto 0);
+  signal s_result : std_logic_vector(31 downto 0);
   signal s_result_ready : std_logic;
 begin
   mul32_0: entity work.mul32
@@ -39,10 +39,10 @@ begin
       i_clk => s_clk,
       i_rst => s_rst,
       i_stall => '0',
-      i_start_op => s_start_op,
+      i_enable => s_enable,
+      i_op => s_op,
       i_src_a => s_src_a,
       i_src_b => s_src_b,
-      i_signed_op => s_signed_op,
       o_result => s_result,
       o_result_ready => s_result_ready
     );
@@ -51,43 +51,37 @@ begin
     --  The patterns to apply.
     type pattern_type is record
       -- Inputs
-      start_op : std_logic;
+      enable : std_logic;
+      op : T_MUL_OP;
       src_a : std_logic_vector(31 downto 0);
       src_b : std_logic_vector(31 downto 0);
-      signed_op : std_logic;
 
       -- Expected outputs
-      result : std_logic_vector(63 downto 0);
+      result : std_logic_vector(31 downto 0);
       result_ready : std_logic;
     end record;
     type pattern_array is array (natural range <>) of pattern_type;
     constant patterns : pattern_array := (
-        -- 1 x 1 = 1
-        ('1', X"00000001", X"00000001", '0', X"0000000000000000", '0'),
-        ('0', X"00000001", X"00000001", '0', X"0000000000000001", '1'),
-        ('1', X"00000001", X"00000001", '1', X"0000000000000001", '0'),
-        ('0', X"00000001", X"00000001", '1', X"0000000000000001", '1'),
-        ('1', X"00000001", X"FFFFFFFF", '1', X"0000000000000001", '0'),
-        ('0', X"00000001", X"FFFFFFFF", '1', X"FFFFFFFFFFFFFFFF", '1'),
-        ('1', X"FFFFFFFF", X"FFFFFFFF", '1', X"FFFFFFFFFFFFFFFF", '0'),
-        ('0', X"FFFFFFFF", X"FFFFFFFF", '1', X"0000000000000001", '1'),
+        -- TODO(m): Add more test vectors.
 
-        -- 99 x 99 = 1
-        ('1', X"00000063", X"00000063", '0', X"0000000000000001", '0'),
-        ('0', X"00000063", X"00000063", '0', X"0000000000002649", '1'),
-        ('1', X"00000063", X"00000063", '1', X"0000000000002649", '0'),
-        ('0', X"00000063", X"00000063", '1', X"0000000000002649", '1'),
-        ('1', X"00000063", X"FFFFFF9D", '1', X"0000000000002649", '0'),
-        ('0', X"00000063", X"FFFFFF9D", '1', X"FFFFFFFFFFFFD9B7", '1')
+        -- 1 x 1 = 1
+        ('1', C_MUL_MUL,    X"00000001", X"00000001", X"00000000", '0'),
+        ('1', C_MUL_MUL,    X"FFFFFFFF", X"00000001", X"00000001", '1'),
+        ('1', C_MUL_MUL,    X"00000001", X"FFFFFFFF", X"FFFFFFFF", '1'),
+        ('0', C_MUL_MUL,    X"00000001", X"00000001", X"FFFFFFFF", '1'),
+
+        -- 99 x 99 = 9801
+        ('1', C_MUL_MUL,    X"00000063", X"00000063", X"00000001", '0'),
+        ('1', C_MUL_MUL,    X"00000063", X"00000063", X"00002649", '1')
       );
   begin
     -- Start by resetting the signals.
     s_clk <= '0';
     s_rst <= '1';
-    s_start_op <= '0';
+    s_enable <= '0';
+    s_op <= (others => '0');
     s_src_a <= (others => '0');
     s_src_b <= (others => '0');
-    s_signed_op <= '0';
 
     wait for 1 ns;
     s_clk <= '1';
@@ -102,10 +96,10 @@ begin
       wait until s_clk = '1';
 
       --  Set the inputs.
-      s_start_op <= patterns(i).start_op;
+      s_enable <= patterns(i).enable;
+      s_op <= patterns(i).op;
       s_src_a <= patterns(i).src_a;
       s_src_b <= patterns(i).src_b;
-      s_signed_op <= patterns(i).signed_op;
 
       -- Wait for the result to be produced.
       wait for 1 ns;

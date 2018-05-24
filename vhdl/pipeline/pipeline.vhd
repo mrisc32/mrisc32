@@ -75,11 +75,13 @@ architecture rtl of pipeline is
   signal s_id_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_id_writes_to_reg : std_logic;
   signal s_id_alu_op : T_ALU_OP;
-  signal s_id_muldiv_op : T_MULDIV_OP;
   signal s_id_mem_op : T_MEM_OP;
+  signal s_id_mul_op : T_MUL_OP;
+  signal s_id_div_op : T_DIV_OP;
   signal s_id_alu_en : std_logic;
-  signal s_id_muldiv_en : std_logic;
   signal s_id_mem_en : std_logic;
+  signal s_id_mul_en : std_logic;
+  signal s_id_div_en : std_logic;
 
   -- From EX1/EX2.
   signal s_ex_stall : std_logic;
@@ -240,11 +242,13 @@ begin
       o_dst_reg => s_id_dst_reg,
       o_writes_to_reg => s_id_writes_to_reg,
       o_alu_op => s_id_alu_op,
-      o_muldiv_op => s_id_muldiv_op,
       o_mem_op => s_id_mem_op,
+      o_mul_op => s_id_mul_op,
+      o_div_op => s_id_div_op,
       o_alu_en => s_id_alu_en,
-      o_muldiv_en => s_id_muldiv_en,
-      o_mem_en => s_id_mem_en
+      o_mem_en => s_id_mem_en,
+      o_mul_en => s_id_mul_en,
+      o_div_en => s_id_div_en
     );
 
 
@@ -265,11 +269,13 @@ begin
       i_dst_reg => s_id_dst_reg,
       i_writes_to_reg => s_id_writes_to_reg,
       i_alu_op => s_id_alu_op,
-      i_muldiv_op => s_id_muldiv_op,
       i_mem_op => s_id_mem_op,
+      i_mul_op => s_id_mul_op,
+      i_div_op => s_id_div_op,
       i_alu_en => s_id_alu_en,
-      i_muldiv_en => s_id_muldiv_en,
       i_mem_en => s_id_mem_en,
+      i_mul_en => s_id_mul_en,
+      i_div_en => s_id_div_en,
 
       -- PC signal from IF (sync).
       i_if_pc => s_if_pc,

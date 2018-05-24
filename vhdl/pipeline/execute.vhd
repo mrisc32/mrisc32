@@ -40,11 +40,13 @@ entity execute is
     i_dst_reg : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
     i_writes_to_reg : in std_logic;
     i_alu_op : in T_ALU_OP;
-    i_muldiv_op : in T_MULDIV_OP;
     i_mem_op : in T_MEM_OP;
+    i_mul_op : in T_MUL_OP;
+    i_div_op : in T_DIV_OP;
     i_alu_en : in std_logic;
-    i_muldiv_en : in std_logic;
     i_mem_en : in std_logic;
+    i_mul_en : in std_logic;
+    i_div_en : in std_logic;
 
     -- PC signal from IF (sync).
     i_if_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -95,23 +97,14 @@ end execute;
 
 architecture rtl of execute is
   signal s_alu_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
-
-  signal s_muldiv_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_muldiv_result_ready : std_logic;
-  signal s_stall_for_muldiv : std_logic;
+  signal s_mul_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_mul_result_ready : std_logic;
 
   -- Should the EX1 stage be stalled by the EX2 stage?
   signal s_stall_ex1 : std_logic;
 
-  -- Multicycle operation handling.
-  signal s_start_multicycle_op : std_logic;
-  signal s_start_muldiv_op : std_logic;
-  signal s_stall_for_multicycle_op : std_logic;
-  signal s_multicycle_op_finished : std_logic;
-  signal s_prev_stall_for_multicycle_op : std_logic;
-
-  signal s_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_next_result_ready : std_logic;
+  signal s_ex1_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_ex1_next_result_ready : std_logic;
 
   -- Signals related to memory I/O.
   signal s_mem_byte_mask_unshifted : std_logic_vector(C_WORD_SIZE/8-1 downto 0);
@@ -149,8 +142,6 @@ architecture rtl of execute is
   -- Signals from the EX2 stage (async).
   signal s_ex2_stall : std_logic;
   signal s_ex2_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
-
-  constant C_MULDIV_ZERO : T_MULDIV_OP := (others => '0');
 begin
   --------------------------------------------------------------------------------------------------
   -- Branch logic.
@@ -194,27 +185,19 @@ begin
       o_result => s_alu_result
     );
 
-  -- Instantiate a multiply unit.
-  muldiv_1: entity work.muldiv
+  -- Instantiate the multiply unit.
+  mul32_1: entity work.mul32
     port map (
       i_clk => i_clk,
       i_rst => i_rst,
       i_stall => s_stall_ex1,
-      o_stall => s_stall_for_muldiv,
-      i_enable => i_muldiv_en,
-      i_op => i_muldiv_op,
+      i_enable => i_mul_en,
+      i_op => i_mul_op,
       i_src_a => i_src_a,
       i_src_b => i_src_b,
-      i_start_op => s_start_muldiv_op,
-      o_result => s_muldiv_result,
-      o_result_ready => s_muldiv_result_ready
+      o_result => s_mul_result,
+      o_result_ready => s_mul_result_ready
     );
-
-  -- Multicycle operation.
-  s_start_multicycle_op <= i_muldiv_en and not s_prev_stall_for_multicycle_op;
-  s_start_muldiv_op <= s_start_multicycle_op and i_muldiv_en;
-  s_stall_for_multicycle_op <= s_stall_for_muldiv;
-  s_multicycle_op_finished <= s_muldiv_result_ready;
 
   -- Prepare the byte mask for the MEM stage.
   ByteMaskMux: with i_mem_op(1 downto 0) select
@@ -238,34 +221,18 @@ begin
       i_src_c(15 downto 0) & X"0000"   when "10",
       i_src_c(7 downto 0)  & X"000000" when others;  -- "11"
 
-  -- Select the output.
-  s_next_result <=
-      s_alu_result when i_alu_en = '1' else
-      s_muldiv_result when i_muldiv_en = '1' else
-      (others => '0');
-
-  s_next_result_ready <= (i_alu_en and (not i_mem_en)) or s_multicycle_op_finished;
+  -- The next output from EX1 comes from the ALU.
+  s_ex1_next_result <= s_alu_result;
+  s_ex1_next_result_ready <= (i_alu_en and (not i_mem_en));
 
   -- Should we send a bubble down the pipeline?
-  -- TODO(m): We also need to bubble if there was a branch misprediction (important for not
-  -- writing to LR for conditional link branches)!
-  s_bubble <= s_stall_for_multicycle_op;
+  -- We need to bubble if there was a branch misprediction (important for not writing to LR for
+  -- conditional link branches)!
+  s_bubble <= s_mispredicted_pc;
   s_mem_op_masked <= i_mem_op when s_bubble = '0' else (others => '0');
   s_mem_en_masked <= i_mem_en and not s_bubble;
   s_dst_reg_masked <= i_dst_reg when s_bubble = '0' else (others => '0');
   s_writes_to_reg_masked <= i_writes_to_reg and not s_bubble;
-
-  -- Internal state.
-  process(i_clk, i_rst)
-  begin
-    if i_rst = '1' then
-      s_prev_stall_for_multicycle_op <= '0';
-    elsif rising_edge(i_clk) then
-      if s_stall_ex1 = '0' then
-        s_prev_stall_for_multicycle_op <= s_stall_for_multicycle_op;
-      end if;
-    end if;
-  end process;
 
   -- Outputs to the EX2 stage (sync).
   process(i_clk, i_rst)
@@ -286,8 +253,8 @@ begin
         s_ex1_mem_enable <= s_mem_en_masked;
         s_ex1_mem_we <= s_mem_op_masked(3);
         s_ex1_mem_byte_mask <= s_mem_byte_mask;
-        s_ex1_result <= s_next_result;
-        s_ex1_result_ready <= s_next_result_ready;
+        s_ex1_result <= s_ex1_next_result;
+        s_ex1_result_ready <= s_ex1_next_result_ready;
         s_ex1_store_data <= s_mem_store_data;
         s_ex1_dst_reg <= s_dst_reg_masked;
         s_ex1_writes_to_reg <= s_writes_to_reg_masked;
@@ -299,8 +266,8 @@ begin
   -- Async:
   o_ex1_next_dst_reg <= s_dst_reg_masked;
   o_ex1_next_writes_to_reg <= s_writes_to_reg_masked;
-  o_ex1_next_result <= s_next_result;
-  o_ex1_next_result_ready <= s_next_result_ready;
+  o_ex1_next_result <= s_ex1_next_result;
+  o_ex1_next_result_ready <= s_ex1_next_result_ready;
 
   -- Sync:
   o_ex1_dst_reg <= s_ex1_dst_reg;
@@ -339,7 +306,9 @@ begin
     );
 
   -- Select the result from the EX2 stage.
-  s_ex2_next_result <= s_mem_data when s_ex1_mem_enable = '1' else s_ex1_result;
+  s_ex2_next_result <= s_mem_data when s_ex1_mem_enable = '1' else
+                       s_mul_result when s_mul_result_ready = '1' else
+                       s_ex1_result;
 
   -- Outputs to the WB stage (sync).
   process(i_clk, i_rst)
@@ -361,6 +330,6 @@ begin
   -- Stall logic (async).
   s_ex2_stall <= s_mem_stall;
   s_stall_ex1 <= s_ex2_stall;
-  o_stall <= s_stall_for_multicycle_op or s_stall_ex1;
+  o_stall <= s_stall_ex1;
 end rtl;
 
