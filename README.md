@@ -10,10 +10,10 @@ This is an experimental, custom 32-bit RISC/Vector CPU.
   - There are 32 scalar registers, S0-S31, each 32 bits wide.
     - Four registers are special: Z, PC, LR, VL.
     - 28 registers are general purpose (of which three are reserved: SP, TP, FP).
-    - All registers can be used for all types (integers, pointers and floating point).
+    - All registers can be used for all types (integers, addresses and floating point).
     - PC is user-visible (for arithmetic and addressing) but read-only (to simplify branching logic).
   - There are 32 vector registers, V0-V31, each with *at least* four 32-bit elements.
-    - All registers can be used for all types (integers, pointers and floating point).
+    - All registers can be used for all types (integers, addresses and floating point).
 * All instructions are 32 bits wide and easy to decode.
   - There are only three basic types of instruction encodings.
   - There is room for 512 register-based and 62 immediate-based instructions.
@@ -24,7 +24,7 @@ This is an experimental, custom 32-bit RISC/Vector CPU.
 * Unlike early RISC architectures, there are *no* delay slots.
 * Many traditional floating point operations can be handled by integer operations, reducing the number of necessary instructions:
   - Load/store.
-  - Compare/branch.
+  - Branch.
   - Sign and bit manipulation (e.g. neg, abs).
 * Vector operations use a Cray-like model:
   - Vector operations are variable length (1-*N* elements).
@@ -57,7 +57,7 @@ So far, the following components have been implemented:
 
 * The integer ALU.
   - All single-cycle integer operations are supported.
-* A two-cycle multiply unit.
+* A pipelined (two-cycle) multiply unit.
   - Supports all multiplication operations.
 * The scalar register file.
   - There are three read ports and one write port.
