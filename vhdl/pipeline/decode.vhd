@@ -77,11 +77,13 @@ entity decode is
       o_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
       o_writes_to_reg : out std_logic;
       o_alu_op : out T_ALU_OP;
-      o_muldiv_op : out T_MULDIV_OP;
       o_mem_op : out T_MEM_OP;
+      o_mul_op : out T_MUL_OP;
+      o_div_op : out T_DIV_OP;
       o_alu_en : out std_logic;
-      o_muldiv_en : out std_logic;
-      o_mem_en : out std_logic
+      o_mem_en : out std_logic;
+      o_mul_en : out std_logic;
+      o_div_en : out std_logic
     );
 end decode;
 
@@ -107,7 +109,9 @@ architecture rtl of decode is
   signal s_is_mem_op : std_logic;
   signal s_is_mem_store : std_logic;
 
-  signal s_is_muldiv_op : std_logic;
+  signal s_is_mul_op : std_logic;
+  signal s_is_div_op : std_logic;
+  signal s_is_fpu_op : std_logic;
 
   signal s_is_ldhi : std_logic;
   signal s_is_ldhio : std_logic;
@@ -143,11 +147,13 @@ architecture rtl of decode is
   signal s_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_writes_to_reg : std_logic;
   signal s_alu_op : T_ALU_OP;
-  signal s_muldiv_op : T_MULDIV_OP;
   signal s_mem_op : T_MEM_OP;
+  signal s_mul_op : T_MUL_OP;
+  signal s_div_op : T_DIV_OP;
   signal s_alu_en : std_logic;
-  signal s_muldiv_en : std_logic;
   signal s_mem_en : std_logic;
+  signal s_mul_en : std_logic;
+  signal s_div_en : std_logic;
 
   -- Operand forwarding signals.
   signal s_reg_a_data_or_fwd : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -162,8 +168,9 @@ architecture rtl of decode is
   signal s_alu_op_masked : T_ALU_OP;
   signal s_mem_op_masked : T_MEM_OP;
   signal s_alu_en_masked : std_logic;
-  signal s_muldiv_en_masked : std_logic;
   signal s_mem_en_masked : std_logic;
+  signal s_mul_en_masked : std_logic;
+  signal s_div_en_masked : std_logic;
   signal s_is_branch_masked : std_logic;
 begin
   -- Extract operation codes.
@@ -279,8 +286,10 @@ begin
   s_is_ldhio <= '1' when s_op_high = "110111" else '0';
   s_is_ldi   <= '1' when s_op_high = "111110" else '0';
 
-  -- Is this a MULDIV op?
-  s_is_muldiv_op <= '1' when (s_is_type_a = '1' and s_op_low(8 downto 3) = "010000") else '0';
+  -- Is this a MUL, DIV or FPU op?
+  s_is_mul_op <= '1' when (s_is_type_a = '1' and s_op_low(8 downto 3) = "010000") else '0';
+  s_is_div_op <= '1' when (s_is_type_a = '1' and s_op_low(8 downto 3) = "010001") else '0';
+  s_is_fpu_op <= '1' when (s_is_type_a = '1' and s_op_low(8 downto 4) = "01001") else '0';
 
   -- What source registers are required for this operation?
   s_reg_a_required <= not s_is_type_c;
@@ -309,8 +318,9 @@ begin
                (others => '0');
 
   -- What pipeline units should be enabled?
-  s_alu_en <= not s_is_muldiv_op;
-  s_muldiv_en <= s_is_muldiv_op;
+  s_alu_en <= not (s_is_mul_op or s_is_div_op or s_is_fpu_op);
+  s_mul_en <= s_is_mul_op;
+  s_div_en <= s_is_div_op;
   s_mem_en <= s_is_mem_op;
 
   -- Select ALU operation.
@@ -339,13 +349,13 @@ begin
       -- Map the high order opcode directly to the ALU.
       s_op_high;
 
-  -- Select MULDIV operation.
-  s_muldiv_op <=
-      -- If this is not a mul/div operation, disable the muldiv unit.
-      (others => '0') when s_muldiv_en = '0' else
+  -- Select multiply operation.
+  -- Map the low order bits of the low order opcode directly to the multiply unit.
+  s_mul_op <= s_op_low(C_MUL_OP_SIZE-1 downto 0);
 
-      -- Map the low order bits of the low order opcode directly to the muldiv unit.
-      s_op_low(C_MULDIV_OP_SIZE-1 downto 0);
+  -- Select division operation.
+  -- Map the low order bits of the low order opcode directly to the division unit.
+  s_mul_op <= s_op_low(C_DIV_OP_SIZE-1 downto 0);
 
   -- Are we missing any fwd operation that has not yet been produced by the pipeline?
   s_missing_fwd_operand <=
@@ -361,8 +371,9 @@ begin
   s_alu_op_masked <= s_alu_op when s_bubble = '0' else (others => '0');
   s_mem_op_masked <= s_mem_op when s_bubble = '0' else (others => '0');
   s_alu_en_masked <= s_alu_en and not s_bubble;
-  s_muldiv_en_masked <= s_muldiv_en and not s_bubble;
   s_mem_en_masked <= s_mem_en and not s_bubble;
+  s_mul_en_masked <= s_mul_en and not s_bubble;
+  s_div_en_masked <= s_div_en and not s_bubble;
   s_is_branch_masked <= s_is_branch and not s_bubble;
 
   -- Will this instruction write to a register?
@@ -379,11 +390,13 @@ begin
       o_dst_reg <= (others => '0');
       o_writes_to_reg <= '0';
       o_alu_op <= (others => '0');
-      o_muldiv_op <= (others => '0');
       o_mem_op <= (others => '0');
+      o_mul_op <= (others => '0');
+      o_div_op <= (others => '0');
       o_alu_en <= '0';
-      o_muldiv_en <= '0';
       o_mem_en <= '0';
+      o_mul_en <= '0';
+      o_div_en <= '0';
 
       o_branch_reg_addr <= (others => '0');
       o_branch_offset_addr <= (others => '0');
@@ -399,11 +412,13 @@ begin
         o_dst_reg <= s_dst_reg_masked;
         o_writes_to_reg <= s_writes_to_reg_masked;
         o_alu_op <= s_alu_op_masked;
-        o_muldiv_op <= s_muldiv_op;
         o_mem_op <= s_mem_op_masked;
+        o_mul_op <= s_mul_op;
+        o_div_op <= s_div_op;
         o_alu_en <= s_alu_en_masked;
-        o_muldiv_en <= s_muldiv_en_masked;
         o_mem_en <= s_mem_en_masked;
+        o_mul_en <= s_mul_en_masked;
+        o_div_en <= s_div_en_masked;
 
         o_branch_reg_addr <= s_branch_reg_data;
         o_branch_offset_addr <= s_branch_offset_addr;

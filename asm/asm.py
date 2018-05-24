@@ -330,7 +330,7 @@ _OPCODES = {
         'J':      [[0x00000070, _REG1]],           # 2nd & 3rd regs are always z
         'JL':     [[0x00000071, _REG1]],           # 2nd & 3rd regs are always z
 
-        # Integer mul/div.
+        # Multiplication operations.
         'MUL':    [[0x00000080, _REG1, _REG2, _REG3],
                    [0x80000080, _VREG1, _VREG2, _REG3],
                    [0xc0000080, _VREG1, _VREG2, _VREG3]],
@@ -341,18 +341,26 @@ _OPCODES = {
         'MULHIU': [[0x00000083, _REG1, _REG2, _REG3],
                    [0x80000083, _VREG1, _VREG2, _REG3],
                    [0xc0000083, _VREG1, _VREG2, _VREG3]],
-        'DIV':    [[0x00000084, _REG1, _REG2, _REG3],
+        'FMUL':   [[0x00000084, _REG1, _REG2, _REG3],
                    [0x80000084, _VREG1, _VREG2, _REG3],
                    [0xc0000084, _VREG1, _VREG2, _VREG3]],
-        'DIVU':   [[0x00000085, _REG1, _REG2, _REG3],
-                   [0x80000085, _VREG1, _VREG2, _REG3],
-                   [0xc0000085, _VREG1, _VREG2, _VREG3]],
-        'REM':    [[0x00000086, _REG1, _REG2, _REG3],
-                   [0x80000086, _VREG1, _VREG2, _REG3],
-                   [0xc0000086, _VREG1, _VREG2, _VREG3]],
-        'REMU':   [[0x00000087, _REG1, _REG2, _REG3],
-                   [0x80000087, _VREG1, _VREG2, _REG3],
-                   [0xc0000087, _VREG1, _VREG2, _VREG3]],
+
+        # Division operations.
+        'DIV':    [[0x00000088, _REG1, _REG2, _REG3],
+                   [0x80000088, _VREG1, _VREG2, _REG3],
+                   [0xc0000088, _VREG1, _VREG2, _VREG3]],
+        'DIVU':   [[0x00000089, _REG1, _REG2, _REG3],
+                   [0x80000089, _VREG1, _VREG2, _REG3],
+                   [0xc0000089, _VREG1, _VREG2, _VREG3]],
+        'REM':    [[0x0000008a, _REG1, _REG2, _REG3],
+                   [0x8000008a, _VREG1, _VREG2, _REG3],
+                   [0xc000008a, _VREG1, _VREG2, _VREG3]],
+        'REMU':   [[0x0000008b, _REG1, _REG2, _REG3],
+                   [0x8000008b, _VREG1, _VREG2, _REG3],
+                   [0xc000008b, _VREG1, _VREG2, _VREG3]],
+        'FDIV':   [[0x0000008c, _REG1, _REG2, _REG3],
+                   [0x8000008c, _VREG1, _VREG2, _REG3],
+                   [0xc000008c, _VREG1, _VREG2, _VREG3]],
 
         # FP arithmetic.
         'ITOF':   [[0x00000090, _REG1, _REG2],     # Cast int->float (reg3 = z)
@@ -365,12 +373,21 @@ _OPCODES = {
         'FSUB':   [[0x00000093, _REG1, _REG2, _REG3],
                    [0x80000093, _VREG1, _VREG2, _REG3],
                    [0xc0000093, _VREG1, _VREG2, _VREG3]],
-        'FMUL':   [[0x00000094, _REG1, _REG2, _REG3],
+        'FCEQ':   [[0x00000094, _REG1, _REG2, _REG3],
                    [0x80000094, _VREG1, _VREG2, _REG3],
                    [0xc0000094, _VREG1, _VREG2, _VREG3]],
-        'FDIV':   [[0x00000095, _REG1, _REG2, _REG3],
+        'FCLT':   [[0x00000095, _REG1, _REG2, _REG3],
                    [0x80000095, _VREG1, _VREG2, _REG3],
                    [0xc0000095, _VREG1, _VREG2, _VREG3]],
+        'FCLE':   [[0x00000096, _REG1, _REG2, _REG3],
+                   [0x80000096, _VREG1, _VREG2, _REG3],
+                   [0xc0000096, _VREG1, _VREG2, _VREG3]],
+        'FMIN':   [[0x00000097, _REG1, _REG2, _REG3],
+                   [0x80000097, _VREG1, _VREG2, _REG3],
+                   [0xc0000097, _VREG1, _VREG2, _VREG3]],
+        'FMAX':   [[0x00000098, _REG1, _REG2, _REG3],
+                   [0x80000098, _VREG1, _VREG2, _REG3],
+                   [0xc0000098, _VREG1, _VREG2, _VREG3]],
 
         # == C ==
 

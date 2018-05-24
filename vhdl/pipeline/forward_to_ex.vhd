@@ -23,8 +23,8 @@
 --
 -- An operand for use in the EX stage during the next cycle may come from:
 --
---   * The EX stage.
---   * The MEM stage.
+--   * The EX1 stage.
+--   * The EX2 stage.
 --   * The WB stage.
 --
 -- This entity decides:
@@ -47,14 +47,14 @@ entity forward_to_ex is
       i_src_reg : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
 
       -- Operand information from the different pipeline stages.
-      i_ex_writes_to_reg : in std_logic;
-      i_dst_reg_from_ex : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-      i_value_from_ex : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_ready_from_ex : in std_logic;
+      i_ex1_writes_to_reg : in std_logic;
+      i_dst_reg_from_ex1 : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      i_value_from_ex1 : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_ready_from_ex1 : in std_logic;
 
-      i_mem_writes_to_reg : in std_logic;
-      i_dst_reg_from_mem : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-      i_value_from_mem : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_ex2_writes_to_reg : in std_logic;
+      i_dst_reg_from_ex2 : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      i_value_from_ex2 : in std_logic_vector(C_WORD_SIZE-1 downto 0);
 
       -- TODO(m): Is this necessary, or are we already reading the same value
       -- from the register file in the ID stage?
@@ -70,27 +70,24 @@ entity forward_to_ex is
 end forward_to_ex;
 
 architecture rtl of forward_to_ex is
-  signal s_reg_from_ex : std_logic;
-  signal s_reg_from_mem : std_logic;
+  signal s_reg_from_ex1 : std_logic;
+  signal s_reg_from_ex2 : std_logic;
   signal s_reg_from_wb : std_logic;
 begin
   -- Determine which stages are writing to the requested source register.
-  s_reg_from_ex <= i_ex_writes_to_reg when i_src_reg = i_dst_reg_from_ex else '0';
-  s_reg_from_mem <= i_mem_writes_to_reg when i_src_reg = i_dst_reg_from_mem else '0';
+  s_reg_from_ex1 <= i_ex1_writes_to_reg when i_src_reg = i_dst_reg_from_ex1 else '0';
+  s_reg_from_ex2 <= i_ex2_writes_to_reg when i_src_reg = i_dst_reg_from_ex2 else '0';
   s_reg_from_wb <= i_wb_writes_to_reg when i_src_reg = i_dst_reg_from_wb else '0';
 
   -- Which value to forward?
-  o_value <= i_value_from_ex when (s_reg_from_ex and i_ready_from_ex) = '1' else
-             i_value_from_mem when s_reg_from_mem = '1' else
+  o_value <= i_value_from_ex1 when (s_reg_from_ex1 and i_ready_from_ex1) = '1' else
+             i_value_from_ex2 when s_reg_from_ex2 = '1' else
              i_value_from_wb;
 
   -- Should the forwarded pipeline value be used instead of register file value?
-  o_use_value <= s_reg_from_ex or s_reg_from_mem or s_reg_from_wb;
+  o_use_value <= s_reg_from_ex1 or s_reg_from_ex2 or s_reg_from_wb;
 
   -- Is the value ready for use?
-  -- TODO(m): As an optimization we could forward memory store values from the
-  -- MEM stage directly to the input of the MEM stage instead of waiting for
-  -- them to be ready as EX inputs (thereby we could prevent a pipeline bubble).
-  o_value_ready <= not (s_reg_from_ex and not i_ready_from_ex);
+  o_value_ready <= not (s_reg_from_ex1 and not i_ready_from_ex1);
 end rtl;
 

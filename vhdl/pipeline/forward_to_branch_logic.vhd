@@ -43,14 +43,14 @@ entity forward_to_branch_logic is
       i_id_writes_to_reg : in std_logic;
       i_dst_reg_from_id : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
 
-      i_ex_writes_to_reg : in std_logic;
-      i_dst_reg_from_ex : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-      i_value_from_ex : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_ready_from_ex : in std_logic;
+      i_ex1_writes_to_reg : in std_logic;
+      i_dst_reg_from_ex1 : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      i_value_from_ex1 : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_ready_from_ex1 : in std_logic;
 
-      i_mem_writes_to_reg : in std_logic;
-      i_dst_reg_from_mem : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-      i_value_from_mem : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_ex2_writes_to_reg : in std_logic;
+      i_dst_reg_from_ex2 : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      i_value_from_ex2 : in std_logic_vector(C_WORD_SIZE-1 downto 0);
 
       -- Operand selection for the ID stage.
       o_value : out std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -61,21 +61,21 @@ end forward_to_branch_logic;
 
 architecture rtl of forward_to_branch_logic is
   signal s_reg_from_id : std_logic;
-  signal s_reg_from_ex : std_logic;
-  signal s_reg_from_mem : std_logic;
+  signal s_reg_from_ex1 : std_logic;
+  signal s_reg_from_ex2 : std_logic;
 begin
   -- Determine which stages are writing to the requested source register.
   s_reg_from_id <= i_id_writes_to_reg when i_src_reg = i_dst_reg_from_id else '0';
-  s_reg_from_ex <= i_ex_writes_to_reg when i_src_reg = i_dst_reg_from_ex else '0';
-  s_reg_from_mem <= i_mem_writes_to_reg when i_src_reg = i_dst_reg_from_mem else '0';
+  s_reg_from_ex1 <= i_ex1_writes_to_reg when i_src_reg = i_dst_reg_from_ex1 else '0';
+  s_reg_from_ex2 <= i_ex2_writes_to_reg when i_src_reg = i_dst_reg_from_ex2 else '0';
 
   -- Which value to forward?
-  o_value <= i_value_from_ex when (s_reg_from_ex and i_ready_from_ex) = '1' else i_value_from_mem;
+  o_value <= i_value_from_ex1 when (s_reg_from_ex1 and i_ready_from_ex1) = '1' else i_value_from_ex2;
 
   -- Should the forwarded pipeline value be used instead of register file value?
-  o_use_value <= s_reg_from_id or s_reg_from_ex or s_reg_from_mem;
+  o_use_value <= s_reg_from_id or s_reg_from_ex1 or s_reg_from_ex2;
 
   -- Is the value ready for use?
-  o_value_ready <= not (s_reg_from_id or (s_reg_from_ex and not i_ready_from_ex));
+  o_value_ready <= not (s_reg_from_id or (s_reg_from_ex1 and not i_ready_from_ex1));
 end rtl;
 
