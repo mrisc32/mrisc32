@@ -46,7 +46,7 @@ entity decode is
       i_branch_fwd_use_value : std_logic;
       i_branch_fwd_value_ready : std_logic;
 
-      -- Operand forwarding to EX input.
+      -- Operand forwarding to EX1 input.
       i_reg_a_fwd_value : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_reg_a_fwd_use_value : in std_logic;
       i_reg_a_fwd_value_ready : in std_logic;
@@ -57,20 +57,21 @@ entity decode is
       i_reg_c_fwd_use_value : in std_logic;
       i_reg_c_fwd_value_ready : in std_logic;
 
-      -- WB data from the MEM stage (sync).
+      -- WB data from the EX2 stage (sync).
       i_wb_we : in std_logic;
       i_wb_data_w : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_wb_sel_w : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
 
-      -- Branch results to the EX stage (sync).
+      -- Branch results to the EX1 stage (sync).
       o_branch_reg_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_branch_offset_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_branch_is_branch : out std_logic;
       o_branch_is_reg : out std_logic;  -- 1 for register branches, 0 for all other instructions.
       o_branch_is_taken : out std_logic;
 
-      -- To the EX stage (sync).
+      -- To the EX1 stage (sync).
       o_pc : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_pc_plus_4 : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_src_a : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_src_b : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_src_c : out std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -130,6 +131,7 @@ architecture rtl of decode is
   signal s_branch_offset_addr : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_branch_reg_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_branch_is_taken : std_logic;
+  signal s_pc_plus_4 : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
   -- Register read signals.
   signal s_reg_a_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -235,6 +237,14 @@ begin
       i_pc => i_pc,
       i_offset => i_instr(18 downto 0),
       o_result => s_branch_offset_addr
+    );
+
+  -- Calculate the expected PC if no branch is taken (i.e. PC + 4).
+  -- This is used by the branch logic in the EX1 stage if the branch is not taken.
+  pc_plus_4_0: entity work.pc_plus_4
+    port map (
+      i_pc => i_pc,
+      o_result => s_pc_plus_4
     );
 
   -- Get the register content for branch logic (condition or target address).
@@ -384,6 +394,8 @@ begin
   process(i_clk, i_rst)
   begin
     if i_rst = '1' then
+      o_pc <= (others => '0');
+      o_pc_plus_4 <= (others => '0');
       o_src_a <= (others => '0');
       o_src_b <= (others => '0');
       o_src_c <= (others => '0');
@@ -406,6 +418,7 @@ begin
     elsif rising_edge(i_clk) then
       if i_stall = '0' then
         o_pc <= i_pc;
+        o_pc_plus_4 <= s_pc_plus_4;
         o_src_a <= s_src_a;
         o_src_b <= s_src_b;
         o_src_c <= s_src_c;

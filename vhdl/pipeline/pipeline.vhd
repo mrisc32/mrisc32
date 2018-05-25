@@ -69,6 +69,7 @@ architecture rtl of pipeline is
   signal s_id_branch_is_taken : std_logic;
 
   signal s_id_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_id_pc_plus_4 : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_id_src_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_id_src_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_id_src_c : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -236,6 +237,7 @@ begin
 
       -- To the EX1 stage (sync).
       o_pc => s_id_pc,
+      o_pc_plus_4 => s_id_pc_plus_4,
       o_src_a => s_id_src_a,
       o_src_b => s_id_src_b,
       o_src_c => s_id_src_c,
@@ -263,6 +265,7 @@ begin
 
       -- From ID stage (sync).
       i_pc => s_id_pc,
+      i_pc_plus_4 => s_id_pc_plus_4,
       i_src_a => s_id_src_a,
       i_src_b => s_id_src_b,
       i_src_c => s_id_src_c,

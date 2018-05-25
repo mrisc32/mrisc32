@@ -34,6 +34,7 @@ entity execute is
 
     -- From ID stage (sync).
     i_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+    i_pc_plus_4 : in std_logic_vector(C_WORD_SIZE-1 downto 0);
     i_src_a : in std_logic_vector(C_WORD_SIZE-1 downto 0);
     i_src_b : in std_logic_vector(C_WORD_SIZE-1 downto 0);
     i_src_c : in std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -147,18 +148,9 @@ begin
   -- Branch logic.
   --------------------------------------------------------------------------------------------------
 
-  -- Calculate the expected PC if no branch is taken (i.e. PC + 4).
-  -- NOTE(m): We could perform this addition in the ID stage instead to save in on gate
-  -- delay, at the cost of more registers.
-  pc_plus_4_0: entity work.pc_plus_4
-    port map (
-      i_pc => i_pc,
-      o_result => s_pc_plus_4
-    );
-
   -- Check if the PC was correctly predicted by the PC stage.
   s_branch_target <= i_branch_reg_addr when i_branch_is_reg = '1' else i_branch_offset_addr;
-  s_actual_pc <= s_branch_target when (i_branch_is_branch and i_branch_is_taken) = '1' else s_pc_plus_4;
+  s_actual_pc <= s_branch_target when (i_branch_is_branch and i_branch_is_taken) = '1' else i_pc_plus_4;
   s_mispredicted_pc <= '0' when s_actual_pc = i_if_pc else i_branch_is_branch;
 
   -- Branch/PC correction signals to the PC stage.
