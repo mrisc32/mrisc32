@@ -73,8 +73,7 @@ architecture rtl of pipeline is
   signal s_id_src_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_id_src_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_id_src_c : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_id_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-  signal s_id_writes_to_reg : std_logic;
+  signal s_id_dst_reg : T_DST_REG;
   signal s_id_alu_op : T_ALU_OP;
   signal s_id_mem_op : T_MEM_OP;
   signal s_id_mul_op : T_MUL_OP;
@@ -96,19 +95,16 @@ architecture rtl of pipeline is
   signal s_ex1_pccorr_adjusted_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
   -- Operand forwarding signals from EX1.
-  signal s_ex1_next_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-  signal s_ex1_next_writes_to_reg : std_logic;
+  signal s_ex1_next_dst_reg : T_DST_REG;
   signal s_ex1_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ex1_next_result_ready : std_logic;
-  signal s_ex1_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-  signal s_ex1_writes_to_reg : std_logic;
+  signal s_ex1_dst_reg : T_DST_REG;
   signal s_ex1_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ex1_result_ready : std_logic;
 
   -- From EX2.
   signal s_ex2_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_ex2_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-  signal s_ex2_writes_to_reg : std_logic;
+  signal s_ex2_dst_reg : T_DST_REG;
 
   -- Operand forwarding signals from EX2.
   signal s_ex2_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -225,8 +221,8 @@ begin
 
       -- WB data from the EX2 stage (sync).
       i_wb_data_w => s_ex2_result,
-      i_wb_sel_w => s_ex2_dst_reg,
-      i_wb_we => s_ex2_writes_to_reg,
+      i_wb_sel_w => s_ex2_dst_reg.reg,
+      i_wb_we => s_ex2_dst_reg.is_target,
 
       -- Branch results to the EX1 stage (sync).
       o_branch_reg_addr => s_id_branch_reg_addr,
@@ -242,7 +238,6 @@ begin
       o_src_b => s_id_src_b,
       o_src_c => s_id_src_c,
       o_dst_reg => s_id_dst_reg,
-      o_writes_to_reg => s_id_writes_to_reg,
       o_alu_op => s_id_alu_op,
       o_mem_op => s_id_mem_op,
       o_mul_op => s_id_mul_op,
@@ -270,7 +265,6 @@ begin
       i_src_b => s_id_src_b,
       i_src_c => s_id_src_c,
       i_dst_reg => s_id_dst_reg,
-      i_writes_to_reg => s_id_writes_to_reg,
       i_alu_op => s_id_alu_op,
       i_mem_op => s_id_mem_op,
       i_mul_op => s_id_mul_op,
@@ -310,15 +304,12 @@ begin
       -- To WB stage (sync).
       o_result => s_ex2_result,
       o_dst_reg => s_ex2_dst_reg,
-      o_writes_to_reg => s_ex2_writes_to_reg,
 
       -- To operand forwarding.
       o_ex1_next_dst_reg => s_ex1_next_dst_reg,
-      o_ex1_next_writes_to_reg => s_ex1_next_writes_to_reg,
       o_ex1_next_result => s_ex1_next_result,
       o_ex1_next_result_ready => s_ex1_next_result_ready,
       o_ex1_dst_reg => s_ex1_dst_reg,
-      o_ex1_writes_to_reg => s_ex1_writes_to_reg,
       o_ex1_result => s_ex1_result,
       o_ex1_result_ready => s_ex1_result_ready,
       o_ex2_next_result => s_ex2_next_result
@@ -335,17 +326,14 @@ begin
       i_src_reg => s_if_instr(23 downto 19),      -- From IF (sync).
 
       -- From ID (sync).
-      i_id_writes_to_reg => s_id_writes_to_reg,
       i_dst_reg_from_id => s_id_dst_reg,
 
       -- From EX1 (sync).
-      i_ex1_writes_to_reg => s_ex1_writes_to_reg,
       i_dst_reg_from_ex1 => s_ex1_dst_reg,
       i_value_from_ex1 => s_ex1_result,
       i_ready_from_ex1 => s_ex1_result_ready,
 
       -- From EX2 (sync).
-      i_ex2_writes_to_reg => s_ex2_writes_to_reg,
       i_dst_reg_from_ex2 => s_ex2_dst_reg,
       i_value_from_ex2 => s_ex2_result,
 
@@ -361,18 +349,15 @@ begin
       i_src_reg => s_if_instr(18 downto 14),  -- Reg A, from IF (sync).
 
       -- From EX1 input (async).
-      i_ex1_writes_to_reg => s_id_writes_to_reg,
       i_dst_reg_from_ex1 => s_id_dst_reg,
       i_value_from_ex1 => s_ex1_next_result,
       i_ready_from_ex1 => s_ex1_next_result_ready,
 
       -- From EX2 input (async).
-      i_ex2_writes_to_reg => s_ex1_writes_to_reg,
       i_dst_reg_from_ex2 => s_ex1_dst_reg,
       i_value_from_ex2 => s_ex2_next_result,
 
       -- From WB input (async).
-      i_wb_writes_to_reg => s_ex2_writes_to_reg,
       i_dst_reg_from_wb => s_ex2_dst_reg,
       i_value_from_wb => s_ex2_result,
 
@@ -388,18 +373,15 @@ begin
       i_src_reg => s_if_instr(13 downto 9),   -- Reg B, from IF (sync).
 
       -- From EX1 input (async).
-      i_ex1_writes_to_reg => s_id_writes_to_reg,
       i_dst_reg_from_ex1 => s_id_dst_reg,
       i_value_from_ex1 => s_ex1_next_result,
       i_ready_from_ex1 => s_ex1_next_result_ready,
 
       -- From EX2 input (async).
-      i_ex2_writes_to_reg => s_ex1_writes_to_reg,
       i_dst_reg_from_ex2 => s_ex1_dst_reg,
       i_value_from_ex2 => s_ex2_next_result,
 
       -- From WB input (async).
-      i_wb_writes_to_reg => s_ex2_writes_to_reg,
       i_dst_reg_from_wb => s_ex2_dst_reg,
       i_value_from_wb => s_ex2_result,
 
@@ -415,18 +397,15 @@ begin
       i_src_reg => s_if_instr(23 downto 19),  -- Reg C, from IF (sync).
 
       -- From EX1 input (async).
-      i_ex1_writes_to_reg => s_id_writes_to_reg,
       i_dst_reg_from_ex1 => s_id_dst_reg,
       i_value_from_ex1 => s_ex1_next_result,
       i_ready_from_ex1 => s_ex1_next_result_ready,
 
       -- From EX2 input (async).
-      i_ex2_writes_to_reg => s_ex1_writes_to_reg,
       i_dst_reg_from_ex2 => s_ex1_dst_reg,
       i_value_from_ex2 => s_ex2_next_result,
 
       -- From WB input (async).
-      i_wb_writes_to_reg => s_ex2_writes_to_reg,
       i_dst_reg_from_wb => s_ex2_dst_reg,
       i_value_from_wb => s_ex2_result,
 

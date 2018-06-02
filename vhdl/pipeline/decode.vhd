@@ -75,8 +75,7 @@ entity decode is
       o_src_a : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_src_b : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_src_c : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-      o_writes_to_reg : out std_logic;
+      o_dst_reg : out T_DST_REG;
       o_alu_op : out T_ALU_OP;
       o_mem_op : out T_MEM_OP;
       o_mul_op : out T_MUL_OP;
@@ -146,8 +145,7 @@ architecture rtl of decode is
   signal s_src_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_src_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_src_c : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-  signal s_writes_to_reg : std_logic;
+  signal s_dst_reg : T_DST_REG;
   signal s_alu_op : T_ALU_OP;
   signal s_mem_op : T_MEM_OP;
   signal s_mul_op : T_MUL_OP;
@@ -165,8 +163,7 @@ architecture rtl of decode is
 
   -- Signals for handling discarding of the current operation (i.e. bubble).
   signal s_bubble : std_logic;
-  signal s_writes_to_reg_masked : std_logic;
-  signal s_dst_reg_masked : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_dst_reg_masked : T_DST_REG;
   signal s_alu_op_masked : T_ALU_OP;
   signal s_mem_op_masked : T_MEM_OP;
   signal s_alu_en_masked : std_logic;
@@ -323,9 +320,17 @@ begin
 
   -- Select destination register.
   -- Note: For linking branches we set the target register to LR.
-  s_dst_reg <= to_vector(C_LR_REG, C_LOG2_NUM_REGS) when s_is_link_branch = '1' else
-               s_reg_c when (s_is_mem_store or s_is_branch) = '0' else
-               (others => '0');
+  s_dst_reg.reg <= to_vector(C_LR_REG, C_LOG2_NUM_REGS) when s_is_link_branch = '1' else
+                   s_reg_c when (s_is_mem_store or s_is_branch) = '0' else
+                   (others => '0');
+
+  -- Will this instruction write to a register?
+  s_dst_reg.is_target <= '1' when ((s_dst_reg.reg /= to_vector(C_Z_REG, C_LOG2_NUM_REGS)) and
+                                   (s_dst_reg.reg /= to_vector(C_PC_REG, C_LOG2_NUM_REGS))) else '0';
+
+  -- Select target vector element.
+  s_dst_reg.element <= (others => '0');  -- TODO(m): Implement me!
+  s_dst_reg.is_vector <= '0';  -- TODO(m): Implement me!
 
   -- What pipeline units should be enabled?
   s_alu_en <= not (s_is_mul_op or s_is_div_op or s_is_fpu_op);
@@ -376,8 +381,10 @@ begin
 
   -- Should we discard the operation (i.e. send a bubble down the pipeline)?
   s_bubble <= i_bubble or i_cancel or s_missing_fwd_operand;
-  s_dst_reg_masked <= s_dst_reg when s_bubble = '0' else (others => '0');
-  s_writes_to_reg_masked <= s_writes_to_reg and not s_bubble;
+  s_dst_reg_masked.is_target <= s_dst_reg.is_target when s_bubble = '0' else '0';
+  s_dst_reg_masked.reg <= s_dst_reg.reg when s_bubble = '0' else (others => '0');
+  s_dst_reg_masked.element <= s_dst_reg.element when s_bubble = '0' else (others => '0');
+  s_dst_reg_masked.is_vector <= s_dst_reg.is_vector when s_bubble = '0' else '0';
   s_alu_op_masked <= s_alu_op when s_bubble = '0' else (others => '0');
   s_mem_op_masked <= s_mem_op when s_bubble = '0' else (others => '0');
   s_alu_en_masked <= s_alu_en and not s_bubble;
@@ -385,10 +392,6 @@ begin
   s_mul_en_masked <= s_mul_en and not s_bubble;
   s_div_en_masked <= s_div_en and not s_bubble;
   s_is_branch_masked <= s_is_branch and not s_bubble;
-
-  -- Will this instruction write to a register?
-  s_writes_to_reg <= '1' when ((s_dst_reg_masked /= to_vector(C_Z_REG, C_LOG2_NUM_REGS)) and
-                               (s_dst_reg_masked /= to_vector(C_PC_REG, C_LOG2_NUM_REGS))) else '0';
 
   -- Outputs to the EX stage.
   process(i_clk, i_rst)
@@ -399,8 +402,10 @@ begin
       o_src_a <= (others => '0');
       o_src_b <= (others => '0');
       o_src_c <= (others => '0');
-      o_dst_reg <= (others => '0');
-      o_writes_to_reg <= '0';
+      o_dst_reg.is_target <= '0';
+      o_dst_reg.reg <= (others => '0');
+      o_dst_reg.element <= (others => '0');
+      o_dst_reg.is_vector <= '0';
       o_alu_op <= (others => '0');
       o_mem_op <= (others => '0');
       o_mul_op <= (others => '0');
@@ -423,7 +428,6 @@ begin
         o_src_b <= s_src_b;
         o_src_c <= s_src_c;
         o_dst_reg <= s_dst_reg_masked;
-        o_writes_to_reg <= s_writes_to_reg_masked;
         o_alu_op <= s_alu_op_masked;
         o_mem_op <= s_mem_op_masked;
         o_mul_op <= s_mul_op;

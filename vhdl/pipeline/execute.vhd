@@ -38,8 +38,7 @@ entity execute is
     i_src_a : in std_logic_vector(C_WORD_SIZE-1 downto 0);
     i_src_b : in std_logic_vector(C_WORD_SIZE-1 downto 0);
     i_src_c : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-    i_dst_reg : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-    i_writes_to_reg : in std_logic;
+    i_dst_reg : in T_DST_REG;
     i_alu_op : in T_ALU_OP;
     i_mem_op : in T_MEM_OP;
     i_mul_op : in T_MUL_OP;
@@ -78,19 +77,16 @@ entity execute is
 
     -- To the WB stage (sync).
     o_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-    o_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-    o_writes_to_reg : out std_logic;
+    o_dst_reg : out T_DST_REG;
 
     -- To operand forward logic (async).
-    o_ex1_next_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-    o_ex1_next_writes_to_reg : out std_logic;
+    o_ex1_next_dst_reg : out T_DST_REG;
     o_ex1_next_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
     o_ex1_next_result_ready : out std_logic;
     o_ex2_next_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
 
     -- To operand forward logic (sync).
-    o_ex1_dst_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-    o_ex1_writes_to_reg : out std_logic;
+    o_ex1_dst_reg : out T_DST_REG;
     o_ex1_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
     o_ex1_result_ready : out std_logic
   );
@@ -116,8 +112,7 @@ architecture rtl of execute is
   signal s_bubble : std_logic;
   signal s_mem_op_masked : T_MEM_OP;
   signal s_mem_en_masked : std_logic;
-  signal s_dst_reg_masked : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-  signal s_writes_to_reg_masked : std_logic;
+  signal s_dst_reg_masked : T_DST_REG;
 
   -- Branch/PC correction signals.
   signal s_branch_target : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -133,8 +128,7 @@ architecture rtl of execute is
   signal s_ex1_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ex1_result_ready : std_logic;
   signal s_ex1_store_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_ex1_dst_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-  signal s_ex1_writes_to_reg : std_logic;
+  signal s_ex1_dst_reg : T_DST_REG;
 
   -- Signals from the memory interface (async).
   signal s_mem_stall : std_logic;
@@ -223,8 +217,10 @@ begin
   s_bubble <= s_mispredicted_pc;
   s_mem_op_masked <= i_mem_op when s_bubble = '0' else (others => '0');
   s_mem_en_masked <= i_mem_en and not s_bubble;
-  s_dst_reg_masked <= i_dst_reg when s_bubble = '0' else (others => '0');
-  s_writes_to_reg_masked <= i_writes_to_reg and not s_bubble;
+  s_dst_reg_masked.is_target <= i_dst_reg.is_target when s_bubble = '0' else '0';
+  s_dst_reg_masked.reg <= i_dst_reg.reg when s_bubble = '0' else (others => '0');
+  s_dst_reg_masked.element <= i_dst_reg.element when s_bubble = '0' else (others => '0');
+  s_dst_reg_masked.is_vector <= i_dst_reg.is_vector when s_bubble = '0' else '0';
 
   -- Outputs to the EX2 stage (sync).
   process(i_clk, i_rst)
@@ -237,8 +233,10 @@ begin
       s_ex1_result <= (others => '0');
       s_ex1_result_ready <= '0';
       s_ex1_store_data <= (others => '0');
-      s_ex1_dst_reg <= (others => '0');
-      s_ex1_writes_to_reg <= '0';
+      s_ex1_dst_reg.is_target <= '0';
+      s_ex1_dst_reg.reg <= (others => '0');
+      s_ex1_dst_reg.element <= (others => '0');
+      s_ex1_dst_reg.is_vector <= '0';
     elsif rising_edge(i_clk) then
       if s_stall_ex1 = '0' then
         s_ex1_mem_op <= s_mem_op_masked;
@@ -249,7 +247,6 @@ begin
         s_ex1_result_ready <= s_ex1_next_result_ready;
         s_ex1_store_data <= s_mem_store_data;
         s_ex1_dst_reg <= s_dst_reg_masked;
-        s_ex1_writes_to_reg <= s_writes_to_reg_masked;
       end if;
     end if;
   end process;
@@ -257,13 +254,11 @@ begin
   -- Output the EX1 result to operand forwarding logic.
   -- Async:
   o_ex1_next_dst_reg <= s_dst_reg_masked;
-  o_ex1_next_writes_to_reg <= s_writes_to_reg_masked;
   o_ex1_next_result <= s_ex1_next_result;
   o_ex1_next_result_ready <= s_ex1_next_result_ready;
 
   -- Sync:
   o_ex1_dst_reg <= s_ex1_dst_reg;
-  o_ex1_writes_to_reg <= s_ex1_writes_to_reg;
   o_ex1_result <= s_ex1_result;
   o_ex1_result_ready <= s_ex1_result_ready;
 
@@ -307,12 +302,13 @@ begin
   begin
     if i_rst = '1' then
       o_result <= (others => '0');
-      o_dst_reg <= (others => '0');
-      o_writes_to_reg <= '0';
+      o_dst_reg.is_target <= '0';
+      o_dst_reg.reg <= (others => '0');
+      o_dst_reg.element <= (others => '0');
+      o_dst_reg.is_vector <= '0';
     elsif rising_edge(i_clk) then
       o_result <= s_ex2_next_result;
       o_dst_reg <= s_ex1_dst_reg;
-      o_writes_to_reg <= s_ex1_writes_to_reg;
     end if;
   end process;
 

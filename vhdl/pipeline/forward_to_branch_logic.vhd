@@ -40,16 +40,13 @@ entity forward_to_branch_logic is
       i_src_reg : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
 
       -- Operand information from the different pipeline stages.
-      i_id_writes_to_reg : in std_logic;
-      i_dst_reg_from_id : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      i_dst_reg_from_id : in T_DST_REG;
 
-      i_ex1_writes_to_reg : in std_logic;
-      i_dst_reg_from_ex1 : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      i_dst_reg_from_ex1 : in T_DST_REG;
       i_value_from_ex1 : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_ready_from_ex1 : in std_logic;
 
-      i_ex2_writes_to_reg : in std_logic;
-      i_dst_reg_from_ex2 : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      i_dst_reg_from_ex2 : in T_DST_REG;
       i_value_from_ex2 : in std_logic_vector(C_WORD_SIZE-1 downto 0);
 
       -- Operand selection for the ID stage.
@@ -65,9 +62,9 @@ architecture rtl of forward_to_branch_logic is
   signal s_reg_from_ex2 : std_logic;
 begin
   -- Determine which stages are writing to the requested source register.
-  s_reg_from_id <= i_id_writes_to_reg when i_src_reg = i_dst_reg_from_id else '0';
-  s_reg_from_ex1 <= i_ex1_writes_to_reg when i_src_reg = i_dst_reg_from_ex1 else '0';
-  s_reg_from_ex2 <= i_ex2_writes_to_reg when i_src_reg = i_dst_reg_from_ex2 else '0';
+  s_reg_from_id <= i_dst_reg_from_id.is_target when i_src_reg = i_dst_reg_from_id.reg else '0';
+  s_reg_from_ex1 <= i_dst_reg_from_ex1.is_target when i_src_reg = i_dst_reg_from_ex1.reg else '0';
+  s_reg_from_ex2 <= i_dst_reg_from_ex2.is_target when i_src_reg = i_dst_reg_from_ex2.reg else '0';
 
   -- Which value to forward?
   o_value <= i_value_from_ex1 when (s_reg_from_ex1 and i_ready_from_ex1) = '1' else i_value_from_ex2;
