@@ -49,6 +49,12 @@ package common is
   constant C_LR_REG : integer := 30;  -- LR = S30
   constant C_PC_REG : integer := 31;  -- PC = S31
 
+  type T_SRC_REG is record
+    reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+    element : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
+    is_vector : std_logic;
+  end record T_SRC_REG;
+
   type T_DST_REG is record
     is_target : std_logic;  -- '1' if the register is being written to, otherwise '0'.
     reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);

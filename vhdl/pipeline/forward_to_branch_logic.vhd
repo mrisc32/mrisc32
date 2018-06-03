@@ -37,7 +37,7 @@ use work.common.all;
 entity forward_to_branch_logic is
   port(
       -- What register is required in the ID stage (if any)?
-      i_src_reg : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      i_src_reg : in T_SRC_REG;
 
       -- Operand information from the different pipeline stages.
       i_dst_reg_from_id : in T_DST_REG;
@@ -60,19 +60,35 @@ architecture rtl of forward_to_branch_logic is
   signal s_reg_from_id : std_logic;
   signal s_reg_from_ex1 : std_logic;
   signal s_reg_from_ex2 : std_logic;
+
+  signal s_use_value : std_logic;
+  signal s_value_ready : std_logic;
 begin
   -- Determine which stages are writing to the requested source register.
-  s_reg_from_id <= i_dst_reg_from_id.is_target when i_src_reg = i_dst_reg_from_id.reg else '0';
-  s_reg_from_ex1 <= i_dst_reg_from_ex1.is_target when i_src_reg = i_dst_reg_from_ex1.reg else '0';
-  s_reg_from_ex2 <= i_dst_reg_from_ex2.is_target when i_src_reg = i_dst_reg_from_ex2.reg else '0';
+  -- Note: The branch logic only cares about scalar registers, so we do not have
+  -- to match against individual vector elements. This also saves time since the
+  -- register matching logic is a critical path.
+  s_reg_from_id <= i_dst_reg_from_id.is_target when
+      (i_src_reg.is_vector = i_dst_reg_from_id.is_vector) and
+      (i_src_reg.reg = i_dst_reg_from_id.reg) else '0';
+  s_reg_from_ex1 <= i_dst_reg_from_ex1.is_target when
+      (i_src_reg.is_vector =  i_dst_reg_from_ex1.is_vector) and
+      (i_src_reg.reg = i_dst_reg_from_ex1.reg) else '0';
+  s_reg_from_ex2 <= i_dst_reg_from_ex2.is_target when
+      (i_src_reg.is_vector =  i_dst_reg_from_ex2.is_vector) and
+      (i_src_reg.reg = i_dst_reg_from_ex2.reg) else '0';
 
   -- Which value to forward?
   o_value <= i_value_from_ex1 when (s_reg_from_ex1 and i_ready_from_ex1) = '1' else i_value_from_ex2;
 
   -- Should the forwarded pipeline value be used instead of register file value?
-  o_use_value <= s_reg_from_id or s_reg_from_ex1 or s_reg_from_ex2;
+  s_use_value <= s_reg_from_id or s_reg_from_ex1 or s_reg_from_ex2;
 
   -- Is the value ready for use?
-  o_value_ready <= not (s_reg_from_id or (s_reg_from_ex1 and not i_ready_from_ex1));
+  s_value_ready <= not (s_reg_from_id or (s_reg_from_ex1 and not i_ready_from_ex1));
+
+  -- Mask the outputs: The branch logic only cares about scalar registers.
+  o_use_value <= s_use_value and not i_src_reg.is_vector;
+  o_value_ready <= s_value_ready and not i_src_reg.is_vector;
 end rtl;
 

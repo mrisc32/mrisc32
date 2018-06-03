@@ -59,6 +59,11 @@ architecture rtl of pipeline is
   signal s_if_instr : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_if_bubble : std_logic;
 
+  signal s_if_instr_is_vector : std_logic;
+  signal s_if_src_reg_a : T_SRC_REG;
+  signal s_if_src_reg_b : T_SRC_REG;
+  signal s_if_src_reg_c : T_SRC_REG;
+
   -- From ID.
   signal s_id_stall : std_logic;
 
@@ -320,10 +325,30 @@ begin
   -- Operand forwarding.
   --------------------------------------------------------------------------------------------------
 
+  -- Decode register information from the IF stage (sync), for use by the forwarding logic.
+  -- TODO(m): We could move this logic to the IF stage.
+  s_if_instr_is_vector <= s_if_instr(31) or s_if_instr(30);
+  s_if_src_reg_a <= (
+      s_if_instr(18 downto 14),   -- reg
+      (others => '0'),            -- element - TODO(m): Implement me!
+      s_if_instr_is_vector        -- is_vector
+      );
+  s_if_src_reg_b <= (
+      s_if_instr(13 downto 9),    -- reg
+      (others => '0'),            -- element - TODO(m): Implement me!
+      s_if_instr_is_vector        -- is_vector
+      );
+  s_if_src_reg_c <= (
+      s_if_instr(23 downto 19),   -- reg
+      (others => '0'),            -- element (REG C can never be a vector register)
+      s_if_instr_is_vector        -- is_vector
+      );
+
   -- Forwarding logic for the branching logic in the ID stage (async).
   forward_to_branch_logic_0: entity work.forward_to_branch_logic
     port map (
-      i_src_reg => s_if_instr(23 downto 19),      -- From IF (sync).
+      -- From IF (sync).
+      i_src_reg => s_if_src_reg_c,
 
       -- From ID (sync).
       i_dst_reg_from_id => s_id_dst_reg,
@@ -346,7 +371,8 @@ begin
   -- Forwarding logic for the A operand input to the EX stage (sync).
   forward_to_ex_A: entity work.forward_to_ex
     port map (
-      i_src_reg => s_if_instr(18 downto 14),  -- Reg A, from IF (sync).
+      -- From IF (sync).
+      i_src_reg => s_if_src_reg_a,
 
       -- From EX1 input (async).
       i_dst_reg_from_ex1 => s_id_dst_reg,
@@ -370,7 +396,8 @@ begin
   -- Forwarding logic for the B operand input to the EX stage (sync).
   forward_to_ex_B: entity work.forward_to_ex
     port map (
-      i_src_reg => s_if_instr(13 downto 9),   -- Reg B, from IF (sync).
+      -- From IF (sync).
+      i_src_reg => s_if_src_reg_b,
 
       -- From EX1 input (async).
       i_dst_reg_from_ex1 => s_id_dst_reg,
@@ -394,7 +421,8 @@ begin
   -- Forwarding logic for the C operand input to the EX stage (sync).
   forward_to_ex_C: entity work.forward_to_ex
     port map (
-      i_src_reg => s_if_instr(23 downto 19),  -- Reg C, from IF (sync).
+      -- From IF (sync).
+      i_src_reg => s_if_src_reg_c,
 
       -- From EX1 input (async).
       i_dst_reg_from_ex1 => s_id_dst_reg,

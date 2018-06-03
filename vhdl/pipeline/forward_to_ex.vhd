@@ -44,7 +44,7 @@ use work.common.all;
 entity forward_to_ex is
   port(
       -- What register is requested (if any)?
-      i_src_reg : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      i_src_reg : in T_SRC_REG;
 
       -- Operand information from the different pipeline stages.
       i_dst_reg_from_ex1 : in T_DST_REG;
@@ -72,9 +72,18 @@ architecture rtl of forward_to_ex is
   signal s_reg_from_wb : std_logic;
 begin
   -- Determine which stages are writing to the requested source register.
-  s_reg_from_ex1 <= i_dst_reg_from_ex1.is_target when i_src_reg = i_dst_reg_from_ex1.reg else '0';
-  s_reg_from_ex2 <= i_dst_reg_from_ex2.is_target when i_src_reg = i_dst_reg_from_ex2.reg else '0';
-  s_reg_from_wb <= i_dst_reg_from_wb.is_target when i_src_reg = i_dst_reg_from_wb.reg else '0';
+  s_reg_from_ex1 <= i_dst_reg_from_ex1.is_target when
+      (i_src_reg.reg = i_dst_reg_from_ex1.reg) and
+      ((i_src_reg.element = i_dst_reg_from_ex1.element) or (i_src_reg.is_vector = '0')) and
+      (i_src_reg.is_vector = i_dst_reg_from_ex1.is_vector) else '0';
+  s_reg_from_ex2 <= i_dst_reg_from_ex2.is_target when
+      (i_src_reg.reg = i_dst_reg_from_ex2.reg) and
+      ((i_src_reg.element = i_dst_reg_from_ex2.element) or (i_src_reg.is_vector = '0')) and
+      (i_src_reg.is_vector = i_dst_reg_from_ex2.is_vector) else '0';
+  s_reg_from_wb <= i_dst_reg_from_wb.is_target when
+      (i_src_reg.reg = i_dst_reg_from_wb.reg) and
+      ((i_src_reg.element = i_dst_reg_from_wb.element) or (i_src_reg.is_vector = '0')) and
+      (i_src_reg.is_vector = i_dst_reg_from_wb.is_vector) else '0';
 
   -- Which value to forward?
   o_value <= i_value_from_ex1 when (s_reg_from_ex1 and i_ready_from_ex1) = '1' else
