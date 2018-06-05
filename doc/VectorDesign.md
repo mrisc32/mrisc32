@@ -8,6 +8,11 @@ The MRISC32 approach to Single Instruction Multiple Data (SIMD) operation is ver
 * A Vector Length (VL) register controls the length of the vector operation.
 * There are vector,vector and vector,scalar versions of most integer and floating point operations.
 * Vector loads and stores have a stride parameter.
+* Folding operations are provided for doing horizontal vector operations (e.g. sum, min/max).
+* Each vector register has a Register Length (RL) state.
+  - Writing to a register updates the Register Length to the operation Vector Length.
+  - Elements with an index >= RL are zero.
+  - Clearing all Register Lengths to zero reduces stack overhead.
 
 
 ## Motivation
