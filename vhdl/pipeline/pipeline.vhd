@@ -59,7 +59,9 @@ architecture rtl of pipeline is
   signal s_if_instr : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_if_bubble : std_logic;
 
-  signal s_if_instr_is_vector : std_logic;
+  signal s_if_src_a_is_vector : std_logic;
+  signal s_if_src_b_is_vector : std_logic;
+  signal s_if_src_c_is_vector : std_logic;
   signal s_if_src_reg_a : T_SRC_REG;
   signal s_if_src_reg_b : T_SRC_REG;
   signal s_if_src_reg_c : T_SRC_REG;
@@ -326,22 +328,25 @@ begin
   --------------------------------------------------------------------------------------------------
 
   -- Decode register information from the IF stage (sync), for use by the forwarding logic.
-  -- TODO(m): We could move this logic to the IF stage.
-  s_if_instr_is_vector <= s_if_instr(31) or s_if_instr(30);
+  -- TODO(m): This logic to determine whether or not a source register is vector or scalar is flawed,
+  -- and it should not be here at all (move it to a vector control unit in IF/ID).
+  s_if_src_a_is_vector <= s_if_instr(31) or s_if_instr(30);
+  s_if_src_b_is_vector <= s_if_instr(30);
+  s_if_src_c_is_vector <= s_if_instr(31) or s_if_instr(30);
   s_if_src_reg_a <= (
       s_if_instr(18 downto 14),   -- reg
       (others => '0'),            -- element - TODO(m): Implement me!
-      s_if_instr_is_vector        -- is_vector
+      s_if_src_a_is_vector        -- is_vector
       );
   s_if_src_reg_b <= (
       s_if_instr(13 downto 9),    -- reg
       (others => '0'),            -- element - TODO(m): Implement me!
-      s_if_instr_is_vector        -- is_vector
+      s_if_src_b_is_vector        -- is_vector
       );
   s_if_src_reg_c <= (
       s_if_instr(23 downto 19),   -- reg
-      (others => '0'),            -- element (REG C can never be a vector register)
-      s_if_instr_is_vector        -- is_vector
+      (others => '0'),            -- element - TODO(m): Implement me!
+      s_if_src_c_is_vector        -- is_vector
       );
 
   -- Forwarding logic for the branching logic in the ID stage (async).

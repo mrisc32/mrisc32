@@ -51,9 +51,10 @@ import sys
 #     +---------------------------------------------------------------+
 #
 # VM:   Vector mode:
-#         00 = scalar
-#         10 = vector,scalar
-#         11 = vector,vector
+#         00: scalar <= op(scalar,scalar)
+#         10: vector <= op(vector,scalar)
+#         11: vector <= op(vector,vector)
+#         01: vector <= op(vector,fold(vector))
 # OP:   Operation
 # REGn: Register (5 bit identifier)
 # IMM:  Immediate value
