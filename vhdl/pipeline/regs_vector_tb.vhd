@@ -59,6 +59,39 @@ begin
     );
 
   process
+    --  The patterns to apply.
+    type pattern_type is record
+      -- Inputs
+      sel_a : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      element_a : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
+      sel_b : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      element_b : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
+      we : std_logic;
+      data_w : std_logic_vector(C_WORD_SIZE-1 downto 0);
+      sel_w : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      element_w : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
+
+      -- Expected outputs
+      data_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
+      data_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
+    end record;
+    type pattern_array is array (natural range <>) of pattern_type;
+    constant patterns : pattern_array := (
+        -- Write a value to V1[0].
+        (5X"00", 2X"0", 5X"00", 2X"0", '1', X"00001234", 5X"01", 2X"0", X"00000000", X"00000000"),
+
+        -- Write a value to V2[1].
+        (5X"00", 2X"0", 5X"00", 2X"0", '1', X"00012340", 5X"02", 2X"1", X"00000000", X"00000000"),
+
+        -- Write a value to V3[2].
+        (5X"00", 2X"0", 5X"00", 2X"0", '1', X"00123400", 5X"03", 2X"2", X"00000000", X"00000000"),
+
+        -- Read V1[0] and V2[1].
+        (5X"01", 2X"0", 5X"02", 2X"1", '0', X"00000000", 5X"00", 2X"0", X"00001234", X"00012340"),
+
+        -- Read V3[2].
+        (5X"03", 2X"2", 5X"00", 2X"0", '0', X"00000000", 5X"00", 2X"0", X"00123400", X"00000000")
+      );
   begin
     -- Reset all inputs.
     s_sel_a <= "00000";
@@ -83,74 +116,40 @@ begin
     wait for C_HALF_PERIOD;
     s_clk <= '0';
 
-    -- Write a value to V1[0].
-    s_data_w <= "00000000000000000000000000010101";
-    s_sel_w <= "00001";
-    s_element_w <= "00";
-    s_we <= '1';
-    wait for C_HALF_PERIOD;
-    s_clk <= '1';
-    wait for C_HALF_PERIOD;
-    s_clk <= '0';
+    -- Test all the patterns in the pattern array.
+    for i in patterns'range loop
+      wait until s_clk = '0';
 
-    -- Write a value to V2[1].
-    s_data_w <= "00000000000000000000000001010100";
-    s_sel_w <= "00010";
-    s_element_w <= "01";
-    s_we <= '1';
-    wait for C_HALF_PERIOD;
-    s_clk <= '1';
-    wait for C_HALF_PERIOD;
-    s_clk <= '0';
+      --  Set the inputs.
+      s_sel_a <= patterns(i).sel_a;
+      s_element_a <= patterns(i).element_a;
+      s_sel_b <= patterns(i).sel_b;
+      s_element_b <= patterns(i).element_b;
+      s_we <= patterns(i).we;
+      s_data_w <= patterns(i).data_w;
+      s_sel_w <= patterns(i).sel_w;
+      s_element_w <= patterns(i).element_w;
 
-    -- Write a value to V3[2].
-    s_data_w <= "00000000000000000000000101010000";
-    s_sel_w <= "00011";
-    s_element_w <= "10";
-    s_we <= '1';
-    wait for C_HALF_PERIOD;
-    s_clk <= '1';
-    wait for C_HALF_PERIOD;
-    s_clk <= '0';
+      -- Tick the clock.
+      wait for C_HALF_PERIOD;
+      s_clk <= '1';
 
-    -- No more writing...
-    s_we <= '0';
+      -- Wait for the result to be produced.
+      wait for C_HALF_PERIOD;
 
-    -- Read V1[0] and check the result.
-    s_sel_a <= "00001";
-    s_element_a <= "00";
-    wait for C_HALF_PERIOD;
-    s_clk <= '1';
-    wait for C_HALF_PERIOD;
-    s_clk <= '0';
-    assert s_data_a = "00000000000000000000000000010101"
-      report "Bad V1[0] value:" & lf &
-             "  V1[0]=" & to_string(s_data_a) & " (expected 00000000000000000000000000010101)"
-        severity error;
+      --  Check the outputs.
+      assert s_data_a = patterns(i).data_a
+        report "Bad port A value (" & integer'image(i) & "):" & lf &
+               "  Vn[e]=" & to_string(s_data_a) & " (expected " & to_string(patterns(i).data_a) &  ")"
+          severity error;
+      assert s_data_b = patterns(i).data_b
+        report "Bad port B value (" & integer'image(i) & "):" & lf &
+               "  Vn[e]=" & to_string(s_data_b) & " (expected " & to_string(patterns(i).data_b) &  ")"
+          severity error;
 
-    -- Read V2[1] and check the result.
-    s_sel_b <= "00010";
-    s_element_b <= "01";
-    wait for C_HALF_PERIOD;
-    s_clk <= '1';
-    wait for C_HALF_PERIOD;
-    s_clk <= '0';
-    assert s_data_b = "00000000000000000000000001010100"
-      report "Bad V2[1] value:" & lf &
-             "  V2[1]=" & to_string(s_data_b) & " (expected 00000000000000000000000001010100)"
-        severity error;
-
-    -- Read V3[2] and check the result.
-    s_sel_a <= "00011";
-    s_element_a <= "10";
-    wait for C_HALF_PERIOD;
-    s_clk <= '1';
-    wait for C_HALF_PERIOD;
-    s_clk <= '0';
-    assert s_data_a = "00000000000000000000000101010000"
-      report "Bad V3[2] value:" & lf &
-             "  V3[2]=" & to_string(s_data_a) & " (expected 00000000000000000000000101010000)"
-        severity error;
+      -- Tick the clock.
+      s_clk <= '0';
+    end loop;
 
     assert false report "End of test" severity note;
     --  Wait forever; this will finish the simulation.
