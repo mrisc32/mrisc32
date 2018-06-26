@@ -27,6 +27,7 @@ SRCS += \
     $(ALU_PATH)/shift32.vhd \
     $(ALU_PATH)/shift32_tb.vhd \
     $(ALU_PATH)/shuf32.vhd \
+    $(ALU_PATH)/shuf32_tb.vhd \
     $(ALU_PATH)/alu.vhd \
     $(ALU_PATH)/alu_tb.vhd
 
@@ -35,5 +36,6 @@ TESTS += \
     clz32_tb \
     comparator_tb \
     shift32_tb \
+    shuf32_tb \
     alu_tb
 
