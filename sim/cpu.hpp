@@ -20,7 +20,6 @@
 #ifndef SIM_CPU_HPP_
 #define SIM_CPU_HPP_
 
-#include "cache.hpp"
 #include "ram.hpp"
 
 #include <array>
@@ -141,8 +140,6 @@ protected:
 
   // Memory interface.
   ram_t& m_ram;
-  cache_t<32, 256> m_icache;
-  cache_t<32, 256> m_dcache;
 
   // Scalar registers.
   std::array<uint32_t, NUM_REGS> m_regs;
@@ -158,9 +155,6 @@ protected:
   uint32_t m_fetched_instr_count;
   uint32_t m_vector_loop_count;
   uint32_t m_total_cycle_count;
-
-private:
-  virtual void flush_caches() = 0;
 };
 
 #endif  // SIM_CPU_HPP_

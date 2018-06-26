@@ -206,9 +206,7 @@ uint32_t cpu_simple_t::run() {
 
         // Read the instruction from the current (predicted) PC.
         id_in.pc = instr_pc;
-        uint32_t cache_cycles;
-        id_in.instr = m_icache.read32(instr_pc, cache_cycles);
-        instr_cycles += cache_cycles;
+        id_in.instr = m_ram.at32(instr_pc);
 
         // We terminate the simulation when we encounter an unconditional branch to the same PC
         // (i.e. infinite loop).
@@ -585,36 +583,34 @@ uint32_t cpu_simple_t::run() {
     // MEM
     {
       uint32_t mem_result = 0u;
-      uint32_t cache_cycles = 0u;
       switch (mem_in.mem_op) {
         case MEM_OP_LOAD8:
           mem_result =
-              s8_as_u32(static_cast<int8_t>(m_dcache.read8(mem_in.mem_addr, cache_cycles)));
+              s8_as_u32(static_cast<int8_t>(m_ram.at8(mem_in.mem_addr)));
           break;
         case MEM_OP_LOADU8:
-          mem_result = u8_as_u32(m_dcache.read8(mem_in.mem_addr, cache_cycles));
+          mem_result = u8_as_u32(m_ram.at8(mem_in.mem_addr));
           break;
         case MEM_OP_LOAD16:
           mem_result =
-              s16_as_u32(static_cast<int16_t>(m_dcache.read16(mem_in.mem_addr, cache_cycles)));
+              s16_as_u32(static_cast<int16_t>(m_ram.at16(mem_in.mem_addr)));
           break;
         case MEM_OP_LOADU16:
-          mem_result = u16_as_u32(m_dcache.read16(mem_in.mem_addr, cache_cycles));
+          mem_result = u16_as_u32(m_ram.at16(mem_in.mem_addr));
           break;
         case MEM_OP_LOAD32:
-          mem_result = m_dcache.read32(mem_in.mem_addr, cache_cycles);
+          mem_result = m_ram.at32(mem_in.mem_addr);
           break;
         case MEM_OP_STORE8:
-          m_dcache.write8(mem_in.mem_addr, static_cast<uint8_t>(mem_in.store_data), cache_cycles);
+          m_ram.at8(mem_in.mem_addr) = static_cast<uint8_t>(mem_in.store_data);
           break;
         case MEM_OP_STORE16:
-          m_dcache.write16(mem_in.mem_addr, static_cast<uint16_t>(mem_in.store_data), cache_cycles);
+          m_ram.at16(mem_in.mem_addr) = static_cast<uint16_t>(mem_in.store_data);
           break;
         case MEM_OP_STORE32:
-          m_dcache.write32(mem_in.mem_addr, mem_in.store_data, cache_cycles);
+          m_ram.at32(mem_in.mem_addr) = mem_in.store_data;
           break;
       }
-      instr_cycles += cache_cycles;
 
       wb_in.dst_data = (mem_in.mem_op != MEM_OP_NONE) ? mem_result : mem_in.dst_data;
       wb_in.dst_reg = mem_in.dst_reg;
@@ -643,9 +639,4 @@ uint32_t cpu_simple_t::run() {
   }
 
   return m_exit_code;
-}
-
-void cpu_simple_t::flush_caches()
-{
-  m_dcache.flush();
 }

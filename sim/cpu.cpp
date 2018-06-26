@@ -31,7 +31,7 @@ const uint32_t SIM_ROUTINE_EXIT = 0u;
 const uint32_t SIM_ROUTINE_PUTC = 1u;
 }  // namespace
 
-cpu_t::cpu_t(ram_t& ram) : m_ram(ram), m_icache(ram), m_dcache(ram) {
+cpu_t::cpu_t(ram_t& ram) : m_ram(ram) {
   reset();
 }
 
@@ -56,20 +56,9 @@ void cpu_t::dump_stats() {
   std::cout << " Vector loops:         " << m_vector_loop_count << "\n";
   std::cout << " Total CPU cycles:     " << m_total_cycle_count << "\n";
   std::cout << " Cycles/Operation:     " << cpo << "\n";
-
-  const double ihit_ratio =
-      100.0 * static_cast<double>(m_icache.hits()) / static_cast<double>(m_icache.accesses());
-  const double dhit_ratio =
-      100.0 * static_cast<double>(m_dcache.hits()) / static_cast<double>(m_dcache.accesses());
-  std::cout << "Cache stats:\n";
-  std::cout << " ICACHE: " << m_icache.accesses() << " accesses " << m_icache.hits() << " hits ("
-            << ihit_ratio << "%)\n";
-  std::cout << " DCACHE: " << m_dcache.accesses() << " accesses " << m_dcache.hits() << " hits ("
-            << dhit_ratio << "%)\n";
 }
 
 void cpu_t::dump_ram(const uint32_t begin, const uint32_t end, const std::string& file_name) {
-  flush_caches();
   std::ofstream file;
   file.open(file_name, std::ios::out | std::ios::binary);
   for (uint32_t addr = begin; addr < end; addr += ram_t::LINE_WIDTH) {
