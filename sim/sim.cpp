@@ -46,11 +46,9 @@ uint32_t read_bin_file(const char* file_name, ram_t& ram) {
   uint32_t current_addr = start_addr;
   uint32_t total_bytes_read = 0u;
   while (f.good()) {
-    ram_t::line_t& line = ram[current_addr];
-    const uint32_t line_offset = current_addr % ram_t::LINE_WIDTH;
-    const uint32_t bytes_to_read = ram_t::LINE_WIDTH - line_offset;
-    f.read(reinterpret_cast<char*>(&line[line_offset]), bytes_to_read);
-    const uint32_t bytes_read = f ? bytes_to_read : static_cast<uint32_t>(f.gcount());
+    auto& byte = ram.at8(current_addr);
+    f.read(reinterpret_cast<char*>(&byte), 1);
+    const uint32_t bytes_read = f ? 1 : static_cast<uint32_t>(f.gcount());
     total_bytes_read += bytes_read;
     current_addr += bytes_read;
   }
