@@ -19,19 +19,20 @@
 
 #include "ram.hpp"
 
+#include <algorithm>
 #include <cstring>
 #include <stdexcept>
 
 ram_t::ram_t() {
   // Clear all blocks (no RAM blocks have yet been allocated).
-  std::fill(m_blocks.begin(), m_blocks.end(), static_cast<block_t*>(0));
+  std::fill(m_blocks.begin(), m_blocks.end(), nullptr);
 }
 
 ram_t::~ram_t() {
   // Free all allocated blocks.
   for (uint32_t block_no = 0u; block_no < NUM_BLOCKS; ++block_no) {
-    block_t* block = m_blocks[block_no];
-    if (block != static_cast<block_t*>(0)) {
+    auto* block = m_blocks[block_no];
+    if (block != nullptr) {
       free(block);
     }
   }
@@ -44,7 +45,7 @@ uint8_t& ram_t::at8(const uint32_t byte_addr) {
   // Allocate and clear a new block if this is the first time we access it.
   if (m_blocks[block_no] == nullptr) {
     m_blocks[block_no] = new block_t;
-    std::memset(&m_blocks[block_no][0], 0, BLOCK_SIZE);
+    std::fill(m_blocks[block_no]->begin(), m_blocks[block_no]->end(), 0);
   }
 
   // Return a pointer to the requested RAM line.
