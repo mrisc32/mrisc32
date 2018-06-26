@@ -35,7 +35,7 @@
 |LSR| x | dst, src1, src2 | dst <= src1 >> src2 (unsigned) | Logic shift right |
 |ASR| x | dst, src1, src2 | dst <= src1 >> src2 (signed) | Arithmetic shift right |
 |LSL| x | dst, src1, src2 | dst <= src1 << src2 | Logic shift left |
-|SHUF| x | dst, src1, src2 | dst <= shuffle(src1, src2) | Shuffle bytes according to indices in src2 (2) |
+|SHUF| x | dst, src1, src2 | dst <= shuffle(src1, src2) | Shuffle bytes according to the shuffle descriptor in src2 (2) |
 |MIN| x | dst, src1, src2 | dst <= min(src1, src2) (signed) | Minimum value |
 |MAX| x | dst, src1, src2 | dst <= max(src1, src2) (signed) | Maximum value |
 |CLZ| x | dst, src1 | dst <= clz(src1) | Count leading zeros |
@@ -56,7 +56,7 @@
 
 **(1)**: The third operand in vector loads/stores is used as a stride parameter rather than an offset.
 
-**(2)**: SHUF uses the four indices given in src2 to rearrange bytes from src1 into dst. The indcies are given in the lowest 12 bits of src2 (three bits per index, where the upper bit in each index can be set to 1 for clearing the corresponding byte in dst).
+**(2)**: SHUF uses the four indices given in src2 to rearrange bytes from src1 into dst. The indcies are given in the lowest 12 bits of src2 (three bits per index, where the upper bit in each index can be set to 1 for filling the corresponding byte in dst with either zeros or the sign bit of the source byte, depending on the value of bit 12 in src2).
 
 ## Branch and jump instructions
 
