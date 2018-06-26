@@ -111,34 +111,12 @@ begin
   ------------------------------------------------------------------------------------------------
 
   -- C_ALU_SHUF
-  ShufMux1: with i_src_b(2 downto 0) select
-    s_shuf_res(7 downto 0) <=
-      i_src_a(7 downto 0) when "000",
-      i_src_a(15 downto 8) when "001",
-      i_src_a(23 downto 16) when "010",
-      i_src_a(31 downto 24) when "011",
-      (others => '0') when others;
-  ShufMux2: with i_src_b(5 downto 3) select
-    s_shuf_res(15 downto 8) <=
-      i_src_a(7 downto 0) when "000",
-      i_src_a(15 downto 8) when "001",
-      i_src_a(23 downto 16) when "010",
-      i_src_a(31 downto 24) when "011",
-      (others => '0') when others;
-  ShufMux3: with i_src_b(8 downto 6) select
-    s_shuf_res(23 downto 16) <=
-      i_src_a(7 downto 0) when "000",
-      i_src_a(15 downto 8) when "001",
-      i_src_a(23 downto 16) when "010",
-      i_src_a(31 downto 24) when "011",
-      (others => '0') when others;
-  ShufMux4: with i_src_b(11 downto 9) select
-    s_shuf_res(31 downto 24) <=
-      i_src_a(7 downto 0) when "000",
-      i_src_a(15 downto 8) when "001",
-      i_src_a(23 downto 16) when "010",
-      i_src_a(31 downto 24) when "011",
-      (others => '0') when others;
+  AluSHUF32: entity work.shuf32
+    port map (
+      i_src_a => i_src_a,
+      i_src_b => i_src_b,
+      o_result => s_shuf_res
+    );
 
   -- C_ALU_REV
   RevGen: for k in 0 to C_WORD_SIZE-1 generate
