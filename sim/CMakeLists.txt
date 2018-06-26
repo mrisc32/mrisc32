@@ -7,7 +7,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_executable(sim
                sim.cpp
-               cache.hpp
                cpu.cpp
                cpu.hpp
                cpu_simple.cpp

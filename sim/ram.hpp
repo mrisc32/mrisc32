@@ -25,24 +25,20 @@
 
 /// @brief Simulated RAM.
 ///
-/// The memory is 32-bit addressable, and is 4GB in size (all elements are zero upon creattion). The
+/// The memory is 32-bit addressable, and is 4GB in size (all elements are zero upon creation). The
 /// memory is allocated on demand from the host machine.
 class ram_t {
 public:
-  // The memory interface width (smallest read/write operation), in bytes.
-  static const uint32_t LINE_WIDTH = 16u;
-
-  using line_t = uint8_t[LINE_WIDTH];
-
   ram_t();
 
   ~ram_t();
 
-  line_t& at(const uint32_t byte_addr);
+  uint8_t& at8(const uint32_t byte_addr);
 
-  line_t& operator[](const uint32_t addr) {
-    return at(addr);
-  }
+  // Note: These functions are host machine endian dependent. Consider converting them to read/write
+  // methods instead.
+  uint16_t& at16(const uint32_t byte_addr);
+  uint32_t& at32(const uint32_t byte_addr);
 
 private:
   // The total 4GB RAM is divided into smaller blocks in the simulator to avoid using more host RAM

@@ -19,38 +19,52 @@
 
 #include "ram.hpp"
 
+#include <algorithm>
 #include <cstring>
+#include <stdexcept>
 
 ram_t::ram_t() {
   // Clear all blocks (no RAM blocks have yet been allocated).
-  std::fill(m_blocks.begin(), m_blocks.end(), static_cast<block_t*>(0));
+  std::fill(m_blocks.begin(), m_blocks.end(), nullptr);
 }
 
 ram_t::~ram_t() {
   // Free all allocated blocks.
   for (uint32_t block_no = 0u; block_no < NUM_BLOCKS; ++block_no) {
-    block_t* block = m_blocks[block_no];
-    if (block != static_cast<block_t*>(0)) {
+    auto* block = m_blocks[block_no];
+    if (block != nullptr) {
       free(block);
     }
   }
 }
 
-ram_t::line_t& ram_t::at(const uint32_t byte_addr) {
-  // Ignore the least significant bits of the memory address to find the start of the corresponding
-  // RAM line.
-  const uint32_t line_addr = byte_addr & ~(LINE_WIDTH - 1u);
-
+uint8_t& ram_t::at8(const uint32_t byte_addr) {
   // Determine the allocated block no.
-  const uint32_t block_no = line_addr / BLOCK_SIZE;
+  const auto block_no = byte_addr / BLOCK_SIZE;
 
   // Allocate and clear a new block if this is the first time we access it.
-  if (m_blocks[block_no] == static_cast<block_t*>(0)) {
+  if (m_blocks[block_no] == nullptr) {
     m_blocks[block_no] = new block_t;
-    std::memset(&m_blocks[block_no][0], 0, BLOCK_SIZE);
+    std::fill(m_blocks[block_no]->begin(), m_blocks[block_no]->end(), 0);
   }
 
   // Return a pointer to the requested RAM line.
-  uint32_t block_offset = line_addr - (block_no * BLOCK_SIZE);
-  return reinterpret_cast<line_t&>((*m_blocks[block_no])[block_offset]);
+  const auto block_offset = byte_addr - (block_no * BLOCK_SIZE);
+  return reinterpret_cast<uint8_t&>((*m_blocks[block_no])[block_offset]);
+}
+
+uint16_t& ram_t::at16(const uint32_t byte_addr) {
+  if ((byte_addr % 2u) != 0u) {
+    throw std::runtime_error("Unaligned 16-bit memory access.");
+  }
+  auto& data8 = at8(byte_addr);
+  return reinterpret_cast<uint16_t&>(data8);
+}
+
+uint32_t& ram_t::at32(const uint32_t byte_addr) {
+  if ((byte_addr % 4u) != 0u) {
+    throw std::runtime_error("Unaligned 32-bit memory access.");
+  }
+  auto& data8 = at8(byte_addr);
+  return reinterpret_cast<uint32_t&>(data8);
 }
