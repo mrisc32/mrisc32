@@ -40,8 +40,6 @@
 |MAX| x | dst, src1, src2 | dst <= max(src1, src2) (signed) | Maximum value |
 |CLZ| x | dst, src1 | dst <= clz(src1) | Count leading zeros |
 |REV| x | dst, src1 | dst <= rev(src1) | Reverse bit order |
-|EXTB| x | dst, src1 | dst <= signextend(src1[7:0]) | Sign-extend byte to word |
-|EXTH| x | dst, src1 | dst <= signextend(src1[15:0]) | Sign-extend halfword to word |
 |LDB| (1) | dst, src1, src2 | dst <= [src1 + src2] (byte) | Load signed byte |
 |LDUB| (1) | dst, src1, src2 | dst <= [src1 + src2] (byte) | Load unsigned byte |
 |LDH| (1) | dst, src1, src2 | dst <= [src1 + src2] (halfword) | Load signed halfword |

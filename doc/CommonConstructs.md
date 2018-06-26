@@ -7,9 +7,11 @@
 | Move register | OR rd,ra,Z |
 | Negate value | SUB rd,Z,ra |
 | Subtract immediate from register | ADD rd,ra,-i14 |
-| Zero-extend byte to word | AND rd,ra,0xff |
-| Zero-extend halfword to word | SHUF rd,ra,0x908 |
-| Swap high and low halfwords | SHUF rd,ra,0x21a |
+| Zero-extend byte to word | SHUF rd,ra,0x0920 |
+| Zero-extend halfword to word | SHUF rd,ra,0x0b48 |
+| Sign-extend byte to word | SHUF rd,ra,0x1920 |
+| Sign-extend halfword to word | SHUF rd,ra,0x1b48 |
+| Swap high and low halfwords | SHUF rd,ra,0x021a |
 | Invert all bits | NOR rd,ra,ra |
 | Compare and branch | SUB tmp,ra,rb<br>B[cond] tmp,branch\_target |
 | Unconditional branch | BEQ Z,branch\_target |

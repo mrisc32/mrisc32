@@ -44,8 +44,6 @@ architecture rtl of alu is
   signal s_cmp_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_shuf_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_rev_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_extb_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_exth_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ldhi_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_clz_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
@@ -122,14 +120,6 @@ begin
   RevGen: for k in 0 to C_WORD_SIZE-1 generate
     s_rev_res(k) <= i_src_a(C_WORD_SIZE-1-k);
   end generate;
-
-  -- C_ALU_EXTB
-  s_extb_res(C_WORD_SIZE-1 downto 8) <= (others => i_src_a(7));
-  s_extb_res(7 downto 0) <= i_src_a(7 downto 0);
-
-  -- C_ALU_EXTH
-  s_exth_res(C_WORD_SIZE-1 downto 16) <= (others => i_src_a(15));
-  s_exth_res(15 downto 0) <= i_src_a(15 downto 0);
 
   -- C_ALU_LDHI, C_ALU_LDHIO
   s_ldhi_res(C_WORD_SIZE-1 downto C_WORD_SIZE-19) <= i_src_a(18 downto 0);
@@ -228,8 +218,6 @@ begin
         s_shuf_res when C_ALU_SHUF,
         s_clz_res when C_ALU_CLZ,
         s_rev_res when C_ALU_REV,
-        s_extb_res when C_ALU_EXTB,
-        s_exth_res when C_ALU_EXTH,
         s_ldhi_res when C_ALU_LDHI | C_ALU_LDHIO,
         (others => '0') when others;
 

@@ -521,12 +521,6 @@ uint32_t cpu_simple_t::run() {
         case EX_OP_REV:
           ex_result = rev32(ex_in.src_a);
           break;
-        case EX_OP_EXTB:
-          ex_result = s8_as_u32(static_cast<int8_t>(ex_in.src_a));
-          break;
-        case EX_OP_EXTH:
-          ex_result = s16_as_u32(static_cast<int16_t>(ex_in.src_a));
-          break;
 
         case EX_OP_MUL:
           ex_result = ex_in.src_a * ex_in.src_b;
