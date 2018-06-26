@@ -29,33 +29,67 @@ entity shuf32 is
 end shuf32;
 
 architecture rtl of shuf32 is
+  signal s_sign_fill : std_logic;
+  signal s_fill_bit_0 : std_logic;
+  signal s_fill_bit_1 : std_logic;
+  signal s_fill_bit_2 : std_logic;
+  signal s_fill_bit_3 : std_logic;
 begin
+  -- Is this a sign-fill or zero-fill operation?
+  s_sign_fill <= i_src_b(12);
+
+  -- Determine fill bits for the four different source bytes.
+  s_fill_bit_0 <= i_src_a(7) when s_sign_fill = '1' else '0';
+  s_fill_bit_1 <= i_src_a(15) when s_sign_fill = '1' else '0';
+  s_fill_bit_2 <= i_src_a(23) when s_sign_fill = '1' else '0';
+  s_fill_bit_3 <= i_src_a(31) when s_sign_fill = '1' else '0';
+
+  -- Select the outputs for the four result bytes.
   ShufMux1: with i_src_b(2 downto 0) select
     o_result(7 downto 0) <=
       i_src_a(7 downto 0) when "000",
       i_src_a(15 downto 8) when "001",
       i_src_a(23 downto 16) when "010",
       i_src_a(31 downto 24) when "011",
+      (others => s_fill_bit_0) when "100",
+      (others => s_fill_bit_1) when "101",
+      (others => s_fill_bit_2) when "110",
+      (others => s_fill_bit_3) when "111",
       (others => '0') when others;
+
   ShufMux2: with i_src_b(5 downto 3) select
     o_result(15 downto 8) <=
       i_src_a(7 downto 0) when "000",
       i_src_a(15 downto 8) when "001",
       i_src_a(23 downto 16) when "010",
       i_src_a(31 downto 24) when "011",
+      (others => s_fill_bit_0) when "100",
+      (others => s_fill_bit_1) when "101",
+      (others => s_fill_bit_2) when "110",
+      (others => s_fill_bit_3) when "111",
       (others => '0') when others;
+
   ShufMux3: with i_src_b(8 downto 6) select
     o_result(23 downto 16) <=
       i_src_a(7 downto 0) when "000",
       i_src_a(15 downto 8) when "001",
       i_src_a(23 downto 16) when "010",
       i_src_a(31 downto 24) when "011",
+      (others => s_fill_bit_0) when "100",
+      (others => s_fill_bit_1) when "101",
+      (others => s_fill_bit_2) when "110",
+      (others => s_fill_bit_3) when "111",
       (others => '0') when others;
+
   ShufMux4: with i_src_b(11 downto 9) select
     o_result(31 downto 24) <=
       i_src_a(7 downto 0) when "000",
       i_src_a(15 downto 8) when "001",
       i_src_a(23 downto 16) when "010",
       i_src_a(31 downto 24) when "011",
+      (others => s_fill_bit_0) when "100",
+      (others => s_fill_bit_1) when "101",
+      (others => s_fill_bit_2) when "110",
+      (others => s_fill_bit_3) when "111",
       (others => '0') when others;
 end rtl;

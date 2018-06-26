@@ -50,15 +50,21 @@ begin
     end record;
     type pattern_array is array (natural range <>) of pattern_type;
     constant patterns : pattern_array := (
-        (X"FF0F3355",
+        (X"860F3355",
          32B"0000001010011",
-         X"55330FFF"),
-        (X"FF0F3355",
+         X"55330F86"),
+        (X"860F3355",
          32B"0001001000000",
          X"33335555"),
-        (X"FF0F3355",
+        (X"860F3355",
          32B"0100101110111",
-         X"00000000")
+         X"00000000"),
+        (X"860F3355",
+         32B"1100101110111",
+         X"000000FF"),
+        (X"860F3355",
+         32B"1111011110010",
+         X"FF86000F")
       );
   begin
     -- Test all the patterns in the pattern array.
