@@ -93,24 +93,44 @@ inline uint32_t rev32(const uint32_t x) {
          ((x << 29u) & 0x40000000u) | ((x << 31u) & 0x80000000u);
 }
 
+inline uint8_t shuf_op(const uint8_t x, const bool fill, const bool sign_fill) {
+  const uint8_t fill_bits = (sign_fill && ((x & 0x80u) != 0u)) ? 0xffu : 0x00u;
+  return fill ? fill_bits : x;
+}
+
 inline uint32_t shuf32(const uint32_t x, const uint32_t idx) {
+  // Extract the four bytes from x.
   uint8_t xv[4];
   xv[0] = static_cast<uint8_t>(x);
   xv[1] = static_cast<uint8_t>(x >> 8u);
   xv[2] = static_cast<uint8_t>(x >> 16u);
   xv[3] = static_cast<uint8_t>(x >> 24u);
+
+  // Extract the four indices from idx.
   uint8_t idxv[4];
-  idxv[0] = static_cast<uint8_t>(idx & 7u);
-  idxv[1] = static_cast<uint8_t>((idx >> 3u) & 7u);
-  idxv[2] = static_cast<uint8_t>((idx >> 6u) & 7u);
-  idxv[3] = static_cast<uint8_t>((idx >> 9u) & 7u);
+  idxv[0] = static_cast<uint8_t>(idx & 3u);
+  idxv[1] = static_cast<uint8_t>((idx >> 3u) & 3u);
+  idxv[2] = static_cast<uint8_t>((idx >> 6u) & 3u);
+  idxv[3] = static_cast<uint8_t>((idx >> 9u) & 3u);
 
+  // Extract the four fill operation descriptions from idx.
+  bool fillv[4];
+  fillv[0] = ((idx & 4u) != 0u);
+  fillv[1] = ((idx & (4u << 3u)) != 0u);
+  fillv[2] = ((idx & (4u << 6u)) != 0u);
+  fillv[3] = ((idx & (4u << 9u)) != 0u);
+
+  // Sign-fill or zero-fill?
+  const bool sign_fill = (((idx >> 12u) & 1u) != 0u);
+
+  // Combine the parts into four new bytes.
   uint8_t yv[4];
-  yv[0] = (idxv[0] & 4u) ? 0u : xv[idxv[0]];
-  yv[1] = (idxv[1] & 4u) ? 0u : xv[idxv[1]];
-  yv[2] = (idxv[2] & 4u) ? 0u : xv[idxv[2]];
-  yv[3] = (idxv[3] & 4u) ? 0u : xv[idxv[3]];
+  yv[0] = shuf_op(xv[idxv[0]], fillv[0], sign_fill);
+  yv[1] = shuf_op(xv[idxv[1]], fillv[1], sign_fill);
+  yv[2] = shuf_op(xv[idxv[2]], fillv[2], sign_fill);
+  yv[3] = shuf_op(xv[idxv[3]], fillv[3], sign_fill);
 
+  // Combine the four bytes into a 32-bit word.
   return static_cast<uint32_t>(yv[0]) | (static_cast<uint32_t>(yv[1]) << 8u) |
          (static_cast<uint32_t>(yv[2]) << 16u) | (static_cast<uint32_t>(yv[3]) << 24u);
 }
