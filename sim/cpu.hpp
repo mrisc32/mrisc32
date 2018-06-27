@@ -111,10 +111,12 @@ protected:
   static const uint32_t EX_OP_FADD = 0x92u;
   static const uint32_t EX_OP_FSUB = 0x93u;
   static const uint32_t EX_OP_FCEQ = 0x94u;
-  static const uint32_t EX_OP_FCLT = 0x95u;
-  static const uint32_t EX_OP_FCLE = 0x96u;
-  static const uint32_t EX_OP_FMIN = 0x97u;
-  static const uint32_t EX_OP_FMAX = 0x98u;
+  static const uint32_t EX_OP_FCNE = 0x95u;
+  static const uint32_t EX_OP_FCLT = 0x96u;
+  static const uint32_t EX_OP_FCLE = 0x97u;
+  static const uint32_t EX_OP_FCNAN = 0x98u;
+  static const uint32_t EX_OP_FMIN = 0x99u;
+  static const uint32_t EX_OP_FMAX = 0x9au;
 
   // Memory operations.
   static const uint32_t MEM_OP_NONE = 0x0u;

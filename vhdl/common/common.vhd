@@ -128,10 +128,12 @@ package common is
   constant C_FPU_FADD : T_FPU_OP := "0010";
   constant C_FPU_FSUB : T_FPU_OP := "0011";
   constant C_FPU_FCEQ : T_FPU_OP := "0100";
-  constant C_FPU_FCLT : T_FPU_OP := "0101";
-  constant C_FPU_FCLE : T_FPU_OP := "0110";
-  constant C_FPU_FMIN : T_FPU_OP := "0111";
-  constant C_FPU_FMAX : T_FPU_OP := "1000";
+  constant C_FPU_FCNE : T_FPU_OP := "0101";
+  constant C_FPU_FCLT : T_FPU_OP := "0110";
+  constant C_FPU_FCLE : T_FPU_OP := "0111";
+  constant C_FPU_FCNAN : T_FPU_OP := "1000";
+  constant C_FPU_FMIN : T_FPU_OP := "1001";
+  constant C_FPU_FMAX : T_FPU_OP := "1010";
 
   -- MEM operations.
   constant C_MEM_OP_SIZE : integer := 4;

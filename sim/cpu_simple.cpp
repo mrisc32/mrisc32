@@ -571,12 +571,18 @@ uint32_t cpu_simple_t::run() {
         case EX_OP_FCEQ:
           // TODO(m): Implement me!
           throw std::runtime_error("FCEQ is not yet implemented.");
+        case EX_OP_FCNE:
+          // TODO(m): Implement me!
+          throw std::runtime_error("FCNE is not yet implemented.");
         case EX_OP_FCLT:
           // TODO(m): Implement me!
           throw std::runtime_error("FCLT is not yet implemented.");
         case EX_OP_FCLE:
           // TODO(m): Implement me!
           throw std::runtime_error("FCLE is not yet implemented.");
+        case EX_OP_FCNAN:
+          // TODO(m): Implement me!
+          throw std::runtime_error("FCNAN is not yet implemented.");
         case EX_OP_FMIN:
           // TODO(m): Implement me!
           throw std::runtime_error("FMIN is not yet implemented.");
