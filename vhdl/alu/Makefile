@@ -34,7 +34,6 @@ SRCS += \
 TESTS += \
     adder_tb \
     clz32_tb \
-    comparator_tb \
     shift32_tb \
     shuf32_tb \
     alu_tb

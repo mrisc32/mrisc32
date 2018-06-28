@@ -41,6 +41,7 @@ TESTS =
 
 include common/Makefile
 include alu/Makefile
+include fpu/Makefile
 include muldiv/Makefile
 include cache/Makefile
 include pipeline/Makefile

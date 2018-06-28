@@ -17,14 +17,12 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ####################################################################################################
 
-COMMON_PATH = common
+FPU_PATH = fpu
 
 SRCS += \
-    $(COMMON_PATH)/common.vhd \
-    $(COMMON_PATH)/comparator.vhd \
-    $(COMMON_PATH)/comparator_tb.vhd \
-    $(COMMON_PATH)/ram_dual_port.vhd
+    $(FPU_PATH)/float32_isnan.vhd \
+    $(FPU_PATH)/float32_isnan_tb.vhd
 
 TESTS += \
-    comparator_tb
+    float32_isnan_tb
 
