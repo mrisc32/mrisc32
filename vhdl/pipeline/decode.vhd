@@ -100,8 +100,9 @@ architecture rtl of decode is
   signal s_is_type_b : std_logic;
   signal s_is_type_c : std_logic;
 
+  signal s_is_unconditional_branch : std_logic;
+  signal s_is_conditional_branch : std_logic;
   signal s_is_reg_branch : std_logic;
-  signal s_is_offset_branch : std_logic;
   signal s_is_branch : std_logic;
   signal s_is_link_branch : std_logic;
 
@@ -214,19 +215,22 @@ begin
   -- Branch logic.
   --------------------------------------------------------------------------------------------------
 
-  -- Is this a branch?
-  s_is_reg_branch <= (s_is_type_a and not i_bubble) when s_op_low(8 downto 1) = "00111000" else '0';  -- J, JL
+  -- Decode branch instructions...
 
-  IsOffsetBranchMux: with s_op_high select
-    s_is_offset_branch <=
-        (not i_bubble) when "110000" | "110001" | "110010" | "110011" | "110100" | "110101" |  -- B[cc]
-                            "111000" | "111001" | "111010" | "111011" | "111100" | "111101",   -- BL[cc]
-        '0' when others;
+  -- Unconditional branch: J, JL, B, BL
+  s_is_unconditional_branch <= (not i_bubble) when s_op_high(5 downto 1) = "11100" else '0';
 
-  s_is_branch <= s_is_reg_branch or s_is_offset_branch;
+  -- Conditional branch: B[cc]
+  s_is_conditional_branch <= (not i_bubble) when s_op_high(5 downto 3) = "110" else '0';
 
-  -- Is this a link branch.
-  s_is_link_branch <= (s_is_reg_branch and s_op_low(0)) or (s_is_offset_branch and s_op_high(3));
+  -- Register branch: J, JL
+  s_is_reg_branch <=
+      s_is_unconditional_branch when s_reg_c /= to_vector(C_PC_REG, C_LOG2_NUM_REGS) else '0';
+
+  -- Link branch: JL, BL
+  s_is_link_branch <= s_is_unconditional_branch and s_op_high(0);
+
+  s_is_branch <= s_is_unconditional_branch or s_is_conditional_branch;
 
   -- Calculate the offset branch target.
   pc_plus_offset_0: entity work.pc_plus_offset
@@ -270,7 +274,7 @@ begin
         s_branch_cond_lt when "101",  -- BLT
         '0' when others;
 
-  s_branch_is_taken <= s_is_reg_branch or (s_is_offset_branch and s_branch_cond_true);
+  s_branch_is_taken <= s_is_unconditional_branch or (s_is_conditional_branch and s_branch_cond_true);
 
 
   --------------------------------------------------------------------------------------------------
@@ -289,9 +293,9 @@ begin
   s_is_mem_store <= s_is_mem_op and s_mem_op(3);
 
   -- Is this an immediate load?
-  s_is_ldhi  <= '1' when s_op_high = "110110" else '0';
-  s_is_ldhio <= '1' when s_op_high = "110111" else '0';
-  s_is_ldi   <= '1' when s_op_high = "111110" else '0';
+  s_is_ldi   <= '1' when s_op_high = 6X"3a" else '0';
+  s_is_ldhi  <= '1' when s_op_high = 6X"3b" else '0';
+  s_is_ldhio <= '1' when s_op_high = 6X"3c" else '0';
 
   -- Is this a MUL, DIV or FPU op?
   s_is_mul_op <= '1' when (s_is_type_a = '1' and s_op_low(8 downto 3) = "010000") else '0';

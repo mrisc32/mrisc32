@@ -323,10 +323,6 @@ _OPCODES = {
         'MSV':    [[0x00000052, _VREG1, _REG2, _REG3]],  # Move scalar->vector element
         'MVS':    [[0x00000053, _REG1, _VREG2, _REG3]],  # Move vector element->scalar
 
-        # Jump to register address.
-        'J':      [[0x00000070, _REG1]],           # 2nd & 3rd regs are always z
-        'JL':     [[0x00000071, _REG1]],           # 2nd & 3rd regs are always z
-
         # Multiplication operations.
         'MUL':    [[0x00000080, _REG1, _REG2, _REG3],
                    [0x80000080, _VREG1, _VREG2, _REG3],
@@ -394,7 +390,7 @@ _OPCODES = {
 
         # == C ==
 
-        # Branch ops.
+        # Conditional branches.
         'BEQ':    [[0x30000000, _REG1, _PCREL19x4]],
         'BNE':    [[0x31000000, _REG1, _PCREL19x4]],
         'BGE':    [[0x32000000, _REG1, _PCREL19x4]],
@@ -402,20 +398,23 @@ _OPCODES = {
         'BLE':    [[0x34000000, _REG1, _PCREL19x4]],
         'BLT':    [[0x35000000, _REG1, _PCREL19x4]],
 
-        'BLEQ':   [[0x38000000, _REG1, _PCREL19x4]],
-        'BLNE':   [[0x39000000, _REG1, _PCREL19x4]],
-        'BLGE':   [[0x3a000000, _REG1, _PCREL19x4]],
-        'BLGT':   [[0x3b000000, _REG1, _PCREL19x4]],
-        'BLLE':   [[0x3c000000, _REG1, _PCREL19x4]],
-        'BLLT':   [[0x3d000000, _REG1, _PCREL19x4]],
+        # Unconditional branches and jumps.
+        # Note: With this encoding we could support J/JL REG+OFFSET19x4 for any
+        # register, but right now we only support offsets when REG is PC (and
+        # call the instruction B/BL instead). For all other registers, the offset
+        # is forcibly zero.
+        'J':      [[0x38000000, _REG1]],        # Jump to register address
+        'B':      [[0x38f80000, _PCREL19x4]],   # Branch unconditionally
+        'JL':     [[0x39000000, _REG1]],        # Jump and link
+        'BL':     [[0x39f80000, _PCREL19x4]],   # Branch and link
 
         # Load immediate.
-        'LDHI':   [[0x36000000, _REG1, _IMM19HI],
-                   [0xb6000000, _VREG1, _IMM19HI]],
-        'LDHIO':  [[0x37000000, _REG1, _IMM19HIO],
-                   [0xb7000000, _VREG1, _IMM19HIO]],
-        'LDI':    [[0x3e000000, _REG1, _IMM19],
-                   [0xbe000000, _VREG1, _IMM19]],
+        'LDI':    [[0x3a000000, _REG1, _IMM19],
+                   [0xba000000, _VREG1, _IMM19]],
+        'LDHI':   [[0x3b000000, _REG1, _IMM19HI],
+                   [0xbb000000, _VREG1, _IMM19HI]],
+        'LDHIO':  [[0x3c000000, _REG1, _IMM19HIO],
+                   [0xbc000000, _VREG1, _IMM19HIO]],
 
 
         # ---------------------------------------------------------------------
@@ -429,12 +428,6 @@ _OPCODES = {
         'MOV':    [[0x00000010, _REG1, _REG2],
                    [0x80000010, _VREG1, _REG2],
                    [0xc0000010, _VREG1, _VREG2]],
-
-        # Alias for: BEQ Z, _PCREL19x4
-        'B':      [[0x30000000, _PCREL19x4]],
-
-        # Alias for: BLEQ Z, _PCREL19x4
-        'BL':     [[0x38000000, _PCREL19x4]],
 
         # Alias for: ADD _REG1, PC, offset
         'LEA':    [[0x1507c000, _REG1, _PCREL14]],
