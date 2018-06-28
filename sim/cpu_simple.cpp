@@ -135,6 +135,10 @@ inline uint32_t shuf32(const uint32_t x, const uint32_t idx) {
          (static_cast<uint32_t>(yv[2]) << 16u) | (static_cast<uint32_t>(yv[3]) << 24u);
 }
 
+inline bool float32_isnan(const uint32_t x) {
+  return ((x & 0x7F800000u) == 0x7F800000u) && ((x & 0x007fffffu) != 0u);
+}
+
 inline float as_f32(const uint32_t x) {
   float result;
   std::memcpy(&result, &x, sizeof(float));
@@ -581,8 +585,8 @@ uint32_t cpu_simple_t::run() {
           // TODO(m): Implement me!
           throw std::runtime_error("FCLE is not yet implemented.");
         case EX_OP_FCNAN:
-          // TODO(m): Implement me!
-          throw std::runtime_error("FCNAN is not yet implemented.");
+          ex_result = (float32_isnan(ex_in.src_a) || float32_isnan(ex_in.src_b)) ? 0xffffffffu : 0u;
+          break;
         case EX_OP_FMIN:
           // TODO(m): Implement me!
           throw std::runtime_error("FMIN is not yet implemented.");
