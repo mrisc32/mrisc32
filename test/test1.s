@@ -9,43 +9,43 @@ main:
 
   bl     test_1
   or     s16, s16, s1
-  beq    s1, .test1_passed
+  bz     s1, .test1_passed
   bl     .test_failed
 .test1_passed:
 
   bl     test_2
   or     s16, s16, s1
-  beq    s1, .test2_passed
+  bz     s1, .test2_passed
   bl     .test_failed
 .test2_passed:
 
   bl     test_3
   or     s16, s16, s1
-  beq    s1, .test3_passed
+  bz     s1, .test3_passed
   bl     .test_failed
 .test3_passed:
 
   bl     test_4
   or     s16, s16, s1
-  beq    s1, .test4_passed
+  bz     s1, .test4_passed
   bl     .test_failed
 .test4_passed:
 
   bl     test_5
   or     s16, s16, s1
-  beq    s1, .test5_passed
+  bz     s1, .test5_passed
   bl     .test_failed
 .test5_passed:
 
   bl     test_6
   or     s16, s16, s1
-  beq    s1, .test6_passed
+  bz     s1, .test6_passed
   bl     .test_failed
 .test6_passed:
 
   bl     test_7
   or     s16, s16, s1
-  beq    s1, .test7_passed
+  bz     s1, .test7_passed
   bl     .test_failed
 .test7_passed:
 
@@ -74,7 +74,7 @@ test_1:
 .loop:
   add    s9, s9, s10
   add    s10, s10, -1
-  bne    s10, .loop
+  bnz    s10, .loop
 
   ldi    s1, 0
   j      lr
@@ -106,7 +106,7 @@ test_2:
 
   ; return (s16 == 0xbeef0042) ? 0 : 1
   ldi    s1, 0
-  beq    s10, .ok
+  bz     s10, .ok
   ldi    s1, 1
 .ok:
 
@@ -212,7 +212,7 @@ test_5:
 
   ; s1 = (result == 2*PI) ? 0 : 1
   ldi    s1, 0
-  beq    s9, .ok
+  bz     s9, .ok
   ldi    s1, 1
 .ok:
 
@@ -291,11 +291,11 @@ test_6:
   ldi    s1, 0x2c
   add    s18, s17, -36  ; s17 == 36 ?
   add    s17, s17, 1
-  bne    s18, .not_last_element
+  bnz    s18, .not_last_element
   ldi    s1, 10         ; Print comma or newline depending on if this is the last element
 .not_last_element:
   bl     _putc
-  bne    s18, .print
+  bnz    s18, .print
 
   ldw    lr, sp, 0
   ldw    vl, sp, 4

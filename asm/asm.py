@@ -391,8 +391,8 @@ _OPCODES = {
         # == C ==
 
         # Conditional branches.
-        'BEQ':    [[0x30000000, _REG1, _PCREL19x4]],
-        'BNE':    [[0x31000000, _REG1, _PCREL19x4]],
+        'BZ':     [[0x30000000, _REG1, _PCREL19x4]],
+        'BNZ':    [[0x31000000, _REG1, _PCREL19x4]],
         'BGE':    [[0x32000000, _REG1, _PCREL19x4]],
         'BGT':    [[0x33000000, _REG1, _PCREL19x4]],
         'BLE':    [[0x34000000, _REG1, _PCREL19x4]],

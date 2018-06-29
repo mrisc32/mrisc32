@@ -266,8 +266,8 @@ begin
 
   BranchCondMux: with s_op_high(2 downto 0) select
     s_branch_cond_true <=
-        s_branch_cond_eq when "000",  -- BEQ
-        s_branch_cond_ne when "001",  -- BNE
+        s_branch_cond_eq when "000",  -- BZ
+        s_branch_cond_ne when "001",  -- BNZ
         s_branch_cond_ge when "010",  -- BGE
         s_branch_cond_gt when "011",  -- BGT
         s_branch_cond_le when "100",  -- BLE

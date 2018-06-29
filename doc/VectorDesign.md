@@ -50,7 +50,7 @@ Assuming that the arguments (c, a, b, n) are in registers S1, S2, S3 and S4 (acc
 
 ```
 abs_diff:
-  BEQ     S4, .done    ; n == 0, nothing to do
+  BZ      S4, .done    ; n == 0, nothing to do
 
   LDHIO   S12, 0x7fffffff
 
@@ -78,7 +78,7 @@ abs_diff:
   ADD     SP, SP, -4
   STW     VL, SP, 0
 
-  BEQ     S4, .done    ; n == 0, nothing to do
+  BZ      S4, .done    ; n == 0, nothing to do
 
   LDHIO   S10, 0x7fffffff
 

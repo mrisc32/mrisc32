@@ -304,10 +304,10 @@ uint32_t cpu_simple_t::run() {
       const uint32_t condition = (sclar_instr >> 24u) & 0x0000003fu;
       bool condition_satisfied = false;
       switch (condition) {
-        case 0x30u:  // beq
+        case 0x30u:  // bz
           condition_satisfied = (branch_cond_value == 0u);
           break;
-        case 0x31u:  // bne
+        case 0x31u:  // bnz
           condition_satisfied = (branch_cond_value != 0u);
           break;
         case 0x32u:  // bge
