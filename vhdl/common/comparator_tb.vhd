@@ -25,12 +25,14 @@ end comparator_tb;
 
 architecture behavioral of comparator_tb is
   signal s_src : std_logic_vector(7 downto 0);
-  signal s_eq : std_logic;
-  signal s_ne : std_logic;
+  signal s_z : std_logic;
+  signal s_nz : std_logic;
+  signal s_ao : std_logic;
+  signal s_nao : std_logic;
   signal s_lt : std_logic;
+  signal s_ge : std_logic;
   signal s_le : std_logic;
   signal s_gt : std_logic;
-  signal s_ge : std_logic;
 begin
   comparator_0: entity work.comparator
     generic map (
@@ -38,12 +40,14 @@ begin
     )
     port map (
       i_src => s_src,
-      o_eq => s_eq,
-      o_ne => s_ne,
+      o_z => s_z,
+      o_nz => s_nz,
+      o_ao => s_ao,
+      o_nao => s_nao,
       o_lt => s_lt,
+      o_ge => s_ge,
       o_le => s_le,
-      o_gt => s_gt,
-      o_ge => s_ge
+      o_gt => s_gt
     );
 
   process
@@ -53,20 +57,22 @@ begin
       src : std_logic_vector(7 downto 0);
 
       -- Expected outputs
-      eq : std_logic;
-      ne : std_logic;
+      z : std_logic;
+      nz : std_logic;
+      ao : std_logic;
+      nao : std_logic;
       lt : std_logic;
+      ge : std_logic;
       le : std_logic;
       gt : std_logic;
-      ge : std_logic;
     end record;
     type pattern_array is array (natural range <>) of pattern_type;
     constant patterns : pattern_array := (
-        ("00000000", '1', '0', '0', '1', '0', '1'),
-        ("00000001", '0', '1', '0', '0', '1', '1'),
-        ("01111111", '0', '1', '0', '0', '1', '1'),
-        ("11000000", '0', '1', '1', '1', '0', '0'),
-        ("11111111", '0', '1', '1', '1', '0', '0')
+        ("00000000", '1', '0', '0', '1', '0', '1', '1', '0'),
+        ("00000001", '0', '1', '0', '1', '0', '1', '0', '1'),
+        ("01111111", '0', '1', '0', '1', '0', '1', '0', '1'),
+        ("11000000", '0', '1', '0', '1', '1', '0', '1', '0'),
+        ("11111111", '0', '1', '1', '0', '1', '0', '1', '0')
       );
   begin
     -- Test all the patterns in the pattern array.
@@ -78,18 +84,22 @@ begin
       wait for 1 ns;
 
       --  Check the outputs.
-      assert s_eq = patterns(i).eq
-        report "Bad EQ value" severity error;
-      assert s_ne = patterns(i).ne
-        report "Bad NE value" severity error;
+      assert s_z = patterns(i).z
+        report "Bad Z value" severity error;
+      assert s_nz = patterns(i).nz
+        report "Bad NZ value" severity error;
+      assert s_ao = patterns(i).ao
+        report "Bad AO value" severity error;
+      assert s_nao = patterns(i).nao
+        report "Bad NAO value" severity error;
       assert s_lt = patterns(i).lt
         report "Bad LT value" severity error;
+      assert s_ge = patterns(i).ge
+        report "Bad GE value" severity error;
       assert s_le = patterns(i).le
         report "Bad LE value" severity error;
       assert s_gt = patterns(i).gt
         report "Bad GT value" severity error;
-      assert s_ge = patterns(i).ge
-        report "Bad GE value" severity error;
     end loop;
     assert false report "End of test" severity note;
     --  Wait forever; this will finish the simulation.

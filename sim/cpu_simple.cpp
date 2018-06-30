@@ -310,19 +310,25 @@ uint32_t cpu_simple_t::run() {
         case 0x31u:  // bnz
           condition_satisfied = (branch_cond_value != 0u);
           break;
-        case 0x32u:  // bge
+        case 0x32u:  // bao
+          condition_satisfied = (branch_cond_value == 0xffffffffu);
+          break;
+        case 0x33u:  // bnao
+          condition_satisfied = (branch_cond_value != 0xffffffffu);
+          break;
+        case 0x34u:  // blt
+          condition_satisfied = ((branch_cond_value & 0x80000000u) != 0u);
+          break;
+        case 0x35u:  // bge
           condition_satisfied = ((branch_cond_value & 0x80000000u) == 0u);
           break;
-        case 0x33u:  // bgt
-          condition_satisfied =
-              ((branch_cond_value & 0x80000000u) == 0u) && (branch_cond_value != 0u);
-          break;
-        case 0x34u:  // ble
+        case 0x36u:  // ble
           condition_satisfied =
               ((branch_cond_value & 0x80000000u) != 0u) || (branch_cond_value == 0u);
           break;
-        case 0x35u:  // blt
-          condition_satisfied = ((branch_cond_value & 0x80000000u) != 0u);
+        case 0x37u:  // bgt
+          condition_satisfied =
+              ((branch_cond_value & 0x80000000u) == 0u) && (branch_cond_value != 0u);
           break;
       }
 

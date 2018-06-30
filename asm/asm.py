@@ -398,10 +398,12 @@ _OPCODES = {
         # Conditional branches.
         'BZ':     [[0x30000000, _REG1, _PCREL19x4]],
         'BNZ':    [[0x31000000, _REG1, _PCREL19x4]],
-        'BGE':    [[0x32000000, _REG1, _PCREL19x4]],
-        'BGT':    [[0x33000000, _REG1, _PCREL19x4]],
-        'BLE':    [[0x34000000, _REG1, _PCREL19x4]],
-        'BLT':    [[0x35000000, _REG1, _PCREL19x4]],
+        'BAO':    [[0x32000000, _REG1, _PCREL19x4]],
+        'BNAO':   [[0x33000000, _REG1, _PCREL19x4]],
+        'BLT':    [[0x34000000, _REG1, _PCREL19x4]],
+        'BGE':    [[0x35000000, _REG1, _PCREL19x4]],
+        'BLE':    [[0x36000000, _REG1, _PCREL19x4]],
+        'BGT':    [[0x37000000, _REG1, _PCREL19x4]],
 
         # Unconditional branches and jumps.
         # Note: With this encoding we could support J/JL REG+OFFSET19x4 for any
