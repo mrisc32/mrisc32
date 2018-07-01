@@ -162,8 +162,8 @@ test_4:
   ; Add the numbers into s1:s16
   add    s16, s10, s12  ; s16 = low bits
   add    s1, s11, s13   ; s1 = high bits
-  sltu   s9, s16, s10   ; s9 = carry (0 or 1)
-  add    s1, s1, s9     ; Add carry to the high word
+  cltu   s9, s16, s10   ; s9 = "carry" (0 or -1)
+  sub    s1, s1, s9     ; Add carry to the high word
 
   bl     _printhex      ; Print high word
   mov    s1, s16
