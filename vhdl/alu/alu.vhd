@@ -59,9 +59,14 @@ architecture rtl of alu is
   signal s_compare_ltu : std_logic;
   signal s_compare_leu : std_logic;
   signal s_set_bit : std_logic;
+
   signal s_is_max_op : std_logic;
+  signal s_is_unsigned_minmax : std_logic;
+  signal s_minmax_sel_a : std_logic;
 
   -- Signals for the shifter.
+  signal s_shift_is_right : std_logic;
+  signal s_shift_is_arithmetic : std_logic;
   signal s_shifter_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
 begin
@@ -153,7 +158,7 @@ begin
   -- Select if we're doing addition or subtraction.
   NegAdderAMux: with i_op select
     s_adder_subtract <=
-      '1' when C_ALU_SUB | C_ALU_SLT | C_ALU_SLTU | C_ALU_SLE | C_ALU_SLEU | C_ALU_MIN | C_ALU_MAX,
+      '1' when C_ALU_SUB | C_ALU_SLT | C_ALU_SLTU | C_ALU_SLE | C_ALU_SLEU | C_ALU_MIN | C_ALU_MAX | C_ALU_MINU | C_ALU_MAXU,
       '0' when others;
 
   -- Camparison results.
@@ -165,9 +170,12 @@ begin
   s_compare_leu <= s_compare_eq or s_compare_ltu;
 
   -- Min/Max operations.
-  s_is_max_op <= '1' when i_op = C_ALU_MAX else '0';
-  s_minmax_res <= i_src_a when s_compare_lt = s_is_max_op else i_src_b;
-
+  s_is_max_op <= not i_op(0);
+  s_is_unsigned_minmax <= '1' when (i_op = C_ALU_MINU or i_op = C_ALU_MAXU) else '0';
+  s_minmax_sel_a <=
+      (not (s_compare_ltu xor s_is_max_op)) when s_is_unsigned_minmax = '1' else
+      (not (s_compare_lt xor s_is_max_op));
+  s_minmax_res <= i_src_a when s_minmax_sel_a = '1' else i_src_b;
 
   -- Compare and set operations.
   CmpMux: with i_op select
@@ -186,10 +194,13 @@ begin
   -- Shift operations
   ------------------------------------------------------------------------------------------------
 
+  s_shift_is_right <= i_op(0);           -- '1' for C_ALU_LSR and C_ALU_ASR, '0' for C_ALU_LSL
+  s_shift_is_arithmetic <= not i_op(1);  -- '1' for C_ALU_ASR, '0' for C_ALU_LSR and C_ALU_LSL
+
   AluShifter: entity work.shift32
     port map (
-      i_right => i_op(0),       -- '1' for C_ALU_LSR and C_ALU_ASR, '0' for C_ALU_LSL
-      i_arithmetic => i_op(1),  -- '1' for C_ALU_ASR, '0' for C_ALU_LSR and C_ALU_LSL
+      i_right => s_shift_is_right,
+      i_arithmetic => s_shift_is_arithmetic,
       i_src => i_src_a,
       i_shift => i_src_b(4 downto 0),
       o_result => s_shifter_res
@@ -210,7 +221,7 @@ begin
         s_xor_res when C_ALU_XOR,
         s_adder_result when C_ALU_ADD | C_ALU_SUB,
         s_set_res when C_ALU_SEQ | C_ALU_SNE | C_ALU_SLT | C_ALU_SLTU | C_ALU_SLE | C_ALU_SLEU,
-        s_minmax_res when C_ALU_MIN | C_ALU_MAX,
+        s_minmax_res when C_ALU_MIN | C_ALU_MAX | C_ALU_MINU | C_ALU_MAXU,
         s_shifter_res when C_ALU_LSR | C_ALU_ASR | C_ALU_LSL,
         s_shuf_res when C_ALU_SHUF,
         s_clz_res when C_ALU_CLZ,

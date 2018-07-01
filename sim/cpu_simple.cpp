@@ -504,6 +504,12 @@ uint32_t cpu_simple_t::run() {
           ex_result = static_cast<uint32_t>(std::max(static_cast<int32_t>(ex_in.src_a),
                                             static_cast<int32_t>(ex_in.src_b)));
           break;
+        case EX_OP_MINU:
+          ex_result = std::min(ex_in.src_a, ex_in.src_b);
+          break;
+        case EX_OP_MAXU:
+          ex_result = std::max(ex_in.src_a, ex_in.src_b);
+          break;
         case EX_OP_ASR:
           ex_result = static_cast<uint32_t>(static_cast<int32_t>(ex_in.src_a) >>
                                             static_cast<int32_t>(ex_in.src_b));

@@ -86,11 +86,13 @@ protected:
   static const uint32_t EX_OP_SLEU = 0x1cu;
   static const uint32_t EX_OP_MIN = 0x1du;
   static const uint32_t EX_OP_MAX = 0x1eu;
+  static const uint32_t EX_OP_MINU = 0x1fu;
+  static const uint32_t EX_OP_MAXU = 0x20u;
 
-  static const uint32_t EX_OP_ASR = 0x1fu;
-  static const uint32_t EX_OP_LSL = 0x20u;
-  static const uint32_t EX_OP_LSR = 0x21u;
-  static const uint32_t EX_OP_SHUF = 0x22u;
+  static const uint32_t EX_OP_ASR = 0x21u;
+  static const uint32_t EX_OP_LSL = 0x22u;
+  static const uint32_t EX_OP_LSR = 0x23u;
+  static const uint32_t EX_OP_SHUF = 0x24u;
 
   static const uint32_t EX_OP_CLZ = 0x31u;
   static const uint32_t EX_OP_REV = 0x32u;

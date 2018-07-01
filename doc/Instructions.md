@@ -33,6 +33,8 @@
 |SLEU| x | dst, src1, src2 | dst <= (src1 <= src2) ? 0xffffffff : 0 | Set if less than or equal (unsigned) |
 |MIN| x | dst, src1, src2 | dst <= min(src1, src2) (signed) | Minimum value |
 |MAX| x | dst, src1, src2 | dst <= max(src1, src2) (signed) | Maximum value |
+|MINU| x | dst, src1, src2 | dst <= min(src1, src2) (unsigned) | Minimum value |
+|MAXU| x | dst, src1, src2 | dst <= max(src1, src2) (unsigned) | Maximum value |
 |ASR| x | dst, src1, src2 | dst <= src1 >> src2 (signed) | Arithmetic shift right |
 |LSL| x | dst, src1, src2 | dst <= src1 << src2 | Logic shift left |
 |LSR| x | dst, src1, src2 | dst <= src1 >> src2 (unsigned) | Logic shift right |
