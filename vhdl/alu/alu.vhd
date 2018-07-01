@@ -39,8 +39,8 @@ architecture rtl of alu is
   signal s_and_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_bic_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_xor_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_minmax_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_set_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_minmax_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_shuf_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_rev_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ldhi_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -208,9 +208,9 @@ begin
         s_and_res when C_ALU_AND,
         s_bic_res when C_ALU_BIC,
         s_xor_res when C_ALU_XOR,
-        s_minmax_res when C_ALU_MIN | C_ALU_MAX,
         s_adder_result when C_ALU_ADD | C_ALU_SUB,
         s_set_res when C_ALU_SEQ | C_ALU_SNE | C_ALU_SLT | C_ALU_SLTU | C_ALU_SLE | C_ALU_SLEU,
+        s_minmax_res when C_ALU_MIN | C_ALU_MAX,
         s_shifter_res when C_ALU_LSR | C_ALU_ASR | C_ALU_LSL,
         s_shuf_res when C_ALU_SHUF,
         s_clz_res when C_ALU_CLZ,

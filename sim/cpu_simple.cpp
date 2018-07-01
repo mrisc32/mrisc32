@@ -496,6 +496,14 @@ uint32_t cpu_simple_t::run() {
         case EX_OP_SLEU:
           ex_result = (ex_in.src_b <= ex_in.src_a) ? 0xffffffffu : 0u;
           break;
+        case EX_OP_MIN:
+          ex_result = static_cast<uint32_t>(std::min(static_cast<int32_t>(ex_in.src_a),
+                                            static_cast<int32_t>(ex_in.src_b)));
+          break;
+        case EX_OP_MAX:
+          ex_result = static_cast<uint32_t>(std::max(static_cast<int32_t>(ex_in.src_a),
+                                            static_cast<int32_t>(ex_in.src_b)));
+          break;
         case EX_OP_ASR:
           ex_result = static_cast<uint32_t>(static_cast<int32_t>(ex_in.src_a) >>
                                             static_cast<int32_t>(ex_in.src_b));
@@ -508,14 +516,6 @@ uint32_t cpu_simple_t::run() {
           break;
         case EX_OP_SHUF:
           ex_result = shuf32(ex_in.src_a, ex_in.src_b);
-          break;
-        case EX_OP_MIN:
-          ex_result = static_cast<uint32_t>(std::min(static_cast<int32_t>(ex_in.src_a),
-                                            static_cast<int32_t>(ex_in.src_b)));
-          break;
-        case EX_OP_MAX:
-          ex_result = static_cast<uint32_t>(std::max(static_cast<int32_t>(ex_in.src_a),
-                                            static_cast<int32_t>(ex_in.src_b)));
           break;
         case EX_OP_CLZ:
           ex_result = clz32(ex_in.src_a);

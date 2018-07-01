@@ -31,12 +31,12 @@
 |SLTU| x | dst, src1, src2 | dst <= (src1 < src2) ? 0xffffffff : 0 | Set if less than (unsigned) |
 |SLE| x | dst, src1, src2 | dst <= (src1 <= src2) ? 0xffffffff : 0 | Set if less than or equal (signed) |
 |SLEU| x | dst, src1, src2 | dst <= (src1 <= src2) ? 0xffffffff : 0 | Set if less than or equal (unsigned) |
+|MIN| x | dst, src1, src2 | dst <= min(src1, src2) (signed) | Minimum value |
+|MAX| x | dst, src1, src2 | dst <= max(src1, src2) (signed) | Maximum value |
 |ASR| x | dst, src1, src2 | dst <= src1 >> src2 (signed) | Arithmetic shift right |
 |LSL| x | dst, src1, src2 | dst <= src1 << src2 | Logic shift left |
 |LSR| x | dst, src1, src2 | dst <= src1 >> src2 (unsigned) | Logic shift right |
 |SHUF| x | dst, src1, src2 | dst <= shuffle(src1, src2) | Shuffle bytes according to the shuffle descriptor in src2 (2) |
-|MIN| x | dst, src1, src2 | dst <= min(src1, src2) (signed) | Minimum value |
-|MAX| x | dst, src1, src2 | dst <= max(src1, src2) (signed) | Maximum value |
 |CLZ| x | dst, src1 | dst <= clz(src1) | Count leading zeros |
 |REV| x | dst, src1 | dst <= rev(src1) | Reverse bit order |
 |LDB| (1) | dst, src1, src2 | dst <= [src1 + src2] (byte) | Load signed byte |
