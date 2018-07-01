@@ -37,7 +37,7 @@ abs_diff_vectors:
   add     sp, sp, -4
   stw     vl, sp, 0
 
-  beq     s4, .done     ; n == 0, nothing to do
+  bz      s4, .done     ; n == 0, nothing to do
 
   ldhio   s10, 0x7fffffff
 
@@ -74,7 +74,7 @@ abs_diff_vectors_scalar:
   ; s3 = b
   ; s4 = n
 
-  beq     s4, .done    ; n == 0, nothing to do
+  bz      s4, .done    ; n == 0, nothing to do
 
   ldhio   s12, 0x7fffffff
 
@@ -89,7 +89,7 @@ abs_diff_vectors_scalar:
   stw     s9, s1, s11  ; c   = abs(a - b)
 
   add     s11, s11, 4  ; Increment the array offset
-  bne     s4, .loop
+  bnz     s4, .loop
 
 .done:
   j       lr

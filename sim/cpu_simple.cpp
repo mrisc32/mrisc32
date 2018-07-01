@@ -234,7 +234,7 @@ uint32_t cpu_simple_t::run() {
 
         // We terminate the simulation when we encounter an unconditional branch to the same PC
         // (i.e. infinite loop).
-        if (id_in.instr == 0x30000000) {
+        if (id_in.instr == 0x38f80000) {
           m_terminate = true;
         }
 
@@ -288,60 +288,63 @@ uint32_t cpu_simple_t::run() {
 
       // == BRANCH ==
 
-      const bool is_bcc = ((sclar_instr & 0x30000000u) == 0x30000000u) &&
-                          ((sclar_instr & 0x06000000u) != 0x06000000u);
-      const bool is_j = ((sclar_instr & 0x3f0001feu) == 0x00000070u);
+      const bool is_bcc = ((sclar_instr & 0x38000000u) == 0x30000000u);
+      const bool is_j = ((sclar_instr & 0x3e000000u) == 0x38000000u);
+      const bool is_subroutine_branch = ((sclar_instr & 0x3f000000u) == 0x39000000u);
       const bool is_branch = is_bcc || is_j;
-      const bool is_subroutine_branch =
-          is_branch && (((sclar_instr & 0x10000001u) == 0x00000001u) ||  // jl
-                        ((sclar_instr & 0x08000000u) == 0x08000000u));   // bl[cc]
 
-      // Branch source register is reg1 (for b[cc]/bl[cc] and jmp/jsr).
+      // Branch source register is reg1 (for b[cc] and j/jl/b/bl).
       const uint32_t branch_cond_reg = is_branch ? reg1 : REG_Z;
 
       // Read the branch/condition register.
       // TODO(m): We should share a register read-port with the other register reads further down.
       const uint32_t branch_cond_value = m_regs[branch_cond_reg];
 
-      // Evaluate condition (for b[cc]/bl[cc]).
-      const uint32_t condition = (sclar_instr >> 24u) & 0x00000037u;
+      // Evaluate condition (for b[cc]).
+      const uint32_t condition = (sclar_instr >> 24u) & 0x0000003fu;
       bool condition_satisfied = false;
       switch (condition) {
-        case 0x30u:  // beq/bleq
+        case 0x30u:  // bz
           condition_satisfied = (branch_cond_value == 0u);
           break;
-        case 0x31u:  // bne/blne
+        case 0x31u:  // bnz
           condition_satisfied = (branch_cond_value != 0u);
           break;
-        case 0x32u:  // bge/blge
+        case 0x32u:  // bao
+          condition_satisfied = (branch_cond_value == 0xffffffffu);
+          break;
+        case 0x33u:  // bnao
+          condition_satisfied = (branch_cond_value != 0xffffffffu);
+          break;
+        case 0x34u:  // blt
+          condition_satisfied = ((branch_cond_value & 0x80000000u) != 0u);
+          break;
+        case 0x35u:  // bge
           condition_satisfied = ((branch_cond_value & 0x80000000u) == 0u);
           break;
-        case 0x33u:  // bgt/blgt
-          condition_satisfied =
-              ((branch_cond_value & 0x80000000u) == 0u) && (branch_cond_value != 0u);
-          break;
-        case 0x34u:  // ble/blle
+        case 0x36u:  // ble
           condition_satisfied =
               ((branch_cond_value & 0x80000000u) != 0u) || (branch_cond_value == 0u);
           break;
-        case 0x35u:  // blt/bllt
-          condition_satisfied = ((branch_cond_value & 0x80000000u) != 0u);
+        case 0x37u:  // bgt
+          condition_satisfied =
+              ((branch_cond_value & 0x80000000u) == 0u) && (branch_cond_value != 0u);
           break;
       }
 
       bool branch_taken = false;
       uint32_t branch_target = 0u;
 
-      // b[cc]/bl[cc]?
+      // b[cc]?
       if (is_bcc) {
         branch_taken = condition_satisfied;
         branch_target = id_in.pc + (imm19 << 2u);
       }
 
-      // jmp/jsr?
+      // j/jl/b/bl?
       if (is_j) {
         branch_taken = true;
-        branch_target = branch_cond_value;
+        branch_target = branch_cond_value + (imm19 << 2u);
       }
 
       next_pc = branch_taken ? branch_target : (id_in.pc + 4u);
@@ -375,8 +378,7 @@ uint32_t cpu_simple_t::run() {
       const uint32_t src_reg_a = is_subroutine_branch ? REG_PC : (reg2_is_src ? reg2 : REG_Z);
       const uint32_t src_reg_b = reg3_is_src ? reg3 : REG_Z;
       const uint32_t src_reg_c = reg1_is_src ? reg1 : REG_Z;
-      const uint32_t dst_reg =
-          (is_subroutine_branch && branch_taken) ? REG_LR : (reg1_is_dst ? reg1 : REG_Z);
+      const uint32_t dst_reg = is_subroutine_branch ? REG_LR : (reg1_is_dst ? reg1 : REG_Z);
 
       // Determine EX operation.
       uint32_t ex_op = EX_OP_CPUID;
@@ -388,14 +390,14 @@ uint32_t cpu_simple_t::run() {
         ex_op = sclar_instr >> 24u;
       } else if (op_class_C) {
         switch (sclar_instr & 0x3f000000u) {
-          case 0x36000000u:  // ldhi
+          case 0x3a000000u:  // ldi
+            ex_op = EX_OP_OR;
+            break;
+          case 0x3b000000u:  // ldhi
             ex_op = EX_OP_LDHI;
             break;
-          case 0x37000000u:  // ldhio
+          case 0x3c000000u:  // ldhio
             ex_op = EX_OP_LDHIO;
-            break;
-          case 0x3e000000u:  // ldi
-            ex_op = EX_OP_OR;
             break;
         }
       }
@@ -483,6 +485,9 @@ uint32_t cpu_simple_t::run() {
         case EX_OP_CEQ:
           ex_result = (ex_in.src_b == ex_in.src_a) ? 0xffffffffu : 0u;
           break;
+        case EX_OP_CNE:
+          ex_result = (ex_in.src_b != ex_in.src_a) ? 0xffffffffu : 0u;
+          break;
         case EX_OP_CLT:
           ex_result = (static_cast<int32_t>(ex_in.src_b) < static_cast<int32_t>(ex_in.src_a))
                           ? 0xffffffffu
@@ -498,18 +503,18 @@ uint32_t cpu_simple_t::run() {
         case EX_OP_CLEU:
           ex_result = (ex_in.src_b <= ex_in.src_a) ? 0xffffffffu : 0u;
           break;
-        case EX_OP_SHUF:
-          ex_result = shuf32(ex_in.src_a, ex_in.src_b);
-          break;
-        case EX_OP_LSR:
-          ex_result = ex_in.src_a >> ex_in.src_b;
-          break;
         case EX_OP_ASR:
           ex_result = static_cast<uint32_t>(static_cast<int32_t>(ex_in.src_a) >>
                                             static_cast<int32_t>(ex_in.src_b));
           break;
         case EX_OP_LSL:
           ex_result = ex_in.src_a << ex_in.src_b;
+          break;
+        case EX_OP_LSR:
+          ex_result = ex_in.src_a >> ex_in.src_b;
+          break;
+        case EX_OP_SHUF:
+          ex_result = shuf32(ex_in.src_a, ex_in.src_b);
           break;
         case EX_OP_MIN:
           ex_result = static_cast<uint32_t>(std::min(static_cast<int32_t>(ex_in.src_a),

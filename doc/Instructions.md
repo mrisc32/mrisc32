@@ -27,14 +27,15 @@
 |SUB| x | dst, src1, src2 | dst <= src1 - src2 | Subtraction (note: src1 can be an immediate value) |
 |SLT| x | dst, src1, src2 | dst <= (src1 < src2) ? 1 : 0 | Set if less than (signed) |
 |SLTU| x | dst, src1, src2 | dst <= (src1 < src2) ? 1 : 0 | Set if less than (unsigned) |
-|CEQ| x | dst, src1, src2 | dst <= (src1 == src2) ? 0xffffffff : 0 | Compare if equal (signed) |
+|CEQ| x | dst, src1, src2 | dst <= (src1 == src2) ? 0xffffffff : 0 | Compare if equal |
+|CNE| x | dst, src1, src2 | dst <= (src1 != src2) ? 0xffffffff : 0 | Compare if not equal |
 |CLT| x | dst, src1, src2 | dst <= (src1 < src2) ? 0xffffffff : 0 | Compare if less than (signed) |
 |CLTU| x | dst, src1, src2 | dst <= (src1 < src2) ? 0xffffffff : 0 | Compare if less than (unsigned) |
 |CLE| x | dst, src1, src2 | dst <= (src1 <= src2) ? 0xffffffff : 0 | Compare less than or equal (signed) |
 |CLEU| x | dst, src1, src2 | dst <= (src1 <= src2) ? 0xffffffff : 0 | Compare less than or equal (unsigned) |
-|LSR| x | dst, src1, src2 | dst <= src1 >> src2 (unsigned) | Logic shift right |
 |ASR| x | dst, src1, src2 | dst <= src1 >> src2 (signed) | Arithmetic shift right |
 |LSL| x | dst, src1, src2 | dst <= src1 << src2 | Logic shift left |
+|LSR| x | dst, src1, src2 | dst <= src1 >> src2 (unsigned) | Logic shift right |
 |SHUF| x | dst, src1, src2 | dst <= shuffle(src1, src2) | Shuffle bytes according to the shuffle descriptor in src2 (2) |
 |MIN| x | dst, src1, src2 | dst <= min(src1, src2) (signed) | Minimum value |
 |MAX| x | dst, src1, src2 | dst <= max(src1, src2) (signed) | Maximum value |
@@ -62,18 +63,16 @@
 |---|---|---|---|---|
 |J|   | src1 | pc <= src1 | Jump to register address |
 |JL|   | src1 | lr <= pc+4, pc <= src1 | Jump to register address and link |
-|BEQ|   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 == 0 | Conditionally branch if equal to zero |
-|BNE|   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 != 0 | Conditionally branch if not equal to zero |
-|BGE|   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 >= 0 | Conditionally branch if greater than or equal to zero |
-|BGT|   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 > 0 | Conditionally branch if greater than zero |
-|BLE|   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 <= 0 | Conditionally branch if less than or equal to zero |
+|B|   | i19 | pc <= pc+signextend(i19)*4 | Unconditionally branch |
+|BL|   | i19 | lr <= pc+4, pc <= pc+signextend(i19)*4 | Unconditionally branch and link |
+|BZ|   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 == 0 | Conditionally branch if equal to zero |
+|BNZ|   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 != 0 | Conditionally branch if not equal to zero |
+|BAO|   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 == 0xffffffff | Conditionally branch if all ones (all bits = 1) |
+|BNAO|   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 != 0xffffffff | Conditionally branch if not all ones |
 |BLT|   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 < 0 | Conditionally branch if less than zero |
-|BLEQ|   | src1, i19 | lr <= pc+4, pc <= pc+signextend(i19)*4 if src1 == 0 | Conditionally branch and link if equal to zero |
-|BLNE|   | src1, i19 | lr <= pc+4, pc <= pc+signextend(i19)*4 if src1 != 0 | Conditionally branch and link if not equal to zero |
-|BLGE|   | src1, i19 | lr <= pc+4, pc <= pc+signextend(i19)*4 if src1 >= 0 | Conditionally branch and link if greater than or equal to zero |
-|BLGT|   | src1, i19 | lr <= pc+4, pc <= pc+signextend(i19)*4 if src1 > 0 | Conditionally branch and link if greater than zero |
-|BLLE|   | src1, i19 | lr <= pc+4, pc <= pc+signextend(i19)*4 if src1 <= 0 | Conditionally branch and link if less than or equal to zero |
-|BLLT|   | src1, i19 | lr <= pc+4, pc <= pc+signextend(i19)*4 if src1 < 0 | Conditionally branch and link if less than zero |
+|BGE|   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 >= 0 | Conditionally branch if greater than or equal to zero |
+|BLE|   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 <= 0 | Conditionally branch if less than or equal to zero |
+|BGT|   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 > 0 | Conditionally branch if greater than zero |
 
 ## Multiply and divide instructions
 

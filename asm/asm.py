@@ -257,31 +257,31 @@ _OPCODES = {
                    [0xc0000019, _VREG1, _VREG2, _VREG3],
                    [0x19000000, _REG1, _REG2, _IMM14],
                    [0x99000000, _VREG1, _VREG2, _IMM14]],
-        'CLT':    [[0x0000001a, _REG1, _REG3, _REG2],
-                   [0x8000001a, _VREG1, _REG3, _VREG2],
-                   [0xc000001a, _VREG1, _VREG3, _VREG2],
-                   [0x1a000000, _REG1, _IMM14, _REG2],
-                   [0x9a000000, _VREG1, _IMM14, _VREG2]],
-        'CLTU':   [[0x0000001b, _REG1, _REG3, _REG2],
+        'CNE':    [[0x0000001a, _REG1, _REG2, _REG3],
+                   [0x8000001a, _VREG1, _VREG2, _REG3],
+                   [0xc000001a, _VREG1, _VREG2, _VREG3],
+                   [0x1a000000, _REG1, _REG2, _IMM14],
+                   [0x9a000000, _VREG1, _VREG2, _IMM14]],
+        'CLT':    [[0x0000001b, _REG1, _REG3, _REG2],
                    [0x8000001b, _VREG1, _REG3, _VREG2],
                    [0xc000001b, _VREG1, _VREG3, _VREG2],
                    [0x1b000000, _REG1, _IMM14, _REG2],
                    [0x9b000000, _VREG1, _IMM14, _VREG2]],
-        'CLE':    [[0x0000001c, _REG1, _REG3, _REG2],
+        'CLTU':   [[0x0000001c, _REG1, _REG3, _REG2],
                    [0x8000001c, _VREG1, _REG3, _VREG2],
                    [0xc000001c, _VREG1, _VREG3, _VREG2],
                    [0x1c000000, _REG1, _IMM14, _REG2],
                    [0x9c000000, _VREG1, _IMM14, _VREG2]],
-        'CLEU':   [[0x0000001d, _REG1, _REG3, _REG2],
+        'CLE':    [[0x0000001d, _REG1, _REG3, _REG2],
                    [0x8000001d, _VREG1, _REG3, _VREG2],
                    [0xc000001d, _VREG1, _VREG3, _VREG2],
                    [0x1d000000, _REG1, _IMM14, _REG2],
                    [0x9d000000, _VREG1, _IMM14, _VREG2]],
-        'LSR':    [[0x0000001e, _REG1, _REG2, _REG3],
-                   [0x8000001e, _VREG1, _VREG2, _REG3],
-                   [0xc000001e, _VREG1, _VREG2, _VREG3],
-                   [0x1e000000, _REG1, _REG2, _IMM14],
-                   [0x9e000000, _VREG1, _VREG2, _IMM14]],
+        'CLEU':   [[0x0000001e, _REG1, _REG3, _REG2],
+                   [0x8000001e, _VREG1, _REG3, _VREG2],
+                   [0xc000001e, _VREG1, _VREG3, _VREG2],
+                   [0x1e000000, _REG1, _IMM14, _REG2],
+                   [0x9e000000, _VREG1, _IMM14, _VREG2]],
         'ASR':    [[0x0000001f, _REG1, _REG2, _REG3],
                    [0x8000001f, _VREG1, _VREG2, _REG3],
                    [0xc000001f, _VREG1, _VREG2, _VREG3],
@@ -292,21 +292,26 @@ _OPCODES = {
                    [0xc0000020, _VREG1, _VREG2, _VREG3],
                    [0x20000000, _REG1, _REG2, _IMM14],
                    [0xa0000000, _VREG1, _VREG2, _IMM14]],
-        'SHUF':   [[0x00000021, _REG1, _REG2, _REG3],
+        'LSR':    [[0x00000021, _REG1, _REG2, _REG3],
                    [0x80000021, _VREG1, _VREG2, _REG3],
                    [0xc0000021, _VREG1, _VREG2, _VREG3],
                    [0x21000000, _REG1, _REG2, _IMM14],
                    [0xa1000000, _VREG1, _VREG2, _IMM14]],
-        'MIN':    [[0x00000022, _REG1, _REG2, _REG3],
+        'SHUF':   [[0x00000022, _REG1, _REG2, _REG3],
                    [0x80000022, _VREG1, _VREG2, _REG3],
                    [0xc0000022, _VREG1, _VREG2, _VREG3],
                    [0x22000000, _REG1, _REG2, _IMM14],
                    [0xa2000000, _VREG1, _VREG2, _IMM14]],
-        'MAX':    [[0x00000023, _REG1, _REG2, _REG3],
+        'MIN':    [[0x00000023, _REG1, _REG2, _REG3],
                    [0x80000023, _VREG1, _VREG2, _REG3],
                    [0xc0000023, _VREG1, _VREG2, _VREG3],
                    [0x23000000, _REG1, _REG2, _IMM14],
                    [0xa3000000, _VREG1, _VREG2, _IMM14]],
+        'MAX':    [[0x00000024, _REG1, _REG2, _REG3],
+                   [0x80000024, _VREG1, _VREG2, _REG3],
+                   [0xc0000024, _VREG1, _VREG2, _VREG3],
+                   [0x24000000, _REG1, _REG2, _IMM14],
+                   [0xa4000000, _VREG1, _VREG2, _IMM14]],
 
         # Bit handling.
         # Note: These op-codes are put in the 0x31+ range since they are not
@@ -322,10 +327,6 @@ _OPCODES = {
         'MXS':    [[0x00000051, _REG1, _XREG2]],         # Move auxiliary->scalar (reg3 = z)
         'MSV':    [[0x00000052, _VREG1, _REG2, _REG3]],  # Move scalar->vector element
         'MVS':    [[0x00000053, _REG1, _VREG2, _REG3]],  # Move vector element->scalar
-
-        # Jump to register address.
-        'J':      [[0x00000070, _REG1]],           # 2nd & 3rd regs are always z
-        'JL':     [[0x00000071, _REG1]],           # 2nd & 3rd regs are always z
 
         # Multiplication operations.
         'MUL':    [[0x00000080, _REG1, _REG2, _REG3],
@@ -394,28 +395,33 @@ _OPCODES = {
 
         # == C ==
 
-        # Branch ops.
-        'BEQ':    [[0x30000000, _REG1, _PCREL19x4]],
-        'BNE':    [[0x31000000, _REG1, _PCREL19x4]],
-        'BGE':    [[0x32000000, _REG1, _PCREL19x4]],
-        'BGT':    [[0x33000000, _REG1, _PCREL19x4]],
-        'BLE':    [[0x34000000, _REG1, _PCREL19x4]],
-        'BLT':    [[0x35000000, _REG1, _PCREL19x4]],
+        # Conditional branches.
+        'BZ':     [[0x30000000, _REG1, _PCREL19x4]],
+        'BNZ':    [[0x31000000, _REG1, _PCREL19x4]],
+        'BAO':    [[0x32000000, _REG1, _PCREL19x4]],
+        'BNAO':   [[0x33000000, _REG1, _PCREL19x4]],
+        'BLT':    [[0x34000000, _REG1, _PCREL19x4]],
+        'BGE':    [[0x35000000, _REG1, _PCREL19x4]],
+        'BLE':    [[0x36000000, _REG1, _PCREL19x4]],
+        'BGT':    [[0x37000000, _REG1, _PCREL19x4]],
 
-        'BLEQ':   [[0x38000000, _REG1, _PCREL19x4]],
-        'BLNE':   [[0x39000000, _REG1, _PCREL19x4]],
-        'BLGE':   [[0x3a000000, _REG1, _PCREL19x4]],
-        'BLGT':   [[0x3b000000, _REG1, _PCREL19x4]],
-        'BLLE':   [[0x3c000000, _REG1, _PCREL19x4]],
-        'BLLT':   [[0x3d000000, _REG1, _PCREL19x4]],
+        # Unconditional branches and jumps.
+        # Note: With this encoding we could support J/JL REG+OFFSET19x4 for any
+        # register, but right now we only support offsets when REG is PC (and
+        # call the instruction B/BL instead). For all other registers, the offset
+        # is forcibly zero.
+        'J':      [[0x38000000, _REG1]],        # Jump to register address
+        'B':      [[0x38f80000, _PCREL19x4]],   # Branch unconditionally
+        'JL':     [[0x39000000, _REG1]],        # Jump and link
+        'BL':     [[0x39f80000, _PCREL19x4]],   # Branch and link
 
         # Load immediate.
-        'LDHI':   [[0x36000000, _REG1, _IMM19HI],
-                   [0xb6000000, _VREG1, _IMM19HI]],
-        'LDHIO':  [[0x37000000, _REG1, _IMM19HIO],
-                   [0xb7000000, _VREG1, _IMM19HIO]],
-        'LDI':    [[0x3e000000, _REG1, _IMM19],
-                   [0xbe000000, _VREG1, _IMM19]],
+        'LDI':    [[0x3a000000, _REG1, _IMM19],
+                   [0xba000000, _VREG1, _IMM19]],
+        'LDHI':   [[0x3b000000, _REG1, _IMM19HI],
+                   [0xbb000000, _VREG1, _IMM19HI]],
+        'LDHIO':  [[0x3c000000, _REG1, _IMM19HIO],
+                   [0xbc000000, _VREG1, _IMM19HIO]],
 
 
         # ---------------------------------------------------------------------
@@ -429,12 +435,6 @@ _OPCODES = {
         'MOV':    [[0x00000010, _REG1, _REG2],
                    [0x80000010, _VREG1, _REG2],
                    [0xc0000010, _VREG1, _VREG2]],
-
-        # Alias for: BEQ Z, _PCREL19x4
-        'B':      [[0x30000000, _PCREL19x4]],
-
-        # Alias for: BLEQ Z, _PCREL19x4
-        'BL':     [[0x38000000, _PCREL19x4]],
 
         # Alias for: ADD _REG1, PC, offset
         'LEA':    [[0x1507c000, _REG1, _PCREL14]],

@@ -35,7 +35,7 @@ _puts:
 .loop:
   ldub   s1, s16, s17
   add    s17, s17, 1
-  beq    s1, .eos
+  bz     s1, .eos
   bl     _putc
   b      .loop
 
@@ -92,12 +92,12 @@ _mul32:
   and    s4, s2, 1
   ldi    s3, 0
 .loop:
-  beq    s4, .no_add
+  bz     s4, .no_add
   add    s3, s3, s1
 .no_add:
   lsr    s2, s2, 1
   and    s4, s2, 1
-  bne    s2, .loop
+  bnz    s2, .loop
 
   or     s1, s3, z    ; s1 = result
   j      lr

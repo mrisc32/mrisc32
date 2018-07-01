@@ -83,7 +83,7 @@ begin
     variable v_write_mask : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
     -- How many CPU cycles should we simulate?
-    constant C_TEST_CYCLES : integer := 100000000;
+    constant C_TEST_CYCLES : integer := 20000000;
 
     -- Helper function for reading one word from a binary file.
     function read_word(file f : T_CHAR_FILE) return std_logic_vector is
@@ -156,7 +156,7 @@ begin
       else
         v_data := X"00000000";  -- NOP
       end if;
-      if v_data = X"30000000" then  -- Infinite branch-to-same-PC loop => exit.
+      if v_data = X"38f80000" then  -- Infinite branch-to-same-PC loop => exit.
         report "Simulation finished after " & integer'image(i) & " cycles.";
         exit;
       end if;

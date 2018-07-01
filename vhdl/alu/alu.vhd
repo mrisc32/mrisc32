@@ -53,11 +53,12 @@ architecture rtl of alu is
   signal s_adder_carry_out : std_logic;
 
   -- Signals for the comparator.
-  signal s_comparator_eq : std_logic;
-  signal s_comparator_lt : std_logic;
-  signal s_comparator_le : std_logic;
-  signal s_comparator_ltu : std_logic;
-  signal s_comparator_leu : std_logic;
+  signal s_compare_eq : std_logic;
+  signal s_compare_ne : std_logic;
+  signal s_compare_lt : std_logic;
+  signal s_compare_le : std_logic;
+  signal s_compare_ltu : std_logic;
+  signal s_compare_leu : std_logic;
   signal s_cmp_bit : std_logic;
   signal s_is_max_op : std_logic;
 
@@ -123,7 +124,7 @@ begin
 
   -- C_ALU_LDHI, C_ALU_LDHIO
   s_ldhi_res(C_WORD_SIZE-1 downto C_WORD_SIZE-19) <= i_src_a(18 downto 0);
-  s_ldhi_res(C_WORD_SIZE-20 downto 0) <= (others => i_op(1));  -- C_ALU_LDHI="000000001", C_ALU_LDHIO="000000010"
+  s_ldhi_res(C_WORD_SIZE-20 downto 0) <= (others => i_op(1));  -- C_ALU_LDHI="000001", C_ALU_LDHIO="000010"
 
   -- C_ALU_CLZ
   AluCLZ32: entity work.clz32
@@ -157,29 +158,31 @@ begin
       '0' when others;
 
   -- Camparison results.
-  s_comparator_eq <= '1' when i_src_a = i_src_b else '0';
-  s_comparator_lt <= s_adder_result(C_WORD_SIZE-1);
-  s_comparator_le <= s_comparator_eq or s_comparator_lt;
-  s_comparator_ltu <= not s_adder_carry_out;
-  s_comparator_leu <= s_comparator_eq or s_comparator_ltu;
+  s_compare_eq <= '1' when i_src_a = i_src_b else '0';
+  s_compare_ne <= not s_compare_eq;
+  s_compare_lt <= s_adder_result(C_WORD_SIZE-1);
+  s_compare_le <= s_compare_eq or s_compare_lt;
+  s_compare_ltu <= not s_adder_carry_out;
+  s_compare_leu <= s_compare_eq or s_compare_ltu;
 
   -- Set operations.
   s_slt_res(C_WORD_SIZE-1 downto 1) <= (others => '0');
-  s_slt_res(0) <= s_comparator_ltu when i_op = C_ALU_SLTU else s_comparator_lt;
+  s_slt_res(0) <= s_compare_ltu when i_op = C_ALU_SLTU else s_compare_lt;
 
   -- Min/Max operations.
   s_is_max_op <= '1' when i_op = C_ALU_MAX else '0';
-  s_minmax_res <= i_src_a when s_comparator_lt = s_is_max_op else i_src_b;
+  s_minmax_res <= i_src_a when s_compare_lt = s_is_max_op else i_src_b;
 
 
   -- Compare operations.
   CmpMux: with i_op select
     s_cmp_bit <=
-      s_comparator_eq when C_ALU_CEQ,
-      s_comparator_lt when C_ALU_CLT,
-      s_comparator_ltu when C_ALU_CLTU,
-      s_comparator_le when C_ALU_CLE,
-      s_comparator_leu when C_ALU_CLEU,
+      s_compare_eq when C_ALU_CEQ,
+      s_compare_ne when C_ALU_CNE,
+      s_compare_lt when C_ALU_CLT,
+      s_compare_ltu when C_ALU_CLTU,
+      s_compare_le when C_ALU_CLE,
+      s_compare_leu when C_ALU_CLEU,
       '0' when others;
   s_cmp_res <= (others => s_cmp_bit);
 
@@ -190,8 +193,8 @@ begin
 
   AluShifter: entity work.shift32
     port map (
-      i_right => i_op(1),       -- '1' for C_ALU_LSR and C_ALU_ASR, '0' for C_ALU_LSL
-      i_arithmetic => i_op(0),  -- '1' for C_ALU_ASR, '0' for C_ALU_LSR and C_ALU_LSL
+      i_right => i_op(0),       -- '1' for C_ALU_LSR and C_ALU_ASR, '0' for C_ALU_LSL
+      i_arithmetic => i_op(1),  -- '1' for C_ALU_ASR, '0' for C_ALU_LSR and C_ALU_LSL
       i_src => i_src_a,
       i_shift => i_src_b(4 downto 0),
       o_result => s_shifter_res
@@ -213,7 +216,7 @@ begin
         s_minmax_res when C_ALU_MIN | C_ALU_MAX,
         s_adder_result when C_ALU_ADD | C_ALU_SUB,
         s_slt_res when C_ALU_SLT | C_ALU_SLTU,
-        s_cmp_res when C_ALU_CEQ | C_ALU_CLT | C_ALU_CLTU | C_ALU_CLE | C_ALU_CLEU,
+        s_cmp_res when C_ALU_CEQ | C_ALU_CNE | C_ALU_CLT | C_ALU_CLTU | C_ALU_CLE | C_ALU_CLEU,
         s_shifter_res when C_ALU_LSR | C_ALU_ASR | C_ALU_LSL,
         s_shuf_res when C_ALU_SHUF,
         s_clz_res when C_ALU_CLZ,

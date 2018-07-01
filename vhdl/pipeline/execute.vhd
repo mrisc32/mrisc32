@@ -108,12 +108,6 @@ architecture rtl of execute is
   signal s_mem_byte_mask : std_logic_vector(C_WORD_SIZE/8-1 downto 0);
   signal s_mem_store_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
-  -- Signals for handling bubbling.
-  signal s_bubble : std_logic;
-  signal s_mem_op_masked : T_MEM_OP;
-  signal s_mem_en_masked : std_logic;
-  signal s_dst_reg_masked : T_DST_REG;
-
   -- Branch/PC correction signals.
   signal s_branch_target : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_pc_plus_4 : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -211,17 +205,6 @@ begin
   s_ex1_next_result <= s_alu_result;
   s_ex1_next_result_ready <= (i_alu_en and (not i_mem_en));
 
-  -- Should we send a bubble down the pipeline?
-  -- We need to bubble if there was a branch misprediction (important for not writing to LR for
-  -- conditional link branches)!
-  s_bubble <= s_mispredicted_pc;
-  s_mem_op_masked <= i_mem_op when s_bubble = '0' else (others => '0');
-  s_mem_en_masked <= i_mem_en and not s_bubble;
-  s_dst_reg_masked.is_target <= i_dst_reg.is_target when s_bubble = '0' else '0';
-  s_dst_reg_masked.reg <= i_dst_reg.reg when s_bubble = '0' else (others => '0');
-  s_dst_reg_masked.element <= i_dst_reg.element when s_bubble = '0' else (others => '0');
-  s_dst_reg_masked.is_vector <= i_dst_reg.is_vector when s_bubble = '0' else '0';
-
   -- Outputs to the EX2 stage (sync).
   process(i_clk, i_rst)
   begin
@@ -239,21 +222,21 @@ begin
       s_ex1_dst_reg.is_vector <= '0';
     elsif rising_edge(i_clk) then
       if s_stall_ex1 = '0' then
-        s_ex1_mem_op <= s_mem_op_masked;
-        s_ex1_mem_enable <= s_mem_en_masked;
-        s_ex1_mem_we <= s_mem_op_masked(3);
+        s_ex1_mem_op <= i_mem_op;
+        s_ex1_mem_enable <= i_mem_en;
+        s_ex1_mem_we <= i_mem_op(3);
         s_ex1_mem_byte_mask <= s_mem_byte_mask;
         s_ex1_result <= s_ex1_next_result;
         s_ex1_result_ready <= s_ex1_next_result_ready;
         s_ex1_store_data <= s_mem_store_data;
-        s_ex1_dst_reg <= s_dst_reg_masked;
+        s_ex1_dst_reg <= i_dst_reg;
       end if;
     end if;
   end process;
 
   -- Output the EX1 result to operand forwarding logic.
   -- Async:
-  o_ex1_next_dst_reg <= s_dst_reg_masked;
+  o_ex1_next_dst_reg <= i_dst_reg;
   o_ex1_next_result <= s_ex1_next_result;
   o_ex1_next_result_ready <= s_ex1_next_result_ready;
 

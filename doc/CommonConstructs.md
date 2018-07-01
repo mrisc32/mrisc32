@@ -14,8 +14,6 @@
 | Swap high and low halfwords | SHUF rd,ra,0x021a |
 | Invert all bits | NOR rd,ra,ra |
 | Compare and branch | SUB tmp,ra,rb<br>B[cond] tmp,branch\_target |
-| Unconditional branch | BEQ Z,branch\_target |
-| Unconditional subroutine branch | BLEQ Z,branch\_target |
 | Return from subroutine | J LR |
 | Push to stack | ADD SP,SP,-N<br>STW ra1,SP,0<br>STW ra2,SP,4<br>... |
 | Pop from stack | LDW rd1,SP,0<br>LDW rd2,SP,4<br>...<br>ADD SP,SP,N |
