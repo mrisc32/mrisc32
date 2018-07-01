@@ -25,10 +25,10 @@ end comparator_tb;
 
 architecture behavioral of comparator_tb is
   signal s_src : std_logic_vector(7 downto 0);
-  signal s_z : std_logic;
+  signal s_z  : std_logic;
   signal s_nz : std_logic;
-  signal s_ao : std_logic;
-  signal s_nao : std_logic;
+  signal s_s  : std_logic;
+  signal s_ns : std_logic;
   signal s_lt : std_logic;
   signal s_ge : std_logic;
   signal s_le : std_logic;
@@ -42,8 +42,8 @@ begin
       i_src => s_src,
       o_z => s_z,
       o_nz => s_nz,
-      o_ao => s_ao,
-      o_nao => s_nao,
+      o_s => s_s,
+      o_ns => s_ns,
       o_lt => s_lt,
       o_ge => s_ge,
       o_le => s_le,
@@ -59,8 +59,8 @@ begin
       -- Expected outputs
       z : std_logic;
       nz : std_logic;
-      ao : std_logic;
-      nao : std_logic;
+      s : std_logic;
+      ns : std_logic;
       lt : std_logic;
       ge : std_logic;
       le : std_logic;
@@ -88,10 +88,10 @@ begin
         report "Bad Z value" severity error;
       assert s_nz = patterns(i).nz
         report "Bad NZ value" severity error;
-      assert s_ao = patterns(i).ao
-        report "Bad AO value" severity error;
-      assert s_nao = patterns(i).nao
-        report "Bad NAO value" severity error;
+      assert s_s = patterns(i).s
+        report "Bad S value" severity error;
+      assert s_ns = patterns(i).ns
+        report "Bad NS value" severity error;
       assert s_lt = patterns(i).lt
         report "Bad LT value" severity error;
       assert s_ge = patterns(i).ge

@@ -121,8 +121,8 @@ architecture rtl of decode is
   -- Branch condition signals.
   signal s_branch_cond_z : std_logic;
   signal s_branch_cond_nz : std_logic;
-  signal s_branch_cond_ao : std_logic;
-  signal s_branch_cond_nao : std_logic;
+  signal s_branch_cond_s : std_logic;
+  signal s_branch_cond_ns : std_logic;
   signal s_branch_cond_lt : std_logic;
   signal s_branch_cond_ge : std_logic;
   signal s_branch_cond_le : std_logic;
@@ -259,10 +259,10 @@ begin
     generic map (WIDTH => C_WORD_SIZE)
     port map (
       i_src => s_branch_reg_data,
-      o_z => s_branch_cond_z,
+      o_z  => s_branch_cond_z,
       o_nz => s_branch_cond_nz,
-      o_ao => s_branch_cond_ao,
-      o_nao => s_branch_cond_nao,
+      o_s  => s_branch_cond_s,
+      o_ns => s_branch_cond_ns,
       o_lt => s_branch_cond_lt,
       o_ge => s_branch_cond_ge,
       o_le => s_branch_cond_le,
@@ -271,14 +271,14 @@ begin
 
   BranchCondMux: with s_op_high(2 downto 0) select
     s_branch_cond_true <=
-        s_branch_cond_z   when "000",  -- BZ
-        s_branch_cond_nz  when "001",  -- BNZ
-        s_branch_cond_ao  when "010",  -- BAO
-        s_branch_cond_nao when "011",  -- BNAO
-        s_branch_cond_lt  when "100",  -- BLT
-        s_branch_cond_ge  when "101",  -- BGE
-        s_branch_cond_le  when "110",  -- BLE
-        s_branch_cond_gt  when "111",  -- BGT
+        s_branch_cond_z  when "000",  -- BZ
+        s_branch_cond_nz when "001",  -- BNZ
+        s_branch_cond_s  when "010",  -- BS
+        s_branch_cond_ns when "011",  -- BNS
+        s_branch_cond_lt when "100",  -- BLT
+        s_branch_cond_ge when "101",  -- BGE
+        s_branch_cond_le when "110",  -- BLE
+        s_branch_cond_gt when "111",  -- BGT
         '0' when others;
 
   s_branch_is_taken <= s_is_unconditional_branch or (s_is_conditional_branch and s_branch_cond_true);

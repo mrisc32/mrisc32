@@ -25,14 +25,12 @@
 |XOR| x | dst, src1, src2 | dst <= src1 ^ src2 | Bitwise exclusive or |
 |ADD| x | dst, src1, src2 | dst <= src1 + src2 | Addition |
 |SUB| x | dst, src1, src2 | dst <= src1 - src2 | Subtraction (note: src1 can be an immediate value) |
-|SLT| x | dst, src1, src2 | dst <= (src1 < src2) ? 1 : 0 | Set if less than (signed) |
-|SLTU| x | dst, src1, src2 | dst <= (src1 < src2) ? 1 : 0 | Set if less than (unsigned) |
-|CEQ| x | dst, src1, src2 | dst <= (src1 == src2) ? 0xffffffff : 0 | Compare if equal |
-|CNE| x | dst, src1, src2 | dst <= (src1 != src2) ? 0xffffffff : 0 | Compare if not equal |
-|CLT| x | dst, src1, src2 | dst <= (src1 < src2) ? 0xffffffff : 0 | Compare if less than (signed) |
-|CLTU| x | dst, src1, src2 | dst <= (src1 < src2) ? 0xffffffff : 0 | Compare if less than (unsigned) |
-|CLE| x | dst, src1, src2 | dst <= (src1 <= src2) ? 0xffffffff : 0 | Compare less than or equal (signed) |
-|CLEU| x | dst, src1, src2 | dst <= (src1 <= src2) ? 0xffffffff : 0 | Compare less than or equal (unsigned) |
+|SEQ| x | dst, src1, src2 | dst <= (src1 == src2) ? 0xffffffff : 0 | Set if equal |
+|SNE| x | dst, src1, src2 | dst <= (src1 != src2) ? 0xffffffff : 0 | Set if not equal |
+|SLT| x | dst, src1, src2 | dst <= (src1 < src2) ? 0xffffffff : 0 | Set if less than (signed) |
+|SLTU| x | dst, src1, src2 | dst <= (src1 < src2) ? 0xffffffff : 0 | Set if less than (unsigned) |
+|SLE| x | dst, src1, src2 | dst <= (src1 <= src2) ? 0xffffffff : 0 | Set if less than or equal (signed) |
+|SLEU| x | dst, src1, src2 | dst <= (src1 <= src2) ? 0xffffffff : 0 | Set if less than or equal (unsigned) |
 |ASR| x | dst, src1, src2 | dst <= src1 >> src2 (signed) | Arithmetic shift right |
 |LSL| x | dst, src1, src2 | dst <= src1 << src2 | Logic shift left |
 |LSR| x | dst, src1, src2 | dst <= src1 >> src2 (unsigned) | Logic shift right |
@@ -67,8 +65,8 @@
 |BL|   | i19 | lr <= pc+4, pc <= pc+signextend(i19)*4 | Unconditionally branch and link |
 |BZ|   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 == 0 | Conditionally branch if equal to zero |
 |BNZ|   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 != 0 | Conditionally branch if not equal to zero |
-|BAO|   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 == 0xffffffff | Conditionally branch if all ones (all bits = 1) |
-|BNAO|   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 != 0xffffffff | Conditionally branch if not all ones |
+|BS|   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 == 0xffffffff | Conditionally branch if set (all bits = 1) |
+|BNS|   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 != 0xffffffff | Conditionally branch if not set (at least one bit = 0) |
 |BLT|   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 < 0 | Conditionally branch if less than zero |
 |BGE|   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 >= 0 | Conditionally branch if greater than or equal to zero |
 |BLE|   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 <= 0 | Conditionally branch if less than or equal to zero |
