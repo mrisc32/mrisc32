@@ -29,6 +29,7 @@ This is an experimental, custom 32-bit RISC/Vector CPU.
 * Vector operations use a Cray-like model:
   - Vector operations are variable length (1-*N* elements).
   - Most integer and floating point instructions come in both scalar and vector variants.
+* In addition to vector operations, there are also packed operations that can improve performance for certain data types.
 * There is currently no HW support for 64-bit floating point operations (that is left for a 64-bit version of the ISA).
 
 
@@ -37,6 +38,7 @@ This is an experimental, custom 32-bit RISC/Vector CPU.
 * [Registers](doc/Registers.md)
 * [Instructions](doc/Instructions.md)
 * [Vector design](doc/VectorDesign.md)
+* [Packed operations](doc/PackedOperations.md)
 * [Common constructs](doc/CommonConstructs.md)
 
 
