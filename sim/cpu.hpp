@@ -78,8 +78,6 @@ protected:
   static const uint32_t EX_OP_XOR = 0x14u;
   static const uint32_t EX_OP_ADD = 0x15u;
   static const uint32_t EX_OP_SUB = 0x16u;
-  static const uint32_t EX_OP_SLT = 0x17u;
-  static const uint32_t EX_OP_SLTU = 0x18u;
   static const uint32_t EX_OP_CEQ = 0x19u;
   static const uint32_t EX_OP_CNE = 0x1au;
   static const uint32_t EX_OP_CLT = 0x1bu;

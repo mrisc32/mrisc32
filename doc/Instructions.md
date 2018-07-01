@@ -25,8 +25,6 @@
 |XOR| x | dst, src1, src2 | dst <= src1 ^ src2 | Bitwise exclusive or |
 |ADD| x | dst, src1, src2 | dst <= src1 + src2 | Addition |
 |SUB| x | dst, src1, src2 | dst <= src1 - src2 | Subtraction (note: src1 can be an immediate value) |
-|SLT| x | dst, src1, src2 | dst <= (src1 < src2) ? 1 : 0 | Set if less than (signed) |
-|SLTU| x | dst, src1, src2 | dst <= (src1 < src2) ? 1 : 0 | Set if less than (unsigned) |
 |CEQ| x | dst, src1, src2 | dst <= (src1 == src2) ? 0xffffffff : 0 | Compare if equal |
 |CNE| x | dst, src1, src2 | dst <= (src1 != src2) ? 0xffffffff : 0 | Compare if not equal |
 |CLT| x | dst, src1, src2 | dst <= (src1 < src2) ? 0xffffffff : 0 | Compare if less than (signed) |

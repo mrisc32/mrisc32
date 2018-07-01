@@ -30,7 +30,7 @@ entity alu is
       o_result : out std_logic_vector(C_WORD_SIZE-1 downto 0)  -- ALU result
     );
 end;
- 
+
 architecture rtl of alu is
   -- Intermediate (concurrent) operation results.
   signal s_cpuid_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -40,7 +40,6 @@ architecture rtl of alu is
   signal s_bic_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_xor_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_minmax_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_slt_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_cmp_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_shuf_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_rev_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -154,7 +153,7 @@ begin
   -- Select if we're doing addition or subtraction.
   NegAdderAMux: with i_op select
     s_adder_subtract <=
-      '1' when C_ALU_SUB | C_ALU_SLT | C_ALU_SLTU | C_ALU_CLT | C_ALU_CLTU | C_ALU_CLE | C_ALU_CLEU | C_ALU_MIN | C_ALU_MAX,
+      '1' when C_ALU_SUB | C_ALU_CLT | C_ALU_CLTU | C_ALU_CLE | C_ALU_CLEU | C_ALU_MIN | C_ALU_MAX,
       '0' when others;
 
   -- Camparison results.
@@ -164,10 +163,6 @@ begin
   s_compare_le <= s_compare_eq or s_compare_lt;
   s_compare_ltu <= not s_adder_carry_out;
   s_compare_leu <= s_compare_eq or s_compare_ltu;
-
-  -- Set operations.
-  s_slt_res(C_WORD_SIZE-1 downto 1) <= (others => '0');
-  s_slt_res(0) <= s_compare_ltu when i_op = C_ALU_SLTU else s_compare_lt;
 
   -- Min/Max operations.
   s_is_max_op <= '1' when i_op = C_ALU_MAX else '0';
@@ -215,7 +210,6 @@ begin
         s_xor_res when C_ALU_XOR,
         s_minmax_res when C_ALU_MIN | C_ALU_MAX,
         s_adder_result when C_ALU_ADD | C_ALU_SUB,
-        s_slt_res when C_ALU_SLT | C_ALU_SLTU,
         s_cmp_res when C_ALU_CEQ | C_ALU_CNE | C_ALU_CLT | C_ALU_CLTU | C_ALU_CLE | C_ALU_CLEU,
         s_shifter_res when C_ALU_LSR | C_ALU_ASR | C_ALU_LSL,
         s_shuf_res when C_ALU_SHUF,

@@ -83,8 +83,7 @@ package common is
   constant C_ALU_XOR   : T_ALU_OP := "010100";
   constant C_ALU_ADD   : T_ALU_OP := "010101";
   constant C_ALU_SUB   : T_ALU_OP := "010110";
-  constant C_ALU_SLT   : T_ALU_OP := "010111";
-  constant C_ALU_SLTU  : T_ALU_OP := "011000";
+
   constant C_ALU_CEQ   : T_ALU_OP := "011001";
   constant C_ALU_CNE   : T_ALU_OP := "011010";
   constant C_ALU_CLT   : T_ALU_OP := "011011";
