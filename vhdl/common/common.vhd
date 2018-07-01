@@ -84,12 +84,12 @@ package common is
   constant C_ALU_ADD   : T_ALU_OP := "010101";
   constant C_ALU_SUB   : T_ALU_OP := "010110";
 
-  constant C_ALU_CEQ   : T_ALU_OP := "011001";
-  constant C_ALU_CNE   : T_ALU_OP := "011010";
-  constant C_ALU_CLT   : T_ALU_OP := "011011";
-  constant C_ALU_CLTU  : T_ALU_OP := "011100";
-  constant C_ALU_CLE   : T_ALU_OP := "011101";
-  constant C_ALU_CLEU  : T_ALU_OP := "011110";
+  constant C_ALU_SEQ   : T_ALU_OP := "011001";
+  constant C_ALU_SNE   : T_ALU_OP := "011010";
+  constant C_ALU_SLT   : T_ALU_OP := "011011";
+  constant C_ALU_SLTU  : T_ALU_OP := "011100";
+  constant C_ALU_SLE   : T_ALU_OP := "011101";
+  constant C_ALU_SLEU  : T_ALU_OP := "011110";
   constant C_ALU_ASR   : T_ALU_OP := "011111";
   constant C_ALU_LSL   : T_ALU_OP := "100000";
   constant C_ALU_LSR   : T_ALU_OP := "100001";

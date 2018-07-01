@@ -310,10 +310,10 @@ uint32_t cpu_simple_t::run() {
         case 0x31u:  // bnz
           condition_satisfied = (branch_cond_value != 0u);
           break;
-        case 0x32u:  // bao
+        case 0x32u:  // bs
           condition_satisfied = (branch_cond_value == 0xffffffffu);
           break;
-        case 0x33u:  // bnao
+        case 0x33u:  // bns
           condition_satisfied = (branch_cond_value != 0xffffffffu);
           break;
         case 0x34u:  // blt
@@ -475,25 +475,25 @@ uint32_t cpu_simple_t::run() {
         case EX_OP_SUB:
           ex_result = add32((~ex_in.src_a) + 1u, ex_in.src_b);
           break;
-        case EX_OP_CEQ:
+        case EX_OP_SEQ:
           ex_result = (ex_in.src_b == ex_in.src_a) ? 0xffffffffu : 0u;
           break;
-        case EX_OP_CNE:
+        case EX_OP_SNE:
           ex_result = (ex_in.src_b != ex_in.src_a) ? 0xffffffffu : 0u;
           break;
-        case EX_OP_CLT:
+        case EX_OP_SLT:
           ex_result = (static_cast<int32_t>(ex_in.src_b) < static_cast<int32_t>(ex_in.src_a))
                           ? 0xffffffffu
                           : 0u;
-        case EX_OP_CLTU:
+        case EX_OP_SLTU:
           ex_result = (ex_in.src_b < ex_in.src_a) ? 0xffffffffu : 0u;
           break;
-        case EX_OP_CLE:
+        case EX_OP_SLE:
           ex_result = (static_cast<int32_t>(ex_in.src_b) <= static_cast<int32_t>(ex_in.src_a))
                           ? 0xffffffffu
                           : 0u;
           break;
-        case EX_OP_CLEU:
+        case EX_OP_SLEU:
           ex_result = (ex_in.src_b <= ex_in.src_a) ? 0xffffffffu : 0u;
           break;
         case EX_OP_ASR:

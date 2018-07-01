@@ -40,7 +40,7 @@ architecture rtl of alu is
   signal s_bic_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_xor_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_minmax_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_cmp_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_set_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_shuf_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_rev_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ldhi_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -58,7 +58,7 @@ architecture rtl of alu is
   signal s_compare_le : std_logic;
   signal s_compare_ltu : std_logic;
   signal s_compare_leu : std_logic;
-  signal s_cmp_bit : std_logic;
+  signal s_set_bit : std_logic;
   signal s_is_max_op : std_logic;
 
   -- Signals for the shifter.
@@ -153,7 +153,7 @@ begin
   -- Select if we're doing addition or subtraction.
   NegAdderAMux: with i_op select
     s_adder_subtract <=
-      '1' when C_ALU_SUB | C_ALU_CLT | C_ALU_CLTU | C_ALU_CLE | C_ALU_CLEU | C_ALU_MIN | C_ALU_MAX,
+      '1' when C_ALU_SUB | C_ALU_SLT | C_ALU_SLTU | C_ALU_SLE | C_ALU_SLEU | C_ALU_MIN | C_ALU_MAX,
       '0' when others;
 
   -- Camparison results.
@@ -169,17 +169,17 @@ begin
   s_minmax_res <= i_src_a when s_compare_lt = s_is_max_op else i_src_b;
 
 
-  -- Compare operations.
+  -- Compare and set operations.
   CmpMux: with i_op select
-    s_cmp_bit <=
-      s_compare_eq when C_ALU_CEQ,
-      s_compare_ne when C_ALU_CNE,
-      s_compare_lt when C_ALU_CLT,
-      s_compare_ltu when C_ALU_CLTU,
-      s_compare_le when C_ALU_CLE,
-      s_compare_leu when C_ALU_CLEU,
+    s_set_bit <=
+      s_compare_eq when C_ALU_SEQ,
+      s_compare_ne when C_ALU_SNE,
+      s_compare_lt when C_ALU_SLT,
+      s_compare_ltu when C_ALU_SLTU,
+      s_compare_le when C_ALU_SLE,
+      s_compare_leu when C_ALU_SLEU,
       '0' when others;
-  s_cmp_res <= (others => s_cmp_bit);
+  s_set_res <= (others => s_set_bit);
 
 
   ------------------------------------------------------------------------------------------------
@@ -210,7 +210,7 @@ begin
         s_xor_res when C_ALU_XOR,
         s_minmax_res when C_ALU_MIN | C_ALU_MAX,
         s_adder_result when C_ALU_ADD | C_ALU_SUB,
-        s_cmp_res when C_ALU_CEQ | C_ALU_CNE | C_ALU_CLT | C_ALU_CLTU | C_ALU_CLE | C_ALU_CLEU,
+        s_set_res when C_ALU_SEQ | C_ALU_SNE | C_ALU_SLT | C_ALU_SLTU | C_ALU_SLE | C_ALU_SLEU,
         s_shifter_res when C_ALU_LSR | C_ALU_ASR | C_ALU_LSL,
         s_shuf_res when C_ALU_SHUF,
         s_clz_res when C_ALU_CLZ,
