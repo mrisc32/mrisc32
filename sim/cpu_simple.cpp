@@ -494,6 +494,7 @@ uint32_t cpu_simple_t::run() {
           ex_result = (static_cast<int32_t>(ex_in.src_b) < static_cast<int32_t>(ex_in.src_a))
                           ? 0xffffffffu
                           : 0u;
+          break;
         case EX_OP_SLTU:
           ex_result = (ex_in.src_b < ex_in.src_a) ? 0xffffffffu : 0u;
           break;

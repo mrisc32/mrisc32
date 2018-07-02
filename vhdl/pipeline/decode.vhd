@@ -305,9 +305,9 @@ begin
   s_is_ldhio <= '1' when s_op_high = 6X"3c" else '0';
 
   -- Is this a MUL, DIV or FPU op?
-  s_is_mul_op <= '1' when (s_is_type_a = '1' and s_op_low(8 downto 3) = "010000") else '0';
-  s_is_div_op <= '1' when (s_is_type_a = '1' and s_op_low(8 downto 3) = "010001") else '0';
-  s_is_fpu_op <= '1' when (s_is_type_a = '1' and s_op_low(8 downto 4) = "01001") else '0';
+  s_is_mul_op <= '1' when (s_is_type_a = '1' and s_op_low(8 downto 3) = "001000") else '0';
+  s_is_div_op <= '1' when (s_is_type_a = '1' and s_op_low(8 downto 3) = "001001") else '0';
+  s_is_fpu_op <= '1' when (s_is_type_a = '1' and s_op_low(8 downto 4) = "00101") else '0';
 
   -- What source registers are required for this operation?
   s_reg_a_required <= not s_is_type_c;
@@ -381,7 +381,7 @@ begin
 
   -- Select division operation.
   -- Map the low order bits of the low order opcode directly to the division unit.
-  s_mul_op <= s_op_low(C_DIV_OP_SIZE-1 downto 0);
+  s_div_op <= s_op_low(C_DIV_OP_SIZE-1 downto 0);
 
   -- Are we missing any fwd operation that has not yet been produced by the pipeline?
   s_missing_fwd_operand <=
