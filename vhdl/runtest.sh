@@ -23,9 +23,10 @@ WORKDIR=out
 GHDL=ghdl
 GHDLFLAGS="--std=08 --work=work --workdir=${WORKDIR}"
 
-# Uncomment to enable vcd generation.
-# TODO(m): Make this a command line argument.
-#VCD=yes
+if [ "$1" = "--vcd" ]; then
+  VCD=yes
+  shift
+fi
 
 for i in $*; do
   echo "** TEST: $i"
