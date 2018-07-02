@@ -103,7 +103,7 @@
 |FCNE| x |   | dst, src1, src2 | dst <= (src1 != src2) ? 0xffffffff : 0 | Compare if not equal (floating point) |
 |FCLT| x |   | dst, src1, src2 | dst <= (src1 < src2) ? 0xffffffff : 0 | Compare if less than (floating point) |
 |FCLE| x |   | dst, src1, src2 | dst <= (src1 <= src2) ? 0xffffffff : 0 | Compare less than or equal (floating point) |
-|FCNAN| x |   | dst, src1, src2 | dst <= (isNaN(src1) || isNaN(src2)) ? 0xffffffff : 0 | Check for Not-a-Number (floating point) |
+|FCNAN| x |   | dst, src1, src2 | dst <= (isNaN(src1) \|\| isNaN(src2)) ? 0xffffffff : 0 | Check for Not-a-Number (floating point) |
 |FMIN| x |   | dst, src1, src2 | dst <= min(src1, src2) | Floating point minimum value |
 |FMAX| x |   | dst, src1, src2 | dst <= max(src1, src2) | Floating point maximum value |
 
