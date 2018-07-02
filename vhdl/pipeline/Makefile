@@ -47,7 +47,7 @@ TESTS += \
     program_counter_tb \
     pipeline_tb
 
-$(PIPELINE_PATH)/pipeline_tb_prg.bin: $(PIPELINE_PATH)/pipeline_tb_prg.s
+$(PIPELINE_PATH)/pipeline_tb_prg.bin: $(PIPELINE_PATH)/pipeline_tb_prg.s $(ASM)
 	$(ASM) $<
 
 pipeline_tb: $(PIPELINE_PATH)/pipeline_tb_prg.bin
