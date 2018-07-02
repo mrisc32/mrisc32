@@ -43,6 +43,7 @@ architecture rtl of alu is
   signal s_minmax_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_shuf_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_rev_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_pack_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ldhi_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_clz_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
@@ -60,9 +61,14 @@ architecture rtl of alu is
   signal s_compare_leu : std_logic;
   signal s_set_bit : std_logic;
 
+  -- Signals for min/max.
   signal s_is_max_op : std_logic;
   signal s_is_unsigned_minmax : std_logic;
   signal s_minmax_sel_a : std_logic;
+
+  -- Signals for packb/packh.
+  signal s_packb_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_packh_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
   -- Signals for the shifter.
   signal s_shift_is_right : std_logic;
@@ -125,6 +131,11 @@ begin
   RevGen: for k in 0 to C_WORD_SIZE-1 generate
     s_rev_res(k) <= i_src_a(C_WORD_SIZE-1-k);
   end generate;
+
+  -- C_ALU_PACKB, C_ALU_PACKH
+  s_packb_res <= i_src_a(23 downto 16) & i_src_a(7 downto 0) & i_src_b(23 downto 16) & i_src_b(7 downto 0);
+  s_packh_res <= i_src_a(15 downto 0) & i_src_b(15 downto 0);
+  s_pack_res <= s_packb_res when i_op(0) = '1' else s_packh_res;
 
   -- C_ALU_LDHI, C_ALU_LDHIO
   s_ldhi_res(C_WORD_SIZE-1 downto C_WORD_SIZE-19) <= i_src_a(18 downto 0);
@@ -226,6 +237,7 @@ begin
         s_shuf_res when C_ALU_SHUF,
         s_clz_res when C_ALU_CLZ,
         s_rev_res when C_ALU_REV,
+        s_pack_res when C_ALU_PACKB | C_ALU_PACKH,
         s_ldhi_res when C_ALU_LDHI | C_ALU_LDHIO,
         (others => '0') when others;
 

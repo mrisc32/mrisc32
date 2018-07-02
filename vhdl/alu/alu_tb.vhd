@@ -259,7 +259,18 @@ begin
         (C_ALU_REV,
           "00000001001000110100010101100111",
           "01010101101010101010101001010101",
-          "11100110101000101100010010000000")
+          "11100110101000101100010010000000"),
+
+        (C_ALU_PACKB,
+          X"12345678",
+          X"FFEEDDCC",
+          X"3478EECC"),
+
+        (C_ALU_PACKH,
+          X"12345678",
+          X"FFEEDDCC",
+          X"5678DDCC")
+
       );
   begin
     -- Test all the patterns in the pattern array.

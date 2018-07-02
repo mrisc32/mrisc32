@@ -135,6 +135,15 @@ inline uint32_t shuf32(const uint32_t x, const uint32_t idx) {
          (static_cast<uint32_t>(yv[2]) << 16u) | (static_cast<uint32_t>(yv[3]) << 24u);
 }
 
+inline uint32_t packb32(const uint32_t a, const uint32_t b) {
+  return ((a & 0x00ff0000u) << 8u) | ((a & 0x000000ffu) << 16u) | ((b & 0x00ff0000u) >> 8u) |
+         (b & 0x000000ffu);
+}
+
+inline uint32_t packh32(const uint32_t a, const uint32_t b) {
+  return ((a & 0x0000ffffu) << 16) | (b & 0x0000ffffu);
+}
+
 inline bool float32_isnan(const uint32_t x) {
   return ((x & 0x7F800000u) == 0x7F800000u) && ((x & 0x007fffffu) != 0u);
 }
@@ -528,6 +537,12 @@ uint32_t cpu_simple_t::run() {
           break;
         case EX_OP_REV:
           ex_result = rev32(ex_in.src_a);
+          break;
+        case EX_OP_PACKB:
+          ex_result = packb32(ex_in.src_a, ex_in.src_b);
+          break;
+        case EX_OP_PACKH:
+          ex_result = packh32(ex_in.src_a, ex_in.src_b);
           break;
 
         case EX_OP_MUL:

@@ -316,7 +316,7 @@ _OPCODES = {
                    [0xa4000000, _VREG1, _VREG2, _IMM14]],
 
 
-        # Bit handling.
+        # Bit/byte/half-word handling.
         # Note: These op-codes are put in the 0x31+ range since they are not
         # very useful with immediate operands (to leave space for new immediate
         # type instructions).
@@ -324,6 +324,12 @@ _OPCODES = {
                    [0x80000031, _VREG1, _VREG2]],
         'REV':    [[0x00000032, _REG1, _REG2],          # 3rd reg is always z
                    [0x80000032, _VREG1, _VREG2]],
+        'PACKB':  [[0x00000033, _REG1, _REG2, _REG3],
+                   [0x80000033, _VREG1, _VREG2, _REG3],
+                   [0xc0000033, _VREG1, _VREG2, _VREG3]],
+        'PACKH':  [[0x00000034, _REG1, _REG2, _REG3],
+                   [0x80000034, _VREG1, _VREG2, _REG3],
+                   [0xc0000034, _VREG1, _VREG2, _VREG3]],
 
         # Special move/load/store instructions.
         'MSX':    [[0x00000050, _XREG1, _REG2]],         # Move scalar->auxiliary (reg3 = z)

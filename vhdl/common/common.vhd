@@ -102,6 +102,8 @@ package common is
 
   constant C_ALU_CLZ   : T_ALU_OP := "110001";
   constant C_ALU_REV   : T_ALU_OP := "110010";
+  constant C_ALU_PACKB : T_ALU_OP := "110011";
+  constant C_ALU_PACKH : T_ALU_OP := "110100";
 
   -- MUL operations.
   constant C_MUL_OP_SIZE : integer := 3;
