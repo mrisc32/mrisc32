@@ -135,6 +135,11 @@ protected:
   static const uint32_t MEM_OP_STORE32 = 0xbu;
   // TODO(m): STORE32_CONDITIONAL
 
+  // Packed operation modes.
+  static const uint32_t PACKED_NONE = 0u;
+  static const uint32_t PACKED_BYTE = 1u;
+  static const uint32_t PACKED_HALF_WORD = 2u;
+
   // One vector register.
   using vreg_t = std::array<uint32_t, NUM_VECTOR_ELEMENTS>;
 

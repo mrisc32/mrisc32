@@ -29,10 +29,11 @@ struct id_in_t {
 };
 
 struct ex_in_t {
-  uint32_t src_a;  // Source operand A.
-  uint32_t src_b;  // Source operand B.
-  uint32_t src_c;  // Source operand C / Data to be stored in the mem step.
-  uint32_t ex_op;  // EX operation.
+  uint32_t src_a;       // Source operand A.
+  uint32_t src_b;       // Source operand B.
+  uint32_t src_c;       // Source operand C / Data to be stored in the mem step.
+  uint32_t ex_op;       // EX operation.
+  uint32_t packed_mode; // Packed operation mode.
 
   uint32_t mem_op;  // MEM operation.
 
@@ -266,6 +267,9 @@ uint32_t cpu_simple_t::run() {
       const bool op_class_C = ((sclar_instr & 0x30000000u) == 0x30000000u);
       const bool op_class_B = !op_class_A && !op_class_C;
 
+      // Is this a packed operation?
+      const uint32_t packed_mode = (op_class_A ? ((sclar_instr & 0x00000180u) >> 7) : 0u);
+
       // Extract parts of the instruction.
       // NOTE: These may or may not be valid, depending on the instruction type.
       const uint32_t reg1 = (sclar_instr >> 19u) & 31u;
@@ -394,7 +398,7 @@ uint32_t cpu_simple_t::run() {
       if (is_subroutine_branch || is_mem_op) {
         ex_op = EX_OP_ADD;
       } else if (op_class_A && ((sclar_instr & 0x000001f0u) != 0x00000000u)) {
-        ex_op = sclar_instr & 0x000001ff;
+        ex_op = sclar_instr & 0x000001ffu;
       } else if (op_class_B && ((sclar_instr & 0x30000000u) != 0x00000000u)) {
         ex_op = sclar_instr >> 24u;
       } else if (op_class_C) {
@@ -409,6 +413,11 @@ uint32_t cpu_simple_t::run() {
             ex_op = EX_OP_LDHIO;
             break;
         }
+      }
+
+      // Mask away packed op from the EX operation.
+      if (packed_mode != PACKED_NONE) {
+        ex_op = ex_op & ~0x00000180u;
       }
 
       // Determine MEM operation.
@@ -443,6 +452,7 @@ uint32_t cpu_simple_t::run() {
       ex_in.dst_idx = vector.idx;
       ex_in.dst_is_vector = is_vector_op;
       ex_in.ex_op = ex_op;
+      ex_in.packed_mode = packed_mode;
       ex_in.mem_op = mem_op;
     }
 
@@ -479,55 +489,70 @@ uint32_t cpu_simple_t::run() {
           ex_result = ex_in.src_a ^ ex_in.src_b;
           break;
         case EX_OP_ADD:
+          // TODO(m): Implement packed operations.
           ex_result = add32(ex_in.src_a, ex_in.src_b);
           break;
         case EX_OP_SUB:
+          // TODO(m): Implement packed operations.
           ex_result = add32((~ex_in.src_a) + 1u, ex_in.src_b);
           break;
         case EX_OP_SEQ:
+          // TODO(m): Implement packed operations.
           ex_result = (ex_in.src_b == ex_in.src_a) ? 0xffffffffu : 0u;
           break;
         case EX_OP_SNE:
+          // TODO(m): Implement packed operations.
           ex_result = (ex_in.src_b != ex_in.src_a) ? 0xffffffffu : 0u;
           break;
         case EX_OP_SLT:
+          // TODO(m): Implement packed operations.
           ex_result = (static_cast<int32_t>(ex_in.src_b) < static_cast<int32_t>(ex_in.src_a))
                           ? 0xffffffffu
                           : 0u;
           break;
         case EX_OP_SLTU:
+          // TODO(m): Implement packed operations.
           ex_result = (ex_in.src_b < ex_in.src_a) ? 0xffffffffu : 0u;
           break;
         case EX_OP_SLE:
+          // TODO(m): Implement packed operations.
           ex_result = (static_cast<int32_t>(ex_in.src_b) <= static_cast<int32_t>(ex_in.src_a))
                           ? 0xffffffffu
                           : 0u;
           break;
         case EX_OP_SLEU:
+          // TODO(m): Implement packed operations.
           ex_result = (ex_in.src_b <= ex_in.src_a) ? 0xffffffffu : 0u;
           break;
         case EX_OP_MIN:
+          // TODO(m): Implement packed operations.
           ex_result = static_cast<uint32_t>(std::min(static_cast<int32_t>(ex_in.src_a),
                                             static_cast<int32_t>(ex_in.src_b)));
           break;
         case EX_OP_MAX:
+          // TODO(m): Implement packed operations.
           ex_result = static_cast<uint32_t>(std::max(static_cast<int32_t>(ex_in.src_a),
                                             static_cast<int32_t>(ex_in.src_b)));
           break;
         case EX_OP_MINU:
+          // TODO(m): Implement packed operations.
           ex_result = std::min(ex_in.src_a, ex_in.src_b);
           break;
         case EX_OP_MAXU:
+          // TODO(m): Implement packed operations.
           ex_result = std::max(ex_in.src_a, ex_in.src_b);
           break;
         case EX_OP_ASR:
+          // TODO(m): Implement packed operations.
           ex_result = static_cast<uint32_t>(static_cast<int32_t>(ex_in.src_a) >>
                                             static_cast<int32_t>(ex_in.src_b));
           break;
         case EX_OP_LSL:
+          // TODO(m): Implement packed operations.
           ex_result = ex_in.src_a << ex_in.src_b;
           break;
         case EX_OP_LSR:
+          // TODO(m): Implement packed operations.
           ex_result = ex_in.src_a >> ex_in.src_b;
           break;
         case EX_OP_SHUF:
@@ -547,15 +572,18 @@ uint32_t cpu_simple_t::run() {
           break;
 
         case EX_OP_MUL:
+          // TODO(m): Implement packed operations.
           ex_result = ex_in.src_a * ex_in.src_b;
           break;
         case EX_OP_MULHI:
+          // TODO(m): Implement packed operations.
           ex_result =
               static_cast<uint32_t>((static_cast<int64_t>(static_cast<int32_t>(ex_in.src_a)) *
                                      static_cast<int64_t>(static_cast<int32_t>(ex_in.src_b))) >>
                                     32u);
           break;
         case EX_OP_MULHIU:
+          // TODO(m): Implement packed operations.
           ex_result = static_cast<uint32_t>(
               (static_cast<uint64_t>(ex_in.src_a) * static_cast<uint64_t>(ex_in.src_b)) >> 32u);
           break;
@@ -564,10 +592,12 @@ uint32_t cpu_simple_t::run() {
           break;
 
         case EX_OP_DIV:
+          // TODO(m): Implement packed operations.
           ex_result = static_cast<uint32_t>(static_cast<int32_t>(ex_in.src_a) /
                                             static_cast<int32_t>(ex_in.src_b));
           break;
         case EX_OP_DIVU:
+          // TODO(m): Implement packed operations.
           ex_result = ex_in.src_a / ex_in.src_b;
           break;
         case EX_OP_REM:
