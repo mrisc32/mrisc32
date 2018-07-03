@@ -119,6 +119,60 @@ inline uint32_t sel32(const uint32_t a, const uint32_t b, const uint32_t mask) {
   return (a & mask) | (b & ~mask);
 }
 
+inline uint32_t asr32(const uint32_t a, const uint32_t b) {
+  return static_cast<uint32_t>(static_cast<int32_t>(a) >> static_cast<int32_t>(b));
+}
+
+inline uint32_t asr16x2(const uint32_t a, const uint32_t b) {
+  const auto h1 = static_cast<uint32_t>(static_cast<uint16_t>(static_cast<int16_t>(a >> 16) >> b));
+  const auto h0 = static_cast<uint32_t>(static_cast<uint16_t>(static_cast<int16_t>(a) >> b));
+  return (h1 << 16) | h0;
+}
+
+inline uint32_t asr8x4(const uint32_t a, const uint32_t b) {
+  const auto b3 = static_cast<uint32_t>(static_cast<uint8_t>(static_cast<int8_t>(a >> 24) >> b));
+  const auto b2 = static_cast<uint32_t>(static_cast<uint8_t>(static_cast<int8_t>(a >> 16) >> b));
+  const auto b1 = static_cast<uint32_t>(static_cast<uint8_t>(static_cast<int8_t>(a >> 8) >> b));
+  const auto b0 = static_cast<uint32_t>(static_cast<uint8_t>(static_cast<int8_t>(a) >> b));
+  return (b3 << 24) | (b2 << 16) | (b1 << 8) | b0;
+}
+
+inline uint32_t lsl32(const uint32_t a, const uint32_t b) {
+  return a << b;
+}
+
+inline uint32_t lsl16x2(const uint32_t a, const uint32_t b) {
+  const auto h1 = (a & 0xffff0000u) << b;
+  const auto h0 = (a << b) & 0x0000ffffu;
+  return h1 | h0;
+}
+
+inline uint32_t lsl8x4(const uint32_t a, const uint32_t b) {
+  const auto b3 = (a & 0xff000000u) << b;
+  const auto b2 = ((a & 0x00ff0000u) << b) & 0x00ff0000u;
+  const auto b1 = ((a & 0x0000ff00u) << b) & 0x0000ff00u;
+  const auto b0 = (a << b) & 0x000000ffu;
+  return b3 | b2 | b1 | b0;
+}
+
+inline uint32_t lsr32(const uint32_t a, const uint32_t b) {
+  return a >> b;
+}
+
+inline uint32_t lsr16x2(const uint32_t a, const uint32_t b) {
+  const auto h1 = (a >> b) & 0xffff0000u;
+  const auto h0 = (a & 0x0000ffffu) >> b;
+  return h1 | h0;
+}
+
+inline uint32_t lsr8x4(const uint32_t a, const uint32_t b) {
+  const auto b3 = (a >> b) & 0xff000000u;
+  const auto b2 = ((a & 0x00ff0000u) >> b) & 0x00ff0000u;
+  const auto b1 = ((a & 0x0000ff00u) >> b) & 0x0000ff00u;
+  const auto b0 = (a & 0x000000ffu) >> b;
+  return b3 | b2 | b1 | b0;
+}
+
 inline uint32_t clz32(const uint32_t x) {
 #if defined(__GNUC__) || defined(__clang__)
   return static_cast<uint32_t>(__builtin_clz(x));
@@ -749,17 +803,40 @@ uint32_t cpu_simple_t::run() {
           }
           break;
         case EX_OP_ASR:
-          // TODO(m): Implement packed operations.
-          ex_result = static_cast<uint32_t>(static_cast<int32_t>(ex_in.src_a) >>
-                                            static_cast<int32_t>(ex_in.src_b));
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = asr8x4(ex_in.src_a, ex_in.src_b);
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = asr16x2(ex_in.src_a, ex_in.src_b);
+              break;
+            default:
+              ex_result = asr32(ex_in.src_a, ex_in.src_b);
+          }
           break;
         case EX_OP_LSL:
-          // TODO(m): Implement packed operations.
-          ex_result = ex_in.src_a << ex_in.src_b;
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = lsl8x4(ex_in.src_a, ex_in.src_b);
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = lsl16x2(ex_in.src_a, ex_in.src_b);
+              break;
+            default:
+              ex_result = lsl32(ex_in.src_a, ex_in.src_b);
+          }
           break;
         case EX_OP_LSR:
-          // TODO(m): Implement packed operations.
-          ex_result = ex_in.src_a >> ex_in.src_b;
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = lsr8x4(ex_in.src_a, ex_in.src_b);
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = lsr16x2(ex_in.src_a, ex_in.src_b);
+              break;
+            default:
+              ex_result = lsr32(ex_in.src_a, ex_in.src_b);
+          }
           break;
         case EX_OP_SHUF:
           ex_result = shuf32(ex_in.src_a, ex_in.src_b);
