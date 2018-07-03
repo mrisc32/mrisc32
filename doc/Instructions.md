@@ -99,11 +99,11 @@
 |FTOI| x |   | dst, src1 | dst <= (int)src1 | Cast float to integer |
 |FADD| x |   | dst, src1, src2 | dst <= src1 + src2 | Floating point addition |
 |FSUB| x |   | dst, src1, src2 | dst <= src1 - src2 | Floating point subtraction |
-|FCEQ| x |   | dst, src1, src2 | dst <= (src1 == src2) ? 0xffffffff : 0 | Compare if equal (floating point) |
-|FCNE| x |   | dst, src1, src2 | dst <= (src1 != src2) ? 0xffffffff : 0 | Compare if not equal (floating point) |
-|FCLT| x |   | dst, src1, src2 | dst <= (src1 < src2) ? 0xffffffff : 0 | Compare if less than (floating point) |
-|FCLE| x |   | dst, src1, src2 | dst <= (src1 <= src2) ? 0xffffffff : 0 | Compare less than or equal (floating point) |
-|FCNAN| x |   | dst, src1, src2 | dst <= (isNaN(src1) \|\| isNaN(src2)) ? 0xffffffff : 0 | Check for Not-a-Number (floating point) |
+|FSEQ| x |   | dst, src1, src2 | dst <= (src1 == src2) ? 0xffffffff : 0 | Set if equal (floating point) |
+|FSNE| x |   | dst, src1, src2 | dst <= (src1 != src2) ? 0xffffffff : 0 | Set if not equal (floating point) |
+|FSLT| x |   | dst, src1, src2 | dst <= (src1 < src2) ? 0xffffffff : 0 | Set if less than (floating point) |
+|FSLE| x |   | dst, src1, src2 | dst <= (src1 <= src2) ? 0xffffffff : 0 | Set if less than or equal (floating point) |
+|FSNAN| x |   | dst, src1, src2 | dst <= (isNaN(src1) \|\| isNaN(src2)) ? 0xffffffff : 0 | Set if Not-a-Number |
 |FMIN| x |   | dst, src1, src2 | dst <= min(src1, src2) | Floating point minimum value |
 |FMAX| x |   | dst, src1, src2 | dst <= max(src1, src2) | Floating point maximum value |
 

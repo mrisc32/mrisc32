@@ -526,31 +526,31 @@ _OPCODES = {
                      [0xc0000053, _VREG1, _VREG2, _VREG3]],
                    'packed_op': False
                   },
-        'FCEQ':   {'descrs':
+        'FSEQ':   {'descrs':
                     [[0x00000054, _REG1, _REG2, _REG3],
                      [0x80000054, _VREG1, _VREG2, _REG3],
                      [0xc0000054, _VREG1, _VREG2, _VREG3]],
                    'packed_op': False
                   },
-        'FCNE':   {'descrs':
+        'FSNE':   {'descrs':
                     [[0x00000055, _REG1, _REG2, _REG3],
                      [0x80000055, _VREG1, _VREG2, _REG3],
                      [0xc0000055, _VREG1, _VREG2, _VREG3]],
                    'packed_op': False
                   },
-        'FCLT':   {'descrs':
+        'FSLT':   {'descrs':
                     [[0x00000056, _REG1, _REG2, _REG3],
                      [0x80000056, _VREG1, _VREG2, _REG3],
                      [0xc0000056, _VREG1, _VREG2, _VREG3]],
                    'packed_op': False
                   },
-        'FCLE':   {'descrs':
+        'FSLE':   {'descrs':
                     [[0x00000057, _REG1, _REG2, _REG3],
                      [0x80000057, _VREG1, _VREG2, _REG3],
                      [0xc0000057, _VREG1, _VREG2, _VREG3]],
                    'packed_op': False
                   },
-        'FCNAN':  {'descrs':
+        'FSNAN':  {'descrs':
                     [[0x00000058, _REG1, _REG2, _REG3],
                      [0x80000058, _VREG1, _VREG2, _REG3],
                      [0xc0000058, _VREG1, _VREG2, _VREG3]],

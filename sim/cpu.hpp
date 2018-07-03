@@ -114,11 +114,11 @@ protected:
   static const uint32_t EX_OP_FTOI = 0x51u;
   static const uint32_t EX_OP_FADD = 0x52u;
   static const uint32_t EX_OP_FSUB = 0x53u;
-  static const uint32_t EX_OP_FCEQ = 0x54u;
-  static const uint32_t EX_OP_FCNE = 0x55u;
-  static const uint32_t EX_OP_FCLT = 0x56u;
-  static const uint32_t EX_OP_FCLE = 0x57u;
-  static const uint32_t EX_OP_FCNAN = 0x58u;
+  static const uint32_t EX_OP_FSEQ = 0x54u;
+  static const uint32_t EX_OP_FSNE = 0x55u;
+  static const uint32_t EX_OP_FSLT = 0x56u;
+  static const uint32_t EX_OP_FSLE = 0x57u;
+  static const uint32_t EX_OP_FSNAN = 0x58u;
   static const uint32_t EX_OP_FMIN = 0x59u;
   static const uint32_t EX_OP_FMAX = 0x5au;
 

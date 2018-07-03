@@ -622,19 +622,19 @@ uint32_t cpu_simple_t::run() {
         case EX_OP_FSUB:
           ex_result = static_cast<uint32_t>(as_u32(-as_f32(ex_in.src_a) + as_f32(ex_in.src_b)));
           break;
-        case EX_OP_FCEQ:
+        case EX_OP_FSEQ:
           // TODO(m): Implement me!
-          throw std::runtime_error("FCEQ is not yet implemented.");
-        case EX_OP_FCNE:
+          throw std::runtime_error("FSEQ is not yet implemented.");
+        case EX_OP_FSNE:
           // TODO(m): Implement me!
-          throw std::runtime_error("FCNE is not yet implemented.");
-        case EX_OP_FCLT:
+          throw std::runtime_error("FSNE is not yet implemented.");
+        case EX_OP_FSLT:
           // TODO(m): Implement me!
-          throw std::runtime_error("FCLT is not yet implemented.");
-        case EX_OP_FCLE:
+          throw std::runtime_error("FSLT is not yet implemented.");
+        case EX_OP_FSLE:
           // TODO(m): Implement me!
-          throw std::runtime_error("FCLE is not yet implemented.");
-        case EX_OP_FCNAN:
+          throw std::runtime_error("FSLE is not yet implemented.");
+        case EX_OP_FSNAN:
           ex_result = (float32_isnan(ex_in.src_a) || float32_isnan(ex_in.src_b)) ? 0xffffffffu : 0u;
           break;
         case EX_OP_FMIN:
