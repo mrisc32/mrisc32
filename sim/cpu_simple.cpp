@@ -794,7 +794,7 @@ uint32_t cpu_simple_t::run() {
               (static_cast<uint64_t>(ex_in.src_a) * static_cast<uint64_t>(ex_in.src_b)) >> 32u);
           break;
         case EX_OP_FMUL:
-          ex_result = static_cast<uint32_t>(as_u32(as_f32(ex_in.src_a) * as_f32(ex_in.src_b)));
+          ex_result = as_u32(as_f32(ex_in.src_a) * as_f32(ex_in.src_b));
           break;
 
         case EX_OP_DIV:
@@ -813,7 +813,7 @@ uint32_t cpu_simple_t::run() {
           // TODO(m): Implement me!
           throw std::runtime_error("REMU is not yet implemented.");
         case EX_OP_FDIV:
-          ex_result = static_cast<uint32_t>(as_u32(as_f32(ex_in.src_a) / as_f32(ex_in.src_b)));
+          ex_result = as_u32(as_f32(ex_in.src_a) / as_f32(ex_in.src_b));
           break;
 
         case EX_OP_ITOF:
@@ -823,32 +823,32 @@ uint32_t cpu_simple_t::run() {
           ex_result = static_cast<uint32_t>((static_cast<int32_t>(as_f32(ex_in.src_a))));
           break;
         case EX_OP_FADD:
-          ex_result = static_cast<uint32_t>(as_u32(as_f32(ex_in.src_a) + as_f32(ex_in.src_b)));
+          ex_result = as_u32(as_f32(ex_in.src_a) + as_f32(ex_in.src_b));
           break;
         case EX_OP_FSUB:
-          ex_result = static_cast<uint32_t>(as_u32(-as_f32(ex_in.src_a) + as_f32(ex_in.src_b)));
+          ex_result = as_u32(-as_f32(ex_in.src_a) + as_f32(ex_in.src_b));
           break;
         case EX_OP_FSEQ:
-          // TODO(m): Implement me!
-          throw std::runtime_error("FSEQ is not yet implemented.");
+          ex_result = (as_f32(ex_in.src_a) == as_f32(ex_in.src_b)) ? 0xffffffffu : 0u;
+          break;
         case EX_OP_FSNE:
-          // TODO(m): Implement me!
-          throw std::runtime_error("FSNE is not yet implemented.");
+          ex_result = (as_f32(ex_in.src_a) != as_f32(ex_in.src_b)) ? 0xffffffffu : 0u;
+          break;
         case EX_OP_FSLT:
-          // TODO(m): Implement me!
-          throw std::runtime_error("FSLT is not yet implemented.");
+          ex_result = (as_f32(ex_in.src_a) < as_f32(ex_in.src_b)) ? 0xffffffffu : 0u;
+          break;
         case EX_OP_FSLE:
-          // TODO(m): Implement me!
-          throw std::runtime_error("FSLE is not yet implemented.");
+          ex_result = (as_f32(ex_in.src_a) <= as_f32(ex_in.src_b)) ? 0xffffffffu : 0u;
+          break;
         case EX_OP_FSNAN:
           ex_result = (float32_isnan(ex_in.src_a) || float32_isnan(ex_in.src_b)) ? 0xffffffffu : 0u;
           break;
         case EX_OP_FMIN:
-          // TODO(m): Implement me!
-          throw std::runtime_error("FMIN is not yet implemented.");
+          ex_result = as_u32(std::min(as_f32(ex_in.src_a), as_f32(ex_in.src_b)));
+          break;
         case EX_OP_FMAX:
-          // TODO(m): Implement me!
-          throw std::runtime_error("FMAX is not yet implemented.");
+          ex_result = as_u32(std::max(as_f32(ex_in.src_a), as_f32(ex_in.src_b)));
+          break;
       }
 
       mem_in.mem_addr = ex_result;
