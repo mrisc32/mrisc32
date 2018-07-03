@@ -855,40 +855,112 @@ uint32_t cpu_simple_t::run() {
           break;
 
         case EX_OP_MUL:
-          // TODO(m): Implement packed operations.
-          ex_result = ex_in.src_a * ex_in.src_b;
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              // TODO(m): Implement me!
+              throw std::runtime_error("PBMUL is not yet implemented.");
+              break;
+            case PACKED_HALF_WORD:
+              // TODO(m): Implement me!
+              throw std::runtime_error("PHMUL is not yet implemented.");
+              break;
+            default:
+              ex_result = ex_in.src_a * ex_in.src_b;
+          }
           break;
         case EX_OP_MULHI:
-          // TODO(m): Implement packed operations.
-          ex_result =
-              static_cast<uint32_t>((static_cast<int64_t>(static_cast<int32_t>(ex_in.src_a)) *
-                                     static_cast<int64_t>(static_cast<int32_t>(ex_in.src_b))) >>
-                                    32u);
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              // TODO(m): Implement me!
+              throw std::runtime_error("PBMULHI is not yet implemented.");
+              break;
+            case PACKED_HALF_WORD:
+              // TODO(m): Implement me!
+              throw std::runtime_error("PHMULHI is not yet implemented.");
+              break;
+            default:
+              ex_result =
+                  static_cast<uint32_t>((static_cast<int64_t>(static_cast<int32_t>(ex_in.src_a)) *
+                                         static_cast<int64_t>(static_cast<int32_t>(ex_in.src_b))) >>
+                                        32u);
+          }
           break;
         case EX_OP_MULHIU:
-          // TODO(m): Implement packed operations.
-          ex_result = static_cast<uint32_t>(
-              (static_cast<uint64_t>(ex_in.src_a) * static_cast<uint64_t>(ex_in.src_b)) >> 32u);
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              // TODO(m): Implement me!
+              throw std::runtime_error("PBMULHIU is not yet implemented.");
+              break;
+            case PACKED_HALF_WORD:
+              // TODO(m): Implement me!
+              throw std::runtime_error("PHMULHIU is not yet implemented.");
+              break;
+            default:
+              ex_result = static_cast<uint32_t>(
+                  (static_cast<uint64_t>(ex_in.src_a) * static_cast<uint64_t>(ex_in.src_b)) >> 32u);
+          }
           break;
         case EX_OP_FMUL:
           ex_result = as_u32(as_f32(ex_in.src_a) * as_f32(ex_in.src_b));
           break;
 
         case EX_OP_DIV:
-          // TODO(m): Implement packed operations.
-          ex_result = static_cast<uint32_t>(static_cast<int32_t>(ex_in.src_a) /
-                                            static_cast<int32_t>(ex_in.src_b));
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              // TODO(m): Implement me!
+              throw std::runtime_error("PBDIV is not yet implemented.");
+              break;
+            case PACKED_HALF_WORD:
+              // TODO(m): Implement me!
+              throw std::runtime_error("PHDIV is not yet implemented.");
+              break;
+            default:
+              ex_result = static_cast<uint32_t>(static_cast<int32_t>(ex_in.src_a) /
+                                                static_cast<int32_t>(ex_in.src_b));
+          }
           break;
         case EX_OP_DIVU:
-          // TODO(m): Implement packed operations.
-          ex_result = ex_in.src_a / ex_in.src_b;
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              // TODO(m): Implement me!
+              throw std::runtime_error("PBDIVU is not yet implemented.");
+              break;
+            case PACKED_HALF_WORD:
+              // TODO(m): Implement me!
+              throw std::runtime_error("PHDIVU is not yet implemented.");
+              break;
+            default:
+              ex_result = ex_in.src_a / ex_in.src_b;
+          }
           break;
         case EX_OP_REM:
-          // TODO(m): Implement me!
-          throw std::runtime_error("REM is not yet implemented.");
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              // TODO(m): Implement me!
+              throw std::runtime_error("PBREM is not yet implemented.");
+              break;
+            case PACKED_HALF_WORD:
+              // TODO(m): Implement me!
+              throw std::runtime_error("PHREM is not yet implemented.");
+              break;
+            default:
+              // TODO(m): Implement me!
+              throw std::runtime_error("REM is not yet implemented.");
+          }
         case EX_OP_REMU:
-          // TODO(m): Implement me!
-          throw std::runtime_error("REMU is not yet implemented.");
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              // TODO(m): Implement me!
+              throw std::runtime_error("PBREMU is not yet implemented.");
+              break;
+            case PACKED_HALF_WORD:
+              // TODO(m): Implement me!
+              throw std::runtime_error("PHREMU is not yet implemented.");
+              break;
+            default:
+              // TODO(m): Implement me!
+              throw std::runtime_error("REMU is not yet implemented.");
+          }
         case EX_OP_FDIV:
           ex_result = as_u32(as_f32(ex_in.src_a) / as_f32(ex_in.src_b));
           break;
