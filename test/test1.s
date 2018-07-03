@@ -68,6 +68,9 @@ main:
 ; A loop with a decrementing conunter.
 
 test_1:
+  add    sp, sp, -4
+  stw    lr, sp, 0
+
   ldi    s9, 0x20
   ldi    s10, 12
 
@@ -76,8 +79,22 @@ test_1:
   add    s10, s10, -1
   bnz    s10, .loop
 
+  lea    s9, .data
+  ldw    s1, s9, 0
+  ldw    s2, s9, 4
+  pbadd  s1, s1, s2
+  bl     _printhex
+  ldi    s1, 10
+  bl     _putc
+
   ldi    s1, 0
+
+  ldw    lr, sp, 0
+  add    sp, sp, 4
   j      lr
+
+.data:
+  .u32   0x12345678, 0xffffffff
 
 
 ; ----------------------------------------------------------------------------

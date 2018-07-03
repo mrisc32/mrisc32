@@ -69,6 +69,20 @@ inline uint32_t add32(const uint32_t a, const uint32_t b) {
   return a + b;
 }
 
+inline uint32_t add16x2(const uint32_t a, const uint32_t b) {
+  const uint32_t h1 = ((a >> 16) + (b >> 16)) & 0x0000ffffu;
+  const uint32_t h0 = (a + b) & 0x0000ffffu;
+  return (h1 << 16) | h0;
+}
+
+inline uint32_t add8x4(const uint32_t a, const uint32_t b) {
+  const uint32_t b3 = ((a >> 24) + (b >> 24)) & 0x000000ffu;
+  const uint32_t b2 = ((a >> 16) + (b >> 16)) & 0x000000ffu;
+  const uint32_t b1 = ((a >> 8) + (b >> 8)) & 0x000000ffu;
+  const uint32_t b0 = (a + b) & 0x000000ffu;
+  return (b3 << 24) | (b2 << 16) | (b1 << 8) | b0;
+}
+
 inline uint32_t clz32(const uint32_t x) {
 #if defined(__GNUC__) || defined(__clang__)
   return static_cast<uint32_t>(__builtin_clz(x));
@@ -489,8 +503,16 @@ uint32_t cpu_simple_t::run() {
           ex_result = ex_in.src_a ^ ex_in.src_b;
           break;
         case EX_OP_ADD:
-          // TODO(m): Implement packed operations.
-          ex_result = add32(ex_in.src_a, ex_in.src_b);
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = add8x4(ex_in.src_a, ex_in.src_b);
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = add16x2(ex_in.src_a, ex_in.src_b);
+              break;
+            default:
+              ex_result = add32(ex_in.src_a, ex_in.src_b);
+          }
           break;
         case EX_OP_SUB:
           // TODO(m): Implement packed operations.
