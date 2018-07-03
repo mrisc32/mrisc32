@@ -70,17 +70,53 @@ inline uint32_t add32(const uint32_t a, const uint32_t b) {
 }
 
 inline uint32_t add16x2(const uint32_t a, const uint32_t b) {
-  const uint32_t h1 = ((a >> 16) + (b >> 16)) & 0x0000ffffu;
-  const uint32_t h0 = (a + b) & 0x0000ffffu;
-  return (h1 << 16) | h0;
+  const uint32_t hi = (a & 0xffff0000u) + (b  & 0xffff0000u);
+  const uint32_t lo = (a + b) & 0x0000ffffu;
+  return hi | lo;
 }
 
 inline uint32_t add8x4(const uint32_t a, const uint32_t b) {
-  const uint32_t b3 = ((a >> 24) + (b >> 24)) & 0x000000ffu;
-  const uint32_t b2 = ((a >> 16) + (b >> 16)) & 0x000000ffu;
-  const uint32_t b1 = ((a >> 8) + (b >> 8)) & 0x000000ffu;
-  const uint32_t b0 = (a + b) & 0x000000ffu;
-  return (b3 << 24) | (b2 << 16) | (b1 << 8) | b0;
+  const uint32_t hi = ((a & 0xff00ff00u) + (b & 0xff00ff00u)) & 0xff00ff00u;
+  const uint32_t lo = ((a & 0x00ff00ffu) + (b & 0x00ff00ffu)) & 0x00ff00ffu;
+  return hi | lo;
+}
+
+inline uint32_t sub32(const uint32_t a, const uint32_t b) {
+  return add32((~a) + 1u, b);
+}
+
+inline uint32_t sub16x2(const uint32_t a, const uint32_t b) {
+  return add16x2(add16x2(~a, 0x00010001u), b);
+}
+
+inline uint32_t sub8x4(const uint32_t a, const uint32_t b) {
+  return add8x4(add8x4(~a, 0x01010101u), b);
+}
+
+inline uint32_t set32(const uint32_t a, const uint32_t b, bool (*cmp)(uint32_t, uint32_t)) {
+  return cmp(a, b) ? 0xffffffffu : 0u;
+}
+
+inline uint32_t set16x2(const uint32_t a, const uint32_t b, bool (*cmp)(uint16_t, uint16_t)) {
+  const uint32_t h1 =
+      (cmp(static_cast<uint16_t>(a >> 16), static_cast<uint16_t>(b >> 16)) ? 0xffff0000u : 0u);
+  const uint32_t h0 = (cmp(static_cast<uint16_t>(a), static_cast<uint16_t>(b)) ? 0x0000ffffu : 0u);
+  return h1 | h0;
+}
+
+inline uint32_t set8x4(const uint32_t a, const uint32_t b, bool (*cmp)(uint8_t, uint8_t)) {
+  const uint32_t b3 =
+      (cmp(static_cast<uint8_t>(a >> 24), static_cast<uint8_t>(b >> 24)) ? 0xff000000u : 0u);
+  const uint32_t b2 =
+      (cmp(static_cast<uint8_t>(a >> 16), static_cast<uint8_t>(b >> 16)) ? 0x00ff0000u : 0u);
+  const uint32_t b1 =
+      (cmp(static_cast<uint8_t>(a >> 8), static_cast<uint8_t>(b >> 8)) ? 0x0000ff00u : 0u);
+  const uint32_t b0 = (cmp(static_cast<uint8_t>(a), static_cast<uint8_t>(b)) ? 0x000000ffu : 0u);
+  return b3 | b2 | b1 | b0;
+}
+
+inline uint32_t sel32(const uint32_t a, const uint32_t b, const uint32_t mask) {
+  return (a & mask) | (b & ~mask);
 }
 
 inline uint32_t clz32(const uint32_t x) {
@@ -515,54 +551,202 @@ uint32_t cpu_simple_t::run() {
           }
           break;
         case EX_OP_SUB:
-          // TODO(m): Implement packed operations.
-          ex_result = add32((~ex_in.src_a) + 1u, ex_in.src_b);
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = sub8x4(ex_in.src_a, ex_in.src_b);
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = sub16x2(ex_in.src_a, ex_in.src_b);
+              break;
+            default:
+              ex_result = sub32(ex_in.src_a, ex_in.src_b);
+          }
           break;
         case EX_OP_SEQ:
-          // TODO(m): Implement packed operations.
-          ex_result = (ex_in.src_b == ex_in.src_a) ? 0xffffffffu : 0u;
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result =
+                  set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t a, uint8_t b) { return a == b; });
+              break;
+            case PACKED_HALF_WORD:
+              ex_result =
+                  set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t a, uint16_t b) { return a == b; });
+              break;
+            default:
+              ex_result =
+                  set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) { return a == b; });
+          }
           break;
         case EX_OP_SNE:
-          // TODO(m): Implement packed operations.
-          ex_result = (ex_in.src_b != ex_in.src_a) ? 0xffffffffu : 0u;
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result =
+                  set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t a, uint8_t b) { return a != b; });
+              break;
+            case PACKED_HALF_WORD:
+              ex_result =
+                  set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t a, uint16_t b) { return a != b; });
+              break;
+            default:
+              ex_result =
+                  set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) { return a != b; });
+          }
           break;
         case EX_OP_SLT:
-          // TODO(m): Implement packed operations.
-          ex_result = (static_cast<int32_t>(ex_in.src_b) < static_cast<int32_t>(ex_in.src_a))
-                          ? 0xffffffffu
-                          : 0u;
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t a, uint8_t b) {
+                return static_cast<int8_t>(b) < static_cast<int8_t>(a);
+              });
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t a, uint16_t b) {
+                return static_cast<int16_t>(b) < static_cast<int16_t>(a);
+              });
+              break;
+            default:
+              ex_result = set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) {
+                return static_cast<int32_t>(b) < static_cast<int32_t>(a);
+              });
+          }
           break;
         case EX_OP_SLTU:
-          // TODO(m): Implement packed operations.
-          ex_result = (ex_in.src_b < ex_in.src_a) ? 0xffffffffu : 0u;
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result =
+                  set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t a, uint8_t b) { return b < a; });
+              break;
+            case PACKED_HALF_WORD:
+              ex_result =
+                  set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t a, uint16_t b) { return b < a; });
+              break;
+            default:
+              ex_result =
+                  set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) { return b < a; });
+          }
           break;
         case EX_OP_SLE:
-          // TODO(m): Implement packed operations.
-          ex_result = (static_cast<int32_t>(ex_in.src_b) <= static_cast<int32_t>(ex_in.src_a))
-                          ? 0xffffffffu
-                          : 0u;
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t a, uint8_t b) {
+                return static_cast<int8_t>(b) <= static_cast<int8_t>(a);
+              });
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t a, uint16_t b) {
+                return static_cast<int16_t>(b) <= static_cast<int16_t>(a);
+              });
+              break;
+            default:
+              ex_result = set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) {
+                return static_cast<int32_t>(b) <= static_cast<int32_t>(a);
+              });
+          }
           break;
         case EX_OP_SLEU:
-          // TODO(m): Implement packed operations.
-          ex_result = (ex_in.src_b <= ex_in.src_a) ? 0xffffffffu : 0u;
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result =
+                  set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t a, uint8_t b) { return b <= a; });
+              break;
+            case PACKED_HALF_WORD:
+              ex_result =
+                  set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t a, uint16_t b) { return b <= a; });
+              break;
+            default:
+              ex_result =
+                  set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) { return b <= a; });
+          }
           break;
         case EX_OP_MIN:
-          // TODO(m): Implement packed operations.
-          ex_result = static_cast<uint32_t>(std::min(static_cast<int32_t>(ex_in.src_a),
-                                            static_cast<int32_t>(ex_in.src_b)));
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = sel32(ex_in.src_a,
+                                ex_in.src_b,
+                                set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t x, uint8_t y) {
+                                  return static_cast<int8_t>(x) < static_cast<int8_t>(y);
+                                }));
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = sel32(ex_in.src_a,
+                                ex_in.src_b,
+                                set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t x, uint16_t y) {
+                                  return static_cast<int16_t>(x) < static_cast<int16_t>(y);
+                                }));
+              break;
+            default:
+              ex_result = sel32(ex_in.src_a,
+                                ex_in.src_b,
+                                set32(ex_in.src_a, ex_in.src_b, [](uint32_t x, uint32_t y) {
+                                  return static_cast<int32_t>(x) < static_cast<int32_t>(y);
+                                }));
+          }
           break;
         case EX_OP_MAX:
-          // TODO(m): Implement packed operations.
-          ex_result = static_cast<uint32_t>(std::max(static_cast<int32_t>(ex_in.src_a),
-                                            static_cast<int32_t>(ex_in.src_b)));
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = sel32(ex_in.src_a,
+                                ex_in.src_b,
+                                set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t x, uint8_t y) {
+                                  return static_cast<int8_t>(x) > static_cast<int8_t>(y);
+                                }));
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = sel32(ex_in.src_a,
+                                ex_in.src_b,
+                                set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t x, uint16_t y) {
+                                  return static_cast<int16_t>(x) > static_cast<int16_t>(y);
+                                }));
+              break;
+            default:
+              ex_result = sel32(ex_in.src_a,
+                                ex_in.src_b,
+                                set32(ex_in.src_a, ex_in.src_b, [](uint32_t x, uint32_t y) {
+                                  return static_cast<int32_t>(x) > static_cast<int32_t>(y);
+                                }));
+          }
           break;
         case EX_OP_MINU:
-          // TODO(m): Implement packed operations.
-          ex_result = std::min(ex_in.src_a, ex_in.src_b);
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = sel32(
+                  ex_in.src_a,
+                  ex_in.src_b,
+                  set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t x, uint8_t y) { return x < y; }));
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = sel32(
+                  ex_in.src_a,
+                  ex_in.src_b,
+                  set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t x, uint16_t y) { return x < y; }));
+              break;
+            default:
+              ex_result = sel32(
+                  ex_in.src_a,
+                  ex_in.src_b,
+                  set32(ex_in.src_a, ex_in.src_b, [](uint32_t x, uint32_t y) { return x < y; }));
+          }
           break;
         case EX_OP_MAXU:
-          // TODO(m): Implement packed operations.
-          ex_result = std::max(ex_in.src_a, ex_in.src_b);
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = sel32(
+                  ex_in.src_a,
+                  ex_in.src_b,
+                  set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t x, uint8_t y) { return x > y; }));
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = sel32(
+                  ex_in.src_a,
+                  ex_in.src_b,
+                  set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t x, uint16_t y) { return x > y; }));
+              break;
+            default:
+              ex_result = sel32(
+                  ex_in.src_a,
+                  ex_in.src_b,
+                  set32(ex_in.src_a, ex_in.src_b, [](uint32_t x, uint32_t y) { return x > y; }));
+          }
           break;
         case EX_OP_ASR:
           // TODO(m): Implement packed operations.
