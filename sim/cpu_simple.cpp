@@ -173,6 +173,24 @@ inline uint32_t lsr8x4(const uint32_t a, const uint32_t b) {
   return b3 | b2 | b1 | b0;
 }
 
+inline uint32_t mul32(const uint32_t a, const uint32_t b) {
+  return a * b;
+}
+
+inline uint32_t mul16x2(const uint32_t a, const uint32_t b) {
+  const auto h1 = (a >> 16) * (b >> 16) << 16;
+  const auto h0 = (a * b) & 0x0000ffffu;
+  return h1 | h0;
+}
+
+inline uint32_t mul8x4(const uint32_t a, const uint32_t b) {
+  const auto b3 = (a >> 24) * (b >> 24) << 24;
+  const auto b2 = (((a >> 16) * (b >> 16)) & 0x000000ffu) << 16;
+  const auto b1 = (((a >> 8) * (b >> 8)) & 0x000000ffu) << 8;
+  const auto b0 = (a * b) & 0x000000ffu;
+  return b3 | b2 | b1 | b0;
+}
+
 inline uint32_t clz32(const uint32_t x) {
 #if defined(__GNUC__) || defined(__clang__)
   return static_cast<uint32_t>(__builtin_clz(x));
@@ -857,15 +875,13 @@ uint32_t cpu_simple_t::run() {
         case EX_OP_MUL:
           switch (ex_in.packed_mode) {
             case PACKED_BYTE:
-              // TODO(m): Implement me!
-              throw std::runtime_error("PBMUL is not yet implemented.");
+              ex_result = mul8x4(ex_in.src_a, ex_in.src_b);
               break;
             case PACKED_HALF_WORD:
-              // TODO(m): Implement me!
-              throw std::runtime_error("PHMUL is not yet implemented.");
+              ex_result = mul16x2(ex_in.src_a, ex_in.src_b);
               break;
             default:
-              ex_result = ex_in.src_a * ex_in.src_b;
+              ex_result = mul32(ex_in.src_a, ex_in.src_b);
           }
           break;
         case EX_OP_MULHI:
