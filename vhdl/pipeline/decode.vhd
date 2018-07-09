@@ -103,10 +103,15 @@ architecture rtl of decode is
   signal s_is_type_c : std_logic;
 
   signal s_vector_mode : std_logic_vector(1 downto 0);
+  signal s_is_vector_op : std_logic;
   signal s_reg_a_is_vector : std_logic;
   signal s_reg_b_is_vector : std_logic;
   signal s_reg_c_is_vector : std_logic;
-  signal s_is_folding_vector_operation : std_logic;
+  signal s_restart_vector_op : std_logic;
+  signal s_is_folding_vector_op : std_logic;
+  signal s_stall_vector_control : std_logic;
+  signal s_bubble_from_vector_op : std_logic;
+  signal s_is_vector_op_busy : std_logic;
 
   signal s_packed_mode : std_logic_vector(1 downto 0);
 
@@ -162,7 +167,7 @@ architecture rtl of decode is
   signal s_vreg_b_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_element_a : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
   signal s_element_b : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
-  signal s_wb_element_w : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
+  signal s_element_c : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
 
   -- Selected register values (scalar or vector).
   signal s_reg_a_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -211,10 +216,11 @@ begin
 
   -- Determine vector mode.
   s_vector_mode <= i_instr(31 downto 30);
-  s_reg_a_is_vector <= '1' when s_vector_mode /= "00" else '0';  -- TODO(m): NOT for load/store operations!
+  s_is_vector_op <= '1' when s_vector_mode /= "00" else '0';
+  s_reg_a_is_vector <= s_is_vector_op;  -- TODO(m): NOT for load/store operations!
   s_reg_b_is_vector <= s_vector_mode(0);
-  s_reg_c_is_vector <= '1' when s_vector_mode /= "00" else '0';
-  s_is_folding_vector_operation <= '1' when s_vector_mode = "01" else '0';
+  s_reg_c_is_vector <= s_is_vector_op;
+  s_is_folding_vector_op <= '1' when s_vector_mode = "01" else '0';
 
   -- Determine packed mode.
   -- Note: Only instructions that support packed operation will care about this value, so it is safe
@@ -230,6 +236,32 @@ begin
   s_reg_a <= i_instr(18 downto 14);
   s_reg_b <= i_instr(13 downto 9);
   s_reg_c <= i_instr(23 downto 19);  -- Usually destination, somtimes source.
+
+
+  --------------------------------------------------------------------------------------------------
+  -- Register files and vector control.
+  --------------------------------------------------------------------------------------------------
+
+  -- Stall the vector control unit?
+  -- TODO(m): We should also handle missing operand forwarding.
+  s_stall_vector_control <= i_stall;
+
+  vector_control_1: entity work.vector_control
+    port map (
+      i_clk => i_clk,
+      i_rst => i_rst,
+      i_stall => s_stall_vector_control,
+      i_is_vector_op => s_is_vector_op,
+      i_vl => s_vl_data,
+      i_fold => s_is_folding_vector_op,
+      o_element_a => s_element_a,
+      o_element_b => s_element_b,
+      o_is_vector_op_busy => s_is_vector_op_busy,
+      o_bubble => s_bubble_from_vector_op
+    );
+
+  -- The target (write) element is always the same as the src A element.
+  s_element_c <= s_element_a;
 
   -- Instantiate the scalar register file.
   s_scalar_we <= i_wb_we and not i_wb_is_vector;
@@ -272,11 +304,6 @@ begin
   s_reg_a_data <= s_vreg_a_data when s_reg_a_is_vector = '1' else s_sreg_a_data;
   s_reg_b_data <= s_vreg_b_data when s_reg_b_is_vector = '1' else s_sreg_b_data;
   s_reg_c_data <= s_sreg_c_data;
-
-  -- HACK
-  s_element_a <= (others => '0');
-  s_element_b <= (others => '0');
-  s_wb_element_w <= (others => '0');
 
 
   --------------------------------------------------------------------------------------------------
@@ -405,7 +432,7 @@ begin
                                    (s_dst_reg.reg /= to_vector(C_PC_REG, C_LOG2_NUM_REGS))) else '0';
 
   -- Select target vector element.
-  s_dst_reg.element <= (others => '0');  -- TODO(m): Implement me!
+  s_dst_reg.element <= s_element_c when s_reg_c_is_vector = '1' else (others => '0');
   s_dst_reg.is_vector <= s_reg_c_is_vector;  -- TODO(m): NOT for store operations!
 
   -- What pipeline units should be enabled?
@@ -456,7 +483,7 @@ begin
       (s_reg_c_required and (i_reg_c_fwd_use_value and not i_reg_c_fwd_value_ready));
 
   -- Should we discard the operation (i.e. send a bubble down the pipeline)?
-  s_bubble <= i_bubble or i_cancel or s_missing_fwd_operand;
+  s_bubble <= i_bubble or i_cancel or s_missing_fwd_operand or s_bubble_from_vector_op;
   s_dst_reg_masked.is_target <= s_dst_reg.is_target when s_bubble = '0' else '0';
   s_dst_reg_masked.reg <= s_dst_reg.reg when s_bubble = '0' else (others => '0');
   s_dst_reg_masked.element <= s_dst_reg.element when s_bubble = '0' else (others => '0');
