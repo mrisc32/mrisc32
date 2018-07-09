@@ -317,7 +317,7 @@ begin
     );
 
   -- Get the register content for branch logic (condition or target address).
-  s_branch_reg_data <= i_branch_fwd_value when i_branch_fwd_use_value = '1' else s_reg_c_data;
+  s_branch_reg_data <= i_branch_fwd_value when i_branch_fwd_use_value = '1' else s_sreg_c_data;
 
   -- Determine if a conditional (offset) branch is taken?
   branch_comparator_0: entity work.comparator
