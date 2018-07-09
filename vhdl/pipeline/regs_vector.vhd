@@ -29,9 +29,6 @@ use work.common.all;
 --  * There is a single write port.
 --  * Reading the VZ register always returns zero (0).
 --  * Writing to the VZ register has no effect (no operation).
---
--- The registers are implemented as dual port RAMs (two identical copies of the reigsters: one for
--- each read port). Both RAMs are written to, so both RAMs contain identical data.
 ---------------------------------------------------------------------------------------------------
 
 entity regs_vector is
@@ -57,67 +54,49 @@ entity regs_vector is
 end regs_vector;
 
 architecture rtl of regs_vector is
-  constant C_RAM_ADDR_BITS : positive := C_LOG2_NUM_REGS + C_LOG2_VEC_REG_ELEMENTS;
-  constant C_SEL_VZ : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0) := (others => '0');
+  -- Internal write-enable signals (one for each dynamic register, which excludes VZ).
+  type T_WE_MATRIX is array (1 to C_NUM_REGS-1, 0 to C_VEC_REG_ELEMENTS-1) of std_logic;
+  signal s_we : T_WE_MATRIX;
 
-  signal s_data_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_next_read_a_is_vz : std_logic;
-  signal s_read_a_is_vz : std_logic;
-  signal s_data_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_next_read_b_is_vz : std_logic;
-  signal s_read_b_is_vz : std_logic;
-
-  signal s_addr_a : std_logic_vector(C_RAM_ADDR_BITS-1 downto 0);
-  signal s_addr_b : std_logic_vector(C_RAM_ADDR_BITS-1 downto 0);
-  signal s_addr_w : std_logic_vector(C_RAM_ADDR_BITS-1 downto 0);
+  -- Internal register data signals for all registers.
+  type T_DATA_MATRIX is array (0 to C_NUM_REGS-1, 0 to C_VEC_REG_ELEMENTS-1) of std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_data : T_DATA_MATRIX;
 begin
-  -- Logic for filtering reads of the VZ register.
-  s_next_read_a_is_vz <= '1' when i_sel_a = C_SEL_VZ else '0';
-  s_next_read_b_is_vz <= '1' when i_sel_b = C_SEL_VZ else '0';
-  process(i_clk, i_rst)
-  begin
-    if i_rst = '1' then
-      s_read_a_is_vz <= '0';
-      s_read_b_is_vz <= '0';
-    elsif rising_edge(i_clk) then
-      s_read_a_is_vz <= s_next_read_a_is_vz;
-      s_read_b_is_vz <= s_next_read_b_is_vz;
-    end if;
-  end process;
+  -- Instantiate the registers.
+  -- Note: We only need registers that can be written (read-only registers are handled separately).
+  RegGen: for r in 1 to C_NUM_REGS-1 generate
+    ElementGen: for e in 0 to C_VEC_REG_ELEMENTS-1 generate
+      reg_x: entity work.reg
+        generic map (
+          WIDTH => C_WORD_SIZE
+        )
+        port map (
+          i_clk => i_clk,
+          i_rst => i_rst,
+          i_we => s_we(r, e),
+          i_data_w => i_data_w,
+          o_data => s_data(r, e)
+        );
+    end generate;
+  end generate;
 
-  s_addr_a <= i_sel_a & i_element_a;
-  s_addr_b <= i_sel_b & i_element_b;
-  s_addr_w <= i_sel_w & i_element_w;
+  -- The write port of the register file is connected to all registers. Select which register to
+  -- write to by setting at most one of the register write-enable signals to '1'.
+  WEGen1: for r in 1 to C_NUM_REGS-1 generate
+    WEGen2: for e in 0 to C_VEC_REG_ELEMENTS-1 generate
+      s_we(r, e) <= i_we when
+          i_sel_w = std_logic_vector(to_unsigned(r, i_sel_w'length)) and
+          i_element_w = std_logic_vector(to_unsigned(e, i_element_w'length))
+          else '0';
+    end generate;
+  end generate;
 
-  -- ram_a is connected to the A read port.
-  ram_a : entity work.ram_dual_port
-    generic map (
-      WIDTH => C_WORD_SIZE,
-      ADDR_BITS => C_RAM_ADDR_BITS
-    )
-    port map (
-      i_clk => i_clk,
-      i_write_data => i_data_w,
-      i_write_addr => s_addr_w,
-      i_we => i_we,
-      i_read_addr => s_addr_a,
-      o_read_data => s_data_a
-    );
-  o_data_a <= s_data_a when s_read_a_is_vz = '0' else (others => '0');
+  -- We hard-wire the values of the VZ register to zero.
+  VZGen: for e in 0 to C_VEC_REG_ELEMENTS-1 generate
+    s_data(C_Z_REG, e) <= (others => '0');
+  end generate;
 
-  -- ram_b is connected to the B read port.
-  ram_b : entity work.ram_dual_port
-    generic map (
-      WIDTH => C_WORD_SIZE,
-      ADDR_BITS => C_RAM_ADDR_BITS
-    )
-    port map (
-      i_clk => i_clk,
-      i_write_data => i_data_w,
-      i_write_addr => s_addr_w,
-      i_we => i_we,
-      i_read_addr => s_addr_b,
-      o_read_data => s_data_b
-    );
-  o_data_b <= s_data_b when s_read_b_is_vz = '0' else (others => '0');
+  -- Read ports.
+  o_data_a <= s_data(to_integer(unsigned(i_sel_a)), to_integer(unsigned(i_element_a)));
+  o_data_b <= s_data(to_integer(unsigned(i_sel_b)), to_integer(unsigned(i_element_b)));
 end rtl;

@@ -229,6 +229,8 @@ begin
       -- WB data from the EX2 stage (sync).
       i_wb_data_w => s_ex2_result,
       i_wb_sel_w => s_ex2_dst_reg.reg,
+      i_wb_element_w => s_ex2_dst_reg.element,
+      i_wb_is_vector => s_ex2_dst_reg.is_vector,
       i_wb_we => s_ex2_dst_reg.is_target,
 
       -- Branch results to the EX1 stage (sync).
