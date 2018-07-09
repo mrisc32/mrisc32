@@ -8,7 +8,7 @@ This is an experimental, custom 32-bit RISC/Vector CPU.
 * Unified scalar/vector/integer/floating point ISA.
 * There are two register files:
   - There are 32 scalar registers, S0-S31, each 32 bits wide.
-    - Four registers are special: Z, PC, LR, VL.
+    - Four registers have special meaning in hardware: Z, PC, LR, VL.
     - 28 registers are general purpose (of which three are reserved: SP, TP, FP).
     - All registers can be used for all types (integers, addresses and floating point).
     - PC is user-visible (for arithmetic and addressing) but read-only (to simplify branching logic).
@@ -22,14 +22,14 @@ This is an experimental, custom 32-bit RISC/Vector CPU.
 * All conditionals (branches etc) are based on register content (not condition code flags).
 * There are no condition code flags (carry, overflow, ...).
 * Unlike early RISC architectures, there are *no* delay slots.
-* Many traditional floating point operations can be handled by integer operations, reducing the number of necessary instructions:
+* Many traditional floating point operations can be handled in whole or patrially by integer operations, reducing the number of necessary instructions:
   - Load/store.
   - Branch.
   - Sign and bit manipulation (e.g. neg, abs).
 * Vector operations use a Cray-like model:
   - Vector operations are variable length (1-*N* elements).
   - Most integer and floating point instructions come in both scalar and vector variants.
-* In addition to vector operations, there are also packed operations that can improve performance for certain data types.
+* In addition to vector operations, there are also packed operations that can improve performance for small data types (byte and half-word).
 * There is currently no HW support for 64-bit floating point operations (that is left for a 64-bit version of the ISA).
 
 
@@ -51,18 +51,21 @@ Use the assembler to compile programs, and use the simulator to run them.
 
 # Hardware/HDL
 
-A [VHDL implementation](vhdl/) of a scalar in-order CPU is currently under development. The working name for the CPU is *MRISC32-A1*:
+A [VHDL implementation](vhdl/) of a single issue, in-order CPU is currently under development. The working name for the CPU is *MRISC32-A1*:
 
 ![MRISC32-A1 pipleine](doc/mrisc32-a1-pipeline.png)
 
 So far, the following components have been implemented:
 
 * The integer ALU.
-  - All single-cycle integer operations are supported.
+  - All single-cycle unpacked integer operations are supported.
 * A pipelined (two-cycle) multiply unit.
-  - Supports all multiplication operations.
+  - Supports all unpacked integer multiplication operations.
 * The scalar register file.
   - There are three read ports and one write port.
+* The vector register file.
+  - There are two read ports and one write port.
+  - Each vector register has four elements.
 * A basic 6-stage pipeline.
   - PC and branching logic.
   - Instruction fetch.
@@ -72,7 +75,7 @@ So far, the following components have been implemented:
   - Register write-back.
   - Operand forwarding.
 
-**TODO**: Caches, vector logic, vector register file, divide, FPU, etc.
+**TODO**: Caches, vector load/store, divide, FPU, packed operations, etc.
 
 # Goals
 
