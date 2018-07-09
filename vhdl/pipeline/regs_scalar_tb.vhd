@@ -42,6 +42,11 @@ architecture behavioral of regs_scalar_tb is
 
   -- Clock period.
   constant C_HALF_PERIOD : time := 2 ns;
+
+  function reg(x: integer) return std_logic_vector is
+  begin
+    return to_vector(x, C_NUM_REGS);
+  end function;
 begin
   regs_scalar_0: entity work.regs_scalar
     port map (
@@ -63,12 +68,12 @@ begin
   process
   begin
     -- Reset all inputs.
-    s_sel_a <= "00000";
-    s_sel_b <= "00000";
-    s_sel_c <= "00000";
+    s_sel_a <= reg(0);
+    s_sel_b <= reg(0);
+    s_sel_c <= reg(0);
     s_we <= '0';
     s_data_w <= "00000000000000000000000000000000";
-    s_sel_w <= "00000";
+    s_sel_w <= reg(0);
     s_pc <= "00000000000000000000000000000000";
     s_clk <= '0';
 
@@ -102,7 +107,7 @@ begin
 
     -- Write a value to register S1.
     s_data_w <= "00000000000000000000000000010101";
-    s_sel_w <= "00001";
+    s_sel_w <= reg(1);
     s_we <= '1';
     wait for C_HALF_PERIOD;
     s_clk <= '1';
@@ -111,7 +116,7 @@ begin
 
     -- Write a value to register S2.
     s_data_w <= "00000000000000000000000001010100";
-    s_sel_w <= "00010";
+    s_sel_w <= reg(2);
     s_we <= '1';
     wait for C_HALF_PERIOD;
     s_clk <= '1';
@@ -120,7 +125,7 @@ begin
 
     -- Write a value to register S3.
     s_data_w <= "00000000000000000000000101010000";
-    s_sel_w <= "00011";
+    s_sel_w <= reg(3);
     s_we <= '1';
     wait for C_HALF_PERIOD;
     s_clk <= '1';
@@ -128,9 +133,9 @@ begin
     s_clk <= '0';
 
     -- Read registers S1, S2, S3, and check the results.
-    s_sel_a <= "00001";
-    s_sel_b <= "00010";
-    s_sel_c <= "00011";
+    s_sel_a <= reg(1);
+    s_sel_b <= reg(2);
+    s_sel_c <= reg(3);
     s_we <= '0';
     wait for C_HALF_PERIOD;
     s_clk <= '1';
@@ -150,12 +155,12 @@ begin
              "  S3=" & to_string(s_data_c) & " (expected 00000000000000000000000101010000)"
         severity error;
 
-    -- Write a value to VL (S29) and...
-    -- ...read registers Z, VL and PC (S0, S29 and S31), and check the results.
-    s_sel_a <= "00000";  -- Should return zero.
-    s_sel_b <= "11111";  -- Should return PC.
-    s_sel_c <= "11101";  -- Should return what's being written (data forwarding).
-    s_sel_w <= "11101";
+    -- Write a value to VL and...
+    -- ...read registers Z, VL and PC, and check the results.
+    s_sel_a <= reg(C_Z_REG);   -- Should return zero.
+    s_sel_b <= reg(C_PC_REG);  -- Should return PC.
+    s_sel_c <= reg(C_VL_REG);  -- Should return what's being written (data forwarding).
+    s_sel_w <= reg(C_VL_REG);
     s_pc <= "00000000000001010100000000000100";
     s_data_w <= "10000000000000000000000000000001";
     s_we <= '1';

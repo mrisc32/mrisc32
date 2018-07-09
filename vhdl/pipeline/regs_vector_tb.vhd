@@ -41,6 +41,16 @@ architecture behavioral of regs_vector_tb is
 
   -- Clock period.
   constant C_HALF_PERIOD : time := 2 ns;
+
+  function reg(x: integer) return std_logic_vector is
+  begin
+    return to_vector(x, C_NUM_REGS);
+  end function;
+
+  function elem(x: integer) return std_logic_vector is
+  begin
+    return to_vector(x, C_LOG2_VEC_REG_ELEMENTS);
+  end function;
 begin
   regs_vector_0: entity work.regs_vector
     port map (
@@ -78,30 +88,30 @@ begin
     type pattern_array is array (natural range <>) of pattern_type;
     constant patterns : pattern_array := (
         -- Write a value to V1[0].
-        (5X"00", 2X"0", 5X"00", 2X"0", '1', X"00001234", 5X"01", 2X"0", X"00000000", X"00000000"),
+        (reg(0), elem(0), reg(0), elem(0), '1', X"00001234", reg(1), elem(0), X"00000000", X"00000000"),
 
         -- Write a value to V2[1].
-        (5X"00", 2X"0", 5X"00", 2X"0", '1', X"00012340", 5X"02", 2X"1", X"00000000", X"00000000"),
+        (reg(0), elem(0), reg(0), elem(0), '1', X"00012340", reg(2), elem(1), X"00000000", X"00000000"),
 
         -- Write a value to V3[2].
-        (5X"00", 2X"0", 5X"00", 2X"0", '1', X"00123400", 5X"03", 2X"2", X"00000000", X"00000000"),
+        (reg(0), elem(0), reg(0), elem(0), '1', X"00123400", reg(3), elem(2), X"00000000", X"00000000"),
 
         -- Read V1[0] and V2[1].
-        (5X"01", 2X"0", 5X"02", 2X"1", '0', X"00000000", 5X"00", 2X"0", X"00001234", X"00012340"),
+        (reg(1), elem(0), 5X"02", elem(1), '0', X"00000000", reg(0), elem(0), X"00001234", X"00012340"),
 
         -- Read V3[2].
-        (5X"03", 2X"2", 5X"00", 2X"0", '0', X"00000000", 5X"00", 2X"0", X"00123400", X"00000000")
+        (reg(3), elem(2), reg(0), elem(0), '0', X"00000000", reg(0), elem(0), X"00123400", X"00000000")
       );
   begin
     -- Reset all inputs.
-    s_sel_a <= "00000";
-    s_element_a <= "00";
-    s_sel_b <= "00000";
-    s_element_b <= "00";
+    s_sel_a <= reg(0);
+    s_element_a <= elem(0);
+    s_sel_b <= reg(0);
+    s_element_b <= elem(0);
     s_we <= '0';
     s_data_w <= "00000000000000000000000000000000";
-    s_sel_w <= "00000";
-    s_element_w <= "00";
+    s_sel_w <= reg(0);
+    s_element_w <= elem(0);
     s_clk <= '0';
 
     -- Start by resetting the register file.
