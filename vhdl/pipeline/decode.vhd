@@ -206,6 +206,10 @@ architecture rtl of decode is
   signal s_div_en_masked : std_logic;
   signal s_is_branch_masked : std_logic;
 begin
+  --------------------------------------------------------------------------------------------------
+  -- Instruction decoding.
+  --------------------------------------------------------------------------------------------------
+
   -- Extract operation codes.
   s_op_high <= i_instr(29 downto 24);
   s_op_low <= i_instr(8 downto 0);
@@ -214,6 +218,37 @@ begin
   s_is_type_a <= '1' when s_op_high = "000000" else '0';
   s_is_type_c <= '1' when s_op_high(5 downto 4) = "11" else '0';
   s_is_type_b <= not (s_is_type_a or s_is_type_c);
+
+  -- Extract immediate.
+  s_imm(13 downto 0) <= i_instr(13 downto 0);
+  s_imm(18 downto 14) <= i_instr(18 downto 14) when s_is_type_c = '1' else (others => i_instr(13));
+  s_imm(31 downto 19) <= (others => s_imm(18));
+
+  -- Extract register numbers.
+  s_reg_a <= i_instr(18 downto 14);
+  s_reg_b <= i_instr(13 downto 9);
+  s_reg_c <= i_instr(23 downto 19);  -- Usually destination, somtimes source.
+
+  -- Determine MEM operation.
+  s_mem_op_type(0) <= s_is_type_a when (s_op_low(8 downto 4) = "00000") else '0';
+  s_mem_op_type(1) <= s_is_type_b when (s_op_high(5 downto 4) = "00") else '0';
+  MemOpMux: with s_mem_op_type select
+    s_mem_op <=
+        s_op_low(3 downto 0) when "01",    -- Addr = reg + reg
+        s_op_high(3 downto 0) when "10",   -- Addr = reg + imm
+        (others => '0') when others;
+  s_is_mem_op <= s_mem_op_type(0) or s_mem_op_type(1);
+  s_is_mem_store <= s_is_mem_op and s_mem_op(3);
+
+  -- Is this an immediate load?
+  s_is_ldi   <= '1' when s_op_high = 6X"3a" else '0';
+  s_is_ldhi  <= '1' when s_op_high = 6X"3b" else '0';
+  s_is_ldhio <= '1' when s_op_high = 6X"3c" else '0';
+
+  -- Is this a MUL, DIV or FPU op?
+  s_is_mul_op <= '1' when (s_is_type_a = '1' and s_op_low(8 downto 3) = "001000") else '0';
+  s_is_div_op <= '1' when (s_is_type_a = '1' and s_op_low(8 downto 3) = "001001") else '0';
+  s_is_fpu_op <= '1' when (s_is_type_a = '1' and s_op_low(8 downto 4) = "00101") else '0';
 
   -- Determine vector mode.
   s_vector_mode <= i_instr(31 downto 30);
@@ -228,19 +263,9 @@ begin
   -- to just pick bits 7 and 8 from the instruction word without masking agains instruction type.
   s_packed_mode <= i_instr(8 downto 7);
 
-  -- Extract immediate.
-  s_imm(13 downto 0) <= i_instr(13 downto 0);
-  s_imm(18 downto 14) <= i_instr(18 downto 14) when s_is_type_c = '1' else (others => i_instr(13));
-  s_imm(31 downto 19) <= (others => s_imm(18));
-
-  -- Extract register numbers.
-  s_reg_a <= i_instr(18 downto 14);
-  s_reg_b <= i_instr(13 downto 9);
-  s_reg_c <= i_instr(23 downto 19);  -- Usually destination, somtimes source.
-
 
   --------------------------------------------------------------------------------------------------
-  -- Register files and vector control.
+  -- Vector control logic.
   --------------------------------------------------------------------------------------------------
 
   -- Stall the vector control unit?
@@ -264,6 +289,11 @@ begin
 
   -- The target (write) element is always the same as the src A element.
   s_element_c <= s_element_a;
+
+
+  --------------------------------------------------------------------------------------------------
+  -- Register files.
+  --------------------------------------------------------------------------------------------------
 
   -- Instantiate the scalar register file.
   s_scalar_we <= i_wb_we and not i_wb_is_vector;
@@ -381,27 +411,6 @@ begin
   --------------------------------------------------------------------------------------------------
   -- Prepare data for the EX stage.
   --------------------------------------------------------------------------------------------------
-
-  -- Determine MEM operation.
-  s_mem_op_type(0) <= s_is_type_a when (s_op_low(8 downto 4) = "00000") else '0';
-  s_mem_op_type(1) <= s_is_type_b when (s_op_high(5 downto 4) = "00") else '0';
-  MemOpMux: with s_mem_op_type select
-    s_mem_op <=
-        s_op_low(3 downto 0) when "01",    -- Addr = reg + reg
-        s_op_high(3 downto 0) when "10",   -- Addr = reg + imm
-        (others => '0') when others;
-  s_is_mem_op <= s_mem_op_type(0) or s_mem_op_type(1);
-  s_is_mem_store <= s_is_mem_op and s_mem_op(3);
-
-  -- Is this an immediate load?
-  s_is_ldi   <= '1' when s_op_high = 6X"3a" else '0';
-  s_is_ldhi  <= '1' when s_op_high = 6X"3b" else '0';
-  s_is_ldhio <= '1' when s_op_high = 6X"3c" else '0';
-
-  -- Is this a MUL, DIV or FPU op?
-  s_is_mul_op <= '1' when (s_is_type_a = '1' and s_op_low(8 downto 3) = "001000") else '0';
-  s_is_div_op <= '1' when (s_is_type_a = '1' and s_op_low(8 downto 3) = "001001") else '0';
-  s_is_fpu_op <= '1' when (s_is_type_a = '1' and s_op_low(8 downto 4) = "00101") else '0';
 
   -- What source registers are required for this operation?
   s_reg_a_required <= not s_is_type_c;
