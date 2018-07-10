@@ -106,6 +106,9 @@ begin
     (others => s_extend_bit) when s_mem_size = "01"
     else s_shifted_read_data(15 downto 8);
 
+  s_adjusted_read_data(7 downto 0) <= s_shifted_read_data(7 downto 0);
+
+
   ------------------------------------------------------------------------------
   -- Outputs.
   ------------------------------------------------------------------------------
