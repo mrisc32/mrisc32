@@ -71,11 +71,11 @@ So far, the following components have been implemented:
   - Instruction fetch.
   - Decode.
   - Execute.
-  - Data read/write logic.
+  - Data read/write logic (scalar and vector).
   - Register write-back.
   - Operand forwarding.
 
-**TODO**: Caches, vector load/store, divide, FPU, packed operations, etc.
+**TODO**: Caches, divide, FPU, packed operations, etc.
 
 # Goals
 
