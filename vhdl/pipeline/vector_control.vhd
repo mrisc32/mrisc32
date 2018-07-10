@@ -50,6 +50,7 @@ entity vector_control is
     o_element_a : out std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
     o_element_b : out std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
     o_is_vector_op_busy : out std_logic;
+    o_is_first_vector_op_cycle : out std_logic;
     o_bubble : out std_logic
   );
 end vector_control;
@@ -170,6 +171,9 @@ begin
 
   -- Should we bubble (i.e. we're doing a zero lenght vector operatoin)?
   o_bubble <= i_is_vector_op when s_vl = C_VL_ZERO else '0';
+
+  -- Signal whether or not a vector operation was just started.
+  o_is_first_vector_op_cycle <= '1' when s_state = START and i_is_vector_op = '1' else '0';
 
   -- Debug signals (should be optimized away during synthesis).
   DebugStateMux: with s_state select

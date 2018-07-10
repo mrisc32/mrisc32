@@ -35,6 +35,7 @@ architecture behavioral of vector_control_tb is
   signal s_element_a : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
   signal s_element_b : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
   signal s_is_vector_op_busy : std_logic;
+  signal s_is_first_vector_op_cycle : std_logic;
   signal s_bubble : std_logic;
 
   -- Clock period.
@@ -61,6 +62,7 @@ begin
       o_element_a => s_element_a,
       o_element_b => s_element_b,
       o_is_vector_op_busy => s_is_vector_op_busy,
+      o_is_first_vector_op_cycle => s_is_first_vector_op_cycle,
       o_bubble => s_bubble
     );
 
@@ -77,67 +79,68 @@ begin
       element_a : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
       element_b : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
       is_vector_op_busy : std_logic;
+      is_first_vector_op_cycle : std_logic;
       bubble : std_logic;
     end record;
     type pattern_array is array (natural range <>) of pattern_type;
     constant patterns : pattern_array := (
         -- The first state should be zero.
-        ('0', '0', vl(4), '0', elem(0), elem(0), '0', '0'),
-        ('0', '0', vl(4), '0', elem(0), elem(0), '0', '0'),
+        ('0', '0', vl(4), '0', elem(0), elem(0), '0', '0', '0'),
+        ('0', '0', vl(4), '0', elem(0), elem(0), '0', '0', '0'),
 
         -- Perform a vector operation of length 4.
-        ('0', '1', vl(4), '0', elem(0), elem(0), '1', '0'),
-        ('0', '1', vl(4), '0', elem(1), elem(1), '1', '0'),
-        ('0', '1', vl(4), '0', elem(2), elem(2), '1', '0'),
-        ('0', '1', vl(4), '0', elem(3), elem(3), '0', '0'),
+        ('0', '1', vl(4), '0', elem(0), elem(0), '1', '1', '0'),
+        ('0', '1', vl(4), '0', elem(1), elem(1), '1', '0', '0'),
+        ('0', '1', vl(4), '0', elem(2), elem(2), '1', '0', '0'),
+        ('0', '1', vl(4), '0', elem(3), elem(3), '0', '0', '0'),
 
         -- Scalar operations...
-        ('0', '0', vl(4), '0', elem(0), elem(0), '0', '0'),
-        ('0', '0', vl(4), '0', elem(0), elem(0), '0', '0'),
+        ('0', '0', vl(4), '0', elem(0), elem(0), '0', '0', '0'),
+        ('0', '0', vl(4), '0', elem(0), elem(0), '0', '0', '0'),
 
         -- Perform a vector operation of length 3.
-        ('0', '1', vl(3), '0', elem(0), elem(0), '1', '0'),
-        ('0', '1', vl(3), '0', elem(1), elem(1), '1', '0'),
-        ('0', '1', vl(3), '0', elem(2), elem(2), '0', '0'),
+        ('0', '1', vl(3), '0', elem(0), elem(0), '1', '1', '0'),
+        ('0', '1', vl(3), '0', elem(1), elem(1), '1', '0', '0'),
+        ('0', '1', vl(3), '0', elem(2), elem(2), '0', '0', '0'),
 
         -- ...and then a new vector operation.
-        ('0', '1', vl(3), '0', elem(0), elem(0), '1', '0'),
-        ('0', '1', vl(3), '0', elem(1), elem(1), '1', '0'),
-        ('0', '1', vl(3), '0', elem(2), elem(2), '0', '0'),
+        ('0', '1', vl(3), '0', elem(0), elem(0), '1', '1', '0'),
+        ('0', '1', vl(3), '0', elem(1), elem(1), '1', '0', '0'),
+        ('0', '1', vl(3), '0', elem(2), elem(2), '0', '0', '0'),
 
         -- Perform a vector operation of length 0: Should bubble.
-        ('0', '1', vl(0), '0', elem(0), elem(0), '0', '1'),
+        ('0', '1', vl(0), '0', elem(0), elem(0), '0', '1', '1'),
 
         -- Perform a vector operation of length 1.
-        ('0', '1', vl(1), '0', elem(0), elem(0), '0', '0'),
+        ('0', '1', vl(1), '0', elem(0), elem(0), '0', '1', '0'),
 
         -- Scalar operations...
-        ('0', '0', vl(1), '0', elem(0), elem(0), '0', '0'),
-        ('0', '0', vl(2), '0', elem(0), elem(0), '0', '0'),
+        ('0', '0', vl(1), '0', elem(0), elem(0), '0', '0', '0'),
+        ('0', '0', vl(2), '0', elem(0), elem(0), '0', '0', '0'),
 
         -- Perform a vector operation of length 2.
-        ('0', '1', vl(2), '0', elem(0), elem(0), '1', '0'),
-        ('0', '1', vl(2), '0', elem(1), elem(1), '0', '0'),
+        ('0', '1', vl(2), '0', elem(0), elem(0), '1', '1', '0'),
+        ('0', '1', vl(2), '0', elem(1), elem(1), '0', '0', '0'),
 
         -- Perform a vector operation of length 999999: Should bubble.
-        ('0', '1', vl(999999), '0', elem(0), elem(0), '0', '1'),
+        ('0', '1', vl(999999), '0', elem(0), elem(0), '0', '1', '1'),
 
         -- Perform a vector operation of length 3, with stalling.
-        ('0', '1', vl(3), '0', elem(0), elem(0), '1', '0'),
-        ('1', '1', vl(3), '0', elem(1), elem(1), '1', '0'),
-        ('1', '1', vl(3), '0', elem(1), elem(1), '1', '0'),
-        ('1', '1', vl(3), '0', elem(1), elem(1), '1', '0'),
-        ('0', '1', vl(3), '0', elem(1), elem(1), '1', '0'),
-        ('0', '1', vl(3), '0', elem(2), elem(2), '0', '0'),
+        ('0', '1', vl(3), '0', elem(0), elem(0), '1', '1', '0'),
+        ('1', '1', vl(3), '0', elem(1), elem(1), '1', '0', '0'),
+        ('1', '1', vl(3), '0', elem(1), elem(1), '1', '0', '0'),
+        ('1', '1', vl(3), '0', elem(1), elem(1), '1', '0', '0'),
+        ('0', '1', vl(3), '0', elem(1), elem(1), '1', '0', '0'),
+        ('0', '1', vl(3), '0', elem(2), elem(2), '0', '0', '0'),
 
         -- Perform a vector operation of length 2, with folding.
-        ('0', '1', vl(2), '1', elem(0), elem(2), '1', '0'),
-        ('0', '1', vl(2), '1', elem(1), elem(3), '0', '0'),
+        ('0', '1', vl(2), '1', elem(0), elem(2), '1', '1', '0'),
+        ('0', '1', vl(2), '1', elem(1), elem(3), '0', '0', '0'),
 
         -- (tail)
-        ('0', '0', vl(4), '0', elem(0), elem(0), '0', '0'),
-        ('0', '0', vl(4), '0', elem(0), elem(0), '0', '0'),
-        ('0', '0', vl(4), '0', elem(0), elem(0), '0', '0')
+        ('0', '0', vl(4), '0', elem(0), elem(0), '0', '0', '0'),
+        ('0', '0', vl(4), '0', elem(0), elem(0), '0', '0', '0'),
+        ('0', '0', vl(4), '0', elem(0), elem(0), '0', '0', '0')
       );
   begin
     -- Reset all inputs.
@@ -186,6 +189,10 @@ begin
       assert s_is_vector_op_busy = patterns(i).is_vector_op_busy
         report "Bad is_vector_op_busy value (" & integer'image(i) & "):" & lf &
                "  " & to_string(s_is_vector_op_busy) & " (expected " & to_string(patterns(i).is_vector_op_busy) &  ")"
+          severity error;
+      assert s_is_first_vector_op_cycle = patterns(i).is_first_vector_op_cycle
+        report "Bad is_first_vector_op_cycle value (" & integer'image(i) & "):" & lf &
+               "  " & to_string(s_is_first_vector_op_cycle) & " (expected " & to_string(patterns(i).is_first_vector_op_cycle) &  ")"
           severity error;
       assert s_bubble = patterns(i).bubble
         report "Bad bubble value (" & integer'image(i) & "):" & lf &

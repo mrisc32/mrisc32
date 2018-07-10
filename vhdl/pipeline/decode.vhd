@@ -110,8 +110,9 @@ architecture rtl of decode is
   signal s_restart_vector_op : std_logic;
   signal s_is_folding_vector_op : std_logic;
   signal s_stall_vector_control : std_logic;
-  signal s_bubble_from_vector_op : std_logic;
   signal s_is_vector_op_busy : std_logic;
+  signal s_is_first_vector_op_cycle : std_logic;
+  signal s_bubble_from_vector_op : std_logic;
 
   signal s_packed_mode : std_logic_vector(1 downto 0);
 
@@ -257,6 +258,7 @@ begin
       o_element_a => s_element_a,
       o_element_b => s_element_b,
       o_is_vector_op_busy => s_is_vector_op_busy,
+      o_is_first_vector_op_cycle => s_is_first_vector_op_cycle,
       o_bubble => s_bubble_from_vector_op
     );
 
