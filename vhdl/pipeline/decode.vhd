@@ -109,10 +109,13 @@ architecture rtl of decode is
   signal s_reg_c_is_vector : std_logic;
   signal s_restart_vector_op : std_logic;
   signal s_is_folding_vector_op : std_logic;
+  signal s_is_vector_stride_mem_op : std_logic;
   signal s_stall_vector_control : std_logic;
   signal s_is_vector_op_busy : std_logic;
   signal s_is_first_vector_op_cycle : std_logic;
   signal s_bubble_from_vector_op : std_logic;
+  signal s_vector_stride : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_vector_stride_offset : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
   signal s_packed_mode : std_logic_vector(1 downto 0);
 
@@ -253,10 +256,11 @@ begin
   -- Determine vector mode.
   s_vector_mode <= i_instr(31 downto 30);
   s_is_vector_op <= '1' when s_vector_mode /= "00" else '0';
-  s_reg_a_is_vector <= s_is_vector_op;  -- TODO(m): NOT for load/store operations!
+  s_reg_a_is_vector <= s_is_vector_op and not s_is_mem_op;
   s_reg_b_is_vector <= s_vector_mode(0);
   s_reg_c_is_vector <= s_is_vector_op;
   s_is_folding_vector_op <= '1' when s_vector_mode = "01" else '0';
+  s_is_vector_stride_mem_op <= s_is_mem_op and s_is_vector_op and (not s_reg_b_is_vector);
 
   -- Determine packed mode.
   -- Note: Only instructions that support packed operation will care about this value, so it is safe
@@ -287,8 +291,23 @@ begin
       o_bubble => s_bubble_from_vector_op
     );
 
-  -- The target (write) element is always the same as the src A element.
+  -- The target (write) element index is always the same as the src A element index.
   s_element_c <= s_element_a;
+
+  -- Select the vector stride source.
+  -- TODO(m): We should also be able to use a scalar register as the stride source.
+  s_vector_stride <= s_imm;
+
+  -- Vector memory address generation.
+  vector_stride_gen_1: entity work.vector_stride_gen
+    port map (
+      i_clk => i_clk,
+      i_rst => i_rst,
+      i_stall => s_stall_vector_control,
+      i_is_first_vector_op_cycle => s_is_first_vector_op_cycle,
+      i_stride => s_vector_stride,
+      o_offset => s_vector_stride_offset
+    );
 
 
   --------------------------------------------------------------------------------------------------
@@ -429,6 +448,7 @@ begin
              s_imm;
   s_src_b <= X"00000004" when s_is_link_branch = '1' else
              s_reg_b_data_or_fwd when s_is_type_a = '1' else
+             s_vector_stride_offset when s_is_vector_stride_mem_op = '1' else
              s_imm;
   s_src_c <= s_reg_c_data_or_fwd;
 
@@ -444,7 +464,7 @@ begin
 
   -- Select target vector element.
   s_dst_reg.element <= s_element_c when s_reg_c_is_vector = '1' else (others => '0');
-  s_dst_reg.is_vector <= s_reg_c_is_vector;  -- TODO(m): NOT for store operations!
+  s_dst_reg.is_vector <= s_reg_c_is_vector and not s_is_mem_store;
 
   -- What pipeline units should be enabled?
   s_alu_en <= not (s_is_mul_op or s_is_div_op or s_is_fpu_op);
@@ -561,5 +581,5 @@ begin
   end process;
 
   -- Do we need to stall the pipeline (async)?
-  o_stall <= s_missing_fwd_operand;
+  o_stall <= s_missing_fwd_operand or s_is_vector_op_busy;
 end rtl;
