@@ -233,7 +233,7 @@ begin
   s_reg_c <= i_instr(23 downto 19);  -- Usually destination, somtimes source.
 
   -- Determine MEM operation.
-  s_mem_op_type(0) <= s_is_type_a when (s_op_low(8 downto 4) = "00000") else '0';
+  s_mem_op_type(0) <= s_is_type_a when (s_op_low(8 downto 4) = "00000") and (s_op_low(3 downto 0) /= "0000") else '0';
   s_mem_op_type(1) <= s_is_type_b when (s_op_high(5 downto 4) = "00") else '0';
   MemOpMux: with s_mem_op_type select
     s_mem_op <=
@@ -459,6 +459,7 @@ begin
                    (others => '0');
 
   -- Will this instruction write to a register?
+  -- TODO(m): C_PC_REG is only read-only in the scalar register file.
   s_dst_reg.is_target <= '1' when ((s_dst_reg.reg /= to_vector(C_Z_REG, C_LOG2_NUM_REGS)) and
                                    (s_dst_reg.reg /= to_vector(C_PC_REG, C_LOG2_NUM_REGS))) else '0';
 
@@ -474,14 +475,8 @@ begin
 
   -- Select ALU operation.
   s_alu_op <=
-      -- If this is not an ALU operation, disable the ALU.
-      C_ALU_CPUID when s_alu_en = '0' else
-
       -- Use the ALU to calculate the memory/return address.
       C_ALU_ADD when (s_is_mem_op or s_is_link_branch) = '1' else
-
-      -- Use NOP for non-linking branches (they do not produce any result).
-      C_ALU_CPUID when s_is_branch = '1' else
 
       -- LDHI has a special ALU op.
       C_ALU_LDHI when s_is_ldhi = '1' else
@@ -491,6 +486,9 @@ begin
 
       -- LDI can use the OR operator (i.e. just move the immediate value to the target reg).
       C_ALU_OR when s_is_ldi = '1' else
+
+      -- Use NOP for non-ALU ops and non-linking branches (they do not produce any result).
+      C_ALU_CPUID when s_alu_en = '0' or (s_is_branch and not s_is_link_branch) = '1' else
 
       -- Map the low order bits of the low order opcode directly to the ALU.
       s_op_low(C_ALU_OP_SIZE-1 downto 0) when s_is_type_a = '1' else
