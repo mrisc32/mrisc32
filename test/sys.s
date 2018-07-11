@@ -102,3 +102,37 @@ _mul32:
   or     s1, s3, z    ; s1 = result
   j      lr
 
+
+; -----------------------------------------------------------------------------
+; [s1: unsigned Q, s2: unsigned R] = divu32(s1: unsigned N, s2: unsigned D)
+;   Compute N / D and N % D
+;
+; Reference:
+;   https://en.wikipedia.org/wiki/Division_algorithm
+; -----------------------------------------------------------------------------
+_divu32:
+  ldi    s9, 0          ; s9 = Q (quotient)
+  ldi    s10, 0         ; s10 = R (remainder)
+
+  ldi    s11, 31        ; s11 = i (bit counter)
+.loop:
+  lsl    s9, s9, 1      ; Q = Q << 1
+  lsl    s10, s10, 1    ; R = R << 1
+
+  lsr    s12, s1, s11
+  and    s12, s12, 1
+  or     s10, s10, s12  ; R(0) = N(i)
+
+  sleu   s12, s2, s10   ; D <= R?
+  add    s11, s11, -1   ; --i
+  bns    s12, .no_op
+  sub    s10, s10, s2   ; R = R - D
+  or     s9, s9, 1      ; Q(0) = 1
+.no_op:
+
+  bge    s11, .loop
+
+  or     s1, s9, z      ; s1 = Q
+  or     s2, s10, z     ; s2 = R
+  j      lr
+

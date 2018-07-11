@@ -49,6 +49,12 @@ main:
   bl     .test_failed
 .test7_passed:
 
+  bl     test_8
+  or     s16, s16, s1
+  bz     s1, .test8_passed
+  bl     .test_failed
+.test8_passed:
+
   ; exit(s16)
   mov    s1, s16
   b      _exit
@@ -353,6 +359,32 @@ test_7:
 
   ldw    lr, sp, 0
   add    sp, sp, 4
+  ldi    s1, 0
+  j      lr
+
+
+; ----------------------------------------------------------------------------
+; Software divide.
+
+test_8:
+  add    sp, sp, -8
+  stw    lr, sp, 0
+
+  ldi    s1, 5536
+  ldi    s2, 13
+  bl     _divu32
+
+  stw    s2, sp, 4
+  bl     _printhex    ; Print the quotient
+  ldi    s1, 0x3a     ; ":"
+  bl     _putc
+  ldw    s1, sp, 4
+  bl     _printhex    ; Print the remainder
+  ldi    s1, 10       ; "\n"
+  bl     _putc
+
+  ldw    lr, sp, 0
+  add    sp, sp, 8
   ldi    s1, 0
   j      lr
 
