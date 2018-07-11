@@ -27,13 +27,19 @@ if [ "$1" = "--vcd" ]; then
   VCD=yes
   shift
 fi
+if [ "$1" = "--wave" ]; then
+  WAVE=yes
+  shift
+fi
 
 for i in $*; do
   echo "** TEST: $i"
-  if [ -z ${VCD+X} ]; then
-    ${GHDL} -r ${GHDLFLAGS} "$i"
-  else
+  if [ "x${VCD}" = "xyes" ]; then
     ${GHDL} -r ${GHDLFLAGS} "$i" "--vcd=${WORKDIR}/$i.vcd"
+  elif [ "x${WAVE}" = "xyes" ]; then
+    ${GHDL} -r ${GHDLFLAGS} "$i" "--wave=${WORKDIR}/$i.ghw"
+  else
+    ${GHDL} -r ${GHDLFLAGS} "$i"
   fi
   echo ""
 done
