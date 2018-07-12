@@ -43,8 +43,13 @@ entity decode is
 
       -- Operand forwarding to the branch logic.
       i_branch_fwd_value : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_branch_fwd_use_value : std_logic;
-      i_branch_fwd_value_ready : std_logic;
+      i_branch_fwd_use_value : in std_logic;
+      i_branch_fwd_value_ready : in std_logic;
+
+      -- Operand forwarding to the vector control unit.
+      i_vl_fwd_value : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_vl_fwd_use_value : in std_logic;
+      i_vl_fwd_value_ready : in std_logic;
 
       -- Operand forwarding to EX1 input.
       i_reg_a_fwd_value : in std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -75,6 +80,7 @@ entity decode is
       o_src_reg_a : out T_SRC_REG;
       o_src_reg_b : out T_SRC_REG;
       o_src_reg_c : out T_SRC_REG;
+      o_vl_requested : out std_logic;
 
       -- To the EX1 stage (sync).
       o_pc : out std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -198,6 +204,7 @@ architecture rtl of decode is
   signal s_div_en : std_logic;
 
   -- Operand forwarding signals.
+  signal s_vl_data_or_fwd : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_reg_a_data_or_fwd : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_reg_b_data_or_fwd : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_reg_c_data_or_fwd : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -282,9 +289,11 @@ begin
   -- Vector control logic.
   --------------------------------------------------------------------------------------------------
 
+  -- Operand forwarding of VL.
+  s_vl_data_or_fwd <= i_vl_fwd_value when i_vl_fwd_use_value = '1' else s_vl_data;
+
   -- Stall the vector control unit?
-  -- TODO(m): We should also handle missing operand forwarding.
-  s_stall_vector_control <= i_stall;
+  s_stall_vector_control <= i_stall or (i_vl_fwd_use_value and not i_vl_fwd_value_ready);
 
   vector_control_1: entity work.vector_control
     port map (
@@ -292,7 +301,7 @@ begin
       i_rst => i_rst,
       i_stall => s_stall_vector_control,
       i_is_vector_op => s_is_vector_op,
-      i_vl => s_vl_data,
+      i_vl => s_vl_data_or_fwd,
       i_fold => s_is_folding_vector_op,
       o_element_a => s_element_a,
       o_element_b => s_element_b,
@@ -452,6 +461,8 @@ begin
   o_src_reg_c.reg <= s_reg_c;
   o_src_reg_c.element <= s_element_c;
   o_src_reg_c.is_vector <= s_reg_c_is_vector;
+
+  o_vl_requested <= s_is_vector_op;
 
 
   --------------------------------------------------------------------------------------------------

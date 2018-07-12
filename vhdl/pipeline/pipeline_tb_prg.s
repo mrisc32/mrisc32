@@ -21,13 +21,6 @@ vector_test:
     LSL   S13, S12, 2     ; Memory increment (vector size in bytes)
 
     OR    VL, S12, Z
-    NOP                   ; TODO(m): Remove these NOP:s when VL operand forwarding works!
-    NOP
-    NOP
-    NOP
-    NOP
-    NOP
-    NOP
     LEA   S10, .data
     LDW   V1, S10, 4      ; Load some data into V1
 
@@ -43,13 +36,6 @@ vector_test:
     MIN   VL, S12, S15
     SUB   S15, S15, VL    ; Decrement the x counter
 
-    NOP                   ; TODO(m): Remove these NOP:s when VL operand forwarding works!
-    NOP
-    NOP
-    NOP
-    NOP
-    NOP
-    NOP
     MUL   V1, V1, S16     ; Vector multiply
     ADD   V1, V1, S12     ; Vector add
     STW   V1, S14, 4      ; Store vector data to memory

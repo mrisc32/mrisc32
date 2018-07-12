@@ -73,6 +73,7 @@ architecture rtl of pipeline is
   signal s_id_src_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_id_src_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_id_src_c : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_id_vl_requested : std_logic;
   signal s_id_src_reg_a : T_SRC_REG;
   signal s_id_src_reg_b : T_SRC_REG;
   signal s_id_src_reg_c : T_SRC_REG;
@@ -116,6 +117,10 @@ architecture rtl of pipeline is
   signal s_branch_fwd_value : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_branch_fwd_use_value : std_logic;
   signal s_branch_fwd_value_ready : std_logic;
+
+  signal s_vl_fwd_value : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_vl_fwd_use_value : std_logic;
+  signal s_vl_fwd_value_ready : std_logic;
 
   signal s_reg_a_fwd_value : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_reg_a_fwd_use_value : std_logic;
@@ -211,6 +216,11 @@ begin
       i_branch_fwd_use_value => s_branch_fwd_use_value,
       i_branch_fwd_value_ready => s_branch_fwd_value_ready,
 
+      -- Operand forwarding to the vector control unit.
+      i_vl_fwd_value => s_vl_fwd_value,
+      i_vl_fwd_use_value => s_vl_fwd_use_value,
+      i_vl_fwd_value_ready => s_vl_fwd_value_ready,
+
       -- Operand forwarding to the source registers.
       i_reg_a_fwd_value => s_reg_a_fwd_value,
       i_reg_a_fwd_use_value => s_reg_a_fwd_use_value,
@@ -240,6 +250,7 @@ begin
       o_src_reg_a => s_id_src_reg_a,
       o_src_reg_b => s_id_src_reg_b,
       o_src_reg_c => s_id_src_reg_c,
+      o_vl_requested => s_id_vl_requested,
 
       -- To the EX1 stage (sync).
       o_pc => s_id_pc,
@@ -353,6 +364,31 @@ begin
       o_use_value => s_branch_fwd_use_value,
       o_value_ready => s_branch_fwd_value_ready
     );
+
+  -- Forwarding logic for the vector control (VL data) in the ID stage (async).
+  forward_to_vector_control_0: entity work.forward_to_vector_control
+    port map (
+      -- From ID (async).
+      i_vl_requested => s_id_vl_requested,
+
+      -- From ID (sync).
+      i_dst_reg_from_id => s_id_dst_reg,
+
+      -- From EX1 (sync).
+      i_dst_reg_from_ex1 => s_ex1_dst_reg,
+      i_value_from_ex1 => s_ex1_result,
+      i_ready_from_ex1 => s_ex1_result_ready,
+
+      -- From EX2 (sync).
+      i_dst_reg_from_ex2 => s_ex2_dst_reg,
+      i_value_from_ex2 => s_ex2_result,
+
+      -- Operand forwarding to the ID stage.
+      o_value => s_vl_fwd_value,
+      o_use_value => s_vl_fwd_use_value,
+      o_value_ready => s_vl_fwd_value_ready
+    );
+
 
   -- Forwarding logic for the A operand input to the EX stage (sync).
   forward_to_ex_A: entity work.forward_to_ex
