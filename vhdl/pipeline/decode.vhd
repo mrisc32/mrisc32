@@ -177,9 +177,12 @@ architecture rtl of decode is
   signal s_reg_c_required : std_logic;
 
   -- Vector register signals.
+  signal s_vreg_a_sel : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_vreg_b_sel : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_vector_we : std_logic;
   signal s_vreg_a_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_vreg_b_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_vreg_c_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_element_a : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
   signal s_element_b : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
   signal s_element_c : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
@@ -352,15 +355,20 @@ begin
       i_pc => i_pc
     );
 
+  -- Select register numbers for the vector read ports.
+  -- Note: We remap vector register ports for memory operations.
+  s_vreg_a_sel <= s_reg_c when s_is_mem_op = '1' else s_reg_a;
+  s_vreg_b_sel <= s_reg_b;
+
   -- Instantiate the vector register file.
   s_vector_we <= i_wb_we and i_wb_is_vector;
   regs_vector_1: entity work.regs_vector
     port map (
       i_clk => i_clk,
       i_rst => i_rst,
-      i_sel_a => s_reg_a,
+      i_sel_a => s_vreg_a_sel,
       i_element_a => s_element_a,
-      i_sel_b => s_reg_b,
+      i_sel_b => s_vreg_b_sel,
       i_element_b => s_element_b,
       o_data_a => s_vreg_a_data,
       o_data_b => s_vreg_b_data,
@@ -370,10 +378,13 @@ begin
       i_element_w => i_wb_element_w
     );
 
+  -- Note: We reuse the A read port of the vector register file for the C register.
+  s_vreg_c_data <= s_vreg_a_data;
+
   -- Select the register data to use (scalar vs vector).
   s_reg_a_data <= s_vreg_a_data when s_reg_a_is_vector = '1' else s_sreg_a_data;
   s_reg_b_data <= s_vreg_b_data when s_reg_b_is_vector = '1' else s_sreg_b_data;
-  s_reg_c_data <= s_sreg_c_data;
+  s_reg_c_data <= s_vreg_c_data when s_reg_c_is_vector = '1' else s_sreg_c_data;
 
 
   --------------------------------------------------------------------------------------------------
