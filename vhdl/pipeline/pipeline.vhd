@@ -59,13 +59,6 @@ architecture rtl of pipeline is
   signal s_if_instr : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_if_bubble : std_logic;
 
-  signal s_if_src_a_is_vector : std_logic;
-  signal s_if_src_b_is_vector : std_logic;
-  signal s_if_src_c_is_vector : std_logic;
-  signal s_if_src_reg_a : T_SRC_REG;
-  signal s_if_src_reg_b : T_SRC_REG;
-  signal s_if_src_reg_c : T_SRC_REG;
-
   -- From ID.
   signal s_id_stall : std_logic;
 
@@ -80,6 +73,9 @@ architecture rtl of pipeline is
   signal s_id_src_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_id_src_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_id_src_c : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_id_src_reg_a : T_SRC_REG;
+  signal s_id_src_reg_b : T_SRC_REG;
+  signal s_id_src_reg_c : T_SRC_REG;
   signal s_id_dst_reg : T_DST_REG;
   signal s_id_alu_op : T_ALU_OP;
   signal s_id_mem_op : T_MEM_OP;
@@ -240,6 +236,11 @@ begin
       o_branch_is_reg => s_id_branch_is_reg,
       o_branch_is_taken => s_id_branch_is_taken,
 
+      -- Information to the operand forwarding logic (async).
+      o_src_reg_a => s_id_src_reg_a,
+      o_src_reg_b => s_id_src_reg_b,
+      o_src_reg_c => s_id_src_reg_c,
+
       -- To the EX1 stage (sync).
       o_pc => s_id_pc,
       o_pc_plus_4 => s_id_pc_plus_4,
@@ -329,33 +330,11 @@ begin
   -- Operand forwarding.
   --------------------------------------------------------------------------------------------------
 
-  -- Decode register information from the IF stage (sync), for use by the forwarding logic.
-  -- TODO(m): This logic to determine whether or not a source register is vector or scalar is flawed,
-  -- and it should not be here at all (move it to a vector control unit in IF/ID).
-  s_if_src_a_is_vector <= s_if_instr(31) or s_if_instr(30);
-  s_if_src_b_is_vector <= s_if_instr(30);
-  s_if_src_c_is_vector <= s_if_instr(31) or s_if_instr(30);
-  s_if_src_reg_a <= (
-      s_if_instr(18 downto 14),   -- reg
-      (others => '0'),            -- element - TODO(m): Implement me!
-      s_if_src_a_is_vector        -- is_vector
-      );
-  s_if_src_reg_b <= (
-      s_if_instr(13 downto 9),    -- reg
-      (others => '0'),            -- element - TODO(m): Implement me!
-      s_if_src_b_is_vector        -- is_vector
-      );
-  s_if_src_reg_c <= (
-      s_if_instr(23 downto 19),   -- reg
-      (others => '0'),            -- element - TODO(m): Implement me!
-      s_if_src_c_is_vector        -- is_vector
-      );
-
   -- Forwarding logic for the branching logic in the ID stage (async).
   forward_to_branch_logic_0: entity work.forward_to_branch_logic
     port map (
-      -- From IF (sync).
-      i_src_reg => s_if_src_reg_c,
+      -- From ID (async).
+      i_src_reg => s_id_src_reg_c,
 
       -- From ID (sync).
       i_dst_reg_from_id => s_id_dst_reg,
@@ -378,8 +357,8 @@ begin
   -- Forwarding logic for the A operand input to the EX stage (sync).
   forward_to_ex_A: entity work.forward_to_ex
     port map (
-      -- From IF (sync).
-      i_src_reg => s_if_src_reg_a,
+      -- From ID (async).
+      i_src_reg => s_id_src_reg_a,
 
       -- From EX1 input (async).
       i_dst_reg_from_ex1 => s_id_dst_reg,
@@ -403,8 +382,8 @@ begin
   -- Forwarding logic for the B operand input to the EX stage (sync).
   forward_to_ex_B: entity work.forward_to_ex
     port map (
-      -- From IF (sync).
-      i_src_reg => s_if_src_reg_b,
+      -- From ID (async).
+      i_src_reg => s_id_src_reg_b,
 
       -- From EX1 input (async).
       i_dst_reg_from_ex1 => s_id_dst_reg,
@@ -428,8 +407,8 @@ begin
   -- Forwarding logic for the C operand input to the EX stage (sync).
   forward_to_ex_C: entity work.forward_to_ex
     port map (
-      -- From IF (sync).
-      i_src_reg => s_if_src_reg_c,
+      -- From ID (async).
+      i_src_reg => s_id_src_reg_c,
 
       -- From EX1 input (async).
       i_dst_reg_from_ex1 => s_id_dst_reg,

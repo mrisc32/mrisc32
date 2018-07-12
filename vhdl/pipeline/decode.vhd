@@ -71,6 +71,11 @@ entity decode is
       o_branch_is_reg : out std_logic;  -- 1 for register branches, 0 for all other instructions.
       o_branch_is_taken : out std_logic;
 
+      -- Information to the operand forwarding logic (async).
+      o_src_reg_a : out T_SRC_REG;
+      o_src_reg_b : out T_SRC_REG;
+      o_src_reg_c : out T_SRC_REG;
+
       -- To the EX1 stage (sync).
       o_pc : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_pc_plus_4 : out std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -267,6 +272,11 @@ begin
   -- to just pick bits 7 and 8 from the instruction word without masking agains instruction type.
   s_packed_mode <= i_instr(8 downto 7);
 
+  -- What source registers are required for this operation?
+  s_reg_a_required <= not s_is_type_c;
+  s_reg_b_required <= s_is_type_a;
+  s_reg_c_required <= s_is_mem_store;
+
 
   --------------------------------------------------------------------------------------------------
   -- Vector control logic.
@@ -428,13 +438,25 @@ begin
 
 
   --------------------------------------------------------------------------------------------------
-  -- Prepare data for the EX stage.
+  -- Information for the operand forwarding logic.
   --------------------------------------------------------------------------------------------------
 
-  -- What source registers are required for this operation?
-  s_reg_a_required <= not s_is_type_c;
-  s_reg_b_required <= s_is_type_a;
-  s_reg_c_required <= s_is_mem_store;
+  o_src_reg_a.reg <= s_reg_a;
+  o_src_reg_a.element <= s_element_a;
+  o_src_reg_a.is_vector <= s_reg_a_is_vector;
+
+  o_src_reg_b.reg <= s_reg_b;
+  o_src_reg_b.element <= s_element_b;
+  o_src_reg_b.is_vector <= s_reg_b_is_vector;
+
+  o_src_reg_c.reg <= s_reg_c;
+  o_src_reg_c.element <= s_element_c;
+  o_src_reg_c.is_vector <= s_reg_c_is_vector;
+
+
+  --------------------------------------------------------------------------------------------------
+  -- Prepare data for the EX stage.
+  --------------------------------------------------------------------------------------------------
 
   -- Select data from the register file or operand forwarding.
   s_reg_a_data_or_fwd <= i_reg_a_fwd_value when i_reg_a_fwd_use_value = '1' else s_reg_a_data;
