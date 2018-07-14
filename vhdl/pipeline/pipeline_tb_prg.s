@@ -8,48 +8,9 @@ boot:
     ; Start by setting up the stack.
     LDI   SP, 0x00020000  ; We grow down from 128KB.
 
-    BL    vector_test
     BL    mandelbrot
+    BL    vector_flip
     B     exit
-
-
-; -------------------------------------------------------------------------------------------------
-
-vector_test:
-    CPUID S12, Z, Z       ; S12 = max VL
-    MIN   S12, S12, 32    ; We only support vector lengths up to 32
-    LSL   S13, S12, 2     ; Memory increment (vector size in bytes)
-
-    OR    VL, S12, Z
-    LEA   S10, .data
-    LDW   V1, S10, 4      ; Load some data into V1
-
-    LDI   S14, 0x00008000 ; S14 = pixel_data (NOTE: must be after the program)
-
-    LDI   S16, 128        ; S16 = loop counter for y
-
-.loop_y:
-    LDI   S15, 64         ; S15 = loop counter for x
-    ADD   S16, S16, -1    ; Decrement the y counter
-
-.loop_x:
-    MIN   VL, S12, S15
-    SUB   S15, S15, VL    ; Decrement the x counter
-
-    MUL   V1, V1, S16     ; Vector multiply
-    ADD   V1, V1, S12     ; Vector add
-    STW   V1, S14, 4      ; Store vector data to memory
-
-    ADD   S14, S14, S13   ; Increment memory pointer
-    BGT   S15, .loop_x
-
-    BGT   S16, .loop_y
-
-    J     LR
-
-.data:
-    .u32  32,31,30,29,28,27,26,25,24,23,22,21,20,19,18,17
-    .u32  16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1
 
 
 ; -------------------------------------------------------------------------------------------------
@@ -59,7 +20,7 @@ mandelbrot:
     LDI   S17, 100        ; S17 = max_num_iterations
     LDI   S18, 16384      ; S18 = max_distance^2 = 4.0
 
-    LDI   S14, 0x00010000 ; S14 = pixel_data (NOTE: must be after the program)
+    LDI   S14, 0x00008000 ; S14 = pixel_data (NOTE: must be after the program)
 
     LDI   S2, -8192       ; S2 = im(c) = -2.0
     LDI   S16, 128        ; S16 = loop counter for y
@@ -113,6 +74,41 @@ mandelbrot:
     ADD   S16, S16, -1
     ADD   S2, S2, S13     ; im(c) = im(c) + coord_step
     BGT   S16, .outer_loop_y
+
+    J     LR
+
+
+; -------------------------------------------------------------------------------------------------
+
+vector_flip:
+    CPUID S12, Z, Z       ; S12 = max VL
+    LSL   S13, S12, 2     ; Vector size in bytes
+
+    LDI   S14, 0x00008000 ; S14 = src
+    LDI   S15, 0x00017FFC ; S15 = dst
+
+    LDI   S18, 3          ; S18 = multiplication factor
+
+    LDI   S17, 128        ; S17 = loop counter for y
+
+.loop_y:
+    LDI   S16, 64         ; S16 = loop counter for x
+    ADD   S17, S17, -1    ; Decrement the y counter
+
+.loop_x:
+    MIN   VL, S12, S16
+    SUB   S16, S16, VL    ; Decrement the x counter
+
+    LDW   V1, S14, 4
+    SHUF  V1, V1, 0x53    ; Reverse byte order
+    MUL   V1, V1, S18     ; Multiply by something
+    STW   V1, S15, -4     ; Store in reverse word order (stride = -4)
+
+    ADD   S14, S14, S13   ; Increment src pointer
+    SUB   S15, S15, S13   ; Decrement dst pointer
+    BGT   S16, .loop_x
+
+    BGT   S17, .loop_y
 
     J     LR
 
