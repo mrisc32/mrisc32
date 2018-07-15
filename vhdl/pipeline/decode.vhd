@@ -303,6 +303,7 @@ begin
       i_clk => i_clk,
       i_rst => i_rst,
       i_stall => s_stall_vector_control,
+      i_cancel => i_cancel,
       i_is_vector_op => s_is_vector_op,
       i_vl => s_vl_data_or_fwd,
       i_fold => s_is_folding_vector_op,

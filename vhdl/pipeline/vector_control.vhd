@@ -42,6 +42,7 @@ entity vector_control is
     i_clk : in std_logic;
     i_rst : in std_logic;
     i_stall : in std_logic;
+    i_cancel : in std_logic;
 
     i_is_vector_op : in std_logic;
     i_vl : in std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -99,42 +100,47 @@ begin
       s_count <= C_VL_ZERO;
     elsif rising_edge(i_clk) then
       if i_stall = '0' then
-        case s_state is
-          when START =>
-            if i_is_vector_op = '0' then
-              -- Scalar operation.
-              s_count <= C_VL_ZERO;
-            else
-              -- Single cycle vector operation.
-              if s_vl = C_VL_ZERO or s_vl = C_VL_ONE then
+        if i_cancel = '1' then
+          s_state <= START;
+          s_count <= C_VL_ZERO;
+        else
+          case s_state is
+            when START =>
+              if i_is_vector_op = '0' then
+                -- Scalar operation.
                 s_count <= C_VL_ZERO;
               else
-                s_count <= s_count_plus_1;
-                if s_vl = C_VL_TWO then
-                  -- First vector operation of two.
-                  s_state <= LAST;
+                -- Single cycle vector operation.
+                if s_vl = C_VL_ZERO or s_vl = C_VL_ONE then
+                  s_count <= C_VL_ZERO;
                 else
-                  -- First vector operation of many.
-                  s_state <= BUSY;
+                  s_count <= s_count_plus_1;
+                  if s_vl = C_VL_TWO then
+                    -- First vector operation of two.
+                    s_state <= LAST;
+                  else
+                    -- First vector operation of many.
+                    s_state <= BUSY;
+                  end if;
                 end if;
               end if;
-            end if;
 
-          when BUSY =>
-            -- Vector operation: at least one element left.
-            s_count <= s_count_plus_1;
-            if s_next_element_is_the_last = '1' then
-              s_state <= LAST;
-            end if;
+            when BUSY =>
+              -- Vector operation: at least one element left.
+              s_count <= s_count_plus_1;
+              if s_next_element_is_the_last = '1' then
+                s_state <= LAST;
+              end if;
 
-          when LAST =>
-            -- Vector operation: final element.
-            s_count <= C_VL_ZERO;
-            s_state <= START;
+            when LAST =>
+              -- Vector operation: final element.
+              s_count <= C_VL_ZERO;
+              s_state <= START;
 
-          when others =>
-            s_state <= START;
-        end case;
+            when others =>
+              s_state <= START;
+          end case;
+        end if;
       end if;
     end if;
   end process;

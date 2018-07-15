@@ -29,6 +29,7 @@ architecture behavioral of vector_control_tb is
   signal s_clk : std_logic;
   signal s_rst : std_logic;
   signal s_stall : std_logic;
+  signal s_cancel : std_logic;
   signal s_is_vector_op : std_logic;
   signal s_vl : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_fold : std_logic;
@@ -56,6 +57,7 @@ begin
       i_clk => s_clk,
       i_rst => s_rst,
       i_stall => s_stall,
+      i_cancel => s_cancel,
       i_is_vector_op => s_is_vector_op,
       i_vl => s_vl,
       i_fold => s_fold,
@@ -71,6 +73,7 @@ begin
     type pattern_type is record
       -- Inputs
       stall : std_logic;
+      cancel : std_logic;
       is_vector_op : std_logic;
       vl : std_logic_vector(C_WORD_SIZE-1 downto 0);
       fold : std_logic;
@@ -85,62 +88,62 @@ begin
     type pattern_array is array (natural range <>) of pattern_type;
     constant patterns : pattern_array := (
         -- The first state should be zero.
-        ('0', '0', vl(4), '0', elem(0), elem(0), '0', '0', '0'),
-        ('0', '0', vl(4), '0', elem(0), elem(0), '0', '0', '0'),
+        ('0', '0', '0', vl(4), '0', elem(0), elem(0), '0', '0', '0'),
+        ('0', '0', '0', vl(4), '0', elem(0), elem(0), '0', '0', '0'),
 
         -- Perform a vector operation of length 4.
-        ('0', '1', vl(4), '0', elem(0), elem(0), '1', '1', '0'),
-        ('0', '1', vl(4), '0', elem(1), elem(1), '1', '0', '0'),
-        ('0', '1', vl(4), '0', elem(2), elem(2), '1', '0', '0'),
-        ('0', '1', vl(4), '0', elem(3), elem(3), '0', '0', '0'),
+        ('0', '0', '1', vl(4), '0', elem(0), elem(0), '1', '1', '0'),
+        ('0', '0', '1', vl(4), '0', elem(1), elem(1), '1', '0', '0'),
+        ('0', '0', '1', vl(4), '0', elem(2), elem(2), '1', '0', '0'),
+        ('0', '0', '1', vl(4), '0', elem(3), elem(3), '0', '0', '0'),
 
         -- Scalar operations...
-        ('0', '0', vl(4), '0', elem(0), elem(0), '0', '0', '0'),
-        ('0', '0', vl(4), '0', elem(0), elem(0), '0', '0', '0'),
+        ('0', '0', '0', vl(4), '0', elem(0), elem(0), '0', '0', '0'),
+        ('0', '0', '0', vl(4), '0', elem(0), elem(0), '0', '0', '0'),
 
         -- Perform a vector operation of length 3.
-        ('0', '1', vl(3), '0', elem(0), elem(0), '1', '1', '0'),
-        ('0', '1', vl(3), '0', elem(1), elem(1), '1', '0', '0'),
-        ('0', '1', vl(3), '0', elem(2), elem(2), '0', '0', '0'),
+        ('0', '0', '1', vl(3), '0', elem(0), elem(0), '1', '1', '0'),
+        ('0', '0', '1', vl(3), '0', elem(1), elem(1), '1', '0', '0'),
+        ('0', '0', '1', vl(3), '0', elem(2), elem(2), '0', '0', '0'),
 
         -- ...and then a new vector operation.
-        ('0', '1', vl(3), '0', elem(0), elem(0), '1', '1', '0'),
-        ('0', '1', vl(3), '0', elem(1), elem(1), '1', '0', '0'),
-        ('0', '1', vl(3), '0', elem(2), elem(2), '0', '0', '0'),
+        ('0', '0', '1', vl(3), '0', elem(0), elem(0), '1', '1', '0'),
+        ('0', '0', '1', vl(3), '0', elem(1), elem(1), '1', '0', '0'),
+        ('0', '0', '1', vl(3), '0', elem(2), elem(2), '0', '0', '0'),
 
         -- Perform a vector operation of length 0: Should bubble.
-        ('0', '1', vl(0), '0', elem(0), elem(0), '0', '1', '1'),
+        ('0', '0', '1', vl(0), '0', elem(0), elem(0), '0', '1', '1'),
 
         -- Perform a vector operation of length 1.
-        ('0', '1', vl(1), '0', elem(0), elem(0), '0', '1', '0'),
+        ('0', '0', '1', vl(1), '0', elem(0), elem(0), '0', '1', '0'),
 
         -- Scalar operations...
-        ('0', '0', vl(1), '0', elem(0), elem(0), '0', '0', '0'),
-        ('0', '0', vl(2), '0', elem(0), elem(0), '0', '0', '0'),
+        ('0', '0', '0', vl(1), '0', elem(0), elem(0), '0', '0', '0'),
+        ('0', '0', '0', vl(2), '0', elem(0), elem(0), '0', '0', '0'),
 
         -- Perform a vector operation of length 2.
-        ('0', '1', vl(2), '0', elem(0), elem(0), '1', '1', '0'),
-        ('0', '1', vl(2), '0', elem(1), elem(1), '0', '0', '0'),
+        ('0', '0', '1', vl(2), '0', elem(0), elem(0), '1', '1', '0'),
+        ('0', '0', '1', vl(2), '0', elem(1), elem(1), '0', '0', '0'),
 
         -- Perform a vector operation of length 999999: Should bubble.
-        ('0', '1', vl(999999), '0', elem(0), elem(0), '0', '1', '1'),
+        ('0', '0', '1', vl(999999), '0', elem(0), elem(0), '0', '1', '1'),
 
         -- Perform a vector operation of length 3, with stalling.
-        ('0', '1', vl(3), '0', elem(0), elem(0), '1', '1', '0'),
-        ('1', '1', vl(3), '0', elem(1), elem(1), '1', '0', '0'),
-        ('1', '1', vl(3), '0', elem(1), elem(1), '1', '0', '0'),
-        ('1', '1', vl(3), '0', elem(1), elem(1), '1', '0', '0'),
-        ('0', '1', vl(3), '0', elem(1), elem(1), '1', '0', '0'),
-        ('0', '1', vl(3), '0', elem(2), elem(2), '0', '0', '0'),
+        ('0', '0', '1', vl(3), '0', elem(0), elem(0), '1', '1', '0'),
+        ('1', '0', '1', vl(3), '0', elem(1), elem(1), '1', '0', '0'),
+        ('1', '0', '1', vl(3), '0', elem(1), elem(1), '1', '0', '0'),
+        ('1', '0', '1', vl(3), '0', elem(1), elem(1), '1', '0', '0'),
+        ('0', '0', '1', vl(3), '0', elem(1), elem(1), '1', '0', '0'),
+        ('0', '0', '1', vl(3), '0', elem(2), elem(2), '0', '0', '0'),
 
         -- Perform a vector operation of length 2, with folding.
-        ('0', '1', vl(2), '1', elem(0), elem(2), '1', '1', '0'),
-        ('0', '1', vl(2), '1', elem(1), elem(3), '0', '0', '0'),
+        ('0', '0', '1', vl(2), '1', elem(0), elem(2), '1', '1', '0'),
+        ('0', '0', '1', vl(2), '1', elem(1), elem(3), '0', '0', '0'),
 
         -- (tail)
-        ('0', '0', vl(4), '0', elem(0), elem(0), '0', '0', '0'),
-        ('0', '0', vl(4), '0', elem(0), elem(0), '0', '0', '0'),
-        ('0', '0', vl(4), '0', elem(0), elem(0), '0', '0', '0')
+        ('0', '0', '0', vl(4), '0', elem(0), elem(0), '0', '0', '0'),
+        ('0', '0', '0', vl(4), '0', elem(0), elem(0), '0', '0', '0'),
+        ('0', '0', '0', vl(4), '0', elem(0), elem(0), '0', '0', '0')
       );
   begin
     -- Reset all inputs.
