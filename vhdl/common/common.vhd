@@ -64,8 +64,36 @@ package common is
 
 
   ------------------------------------------------------------------------------------------------
+  -- Source operand modes.
+  ------------------------------------------------------------------------------------------------
+
+  subtype T_SRC_A_MODE is std_logic_vector(1 downto 0);
+  constant C_SRC_A_REG : T_SRC_A_MODE := "00";
+  constant C_SRC_A_IMM : T_SRC_A_MODE := "01";
+  constant C_SRC_A_PC : T_SRC_A_MODE := "10";
+
+  subtype T_SRC_B_MODE is std_logic_vector(1 downto 0);
+  constant C_SRC_B_REG : T_SRC_B_MODE := "00";
+  constant C_SRC_B_IMM : T_SRC_B_MODE := "01";
+  constant C_SRC_B_FOUR : T_SRC_B_MODE := "10";
+  constant C_SRC_B_STRIDE : T_SRC_B_MODE := "11";
+
+
+  ------------------------------------------------------------------------------------------------
   -- Operation identifiers
   ------------------------------------------------------------------------------------------------
+
+  -- Branch conditions.
+  constant C_BRANCH_COND_SIZE : integer := 3;
+  subtype T_BRANCH_COND is std_logic_vector(C_BRANCH_COND_SIZE-1 downto 0);
+  constant C_BRANCH_BZ : T_BRANCH_COND := "000";
+  constant C_BRANCH_NZ : T_BRANCH_COND := "001";
+  constant C_BRANCH_S  : T_BRANCH_COND := "010";
+  constant C_BRANCH_NS : T_BRANCH_COND := "011";
+  constant C_BRANCH_LT : T_BRANCH_COND := "100";
+  constant C_BRANCH_GE : T_BRANCH_COND := "101";
+  constant C_BRANCH_LE : T_BRANCH_COND := "110";
+  constant C_BRANCH_GT : T_BRANCH_COND := "111";
 
   -- ALU operations.
   constant C_ALU_OP_SIZE : integer := 6;

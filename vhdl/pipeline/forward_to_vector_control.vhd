@@ -41,6 +41,8 @@ entity forward_to_vector_control is
       -- Operand information from the different pipeline stages.
       i_dst_reg_from_id : in T_DST_REG;
 
+      i_dst_reg_from_rf : in T_DST_REG;
+
       i_dst_reg_from_ex1 : in T_DST_REG;
       i_value_from_ex1 : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_ready_from_ex1 : in std_logic;
@@ -57,6 +59,7 @@ end forward_to_vector_control;
 
 architecture rtl of forward_to_vector_control is
   signal s_reg_from_id : std_logic;
+  signal s_reg_from_rf : std_logic;
   signal s_reg_from_ex1 : std_logic;
   signal s_reg_from_ex2 : std_logic;
 
@@ -70,6 +73,9 @@ begin
   s_reg_from_id <= i_dst_reg_from_id.is_target when
       (i_dst_reg_from_id.reg = to_vector(C_VL_REG, C_LOG2_NUM_REGS)) and
       (i_dst_reg_from_id.is_vector = '0') else '0';
+  s_reg_from_rf <= i_dst_reg_from_rf.is_target when
+      (i_dst_reg_from_rf.reg = to_vector(C_VL_REG, C_LOG2_NUM_REGS)) and
+      (i_dst_reg_from_rf.is_vector = '0') else '0';
   s_reg_from_ex1 <= i_dst_reg_from_ex1.is_target when
       (i_dst_reg_from_ex1.reg = to_vector(C_VL_REG, C_LOG2_NUM_REGS)) and
       (i_dst_reg_from_ex1.is_vector = '0') else '0';
@@ -81,10 +87,10 @@ begin
   o_value <= i_value_from_ex1 when (s_reg_from_ex1 and i_ready_from_ex1) = '1' else i_value_from_ex2;
 
   -- Should the forwarded pipeline value be used instead of register file value?
-  s_use_value <= s_reg_from_id or s_reg_from_ex1 or s_reg_from_ex2;
+  s_use_value <= s_reg_from_id or s_reg_from_rf or s_reg_from_ex1 or s_reg_from_ex2;
 
   -- Is the value ready for use?
-  s_value_ready <= not (s_reg_from_id or (s_reg_from_ex1 and not i_ready_from_ex1));
+  s_value_ready <= not (s_reg_from_id or s_reg_from_rf or (s_reg_from_ex1 and not i_ready_from_ex1));
 
   -- Mask the outputs: We should only forward the value if VL is requested.
   o_use_value <= s_use_value and i_vl_requested;

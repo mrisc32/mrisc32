@@ -62,18 +62,22 @@ architecture rtl of pipeline is
   -- From ID.
   signal s_id_stall : std_logic;
 
-  signal s_id_branch_reg_addr : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_id_branch_offset_addr : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_id_branch_is_branch : std_logic;
-  signal s_id_branch_is_reg : std_logic;
-  signal s_id_branch_is_taken : std_logic;
-
-  signal s_id_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_id_pc_plus_4 : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_id_src_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_id_src_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_id_src_c : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_id_vl_requested : std_logic;
+
+  signal s_id_branch_is_branch : std_logic;
+  signal s_id_branch_is_unconditional : std_logic;
+  signal s_id_branch_is_reg : std_logic;
+  signal s_id_branch_condition : T_BRANCH_COND;
+
+  signal s_id_reg_a_required : std_logic;
+  signal s_id_reg_b_required : std_logic;
+  signal s_id_reg_c_required : std_logic;
+  signal s_id_src_a_mode : T_SRC_A_MODE;
+  signal s_id_src_b_mode : T_SRC_B_MODE;
+  signal s_id_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_id_imm : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_id_stall_vector_control : std_logic;
+  signal s_id_is_first_vector_op_cycle : std_logic;
   signal s_id_src_reg_a : T_SRC_REG;
   signal s_id_src_reg_b : T_SRC_REG;
   signal s_id_src_reg_c : T_SRC_REG;
@@ -86,6 +90,34 @@ architecture rtl of pipeline is
   signal s_id_mem_en : std_logic;
   signal s_id_mul_en : std_logic;
   signal s_id_div_en : std_logic;
+
+  -- From REG.
+  signal s_rf_stall : std_logic;
+
+  signal s_rf_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_rf_pc_plus_4 : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_rf_branch_is_branch : std_logic;
+  signal s_rf_branch_is_reg : std_logic;
+  signal s_rf_branch_offset_addr : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_rf_branch_reg_addr : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_rf_branch_is_taken : std_logic;
+
+  signal s_rf_src_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_rf_src_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_rf_src_c : std_logic_vector(C_WORD_SIZE-1 downto 0);
+
+  signal s_rf_src_reg_a : T_SRC_REG;
+  signal s_rf_src_reg_b : T_SRC_REG;
+  signal s_rf_src_reg_c : T_SRC_REG;
+  signal s_rf_dst_reg : T_DST_REG;
+  signal s_rf_alu_op : T_ALU_OP;
+  signal s_rf_mem_op : T_MEM_OP;
+  signal s_rf_mul_op : T_MUL_OP;
+  signal s_rf_div_op : T_DIV_OP;
+  signal s_rf_alu_en : std_logic;
+  signal s_rf_mem_en : std_logic;
+  signal s_rf_mul_en : std_logic;
+  signal s_rf_div_en : std_logic;
 
   -- From EX1/EX2.
   signal s_ex_stall : std_logic;
@@ -141,6 +173,7 @@ architecture rtl of pipeline is
   signal s_stall_pc : std_logic;
   signal s_stall_if : std_logic;
   signal s_stall_id : std_logic;
+  signal s_stall_rf : std_logic;
 begin
   --------------------------------------------------------------------------------------------------
   -- Pipeline stages.
@@ -199,9 +232,9 @@ begin
 
   decode_0: entity work.decode
     port map (
+      -- Control signals.
       i_clk => i_clk,
       i_rst => i_rst,
-
       i_stall => s_stall_id,
       o_stall => s_id_stall,
       i_cancel => s_cancel_speculative_instructions,
@@ -211,17 +244,100 @@ begin
       i_instr => s_if_instr,
       i_bubble => s_if_bubble,
 
-      -- Operand forwarding to the branch logic.
-      i_branch_fwd_value => s_branch_fwd_value,
-      i_branch_fwd_use_value => s_branch_fwd_use_value,
-      i_branch_fwd_value_ready => s_branch_fwd_value_ready,
+      -- Information to the operand forwarding logic (async).
+      o_vl_requested => s_id_vl_requested,
 
-      -- Operand forwarding to the vector control unit.
+      -- Operand forwarding to the vector control unit (async).
       i_vl_fwd_value => s_vl_fwd_value,
       i_vl_fwd_use_value => s_vl_fwd_use_value,
       i_vl_fwd_value_ready => s_vl_fwd_value_ready,
 
-      -- Operand forwarding to the source registers.
+      -- WB data from the EX2 stage (sync).
+      i_wb_data_w => s_ex2_result,
+      i_wb_we => s_ex2_dst_reg.is_target,
+      i_wb_sel_w => s_ex2_dst_reg.reg,
+      i_wb_is_vector => s_ex2_dst_reg.is_vector,
+
+      -- To the RF stage (sync).
+      o_branch_is_branch => s_id_branch_is_branch,
+      o_branch_is_unconditional => s_id_branch_is_unconditional,
+      o_branch_is_reg => s_id_branch_is_reg,
+      o_branch_condition => s_id_branch_condition,
+
+      o_reg_a_required => s_id_reg_a_required,
+      o_reg_b_required => s_id_reg_b_required,
+      o_reg_c_required => s_id_reg_c_required,
+      o_src_a_mode => s_id_src_a_mode,
+      o_src_b_mode => s_id_src_b_mode,
+      o_pc => s_id_pc,
+      o_imm => s_id_imm,
+      o_stall_vector_control => s_id_stall_vector_control,
+      o_is_first_vector_op_cycle => s_id_is_first_vector_op_cycle,
+      o_src_reg_a => s_id_src_reg_a,
+      o_src_reg_b => s_id_src_reg_b,
+      o_src_reg_c => s_id_src_reg_c,
+      o_dst_reg => s_id_dst_reg,
+      o_alu_op => s_id_alu_op,
+      o_mem_op => s_id_mem_op,
+      o_mul_op => s_id_mul_op,
+      o_div_op => s_id_div_op,
+      o_alu_en => s_id_alu_en,
+      o_mem_en => s_id_mem_en,
+      o_mul_en => s_id_mul_en,
+      o_div_en => s_id_div_en
+    );
+
+
+  -- RF: Register fetch.
+
+  register_fetch_0: entity work.register_fetch
+    port map (
+      -- Control signals.
+      i_clk => i_clk,
+      i_rst => i_rst,
+      i_stall => s_stall_rf,
+      o_stall => s_rf_stall,
+      i_cancel => s_cancel_speculative_instructions,
+
+      -- From the ID stage (sync).
+      i_branch_is_branch => s_id_branch_is_branch,
+      i_branch_is_unconditional => s_id_branch_is_unconditional,
+      i_branch_is_reg => s_id_branch_is_reg,
+      i_branch_condition => s_id_branch_condition,
+
+      i_reg_a_required => s_id_reg_a_required,
+      i_reg_b_required => s_id_reg_b_required,
+      i_reg_c_required => s_id_reg_c_required,
+      i_src_a_mode => s_id_src_a_mode,
+      i_src_b_mode => s_id_src_b_mode,
+      i_pc => s_id_pc,
+      i_imm => s_id_imm,
+      i_stall_vector_control => s_id_stall_vector_control,
+      i_is_first_vector_op_cycle => s_id_is_first_vector_op_cycle,
+      i_src_reg_a => s_id_src_reg_a,
+      i_src_reg_b => s_id_src_reg_b,
+      i_src_reg_c => s_id_src_reg_c,
+      i_dst_reg => s_id_dst_reg,
+      i_alu_op => s_id_alu_op,
+      i_mem_op => s_id_mem_op,
+      i_mul_op => s_id_mul_op,
+      i_div_op => s_id_div_op,
+      i_alu_en => s_id_alu_en,
+      i_mem_en => s_id_mem_en,
+      i_mul_en => s_id_mul_en,
+      i_div_en => s_id_div_en,
+
+      -- Information to the operand forwarding logic (async).
+      o_src_reg_a => s_rf_src_reg_a,
+      o_src_reg_b => s_rf_src_reg_b,
+      o_src_reg_c => s_rf_src_reg_c,
+
+      -- Operand forwarding to the branch logic (async).
+      i_branch_fwd_value => s_branch_fwd_value,
+      i_branch_fwd_use_value => s_branch_fwd_use_value,
+      i_branch_fwd_value_ready => s_branch_fwd_value_ready,
+
+      -- Operand forwarding to EX1 input (async).
       i_reg_a_fwd_value => s_reg_a_fwd_value,
       i_reg_a_fwd_use_value => s_reg_a_fwd_use_value,
       i_reg_a_fwd_value_ready => s_reg_a_fwd_value_ready,
@@ -234,39 +350,33 @@ begin
 
       -- WB data from the EX2 stage (sync).
       i_wb_data_w => s_ex2_result,
+      i_wb_we => s_ex2_dst_reg.is_target,
       i_wb_sel_w => s_ex2_dst_reg.reg,
       i_wb_element_w => s_ex2_dst_reg.element,
       i_wb_is_vector => s_ex2_dst_reg.is_vector,
-      i_wb_we => s_ex2_dst_reg.is_target,
 
       -- Branch results to the EX1 stage (sync).
-      o_branch_reg_addr => s_id_branch_reg_addr,
-      o_branch_offset_addr => s_id_branch_offset_addr,
-      o_branch_is_branch => s_id_branch_is_branch,
-      o_branch_is_reg => s_id_branch_is_reg,
-      o_branch_is_taken => s_id_branch_is_taken,
-
-      -- Information to the operand forwarding logic (async).
-      o_src_reg_a => s_id_src_reg_a,
-      o_src_reg_b => s_id_src_reg_b,
-      o_src_reg_c => s_id_src_reg_c,
-      o_vl_requested => s_id_vl_requested,
+      o_branch_is_branch => s_rf_branch_is_branch,
+      o_branch_is_reg => s_rf_branch_is_reg,
+      o_branch_offset_addr => s_rf_branch_offset_addr,
+      o_branch_reg_addr => s_rf_branch_reg_addr,
+      o_branch_is_taken => s_rf_branch_is_taken,
 
       -- To the EX1 stage (sync).
-      o_pc => s_id_pc,
-      o_pc_plus_4 => s_id_pc_plus_4,
-      o_src_a => s_id_src_a,
-      o_src_b => s_id_src_b,
-      o_src_c => s_id_src_c,
-      o_dst_reg => s_id_dst_reg,
-      o_alu_op => s_id_alu_op,
-      o_mem_op => s_id_mem_op,
-      o_mul_op => s_id_mul_op,
-      o_div_op => s_id_div_op,
-      o_alu_en => s_id_alu_en,
-      o_mem_en => s_id_mem_en,
-      o_mul_en => s_id_mul_en,
-      o_div_en => s_id_div_en
+      o_pc => s_rf_pc,
+      o_pc_plus_4 => s_rf_pc_plus_4,
+      o_src_a => s_rf_src_a,
+      o_src_b => s_rf_src_b,
+      o_src_c => s_rf_src_c,
+      o_dst_reg => s_rf_dst_reg,
+      o_alu_op => s_rf_alu_op,
+      o_mem_op => s_rf_mem_op,
+      o_mul_op => s_rf_mul_op,
+      o_div_op => s_rf_div_op,
+      o_alu_en => s_rf_alu_en,
+      o_mem_en => s_rf_mem_en,
+      o_mul_en => s_rf_mul_en,
+      o_div_en => s_rf_div_en
     );
 
 
@@ -280,30 +390,30 @@ begin
       o_stall => s_ex_stall,
 
       -- From ID stage (sync).
-      i_pc => s_id_pc,
-      i_pc_plus_4 => s_id_pc_plus_4,
-      i_src_a => s_id_src_a,
-      i_src_b => s_id_src_b,
-      i_src_c => s_id_src_c,
-      i_dst_reg => s_id_dst_reg,
-      i_alu_op => s_id_alu_op,
-      i_mem_op => s_id_mem_op,
-      i_mul_op => s_id_mul_op,
-      i_div_op => s_id_div_op,
-      i_alu_en => s_id_alu_en,
-      i_mem_en => s_id_mem_en,
-      i_mul_en => s_id_mul_en,
-      i_div_en => s_id_div_en,
+      i_pc => s_rf_pc,
+      i_pc_plus_4 => s_rf_pc_plus_4,
+      i_src_a => s_rf_src_a,
+      i_src_b => s_rf_src_b,
+      i_src_c => s_rf_src_c,
+      i_dst_reg => s_rf_dst_reg,
+      i_alu_op => s_rf_alu_op,
+      i_mem_op => s_rf_mem_op,
+      i_mul_op => s_rf_mul_op,
+      i_div_op => s_rf_div_op,
+      i_alu_en => s_rf_alu_en,
+      i_mem_en => s_rf_mem_en,
+      i_mul_en => s_rf_mul_en,
+      i_div_en => s_rf_div_en,
 
-      -- PC signal from IF (sync).
-      i_if_pc => s_if_pc,
+      -- PC signal from ID (sync).
+      i_id_pc => s_id_pc,
 
       -- Branch results from the ID stage (sync).
-      i_branch_reg_addr => s_id_branch_reg_addr,
-      i_branch_offset_addr => s_id_branch_offset_addr,
-      i_branch_is_branch => s_id_branch_is_branch,
-      i_branch_is_reg => s_id_branch_is_reg,
-      i_branch_is_taken => s_id_branch_is_taken,
+      i_branch_reg_addr => s_rf_branch_reg_addr,
+      i_branch_offset_addr => s_rf_branch_offset_addr,
+      i_branch_is_branch => s_rf_branch_is_branch,
+      i_branch_is_reg => s_rf_branch_is_reg,
+      i_branch_is_taken => s_rf_branch_is_taken,
 
       -- Branch PC correction to the PC stage (async).
       o_pccorr_target => s_ex1_pccorr_target,
@@ -341,14 +451,14 @@ begin
   -- Operand forwarding.
   --------------------------------------------------------------------------------------------------
 
-  -- Forwarding logic for the branching logic in the ID stage (async).
+  -- Forwarding logic for the branching logic in the RF stage (async).
   forward_to_branch_logic_0: entity work.forward_to_branch_logic
     port map (
       -- From ID (async).
-      i_src_reg => s_id_src_reg_c,
+      i_src_reg => s_rf_src_reg_c,
 
-      -- From ID (sync).
-      i_dst_reg_from_id => s_id_dst_reg,
+      -- From RF (sync).
+      i_dst_reg_from_id => s_rf_dst_reg,
 
       -- From EX1 (sync).
       i_dst_reg_from_ex1 => s_ex1_dst_reg,
@@ -374,6 +484,9 @@ begin
       -- From ID (sync).
       i_dst_reg_from_id => s_id_dst_reg,
 
+      -- From RF (sync).
+      i_dst_reg_from_rf => s_rf_dst_reg,
+
       -- From EX1 (sync).
       i_dst_reg_from_ex1 => s_ex1_dst_reg,
       i_value_from_ex1 => s_ex1_result,
@@ -393,11 +506,11 @@ begin
   -- Forwarding logic for the A operand input to the EX stage (sync).
   forward_to_ex_A: entity work.forward_to_ex
     port map (
-      -- From ID (async).
-      i_src_reg => s_id_src_reg_a,
+      -- From RF (async).
+      i_src_reg => s_rf_src_reg_a,
 
       -- From EX1 input (async).
-      i_dst_reg_from_ex1 => s_id_dst_reg,
+      i_dst_reg_from_ex1 => s_ex1_next_dst_reg,
       i_value_from_ex1 => s_ex1_next_result,
       i_ready_from_ex1 => s_ex1_next_result_ready,
 
@@ -418,11 +531,11 @@ begin
   -- Forwarding logic for the B operand input to the EX stage (sync).
   forward_to_ex_B: entity work.forward_to_ex
     port map (
-      -- From ID (async).
-      i_src_reg => s_id_src_reg_b,
+      -- From RF (async).
+      i_src_reg => s_rf_src_reg_b,
 
       -- From EX1 input (async).
-      i_dst_reg_from_ex1 => s_id_dst_reg,
+      i_dst_reg_from_ex1 => s_ex1_next_dst_reg,
       i_value_from_ex1 => s_ex1_next_result,
       i_ready_from_ex1 => s_ex1_next_result_ready,
 
@@ -443,11 +556,11 @@ begin
   -- Forwarding logic for the C operand input to the EX stage (sync).
   forward_to_ex_C: entity work.forward_to_ex
     port map (
-      -- From ID (async).
-      i_src_reg => s_id_src_reg_c,
+      -- From RF (async).
+      i_src_reg => s_rf_src_reg_c,
 
       -- From EX1 input (async).
-      i_dst_reg_from_ex1 => s_id_dst_reg,
+      i_dst_reg_from_ex1 => s_ex1_next_dst_reg,
       i_value_from_ex1 => s_ex1_next_result,
       i_ready_from_ex1 => s_ex1_next_result_ready,
 
@@ -474,7 +587,8 @@ begin
   s_cancel_speculative_instructions <= s_ex1_pccorr_adjust;
 
   -- Determine which pipeline stages need to be stalled during the next cycle.
-  s_stall_id <= s_ex_stall;
+  s_stall_rf <= s_ex_stall;
+  s_stall_id <= s_rf_stall or s_stall_rf;
   s_stall_if <= s_id_stall or s_stall_id;
   s_stall_pc <= s_if_stall or s_stall_if;
 end rtl;

@@ -41,53 +41,38 @@ entity decode is
       i_instr : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_bubble : in std_logic;  -- 1 if IF could not provide a new instruction.
 
-      -- Operand forwarding to the branch logic.
-      i_branch_fwd_value : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_branch_fwd_use_value : in std_logic;
-      i_branch_fwd_value_ready : in std_logic;
+      -- Information to the operand forwarding logic (async).
+      o_vl_requested : out std_logic;
 
       -- Operand forwarding to the vector control unit.
       i_vl_fwd_value : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_vl_fwd_use_value : in std_logic;
       i_vl_fwd_value_ready : in std_logic;
 
-      -- Operand forwarding to EX1 input.
-      i_reg_a_fwd_value : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_reg_a_fwd_use_value : in std_logic;
-      i_reg_a_fwd_value_ready : in std_logic;
-      i_reg_b_fwd_value : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_reg_b_fwd_use_value : in std_logic;
-      i_reg_b_fwd_value_ready : in std_logic;
-      i_reg_c_fwd_value : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_reg_c_fwd_use_value : in std_logic;
-      i_reg_c_fwd_value_ready : in std_logic;
-
       -- WB data from the EX2 stage (sync).
-      i_wb_we : in std_logic;
       i_wb_data_w : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_wb_element_w : in std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
-      i_wb_is_vector : in std_logic;
+      i_wb_we : in std_logic;
       i_wb_sel_w : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      i_wb_is_vector : in std_logic;
 
-      -- Branch results to the EX1 stage (sync).
-      o_branch_reg_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_branch_offset_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      -- To the RF stage (sync).
       o_branch_is_branch : out std_logic;
-      o_branch_is_reg : out std_logic;  -- 1 for register branches, 0 for all other instructions.
-      o_branch_is_taken : out std_logic;
+      o_branch_is_unconditional : out std_logic;
+      o_branch_is_reg : out std_logic;
+      o_branch_condition : out T_BRANCH_COND;
 
-      -- Information to the operand forwarding logic (async).
+      o_reg_a_required : out std_logic;
+      o_reg_b_required : out std_logic;
+      o_reg_c_required : out std_logic;
+      o_src_a_mode : out T_SRC_A_MODE;
+      o_src_b_mode : out T_SRC_B_MODE;
+      o_pc : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_imm : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_stall_vector_control : out std_logic;
+      o_is_first_vector_op_cycle : out std_logic;
       o_src_reg_a : out T_SRC_REG;
       o_src_reg_b : out T_SRC_REG;
       o_src_reg_c : out T_SRC_REG;
-      o_vl_requested : out std_logic;
-
-      -- To the EX1 stage (sync).
-      o_pc : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_pc_plus_4 : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_src_a : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_src_b : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_src_c : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_dst_reg : out T_DST_REG;
       o_alu_op : out T_ALU_OP;
       o_mem_op : out T_MEM_OP;
@@ -118,15 +103,15 @@ architecture rtl of decode is
   signal s_reg_a_is_vector : std_logic;
   signal s_reg_b_is_vector : std_logic;
   signal s_reg_c_is_vector : std_logic;
-  signal s_restart_vector_op : std_logic;
   signal s_is_folding_vector_op : std_logic;
   signal s_is_vector_stride_mem_op : std_logic;
   signal s_stall_vector_control : std_logic;
+  signal s_element_a : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
+  signal s_element_b : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
+  signal s_element_c : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
   signal s_is_vector_op_busy : std_logic;
   signal s_is_first_vector_op_cycle : std_logic;
   signal s_bubble_from_vector_op : std_logic;
-  signal s_vector_stride : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_vector_stride_offset : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
   signal s_packed_mode : std_logic_vector(1 downto 0);
 
@@ -135,6 +120,7 @@ architecture rtl of decode is
   signal s_is_reg_branch : std_logic;
   signal s_is_branch : std_logic;
   signal s_is_link_branch : std_logic;
+  signal s_branch_condition : T_BRANCH_COND;
 
   signal s_mem_op_type : std_logic_vector(1 downto 0);
   signal s_is_mem_op : std_logic;
@@ -148,54 +134,18 @@ architecture rtl of decode is
   signal s_is_ldhio : std_logic;
   signal s_is_ldi : std_logic;
 
-  -- Branch condition signals.
-  signal s_branch_cond_z : std_logic;
-  signal s_branch_cond_nz : std_logic;
-  signal s_branch_cond_s : std_logic;
-  signal s_branch_cond_ns : std_logic;
-  signal s_branch_cond_lt : std_logic;
-  signal s_branch_cond_ge : std_logic;
-  signal s_branch_cond_le : std_logic;
-  signal s_branch_cond_gt : std_logic;
-
-  signal s_branch_cond_true : std_logic;
-
-  -- Branch target signals.
-  signal s_branch_offset_addr : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_branch_reg_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_branch_is_taken : std_logic;
-  signal s_pc_plus_4 : std_logic_vector(C_WORD_SIZE-1 downto 0);
-
-  -- Scalar register signals.
-  signal s_scalar_we : std_logic;
-  signal s_sreg_a_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_sreg_b_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_sreg_c_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  -- VL register signals.
+  signal s_vl_we : std_logic;
   signal s_vl_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_vl_data_or_fwd : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_missing_fwd_operand : std_logic;
+
+  -- Signals to the RF stage.
   signal s_reg_a_required : std_logic;
   signal s_reg_b_required : std_logic;
   signal s_reg_c_required : std_logic;
-
-  -- Vector register signals.
-  signal s_vreg_a_sel : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-  signal s_vreg_b_sel : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
-  signal s_vector_we : std_logic;
-  signal s_vreg_a_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_vreg_b_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_vreg_c_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_element_a : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
-  signal s_element_b : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
-  signal s_element_c : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
-
-  -- Selected register values (scalar or vector).
-  signal s_reg_a_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_reg_b_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_reg_c_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
-
-  -- Signals to the EX stage.
-  signal s_src_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_src_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_src_c : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_src_a_mode : T_SRC_A_MODE;
+  signal s_src_b_mode : T_SRC_B_MODE;
   signal s_dst_reg : T_DST_REG;
   signal s_alu_op : T_ALU_OP;
   signal s_mem_op : T_MEM_OP;
@@ -206,15 +156,11 @@ architecture rtl of decode is
   signal s_mul_en : std_logic;
   signal s_div_en : std_logic;
 
-  -- Operand forwarding signals.
-  signal s_vl_data_or_fwd : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_reg_a_data_or_fwd : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_reg_b_data_or_fwd : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_reg_c_data_or_fwd : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_missing_fwd_operand : std_logic;
-
   -- Signals for handling discarding of the current operation (i.e. bubble).
   signal s_bubble : std_logic;
+  signal s_reg_a_required_masked : std_logic;
+  signal s_reg_b_required_masked : std_logic;
+  signal s_reg_c_required_masked : std_logic;
   signal s_dst_reg_masked : T_DST_REG;
   signal s_alu_op_masked : T_ALU_OP;
   signal s_mem_op_masked : T_MEM_OP;
@@ -292,6 +238,20 @@ begin
   -- Vector control logic.
   --------------------------------------------------------------------------------------------------
 
+  -- Instantiate a register that holds the VL data (a mirror of the corresponding register in the
+  -- scalar register file).
+  s_vl_we <= i_wb_we when i_wb_sel_w = to_vector(C_VL_REG, C_LOG2_NUM_REGS) and i_wb_is_vector = '0' else '0';
+  process(i_clk, i_rst)
+  begin
+    if i_rst = '1' then
+      s_vl_data <= (others => '0');
+    elsif rising_edge(i_clk) then
+      if (s_vl_we = '1') then
+        s_vl_data <= i_wb_data_w;
+      end if;
+    end if;
+  end process;
+
   -- Operand forwarding of VL.
   s_vl_data_or_fwd <= i_vl_fwd_value when i_vl_fwd_use_value = '1' else s_vl_data;
 
@@ -317,76 +277,6 @@ begin
   -- The target (write) element index is always the same as the src A element index.
   s_element_c <= s_element_a;
 
-  -- Select the vector stride source.
-  -- TODO(m): We should also be able to use a scalar register as the stride source.
-  s_vector_stride <= s_imm;
-
-  -- Vector memory address generation.
-  vector_stride_gen_1: entity work.vector_stride_gen
-    port map (
-      i_clk => i_clk,
-      i_rst => i_rst,
-      i_stall => s_stall_vector_control,
-      i_is_first_vector_op_cycle => s_is_first_vector_op_cycle,
-      i_stride => s_vector_stride,
-      o_offset => s_vector_stride_offset
-    );
-
-
-  --------------------------------------------------------------------------------------------------
-  -- Register files.
-  --------------------------------------------------------------------------------------------------
-
-  -- Instantiate the scalar register file.
-  s_scalar_we <= i_wb_we and not i_wb_is_vector;
-  regs_scalar_1: entity work.regs_scalar
-    port map (
-      i_clk => i_clk,
-      i_rst => i_rst,
-      i_sel_a => s_reg_a,
-      i_sel_b => s_reg_b,
-      i_sel_c => s_reg_c,
-      o_data_a => s_sreg_a_data,
-      o_data_b => s_sreg_b_data,
-      o_data_c => s_sreg_c_data,
-      o_vl => s_vl_data,
-      i_we => s_scalar_we,
-      i_data_w => i_wb_data_w,
-      i_sel_w => i_wb_sel_w,
-      i_pc => i_pc
-    );
-
-  -- Select register numbers for the vector read ports.
-  -- Note: We remap vector register ports for memory operations.
-  s_vreg_a_sel <= s_reg_c when s_is_mem_op = '1' else s_reg_a;
-  s_vreg_b_sel <= s_reg_b;
-
-  -- Instantiate the vector register file.
-  s_vector_we <= i_wb_we and i_wb_is_vector;
-  regs_vector_1: entity work.regs_vector
-    port map (
-      i_clk => i_clk,
-      i_rst => i_rst,
-      i_sel_a => s_vreg_a_sel,
-      i_element_a => s_element_a,
-      i_sel_b => s_vreg_b_sel,
-      i_element_b => s_element_b,
-      o_data_a => s_vreg_a_data,
-      o_data_b => s_vreg_b_data,
-      i_we => s_vector_we,
-      i_data_w => i_wb_data_w,
-      i_sel_w => i_wb_sel_w,
-      i_element_w => i_wb_element_w
-    );
-
-  -- Note: We reuse the A read port of the vector register file for the C register.
-  s_vreg_c_data <= s_vreg_a_data;
-
-  -- Select the register data to use (scalar vs vector).
-  s_reg_a_data <= s_vreg_a_data when s_reg_a_is_vector = '1' else s_sreg_a_data;
-  s_reg_b_data <= s_vreg_b_data when s_reg_b_is_vector = '1' else s_sreg_b_data;
-  s_reg_c_data <= s_vreg_c_data when s_reg_c_is_vector = '1' else s_sreg_c_data;
-
 
   --------------------------------------------------------------------------------------------------
   -- Branch logic.
@@ -407,95 +297,33 @@ begin
   -- Link branch: JL, BL
   s_is_link_branch <= s_is_unconditional_branch and s_op_high(0);
 
+  -- Branch condition.
+  s_branch_condition <= s_op_high(2 downto 0);
+
   s_is_branch <= s_is_unconditional_branch or s_is_conditional_branch;
-
-  -- Calculate the offset branch target.
-  pc_plus_offset_0: entity work.pc_plus_offset
-    port map (
-      i_pc => i_pc,
-      i_offset => i_instr(18 downto 0),
-      o_result => s_branch_offset_addr
-    );
-
-  -- Calculate the expected PC if no branch is taken (i.e. PC + 4).
-  -- This is used by the branch logic in the EX1 stage if the branch is not taken.
-  pc_plus_4_0: entity work.pc_plus_4
-    port map (
-      i_pc => i_pc,
-      o_result => s_pc_plus_4
-    );
-
-  -- Get the register content for branch logic (condition or target address).
-  s_branch_reg_data <= i_branch_fwd_value when i_branch_fwd_use_value = '1' else s_sreg_c_data;
-
-  -- Determine if a conditional (offset) branch is taken?
-  branch_comparator_0: entity work.comparator
-    generic map (WIDTH => C_WORD_SIZE)
-    port map (
-      i_src => s_branch_reg_data,
-      o_z  => s_branch_cond_z,
-      o_nz => s_branch_cond_nz,
-      o_s  => s_branch_cond_s,
-      o_ns => s_branch_cond_ns,
-      o_lt => s_branch_cond_lt,
-      o_ge => s_branch_cond_ge,
-      o_le => s_branch_cond_le,
-      o_gt => s_branch_cond_gt
-    );
-
-  BranchCondMux: with s_op_high(2 downto 0) select
-    s_branch_cond_true <=
-        s_branch_cond_z  when "000",  -- BZ
-        s_branch_cond_nz when "001",  -- BNZ
-        s_branch_cond_s  when "010",  -- BS
-        s_branch_cond_ns when "011",  -- BNS
-        s_branch_cond_lt when "100",  -- BLT
-        s_branch_cond_ge when "101",  -- BGE
-        s_branch_cond_le when "110",  -- BLE
-        s_branch_cond_gt when "111",  -- BGT
-        '0' when others;
-
-  s_branch_is_taken <= s_is_unconditional_branch or (s_is_conditional_branch and s_branch_cond_true);
 
 
   --------------------------------------------------------------------------------------------------
   -- Information for the operand forwarding logic.
   --------------------------------------------------------------------------------------------------
 
-  o_src_reg_a.reg <= s_reg_a;
-  o_src_reg_a.element <= s_element_a;
-  o_src_reg_a.is_vector <= s_reg_a_is_vector;
-
-  o_src_reg_b.reg <= s_reg_b;
-  o_src_reg_b.element <= s_element_b;
-  o_src_reg_b.is_vector <= s_reg_b_is_vector;
-
-  o_src_reg_c.reg <= s_reg_c;
-  o_src_reg_c.element <= s_element_c;
-  o_src_reg_c.is_vector <= s_reg_c_is_vector;
-
+  -- Async.
   o_vl_requested <= s_is_vector_op;
 
 
   --------------------------------------------------------------------------------------------------
-  -- Prepare data for the EX stage.
+  -- Prepare data for the RF stage.
   --------------------------------------------------------------------------------------------------
 
-  -- Select data from the register file or operand forwarding.
-  s_reg_a_data_or_fwd <= i_reg_a_fwd_value when i_reg_a_fwd_use_value = '1' else s_reg_a_data;
-  s_reg_b_data_or_fwd <= i_reg_b_fwd_value when i_reg_b_fwd_use_value = '1' else s_reg_b_data;
-  s_reg_c_data_or_fwd <= i_reg_c_fwd_value when i_reg_c_fwd_use_value = '1' else s_reg_c_data;
-
-  -- Select source data for the EX stage.
+  -- Select source data that the RF stage should pass to the EX stage.
   -- Note: For linking branches we use the ALU to calculate PC + 4.
-  s_src_a <= i_pc when s_is_link_branch = '1' else
-             s_reg_a_data_or_fwd when s_is_type_c = '0' else
-             s_imm;
-  s_src_b <= X"00000004" when s_is_link_branch = '1' else
-             s_reg_b_data_or_fwd when s_is_type_a = '1' else
-             s_vector_stride_offset when s_is_vector_stride_mem_op = '1' else
-             s_imm;
-  s_src_c <= s_reg_c_data_or_fwd;
+  s_src_a_mode <= C_SRC_A_PC when s_is_link_branch = '1' else
+                  C_SRC_A_REG when s_is_type_c = '0' else
+                  C_SRC_A_IMM;
+  s_src_b_mode <= C_SRC_B_FOUR when s_is_link_branch = '1' else
+                  C_SRC_B_REG when s_is_type_a = '1' else
+                  C_SRC_B_STRIDE when s_is_vector_stride_mem_op = '1' else
+                  C_SRC_B_IMM;
 
   -- Select destination register.
   -- Note: For linking branches we set the target register to LR.
@@ -550,14 +378,13 @@ begin
   s_div_op <= s_op_low(C_DIV_OP_SIZE-1 downto 0);
 
   -- Are we missing any fwd operation that has not yet been produced by the pipeline?
-  s_missing_fwd_operand <=
-      (s_is_branch and (i_branch_fwd_use_value and not i_branch_fwd_value_ready)) or
-      (s_reg_a_required and (i_reg_a_fwd_use_value and not i_reg_a_fwd_value_ready)) or
-      (s_reg_b_required and (i_reg_b_fwd_use_value and not i_reg_b_fwd_value_ready)) or
-      (s_reg_c_required and (i_reg_c_fwd_use_value and not i_reg_c_fwd_value_ready));
+  s_missing_fwd_operand <= s_is_vector_op and i_vl_fwd_use_value and not i_vl_fwd_value_ready;
 
   -- Should we discard the operation (i.e. send a bubble down the pipeline)?
   s_bubble <= i_bubble or i_cancel or s_missing_fwd_operand or s_bubble_from_vector_op;
+  s_reg_a_required_masked <= s_reg_a_required when s_bubble = '0' else '0';
+  s_reg_b_required_masked <= s_reg_b_required when s_bubble = '0' else '0';
+  s_reg_c_required_masked <= s_reg_c_required when s_bubble = '0' else '0';
   s_dst_reg_masked.is_target <= s_dst_reg.is_target when s_bubble = '0' else '0';
   s_dst_reg_masked.reg <= s_dst_reg.reg when s_bubble = '0' else (others => '0');
   s_dst_reg_masked.element <= s_dst_reg.element when s_bubble = '0' else (others => '0');
@@ -570,15 +397,33 @@ begin
   s_div_en_masked <= s_div_en and not s_bubble;
   s_is_branch_masked <= s_is_branch and not s_bubble;
 
-  -- Outputs to the EX stage.
+  -- Outputs to the RF stage.
   process(i_clk, i_rst)
   begin
     if i_rst = '1' then
+      o_branch_is_branch <= '0';
+      o_branch_is_unconditional <= '0';
+      o_branch_is_reg <= '0';
+      o_branch_condition <= (others => '0');
+
+      o_reg_a_required <= '0';
+      o_reg_b_required <= '0';
+      o_reg_c_required <= '0';
+      o_src_a_mode <= (others => '0');
+      o_src_b_mode <= (others => '0');
       o_pc <= (others => '0');
-      o_pc_plus_4 <= (others => '0');
-      o_src_a <= (others => '0');
-      o_src_b <= (others => '0');
-      o_src_c <= (others => '0');
+      o_imm <= (others => '0');
+      o_stall_vector_control <= '0';
+      o_is_first_vector_op_cycle <= '0';
+      o_src_reg_a.reg <= (others => '0');
+      o_src_reg_a.element <= (others => '0');
+      o_src_reg_a.is_vector <= '0';
+      o_src_reg_b.reg <= (others => '0');
+      o_src_reg_b.element <= (others => '0');
+      o_src_reg_b.is_vector <= '0';
+      o_src_reg_c.reg <= (others => '0');
+      o_src_reg_c.element <= (others => '0');
+      o_src_reg_c.is_vector <= '0';
       o_dst_reg.is_target <= '0';
       o_dst_reg.reg <= (others => '0');
       o_dst_reg.element <= (others => '0');
@@ -591,19 +436,31 @@ begin
       o_mem_en <= '0';
       o_mul_en <= '0';
       o_div_en <= '0';
-
-      o_branch_reg_addr <= (others => '0');
-      o_branch_offset_addr <= (others => '0');
-      o_branch_is_branch <= '0';
-      o_branch_is_reg <= '0';
-      o_branch_is_taken <= '0';
     elsif rising_edge(i_clk) then
       if i_stall = '0' then
+        o_branch_is_branch <= s_is_branch_masked;
+        o_branch_is_unconditional <= s_is_unconditional_branch;
+        o_branch_is_reg <= s_is_reg_branch;
+        o_branch_condition <= s_branch_condition;
+
+        o_reg_a_required <= s_reg_a_required_masked;
+        o_reg_b_required <= s_reg_b_required_masked;
+        o_reg_c_required <= s_reg_c_required_masked;
+        o_src_a_mode <= s_src_a_mode;
+        o_src_b_mode <= s_src_b_mode;
         o_pc <= i_pc;
-        o_pc_plus_4 <= s_pc_plus_4;
-        o_src_a <= s_src_a;
-        o_src_b <= s_src_b;
-        o_src_c <= s_src_c;
+        o_imm <= s_imm;
+        o_stall_vector_control <= s_stall_vector_control;
+        o_is_first_vector_op_cycle <= s_is_first_vector_op_cycle;
+        o_src_reg_a.reg <= s_reg_a;
+        o_src_reg_a.element <= s_element_a;
+        o_src_reg_a.is_vector <= s_reg_a_is_vector;
+        o_src_reg_b.reg <= s_reg_b;
+        o_src_reg_b.element <= s_element_b;
+        o_src_reg_b.is_vector <= s_reg_b_is_vector;
+        o_src_reg_c.reg <= s_reg_c;
+        o_src_reg_c.element <= s_element_c;
+        o_src_reg_c.is_vector <= s_reg_c_is_vector;
         o_dst_reg <= s_dst_reg_masked;
         o_alu_op <= s_alu_op_masked;
         o_mem_op <= s_mem_op_masked;
@@ -613,12 +470,6 @@ begin
         o_mem_en <= s_mem_en_masked;
         o_mul_en <= s_mul_en_masked;
         o_div_en <= s_div_en_masked;
-
-        o_branch_reg_addr <= s_branch_reg_data;
-        o_branch_offset_addr <= s_branch_offset_addr;
-        o_branch_is_branch <= s_is_branch_masked;
-        o_branch_is_reg <= s_is_reg_branch;
-        o_branch_is_taken <= s_branch_is_taken;
       end if;
     end if;
   end process;
