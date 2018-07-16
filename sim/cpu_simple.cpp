@@ -19,6 +19,7 @@
 
 #include "cpu_simple.hpp"
 
+#include <cmath>
 #include <cstring>
 #include <exception>
 
@@ -64,6 +65,34 @@ struct vector_state_t {
   uint32_t addr_offset;  // Current address offset (incremented by load/store stride).
   bool active;           // True if a vector operation is currently active.
 };
+
+inline float as_f32(const uint32_t x) {
+  float result;
+  std::memcpy(&result, &x, sizeof(float));
+  return result;
+}
+
+inline uint32_t as_u32(const float x) {
+  uint32_t result;
+  std::memcpy(&result, &x, sizeof(uint32_t));
+  return result;
+}
+
+inline uint32_t s8_as_u32(const int8_t x) {
+  return static_cast<uint32_t>(static_cast<int32_t>(x));
+}
+
+inline uint32_t u8_as_u32(const uint8_t x) {
+  return static_cast<uint32_t>(x);
+}
+
+inline uint32_t s16_as_u32(const int16_t x) {
+  return static_cast<uint32_t>(static_cast<int32_t>(x));
+}
+
+inline uint32_t u16_as_u32(const uint16_t x) {
+  return static_cast<uint32_t>(x);
+}
 
 inline uint32_t add32(const uint32_t a, const uint32_t b) {
   return a + b;
@@ -271,34 +300,15 @@ inline bool float32_isnan(const uint32_t x) {
   return ((x & 0x7F800000u) == 0x7F800000u) && ((x & 0x007fffffu) != 0u);
 }
 
-inline float as_f32(const uint32_t x) {
-  float result;
-  std::memcpy(&result, &x, sizeof(float));
-  return result;
+uint32_t itof32(const uint32_t a, const uint32_t b) {
+  const float f = static_cast<float>(static_cast<int32_t>(a));
+  return as_u32(ldexp(f, static_cast<int32_t>(b)));
 }
 
-inline uint32_t as_u32(const float x) {
-  uint32_t result;
-  std::memcpy(&result, &x, sizeof(uint32_t));
-  return result;
+uint32_t ftoi32(const uint32_t a, const uint32_t b) {
+  const float f = ldexp(as_f32(a), static_cast<int32_t>(b));
+  return static_cast<uint32_t>((static_cast<int32_t>(f)));
 }
-
-inline uint32_t s8_as_u32(const int8_t x) {
-  return static_cast<uint32_t>(static_cast<int32_t>(x));
-}
-
-inline uint32_t u8_as_u32(const uint8_t x) {
-  return static_cast<uint32_t>(x);
-}
-
-inline uint32_t s16_as_u32(const int16_t x) {
-  return static_cast<uint32_t>(static_cast<int32_t>(x));
-}
-
-inline uint32_t u16_as_u32(const uint16_t x) {
-  return static_cast<uint32_t>(x);
-}
-
 }  // namespace
 
 uint32_t cpu_simple_t::cpuid(const uint32_t a, const uint32_t b) {
@@ -982,10 +992,10 @@ uint32_t cpu_simple_t::run() {
           break;
 
         case EX_OP_ITOF:
-          ex_result = as_u32(static_cast<float>(static_cast<int32_t>(ex_in.src_a)));
+          ex_result = itof32(ex_in.src_a, ex_in.src_b);
           break;
         case EX_OP_FTOI:
-          ex_result = static_cast<uint32_t>((static_cast<int32_t>(as_f32(ex_in.src_a))));
+          ex_result = ftoi32(ex_in.src_a, ex_in.src_b);
           break;
         case EX_OP_FADD:
           ex_result = as_u32(as_f32(ex_in.src_a) + as_f32(ex_in.src_b));

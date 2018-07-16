@@ -55,6 +55,12 @@ main:
   bl     .test_failed
 .test8_passed:
 
+  bl     test_9
+  or     s16, s16, s1
+  bz     s1, .test9_passed
+  bl     .test_failed
+.test9_passed:
+
   ; exit(s16)
   mov    s1, s16
   b      _exit
@@ -387,6 +393,57 @@ test_8:
   add    sp, sp, 8
   ldi    s1, 0
   j      lr
+
+
+; ----------------------------------------------------------------------------
+; Floating point operations.
+
+test_9:
+  add    sp, sp, -20
+  stw    lr, sp, 0
+  stw    s16, sp, 4
+  stw    s17, sp, 8
+  stw    s18, sp, 12
+  stw    s19, sp, 16
+
+  ldhi   s16, 0x3fd98000    ; s16 = 1.6992188F
+  ldhio  s17, 0x41c5bfff    ; s17 = 24.718748F
+  fmul   s18, s16, s17      ; s18 = 42.002561F (0x4228029f)
+
+  ldpcw  s9, .answer
+  sne    s19, s9, s18       ; Expected value?
+
+  or     s1, s18, z
+  bl     _printhex          ; Print the product
+  ldi    s1, 0x2c           ; ","
+  bl     _putc
+
+  ldi    s9, 2
+  ftoi   s1, s18, s9        ; s1 = (int)(s18 * 2.0^2) (0x000000a8)
+
+  ldi    s9, 0x00a8
+  sne    s9, s9, s1         ; Expected value?
+  or     s19, s19, s9
+
+  bl     _printhex          ; Print the integer representation
+  ldi    s1, 10             ; "\n"
+  bl     _putc
+
+  or     s1, s19, z         ; Result in s1
+
+  ldw    lr, sp, 0
+  ldw    s16, sp, 4
+  ldw    s17, sp, 8
+  ldw    s18, sp, 12
+  ldw    s19, sp, 16
+  add    sp, sp, 20
+
+  j      lr
+
+
+.answer:
+  .u32  0x4228029f
+
 
 
 ; ----------------------------------------------------------------------------

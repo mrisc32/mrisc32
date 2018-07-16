@@ -505,13 +505,19 @@ _OPCODES = {
 
         # FP arithmetic.
         'ITOF':   {'descrs':
-                    [[0x00000050, _REG1, _REG2],     # Cast int->float (reg3 = z)
-                     [0x80000050, _VREG1, _VREG2]],
+                    [[0x00000050, _REG1, _REG2],            # REG3 = Z (no exponent offset)
+                     [0x00000050, _REG1, _REG2, _REG3],
+                     [0x80000050, _VREG1, _VREG2],          # REG3 = Z (no exponent offset)
+                     [0x80000050, _VREG1, _VREG2, _REG3],
+                     [0xc0000050, _VREG1, _VREG2, _VREG3]],
                    'packed_op': False
                   },
         'FTOI':   {'descrs':
-                    [[0x00000051, _REG1, _REG2],     # Cast float->int (reg3 = z)
-                     [0x80000051, _VREG1, _VREG2]],
+                    [[0x00000051, _REG1, _REG2],            # REG3 = Z (no exponent offset)
+                     [0x00000051, _REG1, _REG2, _REG3],
+                     [0x80000051, _VREG1, _VREG2],          # REG3 = Z (no exponent offset)
+                     [0x80000051, _VREG1, _VREG2, _REG3],
+                     [0xc0000051, _VREG1, _VREG2, _VREG3]],
                    'packed_op': False
                   },
         'FADD':   {'descrs':

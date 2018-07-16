@@ -95,8 +95,8 @@
 
 | Mnemonic | V | P | Operands | Operation | Description |
 |---|---|---|---|---|---|
-|ITOF| x |   | dst, src1 | dst <= (float)src1 | Cast integer to float |
-|FTOI| x |   | dst, src1 | dst <= (int)src1 | Cast float to integer |
+|ITOF| x |   | dst, src1, src2 | dst <= ((float)src1) * 2^src2 | Cast integer to float with exponent offset |
+|FTOI| x |   | dst, src1, src2 | dst <= (int)(src1 * 2^src2) | Cast float to integer with exponent offset |
 |FADD| x |   | dst, src1, src2 | dst <= src1 + src2 | Floating point addition |
 |FSUB| x |   | dst, src1, src2 | dst <= src1 - src2 | Floating point subtraction |
 |FSEQ| x |   | dst, src1, src2 | dst <= (src1 == src2) ? 0xffffffff : 0 | Set if equal (floating point) |
