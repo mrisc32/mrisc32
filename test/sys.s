@@ -119,9 +119,9 @@ _divu32:
   lsl    s9, s9, 1      ; Q = Q << 1
   lsl    s10, s10, 1    ; R = R << 1
 
-  lsr    s12, s1, s11
-  and    s12, s12, 1
-  or     s10, s10, s12  ; R(0) = N(i)
+  lsr    s12, s1, 31
+  lsl    s1, s1, 1      ; N = N << 1
+  or     s10, s10, s12  ; R(0) = N(31)
 
   sleu   s12, s2, s10   ; D <= R?
   add    s11, s11, -1   ; --i
