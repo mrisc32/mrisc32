@@ -29,7 +29,7 @@ package common is
   constant C_WORD_SIZE : integer := 32;
   constant C_LOG2_NUM_REGS : integer := 5;
   constant C_NUM_REGS : integer := 2**C_LOG2_NUM_REGS;
-  constant C_LOG2_VEC_REG_ELEMENTS : integer := 2;
+  constant C_LOG2_VEC_REG_ELEMENTS : integer := 4;  -- Minimum: 4
   constant C_VEC_REG_ELEMENTS : integer := 2**C_LOG2_VEC_REG_ELEMENTS;
 
   constant C_CPU_HAS_MULDIV : boolean := false;

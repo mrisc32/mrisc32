@@ -3,7 +3,7 @@
 ## Description
 
 The MRISC32 approach to Single Instruction Multiple Data (SIMD) operation is very similar to the early [vector processors](https://en.wikipedia.org/wiki/Vector_processor) (such as the [Cray-1](https://en.wikipedia.org/wiki/Cray-1)):
-* There are 32 vector registers, V0-V31, with *at least* 4 elements in each register.
+* There are 32 vector registers, V0-V31, with *at least* 16 elements in each register.
 * All vector elements are the same size (32 bits), regardless if they represent bytes, half-words, words or floats.
 * A Vector Length (VL) register controls the length of the vector operation.
 * There are vector,vector and vector,scalar versions of most integer and floating point operations.
