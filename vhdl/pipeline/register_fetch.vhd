@@ -36,6 +36,12 @@ entity register_fetch is
       o_stall : out std_logic;
       i_cancel : in std_logic;
 
+      -- From the ID stage (async).
+      i_next_vreg_a_reg : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      i_next_vreg_a_element : in std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
+      i_next_vreg_b_reg : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      i_next_vreg_b_element : in std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
+
       -- From the ID stage (sync).
       i_branch_is_branch : in std_logic;
       i_branch_is_unconditional : in std_logic;
@@ -170,12 +176,10 @@ architecture rtl of register_fetch is
   signal s_sreg_c_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
   -- Vector register signals.
-  signal s_vreg_a_sel : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_vector_we : std_logic;
   signal s_vreg_a_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_vreg_b_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_vreg_c_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_element_a : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
 
   -- Selected register values (scalar or vector).
   signal s_reg_a_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -226,22 +230,16 @@ begin
       i_pc => i_pc
     );
 
-  -- Select register numbers for the vector read ports.
-  -- Note: We remap vector register ports for memory operations.
-  -- TODO(m): Generate these signals in the ID stage.
-  s_vreg_a_sel <= i_src_reg_c.reg when i_mem_en = '1' else i_src_reg_a.reg;
-  s_element_a <= i_src_reg_c.element when i_mem_en = '1' else i_src_reg_a.element;
-
   -- Instantiate the vector register file.
   s_vector_we <= i_wb_we and i_wb_is_vector;
   regs_vector_1: entity work.regs_vector
     port map (
       i_clk => i_clk,
       i_rst => i_rst,
-      i_sel_a => s_vreg_a_sel,
-      i_element_a => s_element_a,
-      i_sel_b => i_src_reg_b.reg,
-      i_element_b => i_src_reg_b.element,
+      i_sel_a => i_next_vreg_a_reg,
+      i_element_a => i_next_vreg_a_element,
+      i_sel_b => i_next_vreg_b_reg,
+      i_element_b => i_next_vreg_b_element,
       o_data_a => s_vreg_a_data,
       o_data_b => s_vreg_b_data,
       i_we => s_vector_we,
