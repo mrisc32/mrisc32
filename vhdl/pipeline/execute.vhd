@@ -18,7 +18,7 @@
 ----------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------
--- Pipeline Stages 4 & 5: Execute (EX1/EX2)
+-- Pipeline Stages 5 & 6: Execute (EX1/EX2)
 ----------------------------------------------------------------------------------------------------
 
 library ieee;
@@ -48,8 +48,8 @@ entity execute is
     i_mul_en : in std_logic;
     i_div_en : in std_logic;
 
-    -- PC signal from IF (sync).
-    i_if_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+    -- PC signal from ID (sync).
+    i_id_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
 
     -- Branch signals from ID (sync).
     i_branch_reg_addr : in std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -139,7 +139,7 @@ begin
   -- Check if the PC was correctly predicted by the PC stage.
   s_branch_target <= i_branch_reg_addr when i_branch_is_reg = '1' else i_branch_offset_addr;
   s_actual_pc <= s_branch_target when (i_branch_is_branch and i_branch_is_taken) = '1' else i_pc_plus_4;
-  s_mispredicted_pc <= '0' when s_actual_pc = i_if_pc else i_branch_is_branch;
+  s_mispredicted_pc <= '0' when s_actual_pc = i_id_pc else i_branch_is_branch;
 
   -- Branch/PC correction signals to the PC stage.
   o_pccorr_target <= s_branch_target;

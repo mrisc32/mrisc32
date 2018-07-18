@@ -37,6 +37,7 @@ SRCS += \
     $(PIPELINE_PATH)/program_counter_tb.vhd \
     $(PIPELINE_PATH)/fetch.vhd \
     $(PIPELINE_PATH)/decode.vhd \
+    $(PIPELINE_PATH)/register_fetch.vhd \
     $(PIPELINE_PATH)/execute.vhd \
     $(PIPELINE_PATH)/memory.vhd \
     $(PIPELINE_PATH)/forward_to_branch_logic.vhd \
