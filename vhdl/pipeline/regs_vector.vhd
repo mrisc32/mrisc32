@@ -27,8 +27,8 @@ use work.common.all;
 --
 --  * There are two read ports.
 --  * There is a single write port.
---  * TODO: Reading the VZ register always returns zero (0).
---  * TODO: Writing to the VZ register has no effect (no operation).
+--  * Reading the VZ register always returns zero (0).
+--  * Writing to the VZ register has no effect (no operation).
 ---------------------------------------------------------------------------------------------------
 
 entity regs_vector is
@@ -36,13 +36,14 @@ entity regs_vector is
     i_clk : in std_logic;
     i_rst : in std_logic;
 
-    -- We have two read ports.
+    -- Asynchronous read requestes.
     i_sel_a : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
     i_element_a : in std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
-    o_data_a : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-
     i_sel_b : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
     i_element_b : in std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
+
+    -- Output read data.
+    o_data_a : out std_logic_vector(C_WORD_SIZE-1 downto 0);
     o_data_b : out std_logic_vector(C_WORD_SIZE-1 downto 0);
 
     -- We have one write port.
@@ -55,13 +56,21 @@ end regs_vector;
 
 architecture rtl of regs_vector is
   constant C_ADDR_BITS : integer := C_LOG2_NUM_REGS + C_LOG2_VEC_REG_ELEMENTS;
+
   signal s_read_a_addr : std_logic_vector(C_ADDR_BITS-1 downto 0);
   signal s_read_b_addr : std_logic_vector(C_ADDR_BITS-1 downto 0);
   signal s_write_addr : std_logic_vector(C_ADDR_BITS-1 downto 0);
 
+  -- Clocked version of the asynchronous inputs.
+  signal s_sel_a : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_element_a : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
+  signal s_sel_b : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_element_b : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
+
   signal s_data_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_data_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
 begin
+  -- Generate read & write addresses for the next clock cycle.
   s_read_a_addr <= i_sel_a & i_element_a;
   s_read_b_addr <= i_sel_b & i_element_b;
   s_write_addr <= i_sel_w & i_element_w;
@@ -96,10 +105,24 @@ begin
       o_read_data => s_data_b
     );
 
+  -- Latch the read addresses.
+  process(i_clk, i_rst)
+  begin
+    if i_rst = '1' then
+      s_sel_a <= (others => '0');
+      s_element_a <= (others => '0');
+      s_sel_b <= (others => '0');
+      s_element_b <= (others => '0');
+    elsif rising_edge(i_clk) then
+      s_sel_a <= i_sel_a;
+      s_element_a <= i_element_a;
+      s_sel_b <= i_sel_b;
+      s_element_b <= i_element_b;
+    end if;
+  end process;
+
   -- Read ports.
   -- TODO(m): Handle register lengths (return zeros for i_element_* >= RL).
-  -- TODO(m): Return zero when i_sel_* is zero (either explicitly or by hardwiring RL
-  -- of VZ to zero).
-  o_data_a <= s_data_a;
-  o_data_b <= s_data_b;
+  o_data_a <= s_data_a when s_sel_a /= to_vector(0, C_LOG2_NUM_REGS) else (others => '0');
+  o_data_b <= s_data_b when s_sel_b /= to_vector(0, C_LOG2_NUM_REGS) else (others => '0');
 end rtl;
