@@ -28,6 +28,7 @@ end regs_vector_tb;
 architecture behavioral of regs_vector_tb is
   signal s_clk : std_logic;
   signal s_rst : std_logic;
+  signal s_stall : std_logic;
   signal s_sel_a : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_element_a : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
   signal s_data_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -56,6 +57,7 @@ begin
     port map (
       i_clk => s_clk,
       i_rst => s_rst,
+      i_stall => s_stall,
       i_sel_a => s_sel_a,
       i_element_a => s_element_a,
       o_data_a => s_data_a,
@@ -104,6 +106,7 @@ begin
       );
   begin
     -- Reset all inputs.
+    s_stall <= '0';
     s_sel_a <= reg(0);
     s_element_a <= elem(0);
     s_sel_b <= reg(0);

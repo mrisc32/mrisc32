@@ -35,14 +35,16 @@ entity regs_vector is
   port (
     i_clk : in std_logic;
     i_rst : in std_logic;
+    i_stall : in std_logic;
 
-    -- We have two generic read ports.
+    -- Asynchronous read requestes.
     i_sel_a : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
     i_element_a : in std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
-    o_data_a : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-
     i_sel_b : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
     i_element_b : in std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
+
+    -- Output read data.
+    o_data_a : out std_logic_vector(C_WORD_SIZE-1 downto 0);
     o_data_b : out std_logic_vector(C_WORD_SIZE-1 downto 0);
 
     -- We have one write port.
@@ -54,49 +56,86 @@ entity regs_vector is
 end regs_vector;
 
 architecture rtl of regs_vector is
-  -- Internal write-enable signals (one for each dynamic register, which excludes VZ).
-  type T_WE_MATRIX is array (1 to C_NUM_REGS-1, 0 to C_VEC_REG_ELEMENTS-1) of std_logic;
-  signal s_we : T_WE_MATRIX;
+  constant C_ADDR_BITS : integer := C_LOG2_NUM_REGS + C_LOG2_VEC_REG_ELEMENTS;
 
-  -- Internal register data signals for all registers.
-  type T_DATA_MATRIX is array (0 to C_NUM_REGS-1, 0 to C_VEC_REG_ELEMENTS-1) of std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_data : T_DATA_MATRIX;
+  signal s_read_a_addr : std_logic_vector(C_ADDR_BITS-1 downto 0);
+  signal s_read_b_addr : std_logic_vector(C_ADDR_BITS-1 downto 0);
+  signal s_write_addr : std_logic_vector(C_ADDR_BITS-1 downto 0);
+
+  -- Selected read addresses.
+  signal s_read_sel_a : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_read_element_a : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
+  signal s_read_sel_b : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_read_element_b : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
+
+  -- Clocked version of the asynchronous inputs.
+  signal s_sel_a : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_element_a : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
+  signal s_sel_b : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_element_b : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
+
+  signal s_data_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_data_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
 begin
-  -- Instantiate the registers.
-  -- Note: We only need registers that can be written (read-only registers are handled separately).
-  RegGen: for r in 1 to C_NUM_REGS-1 generate
-    ElementGen: for e in 0 to C_VEC_REG_ELEMENTS-1 generate
-      reg_x: entity work.reg
-        generic map (
-          WIDTH => C_WORD_SIZE
-        )
-        port map (
-          i_clk => i_clk,
-          i_rst => i_rst,
-          i_we => s_we(r, e),
-          i_data_w => i_data_w,
-          o_data => s_data(r, e)
-        );
-    end generate;
-  end generate;
+  -- Handle stall: Use inputs or latched inputs from the previous cycle.
+  s_read_sel_a <= i_sel_a when i_stall = '0' else s_sel_a;
+  s_read_element_a <= i_element_a when i_stall = '0' else s_element_a;
+  s_read_sel_b <= i_sel_b when i_stall = '0' else s_sel_b;
+  s_read_element_b <= i_element_b when i_stall = '0' else s_element_b;
 
-  -- The write port of the register file is connected to all registers. Select which register to
-  -- write to by setting at most one of the register write-enable signals to '1'.
-  WEGen1: for r in 1 to C_NUM_REGS-1 generate
-    WEGen2: for e in 0 to C_VEC_REG_ELEMENTS-1 generate
-      s_we(r, e) <= i_we when
-          i_sel_w = std_logic_vector(to_unsigned(r, i_sel_w'length)) and
-          i_element_w = std_logic_vector(to_unsigned(e, i_element_w'length))
-          else '0';
-    end generate;
-  end generate;
+  -- Generate read & write addresses for the next clock cycle.
+  s_read_a_addr <= s_read_sel_a & s_read_element_a;
+  s_read_b_addr <= s_read_sel_b & s_read_element_b;
+  s_write_addr <= i_sel_w & i_element_w;
 
-  -- We hard-wire the values of the VZ register to zero.
-  VZGen: for e in 0 to C_VEC_REG_ELEMENTS-1 generate
-    s_data(C_Z_REG, e) <= (others => '0');
-  end generate;
+  -- One RAM for the A read port.
+  ram_a: entity work.ram_dual_port
+    generic map (
+      WIDTH => C_WORD_SIZE,
+      ADDR_BITS => C_ADDR_BITS
+    )
+    port map (
+      i_clk => i_clk,
+      i_write_data => i_data_w,
+      i_write_addr => s_write_addr,
+      i_we => i_we,
+      i_read_addr => s_read_a_addr,
+      o_read_data => s_data_a
+    );
+
+  -- One RAM for the B read port.
+  ram_b: entity work.ram_dual_port
+    generic map (
+      WIDTH => C_WORD_SIZE,
+      ADDR_BITS => C_ADDR_BITS
+    )
+    port map (
+      i_clk => i_clk,
+      i_write_data => i_data_w,
+      i_write_addr => s_write_addr,
+      i_we => i_we,
+      i_read_addr => s_read_b_addr,
+      o_read_data => s_data_b
+    );
+
+  -- Latch the read addresses.
+  process(i_clk, i_rst)
+  begin
+    if i_rst = '1' then
+      s_sel_a <= (others => '0');
+      s_element_a <= (others => '0');
+      s_sel_b <= (others => '0');
+      s_element_b <= (others => '0');
+    elsif rising_edge(i_clk) then
+      s_sel_a <= s_read_sel_a;
+      s_element_a <= s_read_element_a;
+      s_sel_b <= s_read_sel_b;
+      s_element_b <= s_read_element_b;
+    end if;
+  end process;
 
   -- Read ports.
-  o_data_a <= s_data(to_integer(unsigned(i_sel_a)), to_integer(unsigned(i_element_a)));
-  o_data_b <= s_data(to_integer(unsigned(i_sel_b)), to_integer(unsigned(i_element_b)));
+  -- TODO(m): Handle register lengths (return zeros for i_element_* >= RL).
+  o_data_a <= s_data_a when s_sel_a /= to_vector(0, C_LOG2_NUM_REGS) else (others => '0');
+  o_data_b <= s_data_b when s_sel_b /= to_vector(0, C_LOG2_NUM_REGS) else (others => '0');
 end rtl;

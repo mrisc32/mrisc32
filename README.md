@@ -12,7 +12,7 @@ This is an experimental, custom 32-bit RISC/Vector CPU.
     - 28 registers are general purpose (of which three are reserved: SP, TP, FP).
     - All registers can be used for all types (integers, addresses and floating point).
     - PC is user-visible (for arithmetic and addressing) but read-only (to simplify branching logic).
-  - There are 32 vector registers, V0-V31, each with *at least* four 32-bit elements.
+  - There are 32 vector registers, V0-V31, each with *at least* 16 32-bit elements.
     - All registers can be used for all types (integers, addresses and floating point).
 * All instructions are 32 bits wide and easy to decode.
   - There are only three basic types of instruction encodings.
@@ -64,7 +64,7 @@ So far, the following components have been implemented:
   - There are three read ports and one write port.
 * The vector register file.
   - There are two read ports and one write port.
-  - Each vector register has four elements.
+  - Each vector register has 16 elements.
 * A basic 7-stage pipeline.
   - PC and branching logic.
   - Instruction fetch.

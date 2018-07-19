@@ -49,7 +49,7 @@ protected:
 
   // Register configuration.
   static const uint32_t NUM_REGS = 32u;
-  static const uint32_t LOG2_NUM_VECTOR_ELEMENTS = 5u;  // Must be at least 2
+  static const uint32_t LOG2_NUM_VECTOR_ELEMENTS = 5u;  // Must be at least 4
   static const uint32_t NUM_VECTOR_ELEMENTS = 1u << LOG2_NUM_VECTOR_ELEMENTS;
   static const uint32_t NUM_VECTOR_REGS = 32u;
 

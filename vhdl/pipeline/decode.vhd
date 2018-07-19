@@ -55,6 +55,12 @@ entity decode is
       i_wb_sel_w : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
       i_wb_is_vector : in std_logic;
 
+      -- To the RF stage (async).
+      o_next_vreg_a_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      o_next_vreg_a_element : out std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
+      o_next_vreg_b_reg : out std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      o_next_vreg_b_element : out std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
+
       -- To the RF stage (sync).
       o_branch_is_branch : out std_logic;
       o_branch_is_unconditional : out std_logic;
@@ -397,7 +403,14 @@ begin
   s_div_en_masked <= s_div_en and not s_bubble;
   s_is_branch_masked <= s_is_branch and not s_bubble;
 
-  -- Outputs to the RF stage.
+  -- Select register numbers for the vector read ports (async signals to RF).
+  -- Note: We remap vector register ports for memory operations.
+  o_next_vreg_a_reg <= s_reg_c when s_mem_en = '1' else s_reg_a;
+  o_next_vreg_a_element <= s_element_c when s_mem_en = '1' else s_element_a;
+  o_next_vreg_b_reg <= s_reg_b;
+  o_next_vreg_b_element <= s_element_b;
+
+  -- Outputs to the RF stage (sync).
   process(i_clk, i_rst)
   begin
     if i_rst = '1' then
