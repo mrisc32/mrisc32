@@ -236,6 +236,7 @@ begin
     port map (
       i_clk => i_clk,
       i_rst => i_rst,
+      i_stall => i_stall,
       i_sel_a => i_next_vreg_a_reg,
       i_element_a => i_next_vreg_a_element,
       i_sel_b => i_next_vreg_b_reg,
