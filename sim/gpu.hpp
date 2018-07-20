@@ -29,20 +29,46 @@
 class gpu_t {
 public:
   gpu_t(ram_t& ram);
+
+  /// @brief Release OpenGL resources.
+  ///
+  /// Call this before destroying the OpenGL context.
   void cleanup();
 
+  /// @brief Configure the GPU.
+  ///
+  /// The GPU is configured based on whatever configuration parameters are available. This method
+  /// should be called each frame, before calling @c paint().
+  ///
+  /// When this method returns, the frame buffer dimensions have been updated.
+  void configure();
+
+  /// @brief Paint the CPU framebuffer RAM to the OpenGL context.
+  /// @param actual_fb_width The OpenGL framebuffer width.
+  /// @param actual_fb_height The OpenGL framebuffer height.
   void paint(const int actual_fb_width, const int actual_fb_height);
 
+  uint32_t width() const {
+    return m_width;
+  }
+
+  uint32_t height() const {
+    return m_height;
+  }
+
 private:
+  uint32_t mem32_or_default(const uint32_t addr, const uint32_t default_value);
   void check_gfx_config();
+  void compile_shader();
 
   ram_t& m_ram;
 
-  uint32_t m_gfx_ram_start;
-  uint32_t m_width;
-  uint32_t m_height;
-  uint32_t m_bytes_per_pixel;
+  uint32_t m_gfx_ram_start = 0u;
+  uint32_t m_width = 0u;
+  uint32_t m_height = 0u;
+  uint32_t m_depth = 0u;
 
+  uint32_t m_bytes_per_pixel;
   GLint m_tex_internalformat;
   GLenum m_tex_format;
   GLenum m_tex_type;

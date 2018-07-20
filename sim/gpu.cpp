@@ -26,6 +26,13 @@
 #include <stdexcept>
 
 namespace {
+// Memory mapped I/O: GPU configuration registers.
+const uint32_t MMIO_GPU_BASE = 0x00000100u;
+const uint32_t MMIO_GPU_ADDR = MMIO_GPU_BASE + 0u;    // Start of the framebuffer memory area.
+const uint32_t MMIO_GPU_WIDTH = MMIO_GPU_BASE + 4u;   // Width of the framebuffer (in pixels).
+const uint32_t MMIO_GPU_HEIGHT = MMIO_GPU_BASE + 8u;  // Height of the framebuffer (in pixels).
+const uint32_t MMIO_GPU_DEPTH = MMIO_GPU_BASE + 12u;  // Number of bits per pixel.
+
 const GLchar* VERTEX_SRC =
     "#version 150\n"
     "in vec2 a_pos;"
@@ -101,39 +108,42 @@ void check_gl_error_helper(const int line_no) {
 #define check_gl_error() check_gl_error_helper(__LINE__)
 }  // namespace
 
-gpu_t::gpu_t(ram_t& ram)
-    : m_ram(ram),
-      m_gfx_ram_start(config_t::instance().gfx_addr()),
-      m_width(config_t::instance().gfx_width()),
-      m_height(config_t::instance().gfx_height()) {
+gpu_t::gpu_t(ram_t& ram) : m_ram(ram) {
   // Start by clearing the OpenGL error status.
   (void)glGetError();
 
-  // Determine the pixel format.
-  switch (config_t::instance().gfx_depth()) {
-    case 32u:
-      m_bytes_per_pixel = 4u;
-      m_tex_internalformat = GL_RGBA;
-      m_tex_format = GL_BGRA;
-      m_tex_type = GL_UNSIGNED_BYTE;
-      break;
+  // Compile the shader program.
+  compile_shader();
 
-    case 8u:
-      m_bytes_per_pixel = 1u;
-      m_tex_internalformat = GL_RED;
-      m_tex_format = GL_RED;
-      m_tex_type = GL_UNSIGNED_BYTE;
-      break;
+  // Create the vertex array.
+  glGenVertexArrays(1, &m_vertex_array);
+  glBindVertexArray(m_vertex_array);
+  check_gl_error();
 
-    default:
-      throw std::runtime_error("Invalid pixel format.");
+  // Create the vertex buffer.
+  glGenBuffers(1, &m_vertex_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(VERTEX_BUFFER_DATA), VERTEX_BUFFER_DATA, GL_STATIC_DRAW);
+  check_gl_error();
+
+  // Configure the GPU.
+  configure();
+}
+
+uint32_t gpu_t::mem32_or_default(const uint32_t addr, const uint32_t default_value) {
+  const auto value = m_ram.at32(addr);
+  return (value == 0u) ? default_value : value;
+}
+
+void gpu_t::check_gfx_config() {
+  const auto video_ram_end = m_gfx_ram_start + (m_width * m_height * m_bytes_per_pixel);
+  const auto ram_end = config_t::instance().ram_size();
+  if (video_ram_end > ram_end) {
+    throw std::runtime_error("Invalid gfx RAM configuration (does not fit in CPU RAM).");
   }
-  std::cout << "Gfx mode: " << m_width << " x " << m_height << " : " << (m_bytes_per_pixel * 8)
-            << " bpp\n";
+}
 
-  // Make sure that we can use the current GFX configuration.
-  check_gfx_config();
-
+void gpu_t::compile_shader() {
   // Compile the vertrex shader.
   auto vertex_shader = glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(vertex_shader, 1, reinterpret_cast<const GLchar**>(&VERTEX_SRC), nullptr);
@@ -176,40 +186,6 @@ gpu_t::gpu_t(ram_t& ram)
   m_sampler_uniform = glGetUniformLocation(m_program, "u_sampler");
   m_monochrome_uniform = glGetUniformLocation(m_program, "u_monochrome");
   check_gl_error();
-
-  // Create the texture.
-  glGenTextures(1, &m_fb_tex);
-  glBindTexture(GL_TEXTURE_RECTANGLE, m_fb_tex);
-  glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexImage2D(GL_TEXTURE_RECTANGLE,
-               0,
-               m_tex_internalformat,
-               static_cast<GLsizei>(m_width),
-               static_cast<GLsizei>(m_height),
-               0,
-               m_tex_format,
-               m_tex_type,
-               nullptr);
-  check_gl_error();
-
-  // Create the vertex buffer.
-  glGenVertexArrays(1, &m_vertex_array);
-  glBindVertexArray(m_vertex_array);
-  glGenBuffers(1, &m_vertex_buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(VERTEX_BUFFER_DATA), VERTEX_BUFFER_DATA, GL_STATIC_DRAW);
-  check_gl_error();
-}
-
-void gpu_t::check_gfx_config() {
-  const auto video_ram_end = m_gfx_ram_start + (m_width * m_height * m_bytes_per_pixel);
-  const auto ram_end = config_t::instance().ram_size();
-  if (video_ram_end > ram_end) {
-    throw std::runtime_error("Invalid gfx RAM configuration (does not fit in CPU RAM).");
-  }
 }
 
 void gpu_t::cleanup() {
@@ -229,6 +205,67 @@ void gpu_t::cleanup() {
     glDeleteBuffers(1, &m_vertex_buffer);
     m_vertex_buffer = 0u;
   }
+}
+
+void gpu_t::configure() {
+  // Update framebuffer parameters.
+  m_gfx_ram_start = mem32_or_default(MMIO_GPU_ADDR, config_t::instance().gfx_addr());
+  const auto width = mem32_or_default(MMIO_GPU_WIDTH, config_t::instance().gfx_width());
+  const auto height = mem32_or_default(MMIO_GPU_HEIGHT, config_t::instance().gfx_height());
+  const auto depth = mem32_or_default(MMIO_GPU_DEPTH, config_t::instance().gfx_depth());
+  if (width == m_width && height == m_height && depth == m_depth) {
+    // No changes to the video mode, so do not re-create the texture.
+    return;
+  }
+  m_width = width;
+  m_height = height;
+  m_depth = depth;
+
+  // Determine the pixel format.
+  switch (m_depth) {
+    case 32u:
+      m_bytes_per_pixel = 4u;
+      m_tex_internalformat = GL_RGBA;
+      m_tex_format = GL_BGRA;
+      m_tex_type = GL_UNSIGNED_BYTE;
+      break;
+
+    case 8u:
+      m_bytes_per_pixel = 1u;
+      m_tex_internalformat = GL_RED;
+      m_tex_format = GL_RED;
+      m_tex_type = GL_UNSIGNED_BYTE;
+      break;
+
+    default:
+      throw std::runtime_error("Invalid pixel format.");
+  }
+  std::cout << "Gfx mode: " << m_width << " x " << m_height << " : " << (m_bytes_per_pixel * 8)
+            << " bpp\n";
+
+  // Make sure that we can use the current GFX configuration.
+  check_gfx_config();
+
+  // Create the texture.
+  if (m_fb_tex != 0u) {
+    glDeleteTextures(1, &m_fb_tex);
+  }
+  glGenTextures(1, &m_fb_tex);
+  glBindTexture(GL_TEXTURE_RECTANGLE, m_fb_tex);
+  glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_RECTANGLE,
+               0,
+               m_tex_internalformat,
+               static_cast<GLsizei>(m_width),
+               static_cast<GLsizei>(m_height),
+               0,
+               m_tex_format,
+               m_tex_type,
+               nullptr);
+  check_gl_error();
 }
 
 void gpu_t::paint(const int actual_fb_width, const int actual_fb_height) {
@@ -266,7 +303,7 @@ void gpu_t::paint(const int actual_fb_width, const int actual_fb_height) {
                         GL_FALSE,                   // Normalized?
                         0,                          // Stride
                         reinterpret_cast<void*>(0)  // Array buffer offset = 0
-  );
+                        );
   glDrawArrays(GL_TRIANGLES, 0, 6);  // 6 vertices -> 2 triangles
   glDisableVertexAttribArray(0);
   check_gl_error();

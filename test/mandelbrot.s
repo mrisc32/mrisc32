@@ -3,9 +3,19 @@
 ; This is a Mandelbrot fractal generator with a twist.
 ; -------------------------------------------------------------------------------------------------
 
+; Memory mapped I/O registers for controlling the GPU.
+MMIO_GPU_BASE   = 0x00000100  ; Base address of the GPU MMIO registers.
+MMIO_GPU_ADDR   = 0x00        ; Start of the framebuffer memory area.
+MMIO_GPU_WIDTH  = 0x04        ; Width of the framebuffer (in pixels).
+MMIO_GPU_HEIGHT = 0x08        ; Height of the framebuffer (in pixels).
+MMIO_GPU_DEPTH  = 0x0c        ; Number of bits per pixel.
+
+
 boot:
-    ; Start by setting up the stack and clearing the registers.
+    ; Set up the stack and clearing the registers.
     ldi     sp, 0x00020000  ; We grow down from 128KB.
+
+    ; Clear all the registers.
     cpuid   vl, z, z
     ldi     s1, 0
     ldi     s2, 0
@@ -67,10 +77,38 @@ boot:
     ldi     v30, 0
     ldi     v31, 0
 
+
+; -------------------------------------------------------------------------------------------------
+; Main program.
+; -------------------------------------------------------------------------------------------------
+
+; Video configuration.
+VIDEO_MEM    = 0x00008000
+VIDEO_WIDTH  = 256
+VIDEO_HEIGHT = 256
+
 main:
+    bl      init_video
     bl      mandelbrot
     bl      vector_flip
     b       exit
+
+
+; -------------------------------------------------------------------------------------------------
+
+init_video:
+    ; Set the graphics mode.
+    ldi     s10, MMIO_GPU_BASE
+    ldi     s11, VIDEO_MEM
+    stw     s11, s10, MMIO_GPU_ADDR
+    ldi     s11, VIDEO_WIDTH
+    stw     s11, s10, MMIO_GPU_WIDTH
+    ldi     s11, VIDEO_HEIGHT
+    stw     s11, s10, MMIO_GPU_HEIGHT
+    ldi     s11, 8
+    stw     s11, s10, MMIO_GPU_DEPTH
+
+    j       lr
 
 
 ; -------------------------------------------------------------------------------------------------
@@ -80,14 +118,15 @@ mandelbrot:
     ldi     s17, 100        ; s17 = max_num_iterations
     ldi     s18, 16384      ; s18 = max_distance^2 = 4.0
 
-    ldi     s14, 0x00008000 ; s14 = pixel_data (NOTE: must be after the program)
+    ldi     s14, VIDEO_MEM  ; s14 = pixel_data (NOTE: must be after the program)
 
     ldi     s2, -8192       ; s2 = im(c) = -2.0
-    ldi     s16, 128        ; s16 = loop counter for y
+    ldi     s16, VIDEO_HEIGHT
+    lsr     s16, s16, 1     ; s16 = loop counter for y
 
 .outer_loop_y:
     ldi     s1, -10240      ; s1 = re(c) = -2.5
-    ldi     s15, 256        ; s15 = loop counter for x
+    ldi     s15, VIDEO_WIDTH ; s15 = loop counter for x
 
 .outer_loop_x:
     or      s3, z, z        ; s3 = re(z) = 0.0
@@ -143,16 +182,23 @@ vector_flip:
     cpuid   s12, z, z       ; s12 = max VL
     lsl     s13, s12, 2     ; Vector size in bytes
 
-    ldi     s14, 0x00008000 ; s14 = src
-    ldi     s15, 0x00017ffc ; s15 = dst
+    ldi     s14, VIDEO_MEM  ; s14 = src
+
+    ldi     s15, VIDEO_WIDTH
+    ldi     s16, VIDEO_HEIGHT
+    mul     s15, s15, s16
+    add     s15, s14, s15
+    add     s15, s15, -4    ; s15 = dst
 
     ldi     s18, 3          ; s18 = multiplication factor
     shuf    s18, s18, 0     ;       ...per byte
 
-    ldi     s17, 128        ; s17 = loop counter for y
+    ldi     s17, VIDEO_HEIGHT
+    lsr     s17, s17, 1      ; s17 = loop counter for y
 
 .loop_y:
-    ldi     s16, 64         ; s16 = loop counter for x
+    ldi     s16, VIDEO_WIDTH
+    lsr     s16, s16, 2     ; s16 = loop counter for x
     add     s17, s17, -1    ; Decrement the y counter
 
 .loop_x:

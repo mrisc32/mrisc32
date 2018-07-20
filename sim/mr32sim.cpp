@@ -158,8 +158,10 @@ int main(const int argc, const char** argv) {
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
         // Create a GLFW window.
-        auto* window = glfwCreateWindow(static_cast<int>(config_t::instance().gfx_width()),
-                                        static_cast<int>(config_t::instance().gfx_height()),
+        auto window_width = config_t::instance().gfx_width();
+        auto window_height = config_t::instance().gfx_height();
+        auto* window = glfwCreateWindow(static_cast<int>(window_width),
+                                        static_cast<int>(window_height),
                                         "MRISC32 Simulator",
                                         nullptr,
                                         nullptr);
@@ -183,13 +185,22 @@ int main(const int argc, const char** argv) {
           // Main loop.
           bool simulation_finished = false;
           while (!glfwWindowShouldClose(window)) {
+            // Update the video mode.
+            gpu.configure();
+            if (window_width != gpu.width() || window_height != gpu.height()) {
+              window_width = gpu.width();
+              window_height = gpu.height();
+              glfwSetWindowSize(
+                  window, static_cast<int>(window_width), static_cast<int>(window_height));
+            }
+
             // Get the actual window framebuffer size (note: this is important on systems that use
             // coordinate scaling, such as on macos with retina display).
             int actual_fb_width;
             int actual_fb_height;
             glfwGetFramebufferSize(window, &actual_fb_width, &actual_fb_height);
 
-            // Update graphics.
+            // Paint the CPU RAM framebuffer contents to the window.
             gpu.paint(actual_fb_width, actual_fb_height);
 
             // Swap front/back buffers and poll window events.
@@ -219,7 +230,7 @@ int main(const int argc, const char** argv) {
         std::cerr << "Graphics error: " << e.what() << "\n";
       }
     }
-#endif
+#endif  // ENABLE_GUI
 
     // Wait for the cpu thread to finish.
     cpu_thread.join();
