@@ -112,8 +112,11 @@ architecture rtl of pipeline is
   signal s_rf_src_c : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
   signal s_rf_src_reg_a : T_SRC_REG;
+  signal s_rf_reg_a_required : std_logic;
   signal s_rf_src_reg_b : T_SRC_REG;
+  signal s_rf_reg_b_required : std_logic;
   signal s_rf_src_reg_c : T_SRC_REG;
+  signal s_rf_reg_c_required : std_logic;
   signal s_rf_dst_reg : T_DST_REG;
   signal s_rf_alu_op : T_ALU_OP;
   signal s_rf_mem_op : T_MEM_OP;
@@ -346,8 +349,11 @@ begin
 
       -- Information to the operand forwarding logic (async).
       o_src_reg_a => s_rf_src_reg_a,
+      o_reg_a_required => s_rf_reg_a_required,
       o_src_reg_b => s_rf_src_reg_b,
+      o_reg_b_required => s_rf_reg_b_required,
       o_src_reg_c => s_rf_src_reg_c,
+      o_reg_c_required => s_rf_reg_c_required,
 
       -- Operand forwarding to the branch logic (async).
       i_branch_fwd_value => s_branch_fwd_value,
@@ -525,6 +531,7 @@ begin
     port map (
       -- From RF (async).
       i_src_reg => s_rf_src_reg_a,
+      i_reg_required => s_rf_reg_a_required,
 
       -- From EX1 input (async).
       i_dst_reg_from_ex1 => s_ex1_next_dst_reg,
@@ -550,6 +557,7 @@ begin
     port map (
       -- From RF (async).
       i_src_reg => s_rf_src_reg_b,
+      i_reg_required => s_rf_reg_b_required,
 
       -- From EX1 input (async).
       i_dst_reg_from_ex1 => s_ex1_next_dst_reg,
@@ -575,6 +583,7 @@ begin
     port map (
       -- From RF (async).
       i_src_reg => s_rf_src_reg_c,
+      i_reg_required => s_rf_reg_c_required,
 
       -- From EX1 input (async).
       i_dst_reg_from_ex1 => s_ex1_next_dst_reg,

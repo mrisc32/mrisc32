@@ -72,8 +72,11 @@ entity register_fetch is
 
       -- Information to the operand forwarding logic (async).
       o_src_reg_a : out T_SRC_REG;
+      o_reg_a_required : out std_logic;
       o_src_reg_b : out T_SRC_REG;
+      o_reg_b_required : out std_logic;
       o_src_reg_c : out T_SRC_REG;
+      o_reg_c_required : out std_logic;
 
       -- Operand forwarding to the branch logic (async).
       i_branch_fwd_value : in std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -187,14 +190,14 @@ architecture rtl of register_fetch is
   signal s_reg_c_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
   -- Signals to the EX stage.
+  signal s_src_a_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_src_b_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_src_c_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_src_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_src_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_src_c : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
   -- Operand forwarding signals.
-  signal s_reg_a_data_or_fwd : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_reg_b_data_or_fwd : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_reg_c_data_or_fwd : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_missing_fwd_operand : std_logic;
 
   -- Signals for handling discarding of the current operation (i.e. bubble).
@@ -339,34 +342,37 @@ begin
   --------------------------------------------------------------------------------------------------
 
   o_src_reg_a <= i_src_reg_a;
+  o_reg_a_required <= i_reg_a_required;
   o_src_reg_b <= i_src_reg_b;
+  o_reg_b_required <= i_reg_b_required;
   o_src_reg_c <= i_src_reg_c;
+  o_reg_c_required <= i_reg_c_required;
 
 
   --------------------------------------------------------------------------------------------------
   -- Prepare data for the EX stage.
   --------------------------------------------------------------------------------------------------
 
-  -- Select data from the register file or operand forwarding.
-  s_reg_a_data_or_fwd <= i_reg_a_fwd_value when i_reg_a_fwd_use_value = '1' else s_reg_a_data;
-  s_reg_b_data_or_fwd <= i_reg_b_fwd_value when i_reg_b_fwd_use_value = '1' else s_reg_b_data;
-  s_reg_c_data_or_fwd <= i_reg_c_fwd_value when i_reg_c_fwd_use_value = '1' else s_reg_c_data;
-
   -- Select source data for the EX stage.
   SrcAMux: with i_src_a_mode select
-      s_src_a <= s_reg_a_data_or_fwd when C_SRC_A_REG,
-                 i_imm               when C_SRC_A_IMM,
-                 i_pc                when C_SRC_A_PC,
-                 i_imm               when others;
+      s_src_a_data <= s_reg_a_data when C_SRC_A_REG,
+                      i_imm        when C_SRC_A_IMM,
+                      i_pc         when C_SRC_A_PC,
+                      i_imm        when others;
 
   SrcBMux: with i_src_b_mode select
-      s_src_b <= s_reg_b_data_or_fwd    when C_SRC_B_REG,
-                 i_imm                  when C_SRC_B_IMM,
-                 X"00000004"            when C_SRC_B_FOUR,
-                 s_vector_stride_offset when C_SRC_B_STRIDE,
-                 i_imm                  when others;
+      s_src_b_data <= s_reg_b_data           when C_SRC_B_REG,
+                      i_imm                  when C_SRC_B_IMM,
+                      X"00000004"            when C_SRC_B_FOUR,
+                      s_vector_stride_offset when C_SRC_B_STRIDE,
+                      i_imm                  when others;
 
-  s_src_c <= s_reg_c_data_or_fwd;
+  s_src_c_data <= s_reg_c_data;
+
+  -- Select data from decoding / register file or operand forwarding.
+  s_src_a <= i_reg_a_fwd_value when i_reg_a_fwd_use_value = '1' else s_src_a_data;
+  s_src_b <= i_reg_b_fwd_value when i_reg_b_fwd_use_value = '1' else s_src_b_data;
+  s_src_c <= i_reg_c_fwd_value when i_reg_c_fwd_use_value = '1' else s_reg_c_data;
 
   -- Are we missing any fwd operation that has not yet been produced by the pipeline?
   s_missing_fwd_operand <=

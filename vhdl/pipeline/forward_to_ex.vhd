@@ -45,6 +45,7 @@ entity forward_to_ex is
   port(
       -- What register is requested (if any)?
       i_src_reg : in T_SRC_REG;
+      i_reg_required : in std_logic;
 
       -- Operand information from the different pipeline stages.
       i_dst_reg_from_ex1 : in T_DST_REG;
@@ -91,7 +92,7 @@ begin
              i_value_from_wb;
 
   -- Should the forwarded pipeline value be used instead of register file value?
-  o_use_value <= s_reg_from_ex1 or s_reg_from_ex2 or s_reg_from_wb;
+  o_use_value <= i_reg_required and (s_reg_from_ex1 or s_reg_from_ex2 or s_reg_from_wb);
 
   -- Is the value ready for use?
   o_value_ready <= not (s_reg_from_ex1 and not i_ready_from_ex1);
