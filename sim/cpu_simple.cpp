@@ -271,6 +271,66 @@ inline uint32_t mulhiu8x4(const uint32_t a, const uint32_t b) {
   return b3 | b2 | b1 | b0;
 }
 
+inline uint32_t div32(const uint32_t a, const uint32_t b) {
+  return static_cast<uint32_t>(static_cast<int32_t>(a) / static_cast<int32_t>(b));
+}
+
+inline uint32_t div16x2(const uint32_t a, const uint32_t b) {
+  const auto a1 = static_cast<int32_t>(static_cast<int16_t>(a >> 16u));
+  const auto a0 = static_cast<int32_t>(static_cast<int16_t>(a));
+  const auto b1 = static_cast<int32_t>(static_cast<int16_t>(b >> 16u));
+  const auto b0 = static_cast<int32_t>(static_cast<int16_t>(b));
+  const auto c1 = (static_cast<uint32_t>(a1 / b1) & 0x0000ffffu) << 16u;
+  const auto c0 = static_cast<uint32_t>(a0 / b0) & 0x0000ffffu;
+  return c1 | c0;
+}
+
+inline uint32_t div8x4(const uint32_t a, const uint32_t b) {
+  const auto a3 = static_cast<int32_t>(static_cast<int8_t>(a >> 24u));
+  const auto a2 = static_cast<int32_t>(static_cast<int8_t>(a >> 16u));
+  const auto a1 = static_cast<int32_t>(static_cast<int8_t>(a >> 8u));
+  const auto a0 = static_cast<int32_t>(static_cast<int8_t>(a));
+  const auto b3 = static_cast<int32_t>(static_cast<int8_t>(b >> 24u));
+  const auto b2 = static_cast<int32_t>(static_cast<int8_t>(b >> 16u));
+  const auto b1 = static_cast<int32_t>(static_cast<int8_t>(b >> 8u));
+  const auto b0 = static_cast<int32_t>(static_cast<int8_t>(b));
+  const auto c3 = (static_cast<uint32_t>(a3 / b3) & 0x000000ffu) << 24u;
+  const auto c2 = (static_cast<uint32_t>(a2 / b2) & 0x000000ffu) << 16u;
+  const auto c1 = (static_cast<uint32_t>(a1 / b1) & 0x000000ffu) << 8u;
+  const auto c0 = static_cast<uint32_t>(a0 / b0) & 0x000000ffu;
+  return c3 | c2 | c1 | c0;
+}
+
+inline uint32_t divu32(const uint32_t a, const uint32_t b) {
+  return a / b;
+}
+
+inline uint32_t divu16x2(const uint32_t a, const uint32_t b) {
+  const auto a1 = a >> 16u;
+  const auto a0 = a & 0x0000ffff;
+  const auto b1 = b >> 16u;
+  const auto b0 = b & 0x0000ffff;
+  const auto c1 = (a1 / b1) << 16u;
+  const auto c0 = a0 / b0;
+  return c1 | c0;
+}
+
+inline uint32_t divu8x4(const uint32_t a, const uint32_t b) {
+  const auto a3 = a >> 24u;
+  const auto a2 = (a >> 16u) & 0x000000ff;
+  const auto a1 = (a >> 8u) & 0x000000ff;
+  const auto a0 = a & 0x000000ff;
+  const auto b3 = b >> 24u;
+  const auto b2 = (b >> 16u) & 0x000000ff;
+  const auto b1 = (b >> 8u) & 0x000000ff;
+  const auto b0 = b & 0x000000ff;
+  const auto c3 = (a3 / b3) << 24u;
+  const auto c2 = (a2 / b2) << 16u;
+  const auto c1 = (a1 / b1) << 8u;
+  const auto c0 = a0 / b0;
+  return c3 | c2 | c1 | c0;
+}
+
 inline uint32_t clz32(const uint32_t x) {
 #if defined(__GNUC__) || defined(__clang__)
   return static_cast<uint32_t>(__builtin_clz(x));
@@ -976,26 +1036,25 @@ uint32_t cpu_simple_t::run() {
         case EX_OP_DIV:
           switch (ex_in.packed_mode) {
             case PACKED_BYTE:
-              // TODO(m): Implement me!
-              throw std::runtime_error("PBDIV is not yet implemented.");
+              ex_result = div8x4(ex_in.src_a, ex_in.src_b);
+              break;
             case PACKED_HALF_WORD:
-              // TODO(m): Implement me!
-              throw std::runtime_error("PHDIV is not yet implemented.");
+              ex_result = div16x2(ex_in.src_a, ex_in.src_b);
+              break;
             default:
-              ex_result = static_cast<uint32_t>(static_cast<int32_t>(ex_in.src_a) /
-                                                static_cast<int32_t>(ex_in.src_b));
+              ex_result = div32(ex_in.src_a, ex_in.src_b);
           }
           break;
         case EX_OP_DIVU:
           switch (ex_in.packed_mode) {
             case PACKED_BYTE:
-              // TODO(m): Implement me!
-              throw std::runtime_error("PBDIVU is not yet implemented.");
+              ex_result = divu8x4(ex_in.src_a, ex_in.src_b);
+              break;
             case PACKED_HALF_WORD:
-              // TODO(m): Implement me!
-              throw std::runtime_error("PHDIVU is not yet implemented.");
+              ex_result = divu16x2(ex_in.src_a, ex_in.src_b);
+              break;
             default:
-              ex_result = ex_in.src_a / ex_in.src_b;
+              ex_result = divu32(ex_in.src_a, ex_in.src_b);
           }
           break;
         case EX_OP_REM:
