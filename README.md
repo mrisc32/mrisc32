@@ -18,8 +18,10 @@ This is an experimental, custom 32-bit RISC/Vector CPU.
   - There are only three basic types of instruction encodings.
   - There is room for 512 register-based and 62 immediate-based instructions.
   - Space has been reserved for future double-word instruction encodings, for an additional 8192 register + 8192 immediate instructions (or more).
-* All conditionals are based on register content (not condition code flags).
-* There are no condition code flags (carry, overflow, ...).
+* All conditionals are based on register content.
+  - There are no condition code flags (carry, overflow, ...).
+  - Compare instructions generate bit masks (for scalars, vectors and packed data types).
+  - Branch instructions act on bit masks (all bits set, all bits zero, etc) as well as signed quantities (less than zero, etc).
 * Unlike early RISC architectures, there are *no* delay slots.
 * Many traditional floating point operations can be handled in whole or patrially by integer operations, reducing the number of necessary instructions:
   - Load/store.
@@ -28,7 +30,7 @@ This is an experimental, custom 32-bit RISC/Vector CPU.
 * Vector operations use a Cray-like model:
   - Vector operations are variable length (1-*N* elements).
   - Most integer and floating point instructions come in both scalar and vector variants.
-* In addition to vector operations, there are also packed operations that can improve performance for small data types (byte and half-word).
+* In addition to vector operations, there are also packed operations that operate on small data types (byte and half-word).
 * There is currently no HW support for 64-bit floating point operations (that is left for a 64-bit version of the ISA).
 
 
