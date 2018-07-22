@@ -61,6 +61,13 @@ main:
   bl     .test_failed
 .test9_passed:
 
+  bl     test_10
+  or     s16, s16, s1
+  bz     s1, .test10_passed
+  bl     .test_failed
+.test10_passed:
+
+.done:
   ; exit(s16)
   mov    s1, s16
   b      _exit
@@ -444,6 +451,75 @@ test_9:
 .answer:
   .u32  0x4228029f
 
+
+; ----------------------------------------------------------------------------
+; Vector folding.
+
+test_10:
+  add    sp, sp, -24
+
+  ldi    vl, 4
+  lea    s9, .data1
+  lea    s10, .data2
+  ldw    v1, s9, 4    ; v1 = [1, 2, 3, 4]
+  ldw    v2, s10, 4   ; v2 = [9, 8, 7, 6]
+
+  add    v3, v1, v2   ; v3 = [10, 10, 10, 10]
+  add    s10, sp, 0
+  stw    v3, s10, 4
+  ldi    vl, 2
+  add.f  v4, v1, v2   ; v4 = [8, 8]
+  add    s10, sp, 16
+  stw    v4, s10, 4
+
+  ldi    s1, -1
+
+  lea    s9, .answer1
+  add    s10, sp, 0
+  ldw    s2, s10, 0
+  ldw    s3, s9, 0
+  seq    s2, s2, s3
+  and    s1, s1, s2
+  ldw    s2, s10, 4
+  ldw    s3, s9, 4
+  seq    s2, s2, s3
+  and    s1, s1, s2
+  ldw    s2, s10, 8
+  ldw    s3, s9, 8
+  seq    s2, s2, s3
+  and    s1, s1, s2
+  ldw    s2, s10, 12
+  ldw    s3, s9, 12
+  seq    s2, s2, s3
+  and    s1, s1, s2
+
+  lea    s9, .answer2
+  add    s10, sp, 16
+  ldw    s2, s10, 0
+  ldw    s3, s9, 0
+  seq    s2, s2, s3
+  and    s1, s1, s2
+  ldw    s2, s10, 4
+  ldw    s3, s9, 4
+  seq    s2, s2, s3
+  and    s1, s1, s2
+
+  xor    s1, s1, -1
+
+  add    sp, sp, 24
+  j      lr
+
+.data1:
+  .u32   1,2,3,4
+
+.data2:
+  .u32   9,8,7,6
+
+.answer1:
+  .u32   10, 10, 10, 10
+
+.answer2:
+  .u32   8, 8
 
 
 ; ----------------------------------------------------------------------------

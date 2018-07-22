@@ -63,6 +63,7 @@ struct wb_in_t {
 struct vector_state_t {
   uint32_t idx;          // Current vector index.
   uint32_t addr_offset;  // Current address offset (incremented by load/store stride).
+  bool folding;          // True if this is a folding vector op.
   bool active;           // True if a vector operation is currently active.
 };
 
@@ -563,7 +564,9 @@ uint32_t cpu_simple_t::run() {
       const uint32_t sclar_instr = id_in.instr & 0x3fffffffu;
 
       // Is this a vector operation?
-      const bool is_vector_op = ((id_in.instr & 0xc0000000u) != 0u);
+      const uint32_t vector_mode = id_in.instr >> 30u;
+      const bool is_vector_op = (vector_mode != 0u);
+      const bool is_folding_vector_op = (vector_mode == 1u);
 
       // Detect encoding class (A, B or C).
       const bool op_class_A = ((sclar_instr & 0x3f000000u) == 0x00000000u);
@@ -590,6 +593,7 @@ uint32_t cpu_simple_t::run() {
         if (!vector.active) {
           vector.idx = 0u;
           vector.addr_offset = 0u;
+          vector.folding = is_folding_vector_op;
         } else {
           // Do vector offset increments in the ID stage (in a HW implementation we probably want to
           // prepare these values one cycle ahead of time).
@@ -733,14 +737,15 @@ uint32_t cpu_simple_t::run() {
 
       // Check what type of registers should be used (vector or scalar).
       const bool reg1_is_vector = is_vector_op;
-      const bool reg2_is_vector = ((id_in.instr & 0x80000000u) != 0u) && !is_mem_op;
-      const bool reg3_is_vector = ((id_in.instr & 0x40000000u) != 0u);
+      const bool reg2_is_vector = is_vector_op && !is_mem_op;
+      const bool reg3_is_vector = ((vector_mode & 1u) != 0u);
 
       // Read from the register files.
       const uint32_t reg_a_data =
           reg2_is_vector ? m_vregs[src_reg_a][vector.idx] : m_regs[src_reg_a];
+      const uint32_t vector_idx_b = vector.folding ? (vector.idx + m_regs[REG_VL]) : vector.idx;
       const uint32_t reg_b_data =
-          reg3_is_vector ? m_vregs[src_reg_b][vector.idx] : m_regs[src_reg_b];
+          reg3_is_vector ? m_vregs[src_reg_b][vector_idx_b] : m_regs[src_reg_b];
       const uint32_t reg_c_data =
           reg1_is_vector ? m_vregs[src_reg_c][vector.idx] : m_regs[src_reg_c];
 
