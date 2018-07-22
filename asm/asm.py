@@ -830,7 +830,7 @@ def translate_pcrel(operand, operand_type, pc, labels, scope_label, line_no):
     return offset & (offset_max * 2 - 1)
 
 
-def translate_operation(operation, mnemonic, descr, packed_type, addr, line_no, labels, scope_label):
+def translate_operation(operation, mnemonic, descr, packed_type, folding, addr, line_no, labels, scope_label):
     if len(operation) != len(descr):
         raise AsmError(line_no, 'Expected {} arguments for {}'.format(len(descr) - 1, mnemonic))
     instr = descr[0]
@@ -846,6 +846,12 @@ def translate_operation(operation, mnemonic, descr, packed_type, addr, line_no, 
         elif operand_type in [_PCREL14, _PCREL19x4]:
             instr = instr | translate_pcrel(operand, operand_type, addr, labels, scope_label, line_no)
             is_immediate_op = True
+
+    # Folding.
+    if folding:
+        if not ((instr >> 30) == 3):
+            raise AsmError(line_no, 'Folding not supported for these operands')
+        instr = (instr & 0x3fffffff) | 0x40000000
 
     # TODO(m): This check is kind of coarse. More specifically packed operations are only supported
     # for A-type encodings, but we don't have that information here.
@@ -1053,6 +1059,7 @@ def compile_file(file_name, out_name, verbosity_level):
                     operation = extract_parts(line)
                     full_mnemonic = operation[0].upper()
 
+                    # Is this a packed operation?
                     packed_type = _PACKED_NONE
                     if full_mnemonic[:2] == 'PB':
                         packed_type = _PACKED_BYTE
@@ -1063,6 +1070,12 @@ def compile_file(file_name, out_name, verbosity_level):
                     else:
                         mnemonic = full_mnemonic
                     packed_op = (packed_type != _PACKED_NONE)
+
+                    # Is this a folding operation?
+                    folding = False
+                    if full_mnemonic[-2:] == '.F':
+                        folding = True
+                        mnemonic = full_mnemonic[:-2]
 
                     try:
                         op_descr = _OPCODES[mnemonic]
@@ -1077,13 +1090,12 @@ def compile_file(file_name, out_name, verbosity_level):
                         descrs = op_descr['descrs']
                         for descr in descrs:
                             try:
-                                instr = translate_operation(operation, full_mnemonic, descr, packed_type, addr, line_no, labels, scope_label)
+                                instr = translate_operation(operation, full_mnemonic, descr, packed_type, folding, addr, line_no, labels, scope_label)
                                 translation_successful = True
                                 break
                             except AsmError as e:
                                 errors.append(e.msg)
                         if not translation_successful:
-                            # TODO(m): Show the individual errors (overload candidates).
                             msg = 'Invalid operands for {}: {}'.format(full_mnemonic, ','.join(operation[1:]))
                             for e in errors:
                                 msg += '\n  Candidate: {}'.format(e)
