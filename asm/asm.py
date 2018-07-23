@@ -412,6 +412,14 @@ _OPCODES = {
                    'packed_op': False
                   },
 
+        # Get a vector register element.
+        # NOTE: The interpretation of the vector mode bits is non standard!
+        'GETE':  {'descrs':
+                    [[0x28000000, _REG1, _VREG2, _IMM14],
+                     [0xa8000000, _VREG1, _VREG2, _IMM14]],
+                   'packed_op': False
+                  },
+
 
         # Bit/byte/half-word handling.
         # Note: These op-codes are put in the 0x31+ range since they are not
@@ -439,6 +447,14 @@ _OPCODES = {
                      [0xc0000034, _VREG1, _VREG2, _VREG3]],
                    'packed_op': False
                   },
+
+        # Query the vector register mask.
+        # NOTE: The interpretation of the vector mode bits is non standard!
+        'GETM':   {'descrs':
+                    [[0xc0000038, _REG1, _VREG2, _VREG3]],
+                   'packed_op': False
+                  },
+
 
         # Multiplication operations.
         'MUL':    {'descrs':
