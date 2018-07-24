@@ -121,6 +121,7 @@ In the simplest implementation each vector operation is implemented as a pipelin
 
 Even in this implementation, the vectorized operation will be faster than a corresponding repeated scalar operation for a number of reasons:
 * Less overhead from loop branches, counters and memory index calculation.
+* Improved throughput thanks to reduced number of data dependency stalls (vector operations effectively hide data dependencies).
 * Improved cache performance:
   - With relatively little effort, accurate (non-speculative) data cache prefetching can be implemented in hardware for vector loads and stores.
 * More data can be kept in registers, meaning less overhead for swapping data to memory.
