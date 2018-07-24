@@ -183,30 +183,40 @@ _OPCODES = {
         # Load/store.
         'LDB':    {'descrs':
                     [[0x00000001, _REG1, _REG2, _REG3],
+                     [0x80000001, _VREG1, _REG2, _REG3],
+                     [0xc0000001, _VREG1, _REG2, _VREG3],
                      [0x01000000, _REG1, _REG2, _IMM14],
                      [0x81000000, _VREG1, _REG2, _IMM14]],
                    'packed_op': False
                   },
         'LDH':    {'descrs':
                     [[0x00000002, _REG1, _REG2, _REG3],
+                     [0x80000002, _VREG1, _REG2, _REG3],
+                     [0xc0000002, _VREG1, _REG2, _VREG3],
                      [0x02000000, _REG1, _REG2, _IMM14],
                      [0x82000000, _VREG1, _REG2, _IMM14]],
                    'packed_op': False
                   },
         'LDW':    {'descrs':
                     [[0x00000003, _REG1, _REG2, _REG3],
+                     [0x80000003, _VREG1, _REG2, _REG3],
+                     [0xc0000003, _VREG1, _REG2, _VREG3],
                      [0x03000000, _REG1, _REG2, _IMM14],
                      [0x83000000, _VREG1, _REG2, _IMM14]],
                    'packed_op': False
                   },
         'LDUB':   {'descrs':
                     [[0x00000005, _REG1, _REG2, _REG3],
+                     [0x80000005, _VREG1, _REG2, _REG3],
+                     [0xc0000005, _VREG1, _REG2, _VREG3],
                      [0x05000000, _REG1, _REG2, _IMM14],
                      [0x85000000, _VREG1, _REG2, _IMM14]],
                    'packed_op': False
                   },
         'LDUH':   {'descrs':
                     [[0x00000006, _REG1, _REG2, _REG3],
+                     [0x80000006, _VREG1, _REG2, _REG3],
+                     [0xc0000006, _VREG1, _REG2, _VREG3],
                      [0x06000000, _REG1, _REG2, _IMM14],
                      [0x86000000, _VREG1, _REG2, _IMM14]],
                    'packed_op': False
@@ -218,18 +228,24 @@ _OPCODES = {
                   },
         'STB':    {'descrs':
                     [[0x00000009, _REG1, _REG2, _REG3],
+                     [0x80000009, _VREG1, _REG2, _REG3],
+                     [0xc0000009, _VREG1, _REG2, _VREG3],
                      [0x09000000, _REG1, _REG2, _IMM14],
                      [0x89000000, _VREG1, _REG2, _IMM14]],
                    'packed_op': False
                   },
         'STH':    {'descrs':
                     [[0x0000000a, _REG1, _REG2, _REG3],
+                     [0x8000000a, _VREG1, _REG2, _REG3],
+                     [0xc000000a, _VREG1, _REG2, _VREG3],
                      [0x0a000000, _REG1, _REG2, _IMM14],
                      [0x8a000000, _VREG1, _REG2, _IMM14]],
                    'packed_op': False
                   },
         'STW':    {'descrs':
                     [[0x0000000b, _REG1, _REG2, _REG3],
+                     [0x8000000b, _VREG1, _REG2, _REG3],
+                     [0xc000000b, _VREG1, _REG2, _VREG3],
                      [0x0b000000, _REG1, _REG2, _IMM14],
                      [0x8b000000, _VREG1, _REG2, _IMM14]],
                    'packed_op': False
