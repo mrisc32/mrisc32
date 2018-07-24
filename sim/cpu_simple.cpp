@@ -752,13 +752,15 @@ uint32_t cpu_simple_t::run() {
       const uint32_t reg_c_data =
           reg1_is_vector ? m_vregs[src_reg_c][vector.idx] : m_regs[src_reg_c];
 
+      // Select gather-scatter offset or stride offset for vector memory operations.
+      const uint32_t vector_addr_offset = (vector_mode == 3u) ? reg_b_data : vector.addr_offset;
+
       // Output of the ID step.
-      // TODO(m): Add support for gather-scatter!
       ex_in.src_a = reg_a_data;
       ex_in.src_b = is_subroutine_branch
                         ? 4
                         : ((is_vector_op && is_mem_op)
-                               ? vector.addr_offset
+                               ? vector_addr_offset
                                : (op_class_B ? imm14 : (op_class_C ? imm19 : reg_b_data)));
       ex_in.src_c = reg_c_data;
       ex_in.dst_reg = dst_reg;
