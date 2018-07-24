@@ -62,6 +62,7 @@ struct wb_in_t {
 
 struct vector_state_t {
   uint32_t idx;          // Current vector index.
+  uint32_t stride;       // Stride for vector memory address calculations.
   uint32_t addr_offset;  // Current address offset (incremented by load/store stride).
   bool folding;          // True if this is a folding vector op.
   bool active;           // True if a vector operation is currently active.
@@ -558,7 +559,7 @@ uint32_t cpu_simple_t::run() {
       ++m_vector_loop_count;
     }
 
-    // ID
+    // ID/RF
     {
       // Get the scalar instruction (mask off vector control bits).
       const uint32_t sclar_instr = id_in.instr & 0x3fffffffu;
@@ -589,16 +590,18 @@ uint32_t cpu_simple_t::run() {
       // == VECTOR STATE HANDLING ==
 
       if (is_vector_op) {
+        const uint32_t vector_stride = op_class_B ? imm14 : m_regs[reg3];
+
         // Start a new or continue an ongoing vector operartion?
         if (!vector.active) {
           vector.idx = 0u;
+          vector.stride = vector_stride;
           vector.addr_offset = 0u;
           vector.folding = is_folding_vector_op;
         } else {
-          // Do vector offset increments in the ID stage (in a HW implementation we probably want to
-          // prepare these values one cycle ahead of time).
-          ++vector.idx;                 // 5- or 6-bit adder.
-          vector.addr_offset += imm14;  // 19-bit adder + sign-extend to 32 bits.
+          // Do vector offset increments in the ID/RF stage.
+          ++vector.idx;
+          vector.addr_offset += vector.stride;
         }
       }
 
@@ -750,11 +753,13 @@ uint32_t cpu_simple_t::run() {
           reg1_is_vector ? m_vregs[src_reg_c][vector.idx] : m_regs[src_reg_c];
 
       // Output of the ID step.
+      // TODO(m): Add support for gather-scatter!
       ex_in.src_a = reg_a_data;
       ex_in.src_b = is_subroutine_branch
                         ? 4
-                        : (op_class_B ? ((is_vector_op && is_mem_op) ? vector.addr_offset : imm14)
-                                      : (op_class_C ? imm19 : reg_b_data));
+                        : ((is_vector_op && is_mem_op)
+                               ? vector.addr_offset
+                               : (op_class_B ? imm14 : (op_class_C ? imm19 : reg_b_data)));
       ex_in.src_c = reg_c_data;
       ex_in.dst_reg = dst_reg;
       ex_in.dst_idx = vector.idx;
