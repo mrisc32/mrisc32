@@ -56,7 +56,7 @@
 |LDHI| x |   | dst, i19 | dst <= i19 << 13 | Load immediate (high 19 bits) |
 |LDHIO| x |   | dst, i19 | dst <= (i19 << 13) \| 0x1fff | Load immediate with low ones (high 19 bits) |
 
-**(1)**: The third operand in vector loads/stores is used as a stride parameter rather than an offset.
+**(1)**: The third operand in vector loads/stores is used as a stride or offset parameter (see [addressing modes](AddressingModes.md) for more details).
 
 **(2)**: SHUF uses the four indices given in src2 to rearrange bytes from src1 into dst. The indcies are given in the lowest 12 bits of src2 (three bits per index, where the upper bit in each index can be set to 1 for filling the corresponding byte in dst with either zeros or the sign bit of the source byte, depending on the value of bit 12 in src2).
 

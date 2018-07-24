@@ -38,6 +38,7 @@ This is an experimental, custom 32-bit RISC/Vector CPU.
 
 * [Registers](doc/Registers.md)
 * [Instructions](doc/Instructions.md)
+* [Addressing modes](doc/AddressingModes.md)
 * [Vector design](doc/VectorDesign.md)
 * [Packed operations](doc/PackedOperations.md)
 * [Common constructs](doc/CommonConstructs.md)

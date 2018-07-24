@@ -7,7 +7,7 @@ The MRISC32 approach to Single Instruction Multiple Data (SIMD) operation is ver
 * All vector elements are the same size (32 bits), regardless if they represent bytes, half-words, words or floats.
 * A Vector Length (VL) register controls the length of the vector operation.
 * There are vector,vector and vector,scalar versions of most integer and floating point operations.
-* Vector loads and stores have a stride parameter.
+* Vector loads and stores can either be stride-based or gather-scatter (see [addressing modes](AddressingModes.md) for more details).
 * Folding operations are provided for doing horizontal vector operations (e.g. sum, min/max).
 * Each vector register has a Register Length (RL) state.
   - Writing to a register updates the Register Length to the operation Vector Length.
