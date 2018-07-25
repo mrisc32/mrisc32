@@ -327,8 +327,8 @@ begin
                   C_SRC_A_REG when s_is_type_c = '0' else
                   C_SRC_A_IMM;
   s_src_b_mode <= C_SRC_B_FOUR when s_is_link_branch = '1' else
-                  C_SRC_B_REG when s_is_type_a = '1' else
                   C_SRC_B_STRIDE when s_is_vector_stride_mem_op = '1' else
+                  C_SRC_B_REG when s_is_type_a = '1' else
                   C_SRC_B_IMM;
 
   -- Select destination register.

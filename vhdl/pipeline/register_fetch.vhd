@@ -266,8 +266,10 @@ begin
   --------------------------------------------------------------------------------------------------
 
   -- Select the vector stride source.
-  -- TODO(m): We should also be able to use a scalar register as the stride source.
-  s_vector_stride <= i_imm;
+  s_vector_stride <=
+        i_reg_b_fwd_value when i_reg_b_fwd_use_value = '1' else
+        s_sreg_b_data when i_reg_b_required = '1' else
+        i_imm;
 
   -- Vector memory address generation.
   vector_stride_gen_1: entity work.vector_stride_gen
@@ -372,7 +374,7 @@ begin
   -- Select data from decoding / register file or operand forwarding.
   s_src_a <= i_reg_a_fwd_value when i_reg_a_fwd_use_value = '1' else s_src_a_data;
   s_src_b <= i_reg_b_fwd_value when i_reg_b_fwd_use_value = '1' else s_src_b_data;
-  s_src_c <= i_reg_c_fwd_value when i_reg_c_fwd_use_value = '1' else s_reg_c_data;
+  s_src_c <= i_reg_c_fwd_value when i_reg_c_fwd_use_value = '1' else s_src_c_data;
 
   -- Are we missing any fwd operation that has not yet been produced by the pipeline?
   s_missing_fwd_operand <=
