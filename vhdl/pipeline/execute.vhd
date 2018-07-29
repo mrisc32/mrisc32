@@ -38,6 +38,8 @@ entity execute is
     i_src_a : in std_logic_vector(C_WORD_SIZE-1 downto 0);
     i_src_b : in std_logic_vector(C_WORD_SIZE-1 downto 0);
     i_src_c : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+    i_is_first_vector_op_cycle : in std_logic;
+    i_address_offset_is_stride : in std_logic;
     i_dst_reg : in T_DST_REG;
     i_alu_op : in T_ALU_OP;
     i_mem_op : in T_MEM_OP;
@@ -94,6 +96,7 @@ end execute;
 
 architecture rtl of execute is
   signal s_alu_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_agu_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_mul_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_mul_result_ready : std_logic;
 
@@ -116,6 +119,7 @@ architecture rtl of execute is
 
   -- Signals from the EX1 to the EX2 stage (sync).
   signal s_ex1_mem_op : T_MEM_OP;
+  signal s_ex1_mem_addr : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ex1_mem_enable : std_logic;
   signal s_ex1_mem_we : std_logic;
   signal s_ex1_mem_byte_mask : std_logic_vector(C_WORD_SIZE/8-1 downto 0);
@@ -156,13 +160,27 @@ begin
 
   -- Should the EX1 stage be stalled?
 
-  -- Instantiate the ALU.
+  -- Instantiate the ALU (arithmetic logic unit).
   alu_1: entity work.alu
     port map (
       i_op => i_alu_op,
       i_src_a => i_src_a,
       i_src_b => i_src_b,
       o_result => s_alu_result
+    );
+
+  -- Instantiate the AGU (address generation unit).
+  agu_1: entity work.agu
+    port map (
+      i_clk => i_clk,
+      i_rst => i_rst,
+      i_stall => s_stall_ex1,
+
+      i_is_first_vector_op_cycle => i_is_first_vector_op_cycle,
+      i_address_offset_is_stride => i_address_offset_is_stride,
+      i_base => i_src_a,
+      i_offset => i_src_b,
+      o_result => s_agu_result
     );
 
   -- Instantiate the multiply unit.
@@ -186,7 +204,7 @@ begin
       "0011" when "10",    -- halfword
       "1111" when others;  -- word (11) and undefined (00)
 
-  ByteMaskShiftMux: with s_alu_result(1 downto 0) select
+  ByteMaskShiftMux: with s_agu_result(1 downto 0) select
     s_mem_byte_mask <=
       s_mem_byte_mask_unshifted(3 downto 0)         when "00",
       s_mem_byte_mask_unshifted(2 downto 0) & "0"   when "01",
@@ -194,7 +212,7 @@ begin
       s_mem_byte_mask_unshifted(0 downto 0) & "000" when others;  -- "11"
 
   -- Prepare the store data for the MEM stage (shift it into position).
-  StoreDataShiftMux: with s_alu_result(1 downto 0) select
+  StoreDataShiftMux: with s_agu_result(1 downto 0) select
     s_mem_store_data <=
       i_src_c(31 downto 0)             when "00",
       i_src_c(23 downto 0) & X"00"     when "01",
@@ -210,6 +228,7 @@ begin
   begin
     if i_rst = '1' then
       s_ex1_mem_op <= (others => '0');
+      s_ex1_mem_addr <= (others => '0');
       s_ex1_mem_enable <= '0';
       s_ex1_mem_we <= '0';
       s_ex1_mem_byte_mask <= (others => '0');
@@ -223,6 +242,7 @@ begin
     elsif rising_edge(i_clk) then
       if s_stall_ex1 = '0' then
         s_ex1_mem_op <= i_mem_op;
+        s_ex1_mem_addr <= s_agu_result;
         s_ex1_mem_enable <= i_mem_en;
         s_ex1_mem_we <= i_mem_op(3);
         s_ex1_mem_byte_mask <= s_mem_byte_mask;
@@ -259,7 +279,7 @@ begin
       i_mem_enable => s_ex1_mem_enable,
       i_mem_we => s_ex1_mem_we,
       i_mem_byte_mask => s_ex1_mem_byte_mask,
-      i_mem_addr => s_ex1_result,
+      i_mem_addr => s_ex1_mem_addr,
       i_store_data => s_ex1_store_data,
 
       -- DCache interface.

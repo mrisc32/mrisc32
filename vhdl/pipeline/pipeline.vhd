@@ -81,8 +81,8 @@ architecture rtl of pipeline is
   signal s_id_src_b_mode : T_SRC_B_MODE;
   signal s_id_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_id_imm : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_id_stall_vector_control : std_logic;
   signal s_id_is_first_vector_op_cycle : std_logic;
+  signal s_id_address_offset_is_stride : std_logic;
   signal s_id_src_reg_a : T_SRC_REG;
   signal s_id_src_reg_b : T_SRC_REG;
   signal s_id_src_reg_c : T_SRC_REG;
@@ -110,6 +110,8 @@ architecture rtl of pipeline is
   signal s_rf_src_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_rf_src_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_rf_src_c : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_rf_is_first_vector_op_cycle : std_logic;
+  signal s_rf_address_offset_is_stride : std_logic;
 
   signal s_rf_src_reg_a : T_SRC_REG;
   signal s_rf_reg_a_required : std_logic;
@@ -285,8 +287,8 @@ begin
       o_src_b_mode => s_id_src_b_mode,
       o_pc => s_id_pc,
       o_imm => s_id_imm,
-      o_stall_vector_control => s_id_stall_vector_control,
       o_is_first_vector_op_cycle => s_id_is_first_vector_op_cycle,
+      o_address_offset_is_stride => s_id_address_offset_is_stride,
       o_src_reg_a => s_id_src_reg_a,
       o_src_reg_b => s_id_src_reg_b,
       o_src_reg_c => s_id_src_reg_c,
@@ -332,8 +334,8 @@ begin
       i_src_b_mode => s_id_src_b_mode,
       i_pc => s_id_pc,
       i_imm => s_id_imm,
-      i_stall_vector_control => s_id_stall_vector_control,
       i_is_first_vector_op_cycle => s_id_is_first_vector_op_cycle,
+      i_address_offset_is_stride => s_id_address_offset_is_stride,
       i_src_reg_a => s_id_src_reg_a,
       i_src_reg_b => s_id_src_reg_b,
       i_src_reg_c => s_id_src_reg_c,
@@ -391,6 +393,8 @@ begin
       o_src_a => s_rf_src_a,
       o_src_b => s_rf_src_b,
       o_src_c => s_rf_src_c,
+      o_is_first_vector_op_cycle => s_rf_is_first_vector_op_cycle,
+      o_address_offset_is_stride => s_rf_address_offset_is_stride,
       o_dst_reg => s_rf_dst_reg,
       o_alu_op => s_rf_alu_op,
       o_mem_op => s_rf_mem_op,
@@ -418,6 +422,8 @@ begin
       i_src_a => s_rf_src_a,
       i_src_b => s_rf_src_b,
       i_src_c => s_rf_src_c,
+      i_is_first_vector_op_cycle => s_rf_is_first_vector_op_cycle,
+      i_address_offset_is_stride => s_rf_address_offset_is_stride,
       i_dst_reg => s_rf_dst_reg,
       i_alu_op => s_rf_alu_op,
       i_mem_op => s_rf_mem_op,

@@ -17,46 +17,13 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ####################################################################################################
 
-WORKDIR = out
+AGU_PATH = agu
 
-GHDL = ghdl
-GHDLWARNINGS = \
-    -Wbinding \
-    -Wreserved \
-    -Wlibrary \
-    -Wvital-generic \
-    -Wbody \
-    -Wspecs \
-    -Wunused \
-    -Werror
-GHDLFLAGS = --std=08 --work=work --workdir=$(WORKDIR) $(GHDLWARNINGS)
-ASM = ../asm/asm.py
+SRCS += \
+    $(AGU_PATH)/vector_stride_gen.vhd \
+    $(AGU_PATH)/vector_stride_gen_tb.vhd \
+    $(AGU_PATH)/agu.vhd
 
-.PHONY: all clean
-
-default: all
-
-SRCS =
-TESTS =
-
-include common/Makefile
-include agu/Makefile
-include alu/Makefile
-include fpu/Makefile
-include muldiv/Makefile
-include cache/Makefile
-include pipeline/Makefile
-include benchmark/Makefile
-
-all: $(TESTS)
-
-$(TESTS): $(WORKDIR)/work-obj93.cf $(SRCS)
-	$(GHDL) -m $(GHDLFLAGS) $@
-
-clean:
-	$(GHDL) --clean
-	rm -rf *.o *_tb *.vcd *.ghw $(WORKDIR)/*.o $(WORKDIR)/*.cf $(WORKDIR)/*_tb $(WORKDIR)/*.vcd $(WORKDIR)/*.ghw
-
-$(WORKDIR)/work-obj93.cf: $(SRCS)
-	$(GHDL) -i $(GHDLFLAGS) $(SRCS)
+TESTS += \
+    vector_stride_gen_tb
 

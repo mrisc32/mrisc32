@@ -55,8 +55,8 @@ entity register_fetch is
       i_src_b_mode : in T_SRC_B_MODE;
       i_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_imm : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_stall_vector_control : in std_logic;
       i_is_first_vector_op_cycle : in std_logic;
+      i_address_offset_is_stride : in std_logic;
       i_src_reg_a : in T_SRC_REG;
       i_src_reg_b : in T_SRC_REG;
       i_src_reg_c : in T_SRC_REG;
@@ -114,6 +114,8 @@ entity register_fetch is
       o_src_a : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_src_b : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_src_c : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_is_first_vector_op_cycle : out std_logic;
+      o_address_offset_is_stride : out std_logic;
       o_dst_reg : out T_DST_REG;
       o_alu_op : out T_ALU_OP;
       o_mem_op : out T_MEM_OP;
@@ -134,9 +136,6 @@ architecture rtl of register_fetch is
   signal s_reg_c_is_vector : std_logic;
   signal s_restart_vector_op : std_logic;
   signal s_is_folding_vector_op : std_logic;
-  signal s_is_vector_stride_mem_op : std_logic;
-  signal s_vector_stride : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_vector_stride_offset : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
   signal s_packed_mode : std_logic_vector(1 downto 0);
 
@@ -262,28 +261,6 @@ begin
 
 
   --------------------------------------------------------------------------------------------------
-  -- Vector logic.
-  --------------------------------------------------------------------------------------------------
-
-  -- Select the vector stride source.
-  s_vector_stride <=
-        i_reg_b_fwd_value when i_reg_b_fwd_use_value = '1' else
-        s_sreg_b_data when i_reg_b_required = '1' else
-        i_imm;
-
-  -- Vector memory address generation.
-  vector_stride_gen_1: entity work.vector_stride_gen
-    port map (
-      i_clk => i_clk,
-      i_rst => i_rst,
-      i_stall => i_stall_vector_control,  -- TODO(m): Is this right?
-      i_is_first_vector_op_cycle => i_is_first_vector_op_cycle,
-      i_stride => s_vector_stride,
-      o_offset => s_vector_stride_offset
-    );
-
-
-  --------------------------------------------------------------------------------------------------
   -- Branch logic.
   --------------------------------------------------------------------------------------------------
 
@@ -366,7 +343,6 @@ begin
       s_src_b_data <= s_reg_b_data           when C_SRC_B_REG,
                       i_imm                  when C_SRC_B_IMM,
                       X"00000004"            when C_SRC_B_FOUR,
-                      s_vector_stride_offset when C_SRC_B_STRIDE,
                       i_imm                  when others;
 
   s_src_c_data <= s_reg_c_data;
@@ -406,6 +382,8 @@ begin
       o_src_a <= (others => '0');
       o_src_b <= (others => '0');
       o_src_c <= (others => '0');
+      o_is_first_vector_op_cycle <= '0';
+      o_address_offset_is_stride <= '0';
       o_dst_reg.is_target <= '0';
       o_dst_reg.reg <= (others => '0');
       o_dst_reg.element <= (others => '0');
@@ -431,6 +409,8 @@ begin
         o_src_a <= s_src_a;
         o_src_b <= s_src_b;
         o_src_c <= s_src_c;
+        o_is_first_vector_op_cycle <= i_is_first_vector_op_cycle;
+        o_address_offset_is_stride <= i_address_offset_is_stride;
         o_dst_reg <= s_dst_reg_masked;
         o_alu_op <= s_alu_op_masked;
         o_mem_op <= s_mem_op_masked;

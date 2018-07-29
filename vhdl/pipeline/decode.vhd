@@ -74,8 +74,8 @@ entity decode is
       o_src_b_mode : out T_SRC_B_MODE;
       o_pc : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_imm : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_stall_vector_control : out std_logic;
       o_is_first_vector_op_cycle : out std_logic;
+      o_address_offset_is_stride : out std_logic;
       o_src_reg_a : out T_SRC_REG;
       o_src_reg_b : out T_SRC_REG;
       o_src_reg_c : out T_SRC_REG;
@@ -117,6 +117,7 @@ architecture rtl of decode is
   signal s_element_c : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
   signal s_is_vector_op_busy : std_logic;
   signal s_is_first_vector_op_cycle : std_logic;
+  signal s_address_offset_is_stride : std_logic;
   signal s_bubble_from_vector_op : std_logic;
 
   signal s_packed_mode : std_logic_vector(1 downto 0);
@@ -239,6 +240,9 @@ begin
   s_reg_b_required <= s_is_type_a;
   s_reg_c_required <= s_is_mem_store;
 
+  -- Is this a stride offset or regular offset memory addressing mode instruction?
+  s_address_offset_is_stride <= s_is_vector_stride_mem_op;
+
 
   --------------------------------------------------------------------------------------------------
   -- Vector control logic.
@@ -327,7 +331,6 @@ begin
                   C_SRC_A_REG when s_is_type_c = '0' else
                   C_SRC_A_IMM;
   s_src_b_mode <= C_SRC_B_FOUR when s_is_link_branch = '1' else
-                  C_SRC_B_STRIDE when s_is_vector_stride_mem_op = '1' else
                   C_SRC_B_REG when s_is_type_a = '1' else
                   C_SRC_B_IMM;
 
@@ -347,15 +350,15 @@ begin
   s_dst_reg.is_vector <= s_reg_c_is_vector and not s_is_mem_store;
 
   -- What pipeline units should be enabled?
-  s_alu_en <= not (s_is_mul_op or s_is_div_op or s_is_fpu_op);
+  s_alu_en <= not (s_is_mem_op or s_is_mul_op or s_is_div_op or s_is_fpu_op);
   s_mul_en <= s_is_mul_op;
   s_div_en <= s_is_div_op;
   s_mem_en <= s_is_mem_op;
 
   -- Select ALU operation.
   s_alu_op <=
-      -- Use the ALU to calculate the memory/return address.
-      C_ALU_ADD when (s_is_mem_op or s_is_link_branch) = '1' else
+      -- Use the ALU to calculate the return address of linking branches.
+      C_ALU_ADD when s_is_link_branch = '1' else
 
       -- LDHI has a special ALU op.
       C_ALU_LDHI when s_is_ldhi = '1' else
@@ -426,8 +429,8 @@ begin
       o_src_b_mode <= (others => '0');
       o_pc <= (others => '0');
       o_imm <= (others => '0');
-      o_stall_vector_control <= '0';
       o_is_first_vector_op_cycle <= '0';
+      o_address_offset_is_stride <= '0';
       o_src_reg_a.reg <= (others => '0');
       o_src_reg_a.element <= (others => '0');
       o_src_reg_a.is_vector <= '0';
@@ -463,8 +466,8 @@ begin
         o_src_b_mode <= s_src_b_mode;
         o_pc <= i_pc;
         o_imm <= s_imm;
-        o_stall_vector_control <= s_stall_vector_control;
         o_is_first_vector_op_cycle <= s_is_first_vector_op_cycle;
+        o_address_offset_is_stride <= s_address_offset_is_stride;
         o_src_reg_a.reg <= s_reg_a;
         o_src_reg_a.element <= s_element_a;
         o_src_reg_a.is_vector <= s_reg_a_is_vector;

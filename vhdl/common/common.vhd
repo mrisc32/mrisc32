@@ -76,7 +76,6 @@ package common is
   constant C_SRC_B_REG : T_SRC_B_MODE := "00";
   constant C_SRC_B_IMM : T_SRC_B_MODE := "01";
   constant C_SRC_B_FOUR : T_SRC_B_MODE := "10";
-  constant C_SRC_B_STRIDE : T_SRC_B_MODE := "11";
 
 
   ------------------------------------------------------------------------------------------------

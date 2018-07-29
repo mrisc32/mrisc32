@@ -28,8 +28,6 @@ SRCS += \
     $(PIPELINE_PATH)/regs_vector_tb.vhd \
     $(PIPELINE_PATH)/vector_control.vhd \
     $(PIPELINE_PATH)/vector_control_tb.vhd \
-    $(PIPELINE_PATH)/vector_stride_gen.vhd \
-    $(PIPELINE_PATH)/vector_stride_gen_tb.vhd \
     $(PIPELINE_PATH)/pc_plus_4.vhd \
     $(PIPELINE_PATH)/pc_plus_offset.vhd \
     $(PIPELINE_PATH)/branch_target_buffer.vhd \
@@ -51,7 +49,6 @@ TESTS += \
     regs_scalar_tb \
     regs_vector_tb \
     vector_control_tb \
-    vector_stride_gen_tb \
     program_counter_tb \
     pipeline_tb
 
