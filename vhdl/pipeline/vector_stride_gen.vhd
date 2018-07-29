@@ -54,16 +54,16 @@ begin
       if i_stall = '0' then
         if i_is_first_vector_op_cycle = '1' then
           s_stride <= i_stride;
+          s_offset <= i_stride;
+        else
+          s_offset <= s_next_offset;
         end if;
-        s_offset <= s_next_offset;
       end if;
     end if;
   end process;
 
   -- Calculate the next offset.
-  s_next_offset <=
-      i_stride when i_is_first_vector_op_cycle = '1' else
-      std_logic_vector(unsigned(s_offset) + unsigned(s_stride));
+  s_next_offset <= std_logic_vector(unsigned(s_offset) + unsigned(s_stride));
 
   -- Outputs.
   o_offset <= (others => '0') when i_is_first_vector_op_cycle = '1' else s_offset;
