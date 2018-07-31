@@ -1,7 +1,7 @@
 # MRISC32
 *Mostly harmless Reduced Instruction Set Computer, 32-bit edition*
 
-This is an experimental, custom 32-bit RISC/Vector CPU.
+This is an experimental, custom 32-bit RISC/Vector CPU, primarily inspired by the [Cray 1](https://en.wikipedia.org/wiki/Cray-1) and [MIPS](https://en.wikipedia.org/wiki/MIPS_architecture) architectures. The focus is to create a clean, modern [ISA](https://en.wikipedia.org/wiki/Instruction_set_architecture) that is equally attractive to software, hardware and compiler developers.
 
 # Features
 
@@ -18,10 +18,11 @@ This is an experimental, custom 32-bit RISC/Vector CPU.
   - There are only three basic types of instruction encodings.
   - There is room for 512 register-based and 62 immediate-based instructions.
   - Space has been reserved for future double-word instruction encodings, for an additional 8192 register + 8192 immediate instructions (or more).
+* Instructions are non-destructive 3-operand (two sources, one destination).
 * All conditionals are based on register content.
   - There are no condition code flags (carry, overflow, ...).
   - Compare instructions generate bit masks (for scalars, vectors and packed data types).
-  - Branch instructions act on bit masks (all bits set, all bits zero, etc) as well as signed quantities (less than zero, etc).
+  - Branch instructions can act on bit masks (all bits set, all bits zero, etc) as well as signed quantities (less than zero, etc).
 * Unlike early RISC architectures, there are *no* delay slots.
 * Many traditional floating point operations can be handled in whole or patrially by integer operations, reducing the number of necessary instructions:
   - Load/store.
@@ -30,8 +31,10 @@ This is an experimental, custom 32-bit RISC/Vector CPU.
 * Vector operations use a Cray-like model:
   - Vector operations are variable length (1-*N* elements).
   - Most integer and floating point instructions come in both scalar and vector variants.
+  - Vector instructions can use both vector and scalar operands (including immediate values), which removes the overhead for transfering scalar data into vector registers.
 * In addition to vector operations, there are also packed operations that operate on small data types (byte and half-word).
-* There is currently no HW support for 64-bit floating point operations (that is left for a 64-bit version of the ISA).
+
+Note: There is currently no HW support for 64-bit floating point operations (that is left for a 64-bit version of the ISA).
 
 
 # Documentation
