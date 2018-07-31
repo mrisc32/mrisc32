@@ -26,7 +26,6 @@ use work.common.all;
 -- This implements the scalar register file, with the following properties:
 --
 --  * There are three generic read ports.
---  * There is a dedicated, fourth read port hard-wired to the VL register.
 --  * There is a single write port.
 --  * Data is forwarded from the write port to the read ports within the same cycle.
 --  * Reading the Z register always returns zero (0).
@@ -46,9 +45,6 @@ entity regs_scalar is
     o_data_a : out std_logic_vector(C_WORD_SIZE-1 downto 0);
     o_data_b : out std_logic_vector(C_WORD_SIZE-1 downto 0);
     o_data_c : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-
-    -- One read port is hard-wired to the VL register.
-    o_vl : out std_logic_vector(C_WORD_SIZE-1 downto 0);
 
     -- We have one write port.
     i_we : in std_logic;
@@ -94,9 +90,6 @@ begin
   -- We hard-wire the values of the Z and PC registers to zero and the input PC respectively.
   s_data(C_Z_REG) <= (others => '0');
   s_data(C_PC_REG) <= i_pc;
-
-  -- We hard-wire the VL read-port to the VL-register.
-  o_vl <= s_data(C_VL_REG);
 
   -- Read ports.
   o_data_a <= s_data(to_integer(unsigned(i_sel_a)));

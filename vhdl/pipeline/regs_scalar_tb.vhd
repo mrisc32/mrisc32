@@ -34,7 +34,6 @@ architecture behavioral of regs_scalar_tb is
   signal s_data_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_data_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_data_c : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_vl : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_we : std_logic;
   signal s_data_w : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_sel_w : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
@@ -58,7 +57,6 @@ begin
       o_data_a => s_data_a,
       o_data_b => s_data_b,
       o_data_c => s_data_c,
-      o_vl => s_vl,
       i_we => s_we,
       i_data_w => s_data_w,
       i_sel_w => s_sel_w,
@@ -178,10 +176,6 @@ begin
              "  PC=" & to_string(s_data_b) & " (expected " & to_string(s_pc) & ")"
         severity error;
     assert s_data_c = s_data_w
-      report "Bad VL value:" & lf &
-             "  VL=" & to_string(s_data_c) & " (expected " & to_string(s_data_w) & ")"
-        severity error;
-    assert s_vl = s_data_w
       report "Bad VL value:" & lf &
              "  VL=" & to_string(s_data_c) & " (expected " & to_string(s_data_w) & ")"
         severity error;
