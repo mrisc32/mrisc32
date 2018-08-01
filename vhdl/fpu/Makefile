@@ -20,9 +20,9 @@
 FPU_PATH = fpu
 
 SRCS += \
-    $(FPU_PATH)/float32_isnan.vhd \
-    $(FPU_PATH)/float32_isnan_tb.vhd
+    $(FPU_PATH)/float_decompose.vhd \
+    $(FPU_PATH)/float_decompose_tb.vhd
 
 TESTS += \
-    float32_isnan_tb
+    float_decompose_tb
 
