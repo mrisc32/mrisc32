@@ -84,12 +84,10 @@
 |MUL| x | x | dst, src1, src2 | dst <= src1 * src2 | Multiplication (signed or unsigned, low 32 bits) |
 |MULHI| x | x | dst, src1, src2 | dst <= (src1 * src2) >> 32 | Multiplication (signed, high 32 bits) |
 |MULHIU| x | x | dst, src1, src2 | dst <= (src1 * src2) >> 32 | Multiplication (unsigned, high 32 bits) |
-|FMUL| x |   | dst, src1, src2 | dst <= src1 * src2 | Floating point multiplication |
 |DIV| x | x | dst, src1, src2 | dst <= src1 / src2 | Division (signed, integer part) |
 |DIVU| x | x | dst, src1, src2 | dst <= src1 / src2 | Division (unsigned, integer part) |
 |REM| x | x | dst, src1, src2 | dst <= src1 % src2 | Remainder (signed) |
 |REMU| x | x | dst, src1, src2 | dst <= src1 % src2 | Remainder (unsigned) |
-|FDIV| x |   | dst, src1, src2 | dst <= src1 / src2 | Floating point division |
 
 ## Floating point instructions
 
@@ -99,6 +97,8 @@
 |FTOI| x |   | dst, src1, src2 | dst <= (int)(src1 * 2^src2) | Cast float to integer with exponent offset |
 |FADD| x |   | dst, src1, src2 | dst <= src1 + src2 | Floating point addition |
 |FSUB| x |   | dst, src1, src2 | dst <= src1 - src2 | Floating point subtraction |
+|FMUL| x |   | dst, src1, src2 | dst <= src1 * src2 | Floating point multiplication |
+|FDIV| x |   | dst, src1, src2 | dst <= src1 / src2 | Floating point division |
 |FSEQ| x |   | dst, src1, src2 | dst <= (src1 == src2) ? 0xffffffff : 0 | Set if equal (floating point) |
 |FSNE| x |   | dst, src1, src2 | dst <= (src1 != src2) ? 0xffffffff : 0 | Set if not equal (floating point) |
 |FSLT| x |   | dst, src1, src2 | dst <= (src1 < src2) ? 0xffffffff : 0 | Set if less than (floating point) |

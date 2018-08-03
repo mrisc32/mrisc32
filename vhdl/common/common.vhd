@@ -133,23 +133,21 @@ package common is
   constant C_ALU_PACKH : T_ALU_OP := "110100";
 
   -- MUL operations.
-  constant C_MUL_OP_SIZE : integer := 3;
+  constant C_MUL_OP_SIZE : integer := 2;
   subtype T_MUL_OP is std_logic_vector(C_MUL_OP_SIZE-1 downto 0);
 
-  constant C_MUL_MUL    : T_MUL_OP := "000";
-  constant C_MUL_MULHI  : T_MUL_OP := "010";
-  constant C_MUL_MULHIU : T_MUL_OP := "011";
-  constant C_MUL_FMUL   : T_MUL_OP := "100";
+  constant C_MUL_MUL    : T_MUL_OP := "00";
+  constant C_MUL_MULHI  : T_MUL_OP := "10";
+  constant C_MUL_MULHIU : T_MUL_OP := "11";
 
   -- DIV operations.
-  constant C_DIV_OP_SIZE : integer := 3;
+  constant C_DIV_OP_SIZE : integer := 2;
   subtype T_DIV_OP is std_logic_vector(C_DIV_OP_SIZE-1 downto 0);
 
-  constant C_DIV_DIV    : T_DIV_OP := "000";
-  constant C_DIV_DIVU   : T_DIV_OP := "001";
-  constant C_DIV_REM    : T_DIV_OP := "010";
-  constant C_DIV_REMU   : T_DIV_OP := "011";
-  constant C_DIV_FDIV   : T_DIV_OP := "100";
+  constant C_DIV_DIV  : T_DIV_OP := "00";
+  constant C_DIV_DIVU : T_DIV_OP := "01";
+  constant C_DIV_REM  : T_DIV_OP := "10";
+  constant C_DIV_REMU : T_DIV_OP := "11";
 
   -- FPU operations.
   constant C_FPU_OP_SIZE : integer := 4;
@@ -159,13 +157,15 @@ package common is
   constant C_FPU_FTOI : T_FPU_OP := "0001";
   constant C_FPU_FADD : T_FPU_OP := "0010";
   constant C_FPU_FSUB : T_FPU_OP := "0011";
-  constant C_FPU_FSEQ : T_FPU_OP := "0100";
-  constant C_FPU_FSNE : T_FPU_OP := "0101";
-  constant C_FPU_FSLT : T_FPU_OP := "0110";
-  constant C_FPU_FSLE : T_FPU_OP := "0111";
-  constant C_FPU_FSNAN : T_FPU_OP := "1000";
-  constant C_FPU_FMIN : T_FPU_OP := "1001";
-  constant C_FPU_FMAX : T_FPU_OP := "1010";
+  constant C_FPU_FMUL : T_FPU_OP := "0100";
+  constant C_FPU_FDIV : T_FPU_OP := "0101";
+  constant C_FPU_FSEQ : T_FPU_OP := "1000";
+  constant C_FPU_FSNE : T_FPU_OP := "1001";
+  constant C_FPU_FSLT : T_FPU_OP := "1010";
+  constant C_FPU_FSLE : T_FPU_OP := "1011";
+  constant C_FPU_FSNAN : T_FPU_OP := "1100";
+  constant C_FPU_FMIN : T_FPU_OP := "1101";
+  constant C_FPU_FMAX : T_FPU_OP := "1110";
 
   -- MEM operations.
   constant C_MEM_OP_SIZE : integer := 4;

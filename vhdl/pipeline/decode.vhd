@@ -217,9 +217,9 @@ begin
   s_is_ldhio <= '1' when s_op_high = 6X"3c" else '0';
 
   -- Is this a MUL, DIV or FPU op?
-  s_is_mul_op <= '1' when (s_is_type_a = '1' and s_op_low(8 downto 3) = "001000") else '0';
-  s_is_div_op <= '1' when (s_is_type_a = '1' and s_op_low(8 downto 3) = "001001") else '0';
-  s_is_fpu_op <= '1' when (s_is_type_a = '1' and s_op_low(8 downto 4) = "00101") else '0';
+  s_is_mul_op <= '1' when (s_is_type_a = '1' and s_op_low(6 downto 2) = "10000") else '0';
+  s_is_div_op <= '1' when (s_is_type_a = '1' and s_op_low(6 downto 2) = "10001") else '0';
+  s_is_fpu_op <= '1' when (s_is_type_a = '1' and s_op_low(6 downto 4) = "101") else '0';
 
   -- Determine vector mode.
   s_vector_mode <= i_instr(31 downto 30);

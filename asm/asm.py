@@ -492,43 +492,31 @@ _OPCODES = {
                      [0xc0000043, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
-        'FMUL':   {'descrs':
-                    [[0x00000044, _REG1, _REG2, _REG3],
-                     [0x80000044, _VREG1, _VREG2, _REG3],
-                     [0xc0000044, _VREG1, _VREG2, _VREG3]],
-                   'packed_op': False
-                  },
 
         # Division operations.
         'DIV':    {'descrs':
-                    [[0x00000048, _REG1, _REG2, _REG3],
-                     [0x80000048, _VREG1, _VREG2, _REG3],
-                     [0xc0000048, _VREG1, _VREG2, _VREG3]],
+                    [[0x00000044, _REG1, _REG2, _REG3],
+                     [0x80000044, _VREG1, _VREG2, _REG3],
+                     [0xc0000044, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
         'DIVU':   {'descrs':
-                    [[0x00000049, _REG1, _REG2, _REG3],
-                     [0x80000049, _VREG1, _VREG2, _REG3],
-                     [0xc0000049, _VREG1, _VREG2, _VREG3]],
+                    [[0x00000045, _REG1, _REG2, _REG3],
+                     [0x80000045, _VREG1, _VREG2, _REG3],
+                     [0xc0000045, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
         'REM':    {'descrs':
-                    [[0x0000004a, _REG1, _REG2, _REG3],
-                     [0x8000004a, _VREG1, _VREG2, _REG3],
-                     [0xc000004a, _VREG1, _VREG2, _VREG3]],
+                    [[0x00000046, _REG1, _REG2, _REG3],
+                     [0x80000046, _VREG1, _VREG2, _REG3],
+                     [0xc0000046, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
         'REMU':   {'descrs':
-                    [[0x0000004b, _REG1, _REG2, _REG3],
-                     [0x8000004b, _VREG1, _VREG2, _REG3],
-                     [0xc000004b, _VREG1, _VREG2, _VREG3]],
+                    [[0x00000047, _REG1, _REG2, _REG3],
+                     [0x80000047, _VREG1, _VREG2, _REG3],
+                     [0xc0000047, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
-                  },
-        'FDIV':   {'descrs':
-                    [[0x0000004c, _REG1, _REG2, _REG3],
-                     [0x8000004c, _VREG1, _VREG2, _REG3],
-                     [0xc000004c, _VREG1, _VREG2, _VREG3]],
-                   'packed_op': False
                   },
 
         # FP arithmetic.
@@ -560,46 +548,58 @@ _OPCODES = {
                      [0xc0000053, _VREG1, _VREG2, _VREG3]],
                    'packed_op': False
                   },
-        'FSEQ':   {'descrs':
+        'FMUL':   {'descrs':
                     [[0x00000054, _REG1, _REG2, _REG3],
                      [0x80000054, _VREG1, _VREG2, _REG3],
                      [0xc0000054, _VREG1, _VREG2, _VREG3]],
                    'packed_op': False
                   },
-        'FSNE':   {'descrs':
+        'FDIV':   {'descrs':
                     [[0x00000055, _REG1, _REG2, _REG3],
                      [0x80000055, _VREG1, _VREG2, _REG3],
                      [0xc0000055, _VREG1, _VREG2, _VREG3]],
                    'packed_op': False
                   },
-        'FSLT':   {'descrs':
-                    [[0x00000056, _REG1, _REG2, _REG3],
-                     [0x80000056, _VREG1, _VREG2, _REG3],
-                     [0xc0000056, _VREG1, _VREG2, _VREG3]],
-                   'packed_op': False
-                  },
-        'FSLE':   {'descrs':
-                    [[0x00000057, _REG1, _REG2, _REG3],
-                     [0x80000057, _VREG1, _VREG2, _REG3],
-                     [0xc0000057, _VREG1, _VREG2, _VREG3]],
-                   'packed_op': False
-                  },
-        'FSNAN':  {'descrs':
+        'FSEQ':   {'descrs':
                     [[0x00000058, _REG1, _REG2, _REG3],
                      [0x80000058, _VREG1, _VREG2, _REG3],
                      [0xc0000058, _VREG1, _VREG2, _VREG3]],
                    'packed_op': False
                   },
-        'FMIN':   {'descrs':
+        'FSNE':   {'descrs':
                     [[0x00000059, _REG1, _REG2, _REG3],
                      [0x80000059, _VREG1, _VREG2, _REG3],
                      [0xc0000059, _VREG1, _VREG2, _VREG3]],
                    'packed_op': False
                   },
-        'FMAX':   {'descrs':
+        'FSLT':   {'descrs':
                     [[0x0000005a, _REG1, _REG2, _REG3],
                      [0x8000005a, _VREG1, _VREG2, _REG3],
                      [0xc000005a, _VREG1, _VREG2, _VREG3]],
+                   'packed_op': False
+                  },
+        'FSLE':   {'descrs':
+                    [[0x0000005b, _REG1, _REG2, _REG3],
+                     [0x8000005b, _VREG1, _VREG2, _REG3],
+                     [0xc000005b, _VREG1, _VREG2, _VREG3]],
+                   'packed_op': False
+                  },
+        'FSNAN':  {'descrs':
+                    [[0x0000005c, _REG1, _REG2, _REG3],
+                     [0x8000005c, _VREG1, _VREG2, _REG3],
+                     [0xc000005c, _VREG1, _VREG2, _VREG3]],
+                   'packed_op': False
+                  },
+        'FMIN':   {'descrs':
+                    [[0x0000005d, _REG1, _REG2, _REG3],
+                     [0x8000005d, _VREG1, _VREG2, _REG3],
+                     [0xc000005d, _VREG1, _VREG2, _VREG3]],
+                   'packed_op': False
+                  },
+        'FMAX':   {'descrs':
+                    [[0x0000005e, _REG1, _REG2, _REG3],
+                     [0x8000005e, _VREG1, _VREG2, _REG3],
+                     [0xc000005e, _VREG1, _VREG2, _VREG3]],
                    'packed_op': False
                   },
 

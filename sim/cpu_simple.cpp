@@ -1101,9 +1101,6 @@ uint32_t cpu_simple_t::run() {
               ex_result = mulhiu32(ex_in.src_a, ex_in.src_b);
           }
           break;
-        case EX_OP_FMUL:
-          ex_result = as_u32(as_f32(ex_in.src_a) * as_f32(ex_in.src_b));
-          break;
 
         case EX_OP_DIV:
           switch (ex_in.packed_mode) {
@@ -1151,9 +1148,6 @@ uint32_t cpu_simple_t::run() {
             default:
               ex_result = remu32(ex_in.src_a, ex_in.src_b);
           }
-        case EX_OP_FDIV:
-          ex_result = as_u32(as_f32(ex_in.src_a) / as_f32(ex_in.src_b));
-          break;
 
         case EX_OP_ITOF:
           ex_result = itof32(ex_in.src_a, ex_in.src_b);
@@ -1166,6 +1160,12 @@ uint32_t cpu_simple_t::run() {
           break;
         case EX_OP_FSUB:
           ex_result = as_u32(-as_f32(ex_in.src_a) + as_f32(ex_in.src_b));
+          break;
+        case EX_OP_FMUL:
+          ex_result = as_u32(as_f32(ex_in.src_a) * as_f32(ex_in.src_b));
+          break;
+        case EX_OP_FDIV:
+          ex_result = as_u32(as_f32(ex_in.src_a) / as_f32(ex_in.src_b));
           break;
         case EX_OP_FSEQ:
           ex_result = (as_f32(ex_in.src_a) == as_f32(ex_in.src_b)) ? 0xffffffffu : 0u;
