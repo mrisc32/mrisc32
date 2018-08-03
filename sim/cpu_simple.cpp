@@ -1167,6 +1167,9 @@ uint32_t cpu_simple_t::run() {
         case EX_OP_FDIV:
           ex_result = as_u32(as_f32(ex_in.src_a) / as_f32(ex_in.src_b));
           break;
+        case EX_OP_FSQRT:
+          ex_result = as_u32(std::sqrt(as_f32(ex_in.src_a)));
+          break;
         case EX_OP_FSEQ:
           ex_result = (as_f32(ex_in.src_a) == as_f32(ex_in.src_b)) ? 0xffffffffu : 0u;
           break;

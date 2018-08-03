@@ -560,6 +560,11 @@ _OPCODES = {
                      [0xc0000055, _VREG1, _VREG2, _VREG3]],
                    'packed_op': False
                   },
+        'FSQRT': {'descrs':
+                    [[0x00000056, _REG1, _REG2],      # REG3 = Z (operand is unused)
+                     [0xc0000056, _VREG1, _VREG2]],   # VREG3 = VZ (operand is unused)
+                   'packed_op': False
+                  },
         'FSEQ':   {'descrs':
                     [[0x00000058, _REG1, _REG2, _REG3],
                      [0x80000058, _VREG1, _VREG2, _REG3],

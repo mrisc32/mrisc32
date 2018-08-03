@@ -99,6 +99,7 @@
 |FSUB| x |   | dst, src1, src2 | dst <= src1 - src2 | Floating point subtraction |
 |FMUL| x |   | dst, src1, src2 | dst <= src1 * src2 | Floating point multiplication |
 |FDIV| x |   | dst, src1, src2 | dst <= src1 / src2 | Floating point division |
+|FSQRT| x |   | dst, src1 | dst <= sqrt(src1) | Floating point square root |
 |FSEQ| x |   | dst, src1, src2 | dst <= (src1 == src2) ? 0xffffffff : 0 | Set if equal (floating point) |
 |FSNE| x |   | dst, src1, src2 | dst <= (src1 != src2) ? 0xffffffff : 0 | Set if not equal (floating point) |
 |FSLT| x |   | dst, src1, src2 | dst <= (src1 < src2) ? 0xffffffff : 0 | Set if less than (floating point) |
@@ -138,5 +139,5 @@ Note that immediate operands are not supported for packed operations.
 * Control instructions/registers (cache control, interrupt masks, status flags, ...).
 * Load Linked (ll) and Store Conditional (sc) for atomic operations.
 * Single-instruction load of common constants (mostly floating point: PI, sqrt(2), ...).
-* More floating point instructions (round, sqrt, ...?).
+* More floating point instructions (round, ...?).
 

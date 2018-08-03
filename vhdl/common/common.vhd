@@ -159,6 +159,7 @@ package common is
   constant C_FPU_FSUB : T_FPU_OP := "0011";
   constant C_FPU_FMUL : T_FPU_OP := "0100";
   constant C_FPU_FDIV : T_FPU_OP := "0101";
+  constant C_FPU_FSQRT : T_FPU_OP := "0110";
   constant C_FPU_FSEQ : T_FPU_OP := "1000";
   constant C_FPU_FSNE : T_FPU_OP := "1001";
   constant C_FPU_FSLT : T_FPU_OP := "1010";

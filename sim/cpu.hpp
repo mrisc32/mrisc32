@@ -114,6 +114,7 @@ protected:
   static const uint32_t EX_OP_FSUB = 0x53u;
   static const uint32_t EX_OP_FMUL = 0x54u;
   static const uint32_t EX_OP_FDIV = 0x55u;
+  static const uint32_t EX_OP_FSQRT = 0x56u;
   static const uint32_t EX_OP_FSEQ = 0x58u;
   static const uint32_t EX_OP_FSNE = 0x59u;
   static const uint32_t EX_OP_FSLT = 0x5au;
