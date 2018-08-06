@@ -18,7 +18,7 @@
 
 | Mnemonic | V | P | Operands | Operation | Description |
 |---|---|---|---|---|---|
-|CPUID| x |   | dst, src1, src2 | dst <= cpuid(src1, src2) | Get CPU information based on src1, src2 |
+|CPUID| x |   | dst, src1, src2 | dst <= cpuid(src1, src2) | Get CPU information based on src1, src2 (see [CPUID](CPUID.md)) |
 |OR| x |   | dst, src1, src2 | dst <= src1 \| src2 | Bitwise or |
 |NOR| x |   | dst, src1, src2 | dst <= ~(src1 \| src2)  | Bitwise nor |
 |AND| x |   | dst, src1, src2 | dst <= src1 & src2 | Bitwise and |
