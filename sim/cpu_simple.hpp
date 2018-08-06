@@ -36,7 +36,7 @@ public:
   uint32_t run() override;
 
 private:
-  uint32_t cpuid(const uint32_t a, const uint32_t b);
+  uint32_t cpuid32(const uint32_t a, const uint32_t b);
 };
 
 #endif  // SIM_CPU_SIMPLE_HPP_
