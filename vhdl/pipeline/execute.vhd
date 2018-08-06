@@ -46,10 +46,12 @@ entity execute is
     i_mem_op : in T_MEM_OP;
     i_mul_op : in T_MUL_OP;
     i_div_op : in T_DIV_OP;
+    i_fpu_op : in T_FPU_OP;
     i_alu_en : in std_logic;
     i_mem_en : in std_logic;
     i_mul_en : in std_logic;
     i_div_en : in std_logic;
+    i_fpu_en : in std_logic;
 
     -- PC signal from ID (sync).
     i_id_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);

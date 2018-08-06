@@ -85,10 +85,12 @@ entity decode is
       o_mem_op : out T_MEM_OP;
       o_mul_op : out T_MUL_OP;
       o_div_op : out T_DIV_OP;
+      o_fpu_op : out T_FPU_OP;
       o_alu_en : out std_logic;
       o_mem_en : out std_logic;
       o_mul_en : out std_logic;
-      o_div_en : out std_logic
+      o_div_en : out std_logic;
+      o_fpu_en : out std_logic
     );
 end decode;
 
@@ -159,10 +161,12 @@ architecture rtl of decode is
   signal s_mem_op : T_MEM_OP;
   signal s_mul_op : T_MUL_OP;
   signal s_div_op : T_DIV_OP;
+  signal s_fpu_op : T_FPU_OP;
   signal s_alu_en : std_logic;
   signal s_mem_en : std_logic;
   signal s_mul_en : std_logic;
   signal s_div_en : std_logic;
+  signal s_fpu_en : std_logic;
 
   -- Signals for handling discarding of the current operation (i.e. bubble).
   signal s_bubble : std_logic;
@@ -176,6 +180,7 @@ architecture rtl of decode is
   signal s_mem_en_masked : std_logic;
   signal s_mul_en_masked : std_logic;
   signal s_div_en_masked : std_logic;
+  signal s_fpu_en_masked : std_logic;
   signal s_is_branch_masked : std_logic;
 begin
   --------------------------------------------------------------------------------------------------
@@ -355,6 +360,7 @@ begin
   s_mul_en <= s_is_mul_op;
   s_div_en <= s_is_div_op;
   s_mem_en <= s_is_mem_op;
+  s_fpu_en <= s_is_fpu_op;
 
   -- Select ALU operation.
   s_alu_op <=
@@ -387,6 +393,10 @@ begin
   -- Map the low order bits of the low order opcode directly to the division unit.
   s_div_op <= s_op_low(C_DIV_OP_SIZE-1 downto 0);
 
+  -- Select FPU operation.
+  -- Map the low order bits of the low order opcode directly to the FPU.
+  s_fpu_op <= s_op_low(C_FPU_OP_SIZE-1 downto 0);
+
   -- Are we missing any fwd operation that has not yet been produced by the pipeline?
   s_missing_fwd_operand <= s_is_vector_op and i_vl_fwd_use_value and not i_vl_fwd_value_ready;
 
@@ -405,6 +415,7 @@ begin
   s_mem_en_masked <= s_mem_en and not s_bubble;
   s_mul_en_masked <= s_mul_en and not s_bubble;
   s_div_en_masked <= s_div_en and not s_bubble;
+  s_fpu_en_masked <= s_fpu_en and not s_bubble;
   s_is_branch_masked <= s_is_branch and not s_bubble;
 
   -- Select register numbers for the vector read ports (async signals to RF).
@@ -450,10 +461,12 @@ begin
       o_mem_op <= (others => '0');
       o_mul_op <= (others => '0');
       o_div_op <= (others => '0');
+      o_fpu_op <= (others => '0');
       o_alu_en <= '0';
       o_mem_en <= '0';
       o_mul_en <= '0';
       o_div_en <= '0';
+      o_fpu_en <= '0';
     elsif rising_edge(i_clk) then
       if i_stall = '0' then
         o_branch_is_branch <= s_is_branch_masked;
@@ -485,10 +498,12 @@ begin
         o_mem_op <= s_mem_op_masked;
         o_mul_op <= s_mul_op;
         o_div_op <= s_div_op;
+        o_fpu_op <= s_fpu_op;
         o_alu_en <= s_alu_en_masked;
         o_mem_en <= s_mem_en_masked;
         o_mul_en <= s_mul_en_masked;
         o_div_en <= s_div_en_masked;
+        o_fpu_en <= s_fpu_en_masked;
       end if;
     end if;
   end process;

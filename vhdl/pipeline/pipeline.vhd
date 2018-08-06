@@ -92,10 +92,12 @@ architecture rtl of pipeline is
   signal s_id_mem_op : T_MEM_OP;
   signal s_id_mul_op : T_MUL_OP;
   signal s_id_div_op : T_DIV_OP;
+  signal s_id_fpu_op : T_FPU_OP;
   signal s_id_alu_en : std_logic;
   signal s_id_mem_en : std_logic;
   signal s_id_mul_en : std_logic;
   signal s_id_div_en : std_logic;
+  signal s_id_fpu_en : std_logic;
 
   -- From REG.
   signal s_rf_stall : std_logic;
@@ -126,10 +128,12 @@ architecture rtl of pipeline is
   signal s_rf_mem_op : T_MEM_OP;
   signal s_rf_mul_op : T_MUL_OP;
   signal s_rf_div_op : T_DIV_OP;
+  signal s_rf_fpu_op : T_FPU_OP;
   signal s_rf_alu_en : std_logic;
   signal s_rf_mem_en : std_logic;
   signal s_rf_mul_en : std_logic;
   signal s_rf_div_en : std_logic;
+  signal s_rf_fpu_en : std_logic;
 
   -- From EX1/EX2.
   signal s_ex_stall : std_logic;
@@ -300,10 +304,12 @@ begin
       o_mem_op => s_id_mem_op,
       o_mul_op => s_id_mul_op,
       o_div_op => s_id_div_op,
+      o_fpu_op => s_id_fpu_op,
       o_alu_en => s_id_alu_en,
       o_mem_en => s_id_mem_en,
       o_mul_en => s_id_mul_en,
-      o_div_en => s_id_div_en
+      o_div_en => s_id_div_en,
+      o_fpu_en => s_id_fpu_en
     );
 
 
@@ -348,10 +354,12 @@ begin
       i_mem_op => s_id_mem_op,
       i_mul_op => s_id_mul_op,
       i_div_op => s_id_div_op,
+      i_fpu_op => s_id_fpu_op,
       i_alu_en => s_id_alu_en,
       i_mem_en => s_id_mem_en,
       i_mul_en => s_id_mul_en,
       i_div_en => s_id_div_en,
+      i_fpu_en => s_id_fpu_en,
 
       -- Information to the operand forwarding logic (async).
       o_src_reg_a => s_rf_src_reg_a,
@@ -405,10 +413,12 @@ begin
       o_mem_op => s_rf_mem_op,
       o_mul_op => s_rf_mul_op,
       o_div_op => s_rf_div_op,
+      o_fpu_op => s_rf_fpu_op,
       o_alu_en => s_rf_alu_en,
       o_mem_en => s_rf_mem_en,
       o_mul_en => s_rf_mul_en,
-      o_div_en => s_rf_div_en
+      o_div_en => s_rf_div_en,
+      o_fpu_en => s_rf_fpu_en
     );
 
 
@@ -435,10 +445,12 @@ begin
       i_mem_op => s_rf_mem_op,
       i_mul_op => s_rf_mul_op,
       i_div_op => s_rf_div_op,
+      i_fpu_op => s_rf_fpu_op,
       i_alu_en => s_rf_alu_en,
       i_mem_en => s_rf_mem_en,
       i_mul_en => s_rf_mul_en,
       i_div_en => s_rf_div_en,
+      i_fpu_en => s_rf_fpu_en,
 
       -- PC signal from ID (sync).
       i_id_pc => s_id_pc,

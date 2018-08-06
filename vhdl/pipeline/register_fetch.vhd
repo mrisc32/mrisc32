@@ -66,10 +66,12 @@ entity register_fetch is
       i_mem_op : in T_MEM_OP;
       i_mul_op : in T_MUL_OP;
       i_div_op : in T_DIV_OP;
+      i_fpu_op : in T_FPU_OP;
       i_alu_en : in std_logic;
       i_mem_en : in std_logic;
       i_mul_en : in std_logic;
       i_div_en : in std_logic;
+      i_fpu_en : in std_logic;
 
       -- Information to the operand forwarding logic (async).
       o_src_reg_a : out T_SRC_REG;
@@ -123,39 +125,18 @@ entity register_fetch is
       o_mem_op : out T_MEM_OP;
       o_mul_op : out T_MUL_OP;
       o_div_op : out T_DIV_OP;
+      o_fpu_op : out T_FPU_OP;
       o_alu_en : out std_logic;
       o_mem_en : out std_logic;
       o_mul_en : out std_logic;
-      o_div_en : out std_logic
+      o_div_en : out std_logic;
+      o_fpu_en : out std_logic
     );
 end register_fetch;
 
 architecture rtl of register_fetch is
-  -- Instruction decode signals.
-  signal s_is_vector_op : std_logic;
-  signal s_reg_a_is_vector : std_logic;
-  signal s_reg_b_is_vector : std_logic;
-  signal s_reg_c_is_vector : std_logic;
-  signal s_restart_vector_op : std_logic;
-  signal s_is_folding_vector_op : std_logic;
-
-  signal s_packed_mode : std_logic_vector(1 downto 0);
-
-  signal s_branch_is_conditional : std_logic;
-
-  signal s_mem_op_type : std_logic_vector(1 downto 0);
-  signal s_is_mem_op : std_logic;
-  signal s_is_mem_store : std_logic;
-
-  signal s_is_mul_op : std_logic;
-  signal s_is_div_op : std_logic;
-  signal s_is_fpu_op : std_logic;
-
-  signal s_is_ldhi : std_logic;
-  signal s_is_ldhio : std_logic;
-  signal s_is_ldi : std_logic;
-
   -- Branch condition signals.
+  signal s_branch_is_conditional : std_logic;
   signal s_branch_cond_z : std_logic;
   signal s_branch_cond_nz : std_logic;
   signal s_branch_cond_s : std_logic;
@@ -210,6 +191,7 @@ architecture rtl of register_fetch is
   signal s_mem_en_masked : std_logic;
   signal s_mul_en_masked : std_logic;
   signal s_div_en_masked : std_logic;
+  signal s_fpu_en_masked : std_logic;
   signal s_branch_is_branch_masked : std_logic;
 begin
   --------------------------------------------------------------------------------------------------
@@ -373,6 +355,7 @@ begin
   s_mem_en_masked <= i_mem_en and not s_bubble;
   s_mul_en_masked <= i_mul_en and not s_bubble;
   s_div_en_masked <= i_div_en and not s_bubble;
+  s_fpu_en_masked <= i_fpu_en and not s_bubble;
   s_branch_is_branch_masked <= i_branch_is_branch and not s_bubble;
 
   -- Outputs to the EX stage.
@@ -395,10 +378,12 @@ begin
       o_mem_op <= (others => '0');
       o_mul_op <= (others => '0');
       o_div_op <= (others => '0');
+      o_fpu_op <= (others => '0');
       o_alu_en <= '0';
       o_mem_en <= '0';
       o_mul_en <= '0';
       o_div_en <= '0';
+      o_fpu_en <= '0';
 
       o_branch_reg_addr <= (others => '0');
       o_branch_offset_addr <= (others => '0');
@@ -420,10 +405,12 @@ begin
         o_mem_op <= s_mem_op_masked;
         o_mul_op <= i_mul_op;
         o_div_op <= i_div_op;
+        o_fpu_op <= i_fpu_op;
         o_alu_en <= s_alu_en_masked;
         o_mem_en <= s_mem_en_masked;
         o_mul_en <= s_mul_en_masked;
         o_div_en <= s_div_en_masked;
+        o_fpu_en <= s_fpu_en_masked;
 
         o_branch_reg_addr <= s_branch_reg_data;
         o_branch_offset_addr <= s_branch_offset_addr;
