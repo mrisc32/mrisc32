@@ -540,72 +540,72 @@ _OPCODES = {
                     [[0x00000052, _REG1, _REG2, _REG3],
                      [0x80000052, _VREG1, _VREG2, _REG3],
                      [0xc0000052, _VREG1, _VREG2, _VREG3]],
-                   'packed_op': False
+                   'packed_op': True
                   },
         'FSUB':   {'descrs':
                     [[0x00000053, _REG1, _REG2, _REG3],
                      [0x80000053, _VREG1, _VREG2, _REG3],
                      [0xc0000053, _VREG1, _VREG2, _VREG3]],
-                   'packed_op': False
+                   'packed_op': True
                   },
         'FMUL':   {'descrs':
                     [[0x00000054, _REG1, _REG2, _REG3],
                      [0x80000054, _VREG1, _VREG2, _REG3],
                      [0xc0000054, _VREG1, _VREG2, _VREG3]],
-                   'packed_op': False
+                   'packed_op': True
                   },
         'FDIV':   {'descrs':
                     [[0x00000055, _REG1, _REG2, _REG3],
                      [0x80000055, _VREG1, _VREG2, _REG3],
                      [0xc0000055, _VREG1, _VREG2, _VREG3]],
-                   'packed_op': False
+                   'packed_op': True
                   },
         'FSQRT': {'descrs':
                     [[0x00000056, _REG1, _REG2],      # REG3 = Z (operand is unused)
                      [0xc0000056, _VREG1, _VREG2]],   # VREG3 = VZ (operand is unused)
-                   'packed_op': False
+                   'packed_op': True
                   },
         'FSEQ':   {'descrs':
                     [[0x00000058, _REG1, _REG2, _REG3],
                      [0x80000058, _VREG1, _VREG2, _REG3],
                      [0xc0000058, _VREG1, _VREG2, _VREG3]],
-                   'packed_op': False
+                   'packed_op': True
                   },
         'FSNE':   {'descrs':
                     [[0x00000059, _REG1, _REG2, _REG3],
                      [0x80000059, _VREG1, _VREG2, _REG3],
                      [0xc0000059, _VREG1, _VREG2, _VREG3]],
-                   'packed_op': False
+                   'packed_op': True
                   },
         'FSLT':   {'descrs':
                     [[0x0000005a, _REG1, _REG2, _REG3],
                      [0x8000005a, _VREG1, _VREG2, _REG3],
                      [0xc000005a, _VREG1, _VREG2, _VREG3]],
-                   'packed_op': False
+                   'packed_op': True
                   },
         'FSLE':   {'descrs':
                     [[0x0000005b, _REG1, _REG2, _REG3],
                      [0x8000005b, _VREG1, _VREG2, _REG3],
                      [0xc000005b, _VREG1, _VREG2, _VREG3]],
-                   'packed_op': False
+                   'packed_op': True
                   },
         'FSNAN':  {'descrs':
                     [[0x0000005c, _REG1, _REG2, _REG3],
                      [0x8000005c, _VREG1, _VREG2, _REG3],
                      [0xc000005c, _VREG1, _VREG2, _VREG3]],
-                   'packed_op': False
+                   'packed_op': True
                   },
         'FMIN':   {'descrs':
                     [[0x0000005d, _REG1, _REG2, _REG3],
                      [0x8000005d, _VREG1, _VREG2, _REG3],
                      [0xc000005d, _VREG1, _VREG2, _VREG3]],
-                   'packed_op': False
+                   'packed_op': True
                   },
         'FMAX':   {'descrs':
                     [[0x0000005e, _REG1, _REG2, _REG3],
                      [0x8000005e, _VREG1, _VREG2, _REG3],
                      [0xc000005e, _VREG1, _VREG2, _VREG3]],
-                   'packed_op': False
+                   'packed_op': True
                   },
 
         # == C ==
