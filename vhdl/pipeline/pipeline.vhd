@@ -87,6 +87,7 @@ architecture rtl of pipeline is
   signal s_id_src_reg_b : T_SRC_REG;
   signal s_id_src_reg_c : T_SRC_REG;
   signal s_id_dst_reg : T_DST_REG;
+  signal s_id_packed_mode : T_PACKED_MODE;
   signal s_id_alu_op : T_ALU_OP;
   signal s_id_mem_op : T_MEM_OP;
   signal s_id_mul_op : T_MUL_OP;
@@ -120,6 +121,7 @@ architecture rtl of pipeline is
   signal s_rf_src_reg_c : T_SRC_REG;
   signal s_rf_reg_c_required : std_logic;
   signal s_rf_dst_reg : T_DST_REG;
+  signal s_rf_packed_mode : T_PACKED_MODE;
   signal s_rf_alu_op : T_ALU_OP;
   signal s_rf_mem_op : T_MEM_OP;
   signal s_rf_mul_op : T_MUL_OP;
@@ -293,6 +295,7 @@ begin
       o_src_reg_b => s_id_src_reg_b,
       o_src_reg_c => s_id_src_reg_c,
       o_dst_reg => s_id_dst_reg,
+      o_packed_mode => s_id_packed_mode,
       o_alu_op => s_id_alu_op,
       o_mem_op => s_id_mem_op,
       o_mul_op => s_id_mul_op,
@@ -340,6 +343,7 @@ begin
       i_src_reg_b => s_id_src_reg_b,
       i_src_reg_c => s_id_src_reg_c,
       i_dst_reg => s_id_dst_reg,
+      i_packed_mode => s_id_packed_mode,
       i_alu_op => s_id_alu_op,
       i_mem_op => s_id_mem_op,
       i_mul_op => s_id_mul_op,
@@ -396,6 +400,7 @@ begin
       o_is_first_vector_op_cycle => s_rf_is_first_vector_op_cycle,
       o_address_offset_is_stride => s_rf_address_offset_is_stride,
       o_dst_reg => s_rf_dst_reg,
+      o_packed_mode => s_rf_packed_mode,
       o_alu_op => s_rf_alu_op,
       o_mem_op => s_rf_mem_op,
       o_mul_op => s_rf_mul_op,
@@ -425,6 +430,7 @@ begin
       i_is_first_vector_op_cycle => s_rf_is_first_vector_op_cycle,
       i_address_offset_is_stride => s_rf_address_offset_is_stride,
       i_dst_reg => s_rf_dst_reg,
+      i_packed_mode => s_rf_packed_mode,
       i_alu_op => s_rf_alu_op,
       i_mem_op => s_rf_mem_op,
       i_mul_op => s_rf_mul_op,

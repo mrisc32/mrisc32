@@ -61,6 +61,7 @@ entity register_fetch is
       i_src_reg_b : in T_SRC_REG;
       i_src_reg_c : in T_SRC_REG;
       i_dst_reg : in T_DST_REG;
+      i_packed_mode : in T_PACKED_MODE;
       i_alu_op : in T_ALU_OP;
       i_mem_op : in T_MEM_OP;
       i_mul_op : in T_MUL_OP;
@@ -117,6 +118,7 @@ entity register_fetch is
       o_is_first_vector_op_cycle : out std_logic;
       o_address_offset_is_stride : out std_logic;
       o_dst_reg : out T_DST_REG;
+      o_packed_mode : out T_PACKED_MODE;
       o_alu_op : out T_ALU_OP;
       o_mem_op : out T_MEM_OP;
       o_mul_op : out T_MUL_OP;
@@ -388,6 +390,7 @@ begin
       o_dst_reg.reg <= (others => '0');
       o_dst_reg.element <= (others => '0');
       o_dst_reg.is_vector <= '0';
+      o_packed_mode <= (others => '0');
       o_alu_op <= (others => '0');
       o_mem_op <= (others => '0');
       o_mul_op <= (others => '0');
@@ -412,6 +415,7 @@ begin
         o_is_first_vector_op_cycle <= i_is_first_vector_op_cycle;
         o_address_offset_is_stride <= i_address_offset_is_stride;
         o_dst_reg <= s_dst_reg_masked;
+        o_packed_mode <= i_packed_mode;
         o_alu_op <= s_alu_op_masked;
         o_mem_op <= s_mem_op_masked;
         o_mul_op <= i_mul_op;

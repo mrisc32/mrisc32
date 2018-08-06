@@ -41,6 +41,7 @@ entity execute is
     i_is_first_vector_op_cycle : in std_logic;
     i_address_offset_is_stride : in std_logic;
     i_dst_reg : in T_DST_REG;
+    i_packed_mode : in T_PACKED_MODE;
     i_alu_op : in T_ALU_OP;
     i_mem_op : in T_MEM_OP;
     i_mul_op : in T_MUL_OP;

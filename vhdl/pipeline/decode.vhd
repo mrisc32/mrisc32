@@ -80,6 +80,7 @@ entity decode is
       o_src_reg_b : out T_SRC_REG;
       o_src_reg_c : out T_SRC_REG;
       o_dst_reg : out T_DST_REG;
+      o_packed_mode : out T_PACKED_MODE;
       o_alu_op : out T_ALU_OP;
       o_mem_op : out T_MEM_OP;
       o_mul_op : out T_MUL_OP;
@@ -120,7 +121,7 @@ architecture rtl of decode is
   signal s_address_offset_is_stride : std_logic;
   signal s_bubble_from_vector_op : std_logic;
 
-  signal s_packed_mode : std_logic_vector(1 downto 0);
+  signal s_packed_mode : T_PACKED_MODE;
 
   signal s_is_unconditional_branch : std_logic;
   signal s_is_conditional_branch : std_logic;
@@ -444,6 +445,7 @@ begin
       o_dst_reg.reg <= (others => '0');
       o_dst_reg.element <= (others => '0');
       o_dst_reg.is_vector <= '0';
+      o_packed_mode <= (others => '0');
       o_alu_op <= (others => '0');
       o_mem_op <= (others => '0');
       o_mul_op <= (others => '0');
@@ -478,6 +480,7 @@ begin
         o_src_reg_c.element <= s_element_c;
         o_src_reg_c.is_vector <= s_reg_c_is_vector;
         o_dst_reg <= s_dst_reg_masked;
+        o_packed_mode <= s_packed_mode;
         o_alu_op <= s_alu_op_masked;
         o_mem_op <= s_mem_op_masked;
         o_mul_op <= s_mul_op;
