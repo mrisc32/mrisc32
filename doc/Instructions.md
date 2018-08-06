@@ -95,18 +95,18 @@
 |---|---|---|---|---|---|
 |ITOF| x |   | dst, src1, src2 | dst <= ((float)src1) * 2^src2 | Cast integer to float with exponent offset |
 |FTOI| x |   | dst, src1, src2 | dst <= (int)(src1 * 2^src2) | Cast float to integer with exponent offset |
-|FADD| x |   | dst, src1, src2 | dst <= src1 + src2 | Floating point addition |
-|FSUB| x |   | dst, src1, src2 | dst <= src1 - src2 | Floating point subtraction |
-|FMUL| x |   | dst, src1, src2 | dst <= src1 * src2 | Floating point multiplication |
-|FDIV| x |   | dst, src1, src2 | dst <= src1 / src2 | Floating point division |
-|FSQRT| x |   | dst, src1 | dst <= sqrt(src1) | Floating point square root |
-|FSEQ| x |   | dst, src1, src2 | dst <= (src1 == src2) ? 0xffffffff : 0 | Set if equal (floating point) |
-|FSNE| x |   | dst, src1, src2 | dst <= (src1 != src2) ? 0xffffffff : 0 | Set if not equal (floating point) |
-|FSLT| x |   | dst, src1, src2 | dst <= (src1 < src2) ? 0xffffffff : 0 | Set if less than (floating point) |
-|FSLE| x |   | dst, src1, src2 | dst <= (src1 <= src2) ? 0xffffffff : 0 | Set if less than or equal (floating point) |
-|FSNAN| x |   | dst, src1, src2 | dst <= (isNaN(src1) \|\| isNaN(src2)) ? 0xffffffff : 0 | Set if Not-a-Number |
-|FMIN| x |   | dst, src1, src2 | dst <= min(src1, src2) | Floating point minimum value |
-|FMAX| x |   | dst, src1, src2 | dst <= max(src1, src2) | Floating point maximum value |
+|FADD| x | x | dst, src1, src2 | dst <= src1 + src2 | Floating point addition |
+|FSUB| x | x | dst, src1, src2 | dst <= src1 - src2 | Floating point subtraction |
+|FMUL| x | x | dst, src1, src2 | dst <= src1 * src2 | Floating point multiplication |
+|FDIV| x | x | dst, src1, src2 | dst <= src1 / src2 | Floating point division |
+|FSQRT| x | x | dst, src1 | dst <= sqrt(src1) | Floating point square root |
+|FSEQ| x | x | dst, src1, src2 | dst <= (src1 == src2) ? 0xffffffff : 0 | Set if equal (floating point) |
+|FSNE| x | x | dst, src1, src2 | dst <= (src1 != src2) ? 0xffffffff : 0 | Set if not equal (floating point) |
+|FSLT| x | x | dst, src1, src2 | dst <= (src1 < src2) ? 0xffffffff : 0 | Set if less than (floating point) |
+|FSLE| x | x | dst, src1, src2 | dst <= (src1 <= src2) ? 0xffffffff : 0 | Set if less than or equal (floating point) |
+|FSNAN| x | x | dst, src1, src2 | dst <= (isNaN(src1) \|\| isNaN(src2)) ? 0xffffffff : 0 | Set if Not-a-Number |
+|FMIN| x | x | dst, src1, src2 | dst <= min(src1, src2) | Floating point minimum value |
+|FMAX| x | x | dst, src1, src2 | dst <= max(src1, src2) | Floating point maximum value |
 
 ## Vector instructions
 

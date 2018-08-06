@@ -1,13 +1,13 @@
 # Packed operations
 
 ## Unpacked operations
-All regular integer operations act on single signed or unsigned 32-bit words. This is true for both scalar and vector operations (although in the latter case each instruction may spawn multiple operations). In other words, instructions such as `ADD` and `MUL` always operate on all 32 bits of the source operands and provide a 32-bit result.
+All regular operations act on single signed, unsigned or floating point 32-bit words. This is true for both scalar and vector operations (although in the latter case each instruction may spawn multiple operations). In other words, instructions such as `ADD` and `MUL` always operate on all 32 bits of the source operands and provide a 32-bit result.
 
 Support for working with bytes (8-bit integers) and half-words (16-bit integers) is primarily provided via the load and store instructions, which do size expansion up to word size and truncation down to 8/16-bit size, respectively. Additionally bit and byte manipulating instructions such as `SHUF` can be used to expand or truncate signed and unsigned data in registers.
 
 ## Packed operations
 
-In addition to the regular unpacked 32-bit operations, there are also packed 4x8-bit and 2x16-bit versions of many integer operations. Instructions that perform packed operations are prefixed with **PB** ("packed bytes") and **BH** ("packed half-words").
+In addition to the regular unpacked 32-bit operations, there are also packed 4x8-bit and 2x16-bit versions of many operations. Instructions that perform packed operations are prefixed with **PB** ("packed bytes") and **BH** ("packed half-words").
 
 Packed operations perform the same operation as the unpacked operation, except on a smaller sized data type. Also, multiple operations are performed in parallel. For example:
 
@@ -28,13 +28,13 @@ However, the packed operations have the following benefits:
 ## Packed operations and vector instructions
 Packed operations are part of the scalar instruction set, and just as other instructions they can be used with both scalar registers and vector registers. In other words packed operations can be used with vector instructions without any problems.
 
-For instance, the following code (which adds 7 to 16 bytes in memory) is perfectly valid:
+For instance, the following code (which adds the number seven to 64 bytes in memory) is perfectly valid:
 
 ```
   LDI   S10,7
   SHUF  S10,S10,0   ; S10 = 0x07070707
 
-  LDI   VL,4        ; Vector Length = 4 words, i.e. 16 bytes
+  LDI   VL,16        ; Vector Length = 16 words, i.e. 64 bytes
   LDW   V10,S1,4    ; Load source operands, X, into V10
   PBADD V10,V10,S10 ; Calculate the byte-wise addition of X and 0x07070707
   STW   V10,S1,4    ; Store the result back into memory
@@ -42,9 +42,7 @@ For instance, the following code (which adds 7 to 16 bytes in memory) is perfect
 
 ## Floating point
 
-*Note: This is still under construction.*
-
-Floating point operations may also act on packed data. The natural size for floating point operations is 32 bits ([IEEE 754 binary32](https://en.wikipedia.org/wiki/Single-precision_floating-point_format)), but with packed operations the MRISC32 ISA also supports 16-bit floating point ([IEEE 754 binary16](https://en.wikipedia.org/wiki/Half-precision_floating-point_format)) and 8-bit floating point (non-standard).
+Most floating point operations may also act on packed data. The natural size for floating point operations is 32 bits ([IEEE 754 binary32](https://en.wikipedia.org/wiki/Single-precision_floating-point_format)), but with packed operations the MRISC32 ISA also supports 16-bit floating point ([IEEE 754 binary16](https://en.wikipedia.org/wiki/Half-precision_floating-point_format)) and 8-bit floating point (non-standard).
 
 For instance, `PHFADD` performs two 16-bit (half precision) floating point additions, and `PBFMUL` performs four 8-bit floating point multiplications.
 
