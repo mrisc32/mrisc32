@@ -571,18 +571,22 @@ inline uint32_t ftoi32(const uint32_t a, const uint32_t b) {
 
 uint32_t cpu_simple_t::cpuid32(const uint32_t a, const uint32_t b) {
   switch (a) {
-    case 0x00000000u:  // Number of vector elements
+    case 0x00000000u:
+      // Number of vector elements
       if (b == 0x00000000u) {
         return NUM_VECTOR_ELEMENTS;
       } else if (b == 0x00000001u) {
         return LOG2_NUM_VECTOR_ELEMENTS;
       }
 
-    case 0x00000001u:  // CPU features
-      // MD (integer mult/div)  = 1 << 0
-      // FP (floating point)    = 1 << 1
-      // VEC (vector processor) = 1 << 2
-      return 0x00000007u;
+    case 0x00000001u:
+      // CPU features:
+      //   VEC (vector processor) = 1 << 0
+      //   PO (packed operations) = 1 << 1
+      //   MUL (integer mul)      = 1 << 2
+      //   DIV (integer mul)      = 1 << 3
+      //   FP (floating point)    = 1 << 4
+      return 0x0000001fu;
 
     default:
       return 0u;
