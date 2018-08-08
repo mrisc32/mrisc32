@@ -156,10 +156,21 @@ architecture rtl of pipeline is
 
   -- From EX2.
   signal s_ex2_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_ex2_result_ready : std_logic;
   signal s_ex2_dst_reg : T_DST_REG;
 
   -- Operand forwarding signals from EX2.
+  signal s_ex2_next_dst_reg : T_DST_REG;
   signal s_ex2_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_ex2_next_result_ready : std_logic;
+
+  -- From EX3.
+  signal s_ex3_dst_reg : T_DST_REG;
+  signal s_ex3_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+
+  -- Operand forwarding signals from EX3.
+  signal s_ex3_next_dst_reg : T_DST_REG;
+  signal s_ex3_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
   -- Operand forwarding signals.
   signal s_branch_fwd_value : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -480,17 +491,26 @@ begin
       i_dcache_read_data_ready => i_dcache_read_data_ready,
 
       -- To WB stage (sync).
-      o_result => s_ex2_result,
-      o_dst_reg => s_ex2_dst_reg,
+      o_result => s_ex3_result,
+      o_dst_reg => s_ex3_dst_reg,
 
-      -- To operand forwarding.
+      -- To operand forwarding (async).
       o_ex1_next_dst_reg => s_ex1_next_dst_reg,
       o_ex1_next_result => s_ex1_next_result,
       o_ex1_next_result_ready => s_ex1_next_result_ready,
+      o_ex2_next_dst_reg => s_ex2_next_dst_reg,
+      o_ex2_next_result => s_ex2_next_result,
+      o_ex2_next_result_ready => s_ex2_next_result_ready,
+      o_ex3_next_dst_reg => s_ex3_next_dst_reg,
+      o_ex3_next_result => s_ex3_next_result,
+
+      -- To operand forwarding (sync).
       o_ex1_dst_reg => s_ex1_dst_reg,
       o_ex1_result => s_ex1_result,
       o_ex1_result_ready => s_ex1_result_ready,
-      o_ex2_next_result => s_ex2_next_result
+      o_ex2_dst_reg => s_ex2_dst_reg,
+      o_ex2_result => s_ex2_result,
+      o_ex2_result_ready => s_ex2_result_ready
     );
 
 
@@ -505,7 +525,7 @@ begin
       i_src_reg => s_rf_src_reg_c,
 
       -- From RF (sync).
-      i_dst_reg_from_id => s_rf_dst_reg,
+      i_dst_reg_from_rf => s_rf_dst_reg,
 
       -- From EX1 (sync).
       i_dst_reg_from_ex1 => s_ex1_dst_reg,
@@ -515,6 +535,11 @@ begin
       -- From EX2 (sync).
       i_dst_reg_from_ex2 => s_ex2_dst_reg,
       i_value_from_ex2 => s_ex2_result,
+      i_ready_from_ex2 => s_ex2_result_ready,
+
+      -- From EX3 (sync).
+      i_dst_reg_from_ex3 => s_ex3_dst_reg,
+      i_value_from_ex3 => s_ex3_result,
 
       -- Operand forwarding to the ID stage.
       o_value => s_branch_fwd_value,
@@ -542,6 +567,11 @@ begin
       -- From EX2 (sync).
       i_dst_reg_from_ex2 => s_ex2_dst_reg,
       i_value_from_ex2 => s_ex2_result,
+      i_ready_from_ex2 => s_ex2_result_ready,
+
+      -- From EX3 (sync).
+      i_dst_reg_from_ex3 => s_ex3_dst_reg,
+      i_value_from_ex3 => s_ex3_result,
 
       -- Operand forwarding to the ID stage.
       o_value => s_vl_fwd_value,
@@ -563,14 +593,19 @@ begin
       i_ready_from_ex1 => s_ex1_next_result_ready,
 
       -- From EX2 input (async).
-      i_dst_reg_from_ex2 => s_ex1_dst_reg,
+      i_dst_reg_from_ex2 => s_ex2_next_dst_reg,
       i_value_from_ex2 => s_ex2_next_result,
+      i_ready_from_ex2 => s_ex2_next_result_ready,
+
+      -- From EX3 input (async).
+      i_dst_reg_from_ex3 => s_ex3_next_dst_reg,
+      i_value_from_ex3 => s_ex3_next_result,
 
       -- From WB input (async).
-      i_dst_reg_from_wb => s_ex2_dst_reg,
-      i_value_from_wb => s_ex2_result,
+      i_dst_reg_from_wb => s_ex3_dst_reg,
+      i_value_from_wb => s_ex3_result,
 
-      -- Operand forwarding to the EX inputs in the ID stage.
+      -- Operand forwarding to the EX inputs in the RF stage.
       o_value => s_reg_a_fwd_value,
       o_use_value => s_reg_a_fwd_use_value,
       o_value_ready => s_reg_a_fwd_value_ready
@@ -589,14 +624,19 @@ begin
       i_ready_from_ex1 => s_ex1_next_result_ready,
 
       -- From EX2 input (async).
-      i_dst_reg_from_ex2 => s_ex1_dst_reg,
+      i_dst_reg_from_ex2 => s_ex2_next_dst_reg,
       i_value_from_ex2 => s_ex2_next_result,
+      i_ready_from_ex2 => s_ex2_next_result_ready,
+
+      -- From EX3 input (async).
+      i_dst_reg_from_ex3 => s_ex3_next_dst_reg,
+      i_value_from_ex3 => s_ex3_next_result,
 
       -- From WB input (async).
-      i_dst_reg_from_wb => s_ex2_dst_reg,
-      i_value_from_wb => s_ex2_result,
+      i_dst_reg_from_wb => s_ex3_dst_reg,
+      i_value_from_wb => s_ex3_result,
 
-      -- Operand forwarding to the EX inputs in the ID stage.
+      -- Operand forwarding to the EX inputs in the RF stage.
       o_value => s_reg_b_fwd_value,
       o_use_value => s_reg_b_fwd_use_value,
       o_value_ready => s_reg_b_fwd_value_ready
@@ -615,14 +655,19 @@ begin
       i_ready_from_ex1 => s_ex1_next_result_ready,
 
       -- From EX2 input (async).
-      i_dst_reg_from_ex2 => s_ex1_dst_reg,
+      i_dst_reg_from_ex2 => s_ex2_next_dst_reg,
       i_value_from_ex2 => s_ex2_next_result,
+      i_ready_from_ex2 => s_ex2_next_result_ready,
+
+      -- From EX3 input (async).
+      i_dst_reg_from_ex3 => s_ex3_next_dst_reg,
+      i_value_from_ex3 => s_ex3_next_result,
 
       -- From WB input (async).
-      i_dst_reg_from_wb => s_ex2_dst_reg,
-      i_value_from_wb => s_ex2_result,
+      i_dst_reg_from_wb => s_ex3_dst_reg,
+      i_value_from_wb => s_ex3_result,
 
-      -- Operand forwarding to the EX inputs in the ID stage.
+      -- Operand forwarding to the EX inputs in the RF stage.
       o_value => s_reg_c_fwd_value,
       o_use_value => s_reg_c_fwd_use_value,
       o_value_ready => s_reg_c_fwd_value_ready

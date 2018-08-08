@@ -20,7 +20,7 @@
 ----------------------------------------------------------------------------------------------------
 -- Pipeline Stage 4: Register Fetch (RF)
 --
--- Note: This entity also implements the WB stage (stage 7), since the register files live here.
+-- Note: This entity also implements the WB stage (stage 8), since the register files live here.
 ----------------------------------------------------------------------------------------------------
 
 library ieee;

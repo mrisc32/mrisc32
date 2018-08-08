@@ -54,6 +54,10 @@ entity forward_to_ex is
 
       i_dst_reg_from_ex2 : in T_DST_REG;
       i_value_from_ex2 : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_ready_from_ex2 : in std_logic;
+
+      i_dst_reg_from_ex3 : in T_DST_REG;
+      i_value_from_ex3 : in std_logic_vector(C_WORD_SIZE-1 downto 0);
 
       -- TODO(m): Is this necessary, or are we already reading the same value
       -- from the register file in the ID stage?
@@ -70,6 +74,7 @@ end forward_to_ex;
 architecture rtl of forward_to_ex is
   signal s_reg_from_ex1 : std_logic;
   signal s_reg_from_ex2 : std_logic;
+  signal s_reg_from_ex3 : std_logic;
   signal s_reg_from_wb : std_logic;
 begin
   -- Determine which stages are writing to the requested source register.
@@ -81,6 +86,10 @@ begin
       (i_src_reg.reg = i_dst_reg_from_ex2.reg) and
       ((i_src_reg.element = i_dst_reg_from_ex2.element) or (i_src_reg.is_vector = '0')) and
       (i_src_reg.is_vector = i_dst_reg_from_ex2.is_vector) else '0';
+  s_reg_from_ex3 <= i_dst_reg_from_ex3.is_target when
+      (i_src_reg.reg = i_dst_reg_from_ex3.reg) and
+      ((i_src_reg.element = i_dst_reg_from_ex3.element) or (i_src_reg.is_vector = '0')) and
+      (i_src_reg.is_vector = i_dst_reg_from_ex3.is_vector) else '0';
   s_reg_from_wb <= i_dst_reg_from_wb.is_target when
       (i_src_reg.reg = i_dst_reg_from_wb.reg) and
       ((i_src_reg.element = i_dst_reg_from_wb.element) or (i_src_reg.is_vector = '0')) and
@@ -88,13 +97,16 @@ begin
 
   -- Which value to forward?
   o_value <= i_value_from_ex1 when (s_reg_from_ex1 and i_ready_from_ex1) = '1' else
-             i_value_from_ex2 when s_reg_from_ex2 = '1' else
+             i_value_from_ex2 when (s_reg_from_ex2 and i_ready_from_ex2) = '1' else
+             i_value_from_ex3 when s_reg_from_ex3 = '1' else
              i_value_from_wb;
 
   -- Should the forwarded pipeline value be used instead of register file value?
-  o_use_value <= i_reg_required and (s_reg_from_ex1 or s_reg_from_ex2 or s_reg_from_wb);
+  o_use_value <= i_reg_required and (s_reg_from_ex1 or s_reg_from_ex2 or s_reg_from_ex3 or s_reg_from_wb);
 
   -- Is the value ready for use?
-  o_value_ready <= not (s_reg_from_ex1 and not i_ready_from_ex1);
+  o_value_ready <= i_ready_from_ex1 when s_reg_from_ex1 = '1' else
+                   i_ready_from_ex2 when s_reg_from_ex2 = '1' else
+                   '1';
 end rtl;
 
