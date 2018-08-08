@@ -17,15 +17,11 @@ The MRISC32 approach to Single Instruction Multiple Data (SIMD) operation is ver
 
 ## Motivation
 
-The dominating SIMD solution today (SSE, AVX, NEON) is based on an ISA that is largely separate from the scalar ISA of the CPU.
+The dominating SIMD solution today (SSE, AVX, NEON) is based on an ISA that is largely separate from the scalar ISA of the CPU. That model, however, comes with relatively high costs for hardware and software:
 * All SIMD instructions operate on fixed width registers (you have to use all elements or nothing).
 * A completely separate instruction set and separate execution units are used for operating on the SIMD registers.
 * Each register is split into different number of elements depending on the type (i.e. the data is packed in the registers).
-
-That model, however, comes with relatively high costs for hardware and software:
-* Specialized SIMD execution units must be included in the hardware, in addition to the regular scalar execution units.
 * It is hard to write software that utilizes the SIMD hardware efficiently, partially because compilers have a hard time to map traditional software constructs to the SIMD ISA, so you often have to hand-write code at a very low level.
-* Another problem is that it is hard to mix scalar and SIMD code, or mix different data types in SIMD code.
 * In order to exploit more parallelism in new hardware generations, new instruction sets and registers have to be added (e.g. MMX vs SSE vs AVX vs ...), leading to a very complex software model.
 
 In comparison, the MRISC32 vector model is easier to implement in hardware and easier to use in software. For instance:
@@ -83,7 +79,7 @@ abs_diff:
   LDHIO   S10, 0x7fffffff
 
   ; Prepare the vector operation
-  CPUID   S11, Z       ; S11 is the max number of vector elements
+  CPUID   S11, Z, Z    ; S11 is the max number of vector elements
   LSL     S12, S11, 2  ; S12 is the memory increment per vector operation
 
 .loop:
@@ -122,9 +118,12 @@ In the simplest implementation each vector operation is implemented as a pipelin
 Even in this implementation, the vectorized operation will be faster than a corresponding repeated scalar operation for a number of reasons:
 * Less overhead from loop branches, counters and memory index calculation.
 * Improved throughput thanks to reduced number of data dependency stalls (vector operations effectively hide data dependencies).
+
+Low-hanging fruits:
+* Deep pipelining:
+  - Long pipelines (e.g. for division instructions) can be blocking/stalling in scalar mode, but fully pipelined in vector mode, without breaking the promise of in-order instruction retirement.
 * Improved cache performance:
   - With relatively little effort, accurate (non-speculative) data cache prefetching can be implemented in hardware for vector loads and stores.
-* More data can be kept in registers, meaning less overhead for swapping data to memory.
 
 ### Scalar CPU with parallel loops
 
@@ -150,5 +149,5 @@ This is essentially the same principle as for SIMD ISAs such as SSE or NEON.
 It puts some more requirements on the hardware logic to be able to issue multiple elements per vector operation. In particular the hardware needs:
 * A sufficient number of execution units.
 * Wider read/write ports for the vector registers and the data cache(s).
-* Masking logic for handling tail cases (e.g. if only three out of four parallel elements are to be processed).
+* More advanced data cache interface (e.g. for wide gater-scatter operations).
 

@@ -34,7 +34,7 @@ For instance, the following code (which adds the number seven to 64 bytes in mem
   LDI   S10,7
   SHUF  S10,S10,0   ; S10 = 0x07070707
 
-  LDI   VL,16        ; Vector Length = 16 words, i.e. 64 bytes
+  LDI   VL,16       ; Vector Length = 16 words, i.e. 64 bytes
   LDW   V10,S1,4    ; Load source operands, X, into V10
   PBADD V10,V10,S10 ; Calculate the byte-wise addition of X and 0x07070707
   STW   V10,S1,4    ; Store the result back into memory
@@ -56,6 +56,6 @@ For instance, `PHFADD` performs two 16-bit (half precision) floating point addit
 
 
 ## The 64-bit perspective
-If the MRISC32 ISA is ever extended into an MRISC64 ISA, packed operations would be the natural way to support 32-bit floating point and 32-bit integer arithmetic. In fact, there is room in the current ISA for Packed Word operations (though they make no sense with 32-bit registers), which could be used in a 64-bit ISA.
+If the MRISC32 ISA is extended into an MRISC64 ISA, packed operations would be the natural way to support 32-bit floating point and 32-bit integer arithmetic. In fact, there is room in the current ISA for Packed Word operations (though they make no sense with 32-bit registers), which could be used in a 64-bit ISA.
 
 E.g. `PWFADD` would do two 32-bit floating point additions, whereas `FADD` would do a single 64-bit floating point addition. Similarly `PWADD` would do two 32-bit integer additions, whereas `ADD` would do a single 64-bit integer addition.

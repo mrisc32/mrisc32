@@ -33,7 +33,7 @@ The scalar registers are allocated as follows:
 
 ## Vector registers
 
-Each vector register contains *N* elements (at least 4 elements), and each element is 32 bits wide.
+Each vector register contains *N* elements (at least 16 elements), and each element is 32 bits wide.
 
 To find the number of elements per vector register, use `CPUID Sn,Z` (S*n* will hold the number of elements).
 
