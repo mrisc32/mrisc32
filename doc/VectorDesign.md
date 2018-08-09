@@ -129,7 +129,7 @@ Low-hanging fruits:
 
 An extension to the simplest model is to keep two (or more) vector loops running in parallel, which would enable a single-issue CPU (fetching only a single instruction per cycle) to execute multiple operations in parallel.
 
-This is to the concept of "chaining" in the Cray 1, which allowed it to do 160 MFLOPS at 80 MHz.
+This is similar to the concept of "chaining" in the Cray 1, which allowed it to do 160 MFLOPS at 80 MHz.
 
 This requires slightly more hardware logic:
 * Duplicated vector loop logic.
@@ -140,9 +140,11 @@ This requires slightly more hardware logic:
 
 One advantage of this implementation is that the instruction fetch pipeline can be kept simple, and the logic for running multiple instructions in parallel is simpler than that of a traditional [superscalar architecture](https://en.wikipedia.org/wiki/Superscalar_processor).
 
+Another advantage, compared to implementing a wider pipeline (see below), is that you can improve parallelism wihout adding more execution units.
+
 ### Multiple elements per cycle
 
-Instead of processing one element at a time, each vector loop can process multiple elements at a time. For instance, if there are four identical floating point units, four elements can be read from a vector register and processed in parallel per clock cycle.
+Instead of processing one element at a time, each vector loop iteration can process multiple elements at a time. For instance, if there are four identical floating point units, four elements can be read from a vector register and processed in parallel per clock cycle.
 
 This is essentially the same principle as for SIMD ISAs such as SSE or NEON.
 

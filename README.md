@@ -1,7 +1,7 @@
 # MRISC32
 *Mostly harmless Reduced Instruction Set Computer, 32-bit edition*
 
-This is an experimental, custom 32-bit RISC/Vector CPU, primarily inspired by the [Cray 1](https://en.wikipedia.org/wiki/Cray-1) and [MIPS](https://en.wikipedia.org/wiki/MIPS_architecture) architectures. The focus is to create a clean, modern [ISA](https://en.wikipedia.org/wiki/Instruction_set_architecture) that is equally attractive to software, hardware and compiler developers.
+This is an experimental, custom 32-bit RISC/Vector CPU, primarily inspired by the [Cray-1](https://en.wikipedia.org/wiki/Cray-1) and [MIPS](https://en.wikipedia.org/wiki/MIPS_architecture) architectures. The focus is to create a clean, modern [ISA](https://en.wikipedia.org/wiki/Instruction_set_architecture) that is equally attractive to software, hardware and compiler developers.
 
 # Features
 

@@ -2,7 +2,7 @@
 
 ## Scalar registers
 
-Each scalar register is 32 bits wide, and can be used for integers, floating point values and pointers.
+Each scalar register is 32 bits wide, and can be used for integers, floating point values and addresses.
 
 Four scalar registers have a special meaning in hardware:
 * Z (S0) - This register is always zero (read-only).

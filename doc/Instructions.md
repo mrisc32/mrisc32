@@ -119,9 +119,11 @@ For instance the integer instruction `ADD` has the following operation modes:
 * `ADD Vd,Va,IMM` - vector <= vector + scalar
 * `ADD Vd,Va,Vb` - vector <= vector + vector
 
+*See [Vector Design](VectorDesign.md) for more information.*
+
 ## Packed operation
 
-Some instructions support packed operation. Prefix the instruction with `PB` for packed byte operation (each word is treated as four bytes, and four operations are performed in parallel), or `PH` for packed half-word operation (each word is treated as two half-words, and two operations are performed in parallel).
+Many instructions support packed operation. Prefix the instruction with `PB` for packed byte operation (each word is treated as four bytes, and four operations are performed in parallel), or `PH` for packed half-word operation (each word is treated as two half-words, and two operations are performed in parallel).
 
 For instance, the following packed operations are possible for the `MAX` instruction:
 * `PBMAX Sd,Sa,Sb` - 4x packed byte MAX, scalar <= max(scalar, scalar)
@@ -132,6 +134,8 @@ For instance, the following packed operations are possible for the `MAX` instruc
 * `PHMAX Vd,Va,Vb` - 2x packed half-word MAX, vector <= max(vector, vector)
 
 Note that immediate operands are not supported for packed operations.
+
+*See [Packed Operations](PackedOperations.md) for more information.*
 
 ## Planned instructions
 
