@@ -141,8 +141,9 @@ Note that immediate operands are not supported for packed operations.
 ## Planned instructions
 
 * Move scalar registers to/from vector register elements.
+* Conversion and packing/unpacking of different floating point representations (32-bit, 2x16-bit, 4x8-bit).
+* More floating point instructions (round, ...?).
 * Control instructions/registers (cache control, interrupt masks, status flags, ...).
 * Load Linked (ll) and Store Conditional (sc) for atomic operations.
 * Single-instruction load of common constants (mostly floating point: PI, sqrt(2), ...).
-* More floating point instructions (round, ...?).
 
