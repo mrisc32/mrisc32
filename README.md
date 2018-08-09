@@ -21,10 +21,11 @@ This is an experimental, custom 32-bit RISC/Vector CPU, primarily inspired by th
 * Instructions are non-destructive 3-operand (two sources, one destination).
 * All conditionals are based on register content.
   - There are no condition code flags (carry, overflow, ...).
-  - Compare instructions generate bit masks (for scalars, vectors and packed data types).
+  - Compare instructions generate bit masks.
   - Branch instructions can act on bit masks (all bits set, all bits zero, etc) as well as signed quantities (less than zero, etc).
+  - Bit masks are suitable for masking in conditional operations (for scalars, vectors and packed data types).
 * Unlike early RISC architectures, there are *no* delay slots.
-* Many traditional floating point operations can be handled in whole or patrially by integer operations, reducing the number of necessary instructions:
+* Many traditional floating point operations can be handled in whole or partially by integer operations, reducing the number of necessary instructions:
   - Load/store.
   - Branch.
   - Sign and bit manipulation (e.g. neg, abs).
