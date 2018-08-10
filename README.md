@@ -72,7 +72,7 @@ So far, the following components have been implemented:
 * The vector register file.
   - There are two read ports and one write port.
   - Each vector register has 16 elements.
-* A basic 7-stage pipeline.
+* A basic 8-stage pipeline.
   - PC and branching logic.
   - Instruction fetch.
   - Decode.
