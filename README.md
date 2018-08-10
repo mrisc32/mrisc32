@@ -57,32 +57,8 @@ Use the assembler to compile programs, and use the simulator to run them.
 
 # Hardware/HDL
 
-A [VHDL implementation](vhdl/) of a single issue, in-order CPU is currently under development. The working name for the CPU is *MRISC32-A1*:
+A [VHDL implementation](vhdl/) of a single issue, in-order CPU is currently under development.
 
-![MRISC32-A1 pipleine](doc/mrisc32-a1-pipeline.png)
-
-So far, the following components have been implemented:
-
-* The integer ALU.
-  - All single-cycle unpacked integer operations are supported.
-* A pipelined (two-cycle) multiply unit.
-  - Supports all unpacked integer multiplication operations.
-* The scalar register file.
-  - There are three read ports and one write port.
-* The vector register file.
-  - There are two read ports and one write port.
-  - Each vector register has 16 elements.
-* A basic 8-stage pipeline.
-  - PC and branching logic.
-  - Instruction fetch.
-  - Decode.
-  - Register fetch.
-  - Execute.
-  - Data read/write logic (scalar and vector).
-  - Register write-back.
-  - Operand forwarding.
-
-**TODO**: Caches, divide, FPU, packed operations, etc.
 
 # Goals
 
