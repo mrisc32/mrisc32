@@ -40,7 +40,7 @@ entity forward_to_branch_logic is
       i_src_reg : in T_SRC_REG;
 
       -- Operand information from the different pipeline stages.
-      i_dst_reg_from_id : in T_DST_REG;
+      i_dst_reg_from_rf : in T_DST_REG;
 
       i_dst_reg_from_ex1 : in T_DST_REG;
       i_value_from_ex1 : in std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -48,6 +48,10 @@ entity forward_to_branch_logic is
 
       i_dst_reg_from_ex2 : in T_DST_REG;
       i_value_from_ex2 : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_ready_from_ex2 : in std_logic;
+
+      i_dst_reg_from_ex3 : in T_DST_REG;
+      i_value_from_ex3 : in std_logic_vector(C_WORD_SIZE-1 downto 0);
 
       -- Operand selection for the ID stage.
       o_value : out std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -57,9 +61,10 @@ entity forward_to_branch_logic is
 end forward_to_branch_logic;
 
 architecture rtl of forward_to_branch_logic is
-  signal s_reg_from_id : std_logic;
+  signal s_reg_from_rf : std_logic;
   signal s_reg_from_ex1 : std_logic;
   signal s_reg_from_ex2 : std_logic;
+  signal s_reg_from_ex3 : std_logic;
 
   signal s_use_value : std_logic;
   signal s_value_ready : std_logic;
@@ -68,24 +73,32 @@ begin
   -- Note: The branch logic only cares about scalar registers, so we do not have
   -- to match against individual vector elements. This also saves time since the
   -- register matching logic is a critical path.
-  s_reg_from_id <= i_dst_reg_from_id.is_target when
-      (i_src_reg.is_vector = i_dst_reg_from_id.is_vector) and
-      (i_src_reg.reg = i_dst_reg_from_id.reg) else '0';
+  s_reg_from_rf <= i_dst_reg_from_rf.is_target when
+      (i_src_reg.is_vector = i_dst_reg_from_rf.is_vector) and
+      (i_src_reg.reg = i_dst_reg_from_rf.reg) else '0';
   s_reg_from_ex1 <= i_dst_reg_from_ex1.is_target when
       (i_src_reg.is_vector =  i_dst_reg_from_ex1.is_vector) and
       (i_src_reg.reg = i_dst_reg_from_ex1.reg) else '0';
   s_reg_from_ex2 <= i_dst_reg_from_ex2.is_target when
       (i_src_reg.is_vector =  i_dst_reg_from_ex2.is_vector) and
       (i_src_reg.reg = i_dst_reg_from_ex2.reg) else '0';
+  s_reg_from_ex3 <= i_dst_reg_from_ex3.is_target when
+      (i_src_reg.is_vector =  i_dst_reg_from_ex3.is_vector) and
+      (i_src_reg.reg = i_dst_reg_from_ex3.reg) else '0';
 
   -- Which value to forward?
-  o_value <= i_value_from_ex1 when (s_reg_from_ex1 and i_ready_from_ex1) = '1' else i_value_from_ex2;
+  o_value <= i_value_from_ex1 when (s_reg_from_ex1 and i_ready_from_ex1) = '1' else
+             i_value_from_ex2 when (s_reg_from_ex2 and i_ready_from_ex2) = '1' else
+             i_value_from_ex3;
 
   -- Should the forwarded pipeline value be used instead of register file value?
-  s_use_value <= s_reg_from_id or s_reg_from_ex1 or s_reg_from_ex2;
+  s_use_value <= s_reg_from_rf or s_reg_from_ex1 or s_reg_from_ex2 or s_reg_from_ex3;
 
   -- Is the value ready for use?
-  s_value_ready <= not (s_reg_from_id or (s_reg_from_ex1 and not i_ready_from_ex1));
+  s_value_ready <= '0' when s_reg_from_rf = '1' else
+                   i_ready_from_ex1 when s_reg_from_ex1 = '1' else
+                   i_ready_from_ex2 when s_reg_from_ex2 = '1' else
+                   '1';
 
   -- Mask the outputs: The branch logic only cares about scalar registers.
   o_use_value <= s_use_value and not i_src_reg.is_vector;

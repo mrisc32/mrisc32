@@ -18,7 +18,7 @@
 ----------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------
--- Pipeline Stages 5 & 6: Execute (EX1/EX2)
+-- Pipeline Stages 5, 6 & 7: Execute (EX1/EX2/EX3)
 ----------------------------------------------------------------------------------------------------
 
 library ieee;
@@ -88,12 +88,19 @@ entity execute is
     o_ex1_next_dst_reg : out T_DST_REG;
     o_ex1_next_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
     o_ex1_next_result_ready : out std_logic;
+    o_ex2_next_dst_reg : out T_DST_REG;
     o_ex2_next_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+    o_ex2_next_result_ready : out std_logic;
+    o_ex3_next_dst_reg : out T_DST_REG;
+    o_ex3_next_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
 
     -- To operand forward logic (sync).
     o_ex1_dst_reg : out T_DST_REG;
     o_ex1_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-    o_ex1_result_ready : out std_logic
+    o_ex1_result_ready : out std_logic;
+    o_ex2_dst_reg : out T_DST_REG;
+    o_ex2_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+    o_ex2_result_ready : out std_logic
   );
 end execute;
 
@@ -135,9 +142,19 @@ architecture rtl of execute is
   signal s_mem_stall : std_logic;
   signal s_mem_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
-  -- Signals from the EX2 stage (async).
+  -- Signals from the EX2 to the EX3 stage (async).
   signal s_ex2_stall : std_logic;
   signal s_ex2_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_ex2_next_result_ready : std_logic;
+  signal s_ex2_next_dst_reg : T_DST_REG;
+
+  -- Signals from the EX2 to the EX3 stage (sync).
+  signal s_ex2_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_ex2_result_ready : std_logic;
+  signal s_ex2_dst_reg : T_DST_REG;
+
+  -- Signals from the EX3 stage (async).
+  signal s_ex3_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
 begin
   --------------------------------------------------------------------------------------------------
   -- Branch logic.
@@ -158,10 +175,27 @@ begin
 
 
   --------------------------------------------------------------------------------------------------
-  -- EX1: Execution units.
+  -- Multi cycle units: MUL (2 cycles).
   --------------------------------------------------------------------------------------------------
 
-  -- Should the EX1 stage be stalled?
+  -- Instantiate the multiply unit.
+  mul32_1: entity work.mul32
+    port map (
+      i_clk => i_clk,
+      i_rst => i_rst,
+      i_stall => s_stall_ex1,
+      i_enable => i_mul_en,
+      i_op => i_mul_op,
+      i_src_a => i_src_a,
+      i_src_b => i_src_b,
+      o_result => s_mul_result,
+      o_result_ready => s_mul_result_ready
+    );
+
+
+  --------------------------------------------------------------------------------------------------
+  -- EX1: ALU, AGU, memory store preparation.
+  --------------------------------------------------------------------------------------------------
 
   -- Instantiate the ALU (arithmetic logic unit).
   alu_1: entity work.alu
@@ -184,20 +218,6 @@ begin
       i_base => i_src_a,
       i_offset => i_src_b,
       o_result => s_agu_result
-    );
-
-  -- Instantiate the multiply unit.
-  mul32_1: entity work.mul32
-    port map (
-      i_clk => i_clk,
-      i_rst => i_rst,
-      i_stall => s_stall_ex1,
-      i_enable => i_mul_en,
-      i_op => i_mul_op,
-      i_src_a => i_src_a,
-      i_src_b => i_src_b,
-      o_result => s_mul_result,
-      o_result_ready => s_mul_result_ready
     );
 
   -- Prepare the byte mask for the MEM stage.
@@ -299,9 +319,47 @@ begin
     );
 
   -- Select the result from the EX2 stage.
+  s_ex2_next_result_ready <= '1';  -- TODO(m): Can be 0 when EX3 actually does something.
   s_ex2_next_result <= s_mem_data when s_ex1_mem_enable = '1' else
                        s_mul_result when s_mul_result_ready = '1' else
                        s_ex1_result;
+
+  -- Outputs to the EX3 stage (sync).
+  process(i_clk, i_rst)
+  begin
+    if i_rst = '1' then
+      s_ex2_result <= (others => '0');
+      s_ex2_result_ready <= '0';
+      s_ex2_dst_reg.is_target <= '0';
+      s_ex2_dst_reg.reg <= (others => '0');
+      s_ex2_dst_reg.element <= (others => '0');
+      s_ex2_dst_reg.is_vector <= '0';
+    elsif rising_edge(i_clk) then
+      s_ex2_result <= s_ex2_next_result;
+      s_ex2_result_ready <= s_ex2_next_result_ready;
+      s_ex2_dst_reg <= s_ex1_dst_reg;
+    end if;
+  end process;
+
+  -- Output the EX2 result to operand forwarding logic.
+  -- Async:
+  o_ex2_next_dst_reg <= s_ex1_dst_reg;
+  o_ex2_next_result <= s_ex2_next_result;
+  o_ex2_next_result_ready <= s_ex2_next_result_ready;
+
+  -- Sync:
+  o_ex2_dst_reg <= s_ex2_dst_reg;
+  o_ex2_result <= s_ex2_result;
+  o_ex2_result_ready <= s_ex2_result_ready;
+
+
+  --------------------------------------------------------------------------------------------------
+  -- EX3: Currently just forward the EX2 result.
+  -- TODO(m): This stage will pick up results from the FPU.
+  --------------------------------------------------------------------------------------------------
+
+  -- Just forward values from the EX2 stage.
+  s_ex3_next_result <= s_ex2_result;
 
   -- Outputs to the WB stage (sync).
   process(i_clk, i_rst)
@@ -313,13 +371,14 @@ begin
       o_dst_reg.element <= (others => '0');
       o_dst_reg.is_vector <= '0';
     elsif rising_edge(i_clk) then
-      o_result <= s_ex2_next_result;
-      o_dst_reg <= s_ex1_dst_reg;
+      o_result <= s_ex3_next_result;
+      o_dst_reg <= s_ex2_dst_reg;
     end if;
   end process;
 
-  -- Output the EX2 result to operand forwarding logic (async).
-  o_ex2_next_result <= s_ex2_next_result;
+  -- Output the EX3 result to operand forwarding logic (async).
+  o_ex3_next_dst_reg <= s_ex2_dst_reg;
+  o_ex3_next_result <= s_ex3_next_result;
 
   -- Stall logic (async).
   s_ex2_stall <= s_mem_stall;
