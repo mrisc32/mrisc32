@@ -109,6 +109,10 @@ architecture rtl of execute is
   signal s_agu_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_mul_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_mul_result_ready : std_logic;
+  signal s_fpu_f1_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_fpu_f1_result_ready : std_logic;
+  signal s_fpu_f3_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_fpu_f3_result_ready : std_logic;
 
   -- Should the EX1 stage be stalled by the EX2 stage?
   signal s_stall_ex1 : std_logic;
@@ -175,7 +179,7 @@ begin
 
 
   --------------------------------------------------------------------------------------------------
-  -- Multi cycle units: MUL (2 cycles).
+  -- Multi cycle units: MUL (2 cycles), FPU (1/3 cycles).
   --------------------------------------------------------------------------------------------------
 
   -- Instantiate the multiply unit.
@@ -192,9 +196,26 @@ begin
       o_result_ready => s_mul_result_ready
     );
 
+  -- Instantiate the floating point unit.
+  fpu_1: entity work.fpu
+    port map (
+      i_clk => i_clk,
+      i_rst => i_rst,
+      i_stall => s_stall_ex1,
+      i_enable => i_fpu_en,
+      i_op => i_fpu_op,
+      i_packed_mode => i_packed_mode,
+      i_src_a => i_src_a,
+      i_src_b => i_src_b,
+      o_f1_next_result => s_fpu_f1_result,
+      o_f1_next_result_ready => s_fpu_f1_result_ready,
+      o_f3_next_result => s_fpu_f3_result,
+      o_f3_next_result_ready => s_fpu_f3_result_ready
+    );
+
 
   --------------------------------------------------------------------------------------------------
-  -- EX1: ALU, AGU, memory store preparation.
+  -- EX1: ALU, FPU (single cycle operations), AGU, memory store preparation.
   --------------------------------------------------------------------------------------------------
 
   -- Instantiate the ALU (arithmetic logic unit).
@@ -242,9 +263,10 @@ begin
       i_src_c(15 downto 0) & X"0000"   when "10",
       i_src_c(7 downto 0)  & X"000000" when others;  -- "11"
 
-  -- The next output from EX1 comes from the ALU.
-  s_ex1_next_result <= s_alu_result;
-  s_ex1_next_result_ready <= (i_alu_en and (not i_mem_en));
+  -- Select the result from the EX1 stage.
+  s_ex1_next_result <= s_fpu_f1_result when s_fpu_f1_result_ready = '1' else
+                       s_alu_result;
+  s_ex1_next_result_ready <= i_alu_en or s_fpu_f1_result_ready;
 
   -- Outputs to the EX2 stage (sync).
   process(i_clk, i_rst)
@@ -319,10 +341,10 @@ begin
     );
 
   -- Select the result from the EX2 stage.
-  s_ex2_next_result_ready <= '1';  -- TODO(m): Can be 0 when EX3 actually does something.
   s_ex2_next_result <= s_mem_data when s_ex1_mem_enable = '1' else
                        s_mul_result when s_mul_result_ready = '1' else
                        s_ex1_result;
+  s_ex2_next_result_ready <= s_ex1_mem_enable or s_mul_result_ready or s_ex1_result_ready;
 
   -- Outputs to the EX3 stage (sync).
   process(i_clk, i_rst)
@@ -354,12 +376,12 @@ begin
 
 
   --------------------------------------------------------------------------------------------------
-  -- EX3: Currently just forward the EX2 result.
-  -- TODO(m): This stage will pick up results from the FPU.
+  -- EX3: FPU (multi cycle operations).
   --------------------------------------------------------------------------------------------------
 
-  -- Just forward values from the EX2 stage.
-  s_ex3_next_result <= s_ex2_result;
+  -- Select the EX2 result or the FPU result.
+  s_ex3_next_result <= s_fpu_f3_result when s_fpu_f3_result_ready = '1' else
+                       s_ex2_result;
 
   -- Outputs to the WB stage (sync).
   process(i_clk, i_rst)
