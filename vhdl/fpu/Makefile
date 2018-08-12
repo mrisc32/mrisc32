@@ -22,8 +22,11 @@ FPU_PATH = fpu
 SRCS += \
     $(FPU_PATH)/float_decompose.vhd \
     $(FPU_PATH)/float_decompose_tb.vhd \
-    $(FPU_PATH)/float_compose.vhd
+    $(FPU_PATH)/float_compose.vhd \
+    $(FPU_PATH)/float_compare.vhd \
+    $(FPU_PATH)/float_compare_tb.vhd
 
 TESTS += \
-    float_decompose_tb
+    float_decompose_tb \
+    float_compare_tb
 
