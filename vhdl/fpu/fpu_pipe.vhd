@@ -79,6 +79,20 @@ architecture rtl of fpu_pipe is
   signal s_is_sqrt_op : std_logic;
   signal s_is_single_cycle_op : std_logic;
 
+  -- Set operations.
+  signal s_compare_eq : std_logic;
+  signal s_compare_ne : std_logic;
+  signal s_compare_lt : std_logic;
+  signal s_compare_le : std_logic;
+  signal s_is_any_src_nan : std_logic;
+  signal s_set_bit : std_logic;
+  signal s_set_res : std_logic_vector(WIDTH-1 downto 0);
+
+  -- Min/Max operations.
+  signal s_is_max_op : std_logic;
+  signal s_minmax_sel_a : std_logic;
+  signal s_minmax_res : std_logic_vector(WIDTH-1 downto 0);
+
   signal s_f1_next_add_en : std_logic;
   signal s_f1_next_mul_en : std_logic;
   signal s_f1_next_div_en : std_logic;
@@ -144,11 +158,14 @@ architecture rtl of fpu_pipe is
   -- F3 signals.
   signal s_f3_next_result : std_logic_vector(WIDTH-1 downto 0);
 begin
-  ----------------------------------------------------------------------------------------------------
+  --==================================================================================================
   -- F1: Stage 1 of the FPU pipeline.
+  --==================================================================================================
+
+  ----------------------------------------------------------------------------------------------------
+  -- Decode the FPU operation.
   ----------------------------------------------------------------------------------------------------
 
-  -- Decode the FPU operation.
   DecodeOpMux1: with i_op select
     s_is_compare_op <=
       '1' when C_FPU_FSEQ | C_FPU_FSNE | C_FPU_FSLT | C_FPU_FSLE | C_FPU_FSNAN,
@@ -176,11 +193,11 @@ begin
   -- Is this a single cycle operation?
   s_is_single_cycle_op <= s_is_compare_op or s_is_minmax_op;
 
-  -- TODO(m): Instantiate float_compare and return single cycle results.
-  o_f1_next_result <= (others => '0');
-  o_f1_next_result_ready <= s_is_single_cycle_op and i_enable;
 
-  -- Decompose source operands.
+  ----------------------------------------------------------------------------------------------------
+  -- Decompose source operands (mostly for multi-cycle ops).
+  ----------------------------------------------------------------------------------------------------
+
   DecomposeA: entity work.float_decompose
     generic map (
       WIDTH => WIDTH,
@@ -212,6 +229,46 @@ begin
       o_is_inf => s_f1_next_src_b_is_inf,
       o_is_zero => s_f1_next_src_b_is_zero
     );
+
+
+  ----------------------------------------------------------------------------------------------------
+  -- Single cycle compare/min/max operations.
+  ----------------------------------------------------------------------------------------------------
+
+  -- Camparison results.
+  Cmp: entity work.float_compare
+    generic map (
+      WIDTH => WIDTH
+    )
+    port map (
+      i_src_a => i_src_a,
+      i_src_b => i_src_b,
+      o_eq => s_compare_eq,
+      o_ne => s_compare_ne,
+      o_lt => s_compare_lt,
+      o_le => s_compare_le
+    );
+
+  -- Min/Max operations.
+  s_is_max_op <= not i_op(0);
+  s_minmax_sel_a <= s_compare_lt xor s_is_max_op;
+  s_minmax_res <= i_src_a when s_minmax_sel_a = '1' else i_src_b;
+
+  -- Compare and set operations.
+  s_is_any_src_nan <= s_f1_next_src_a_is_nan or s_f1_next_src_b_is_nan;
+  CmpMux: with i_op select
+    s_set_bit <=
+      s_compare_eq when C_FPU_FSEQ,
+      s_compare_ne when C_FPU_FSNE,
+      s_compare_lt when C_FPU_FSLT,
+      s_compare_le when C_FPU_FSLE,
+      s_is_any_src_nan when C_FPU_FSNAN,
+      '0' when others;
+  s_set_res <= (others => s_set_bit);
+
+  -- Select the result from the first FPU stage.
+  o_f1_next_result <= s_set_res when s_is_compare_op = '1' else s_minmax_res;
+  o_f1_next_result_ready <= s_is_single_cycle_op and i_enable;
 
   -- Signals from stage 1 to stage 2 of the FPU.
   process(i_clk, i_rst)
@@ -256,9 +313,9 @@ begin
   end process;
 
 
-  ----------------------------------------------------------------------------------------------------
+  --==================================================================================================
   -- F2: Stage 2 of the FPU pipeline.
-  ----------------------------------------------------------------------------------------------------
+  --==================================================================================================
 
   -- TODO(m): Implement me!
   -- Currently we implement a fake form of FMUL just to get some data through.
@@ -301,9 +358,9 @@ begin
   end process;
 
 
-  ----------------------------------------------------------------------------------------------------
+  --==================================================================================================
   -- F3: Stage 3 of the FPU pipeline.
-  ----------------------------------------------------------------------------------------------------
+  --==================================================================================================
 
   -- Compose the result.
   ComposeResult: entity work.float_compose
