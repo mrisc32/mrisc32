@@ -23,6 +23,8 @@ The CPU is still under development. So far, the following components have been i
   - All single-cycle unpacked integer operations are supported.
 * A pipelined (two-cycle) multiply unit.
   - Supports all unpacked integer multiplication operations.
+* An FPU.
+  - Currently only a subset of all the FPU instructions is implemented.
 * The scalar register file.
   - There are three read ports and one write port.
 * The vector register file.
@@ -33,7 +35,7 @@ The CPU is still under development. So far, the following components have been i
 * Branch prediction and correction.
   - The branch misprediction penalty is 3 cycles.
 
-**TODO**: Caches, divide, FPU, packed operations, etc.
+**TODO**: Caches, divide, more FPU instrucions, packed operations, etc.
 
 ## Preformance
 
