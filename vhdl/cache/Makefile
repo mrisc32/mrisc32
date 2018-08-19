@@ -19,3 +19,8 @@
 
 CACHE_PATH = cache
 
+SRCS += \
+    $(CACHE_PATH)/dummy_icache.vhd \
+    $(CACHE_PATH)/dummy_dcache.vhd \
+    $(CACHE_PATH)/cache_access_arbitrator.vhd
+
