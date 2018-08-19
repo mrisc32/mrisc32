@@ -31,40 +31,28 @@ architecture behavioral of pipeline_tb is
   signal s_clk : std_logic;
   signal s_rst : std_logic;
 
-  -- ICache interface.
-  signal s_icache_req : std_logic;
-  signal s_icache_addr : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_icache_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_icache_data_ready : std_logic;
-
-  -- DCache interface.
-  signal s_dcache_req : std_logic;
-  signal s_dcache_we : std_logic;
-  signal s_dcache_byte_mask : std_logic_vector(C_WORD_SIZE/8-1 downto 0);
-  signal s_dcache_addr : std_logic_vector(C_WORD_SIZE-1 downto 2);
-  signal s_dcache_write_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_dcache_read_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_dcache_read_data_ready : std_logic;
+  -- Memory interface.
+  signal s_mem_req : std_logic;
+  signal s_mem_we : std_logic;
+  signal s_mem_byte_mask : std_logic_vector(C_WORD_SIZE/8-1 downto 0);
+  signal s_mem_addr : std_logic_vector(C_WORD_SIZE-1 downto 2);
+  signal s_mem_write_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_mem_read_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_mem_read_data_ready : std_logic;
 begin
   pipeline_0: entity work.pipeline
     port map (
       i_clk => s_clk,
       i_rst => s_rst,
 
-      -- ICache interface.
-      o_icache_req => s_icache_req,
-      o_icache_addr => s_icache_addr,
-      i_icache_data => s_icache_data,
-      i_icache_data_ready => s_icache_data_ready,
-
-      -- DCache interface.
-      o_dcache_req => s_dcache_req,
-      o_dcache_we => s_dcache_we,
-      o_dcache_byte_mask => s_dcache_byte_mask,
-      o_dcache_addr => s_dcache_addr,
-      o_dcache_write_data => s_dcache_write_data,
-      i_dcache_read_data => s_dcache_read_data,
-      i_dcache_read_data_ready => s_dcache_read_data_ready
+      -- Memory interface.
+      o_mem_req => s_mem_req,
+      o_mem_we => s_mem_we,
+      o_mem_byte_mask => s_mem_byte_mask,
+      o_mem_addr => s_mem_addr,
+      o_mem_write_data => s_mem_write_data,
+      i_mem_read_data => s_mem_read_data,
+      i_mem_read_data_ready => s_mem_read_data_ready
     );
 
   process
@@ -125,11 +113,9 @@ begin
     end loop;
     file_close(f_char_file);
 
-    -- Reset the cache signals.
-    s_dcache_read_data <= (others => '0');
-    s_dcache_read_data_ready <= '0';
-    s_icache_data <= (others => '0');
-    s_icache_data_ready <= '0';
+    -- Reset the memory signals.
+    s_mem_read_data <= (others => '0');
+    s_mem_read_data_ready <= '0';
 
     -- Start by resetting the pipeline (to have defined signals).
     s_rst <= '1';
@@ -147,44 +133,28 @@ begin
     for i in 0 to C_TEST_CYCLES-1 loop
       -- Positive clock flank -> we should get a PC address on the ICache interface.
       s_clk <= '1';
-      wait for 0.25 ns;
+      wait for 0.5 ns;
 
-      -- Load an instruction from the memory (simulate ICache).
-      v_mem_idx := to_integer(unsigned(s_icache_addr)) / 4;
-      if (v_mem_idx >= 0) and (v_mem_idx < C_MEM_NUM_WORDS) then
-        v_data := v_mem_array(v_mem_idx);
-      else
-        v_data := X"00000000";  -- NOP
-      end if;
-      if v_data = X"38f80000" then  -- Infinite branch-to-same-PC loop => exit.
-        report "Simulation finished after " & integer'image(i) & " cycles.";
-        exit;
-      end if;
-      s_icache_data <= v_data;
-      s_icache_data_ready <= '1';
-
-      wait for 0.25 ns;
-
-      -- Read/write data to/from the memory (simulate DCache).
-      v_write_mask(31 downto 24) := (others => s_dcache_byte_mask(3));
-      v_write_mask(23 downto 16) := (others => s_dcache_byte_mask(2));
-      v_write_mask(15 downto 8) := (others => s_dcache_byte_mask(1));
-      v_write_mask(7 downto 0) := (others => s_dcache_byte_mask(0));
-      if s_dcache_req = '1' then
-        v_mem_idx := to_integer(unsigned(s_dcache_addr));
+      -- Read/write data to/from the memory.
+      v_write_mask(31 downto 24) := (others => s_mem_byte_mask(3));
+      v_write_mask(23 downto 16) := (others => s_mem_byte_mask(2));
+      v_write_mask(15 downto 8) := (others => s_mem_byte_mask(1));
+      v_write_mask(7 downto 0) := (others => s_mem_byte_mask(0));
+      if s_mem_req = '1' then
+        v_mem_idx := to_integer(unsigned(s_mem_addr));
         if (v_mem_idx >= 0) and (v_mem_idx < C_MEM_NUM_WORDS) then
           v_data := v_mem_array(v_mem_idx);
         else
           v_data := X"00000000";
         end if;
-        if s_dcache_we = '1' then
-          v_data := (v_data and (not v_write_mask)) or (s_dcache_write_data and v_write_mask);
+        if s_mem_we = '1' then
+          v_data := (v_data and (not v_write_mask)) or (s_mem_write_data and v_write_mask);
           if (v_mem_idx >= 0) and (v_mem_idx < C_MEM_NUM_WORDS) then
             v_mem_array(v_mem_idx) := v_data;
           end if;
         else
-          s_dcache_read_data <= v_data;
-          s_dcache_read_data_ready <= '1';
+          s_mem_read_data <= v_data;
+          s_mem_read_data_ready <= '1';
         end if;
       end if;
 

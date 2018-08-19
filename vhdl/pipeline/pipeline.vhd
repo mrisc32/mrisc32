@@ -31,20 +31,14 @@ entity pipeline is
       i_clk : in std_logic;
       i_rst : in std_logic;
 
-      -- ICache interface.
-      o_icache_req : out std_logic;
-      o_icache_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_icache_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_icache_data_ready : in std_logic;
-
-      -- DCache interface.
-      o_dcache_req : out std_logic;  -- 1 = request, 0 = nop
-      o_dcache_we : out std_logic;   -- 1 = write, 0 = read
-      o_dcache_byte_mask : out std_logic_vector(C_WORD_SIZE/8-1 downto 0);
-      o_dcache_addr : out std_logic_vector(C_WORD_SIZE-1 downto 2);
-      o_dcache_write_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_dcache_read_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_dcache_read_data_ready : in std_logic
+      -- Memory interface.
+      o_mem_req : out std_logic;  -- 1 = request, 0 = nop
+      o_mem_we : out std_logic;   -- 1 = write, 0 = read
+      o_mem_byte_mask : out std_logic_vector(C_WORD_SIZE/8-1 downto 0);
+      o_mem_addr : out std_logic_vector(C_WORD_SIZE-1 downto 2);
+      o_mem_write_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_mem_read_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_mem_read_data_ready : in std_logic
     );
 end pipeline;
 
@@ -201,6 +195,34 @@ architecture rtl of pipeline is
   signal s_stall_if : std_logic;
   signal s_stall_id : std_logic;
   signal s_stall_rf : std_logic;
+
+  -- ICache interface.
+  signal s_icache_req : std_logic;
+  signal s_icache_addr : std_logic_vector(C_WORD_SIZE-1 downto 2);
+  signal s_icache_read_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_icache_read_data_ready : std_logic;
+
+  signal s_icache_mem_req : std_logic;
+  signal s_icache_mem_addr : std_logic_vector(C_WORD_SIZE-1 downto 2);
+  signal s_icache_mem_read_data: std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_icache_mem_read_data_ready : std_logic;
+
+  -- DCache interface.
+  signal s_dcache_req : std_logic;  -- 1 = request, 0 = nop
+  signal s_dcache_we : std_logic;   -- 1 = write, 0 = read
+  signal s_dcache_byte_mask : std_logic_vector(C_WORD_SIZE/8-1 downto 0);
+  signal s_dcache_addr : std_logic_vector(C_WORD_SIZE-1 downto 2);
+  signal s_dcache_write_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_dcache_read_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_dcache_read_data_ready : std_logic;
+
+  signal s_dcache_mem_req : std_logic;
+  signal s_dcache_mem_we : std_logic;
+  signal s_dcache_mem_byte_mask: std_logic_vector(C_WORD_SIZE/8-1 downto 0);
+  signal s_dcache_mem_addr: std_logic_vector(C_WORD_SIZE-1 downto 2);
+  signal s_dcache_mem_write_data: std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_dcache_mem_read_data: std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_dcache_mem_read_data_ready : std_logic;
 begin
   --------------------------------------------------------------------------------------------------
   -- Pipeline stages.
@@ -243,10 +265,10 @@ begin
       i_pc => s_pc_pc,
 
       -- ICache interface.
-      o_icache_req => o_icache_req,
-      o_icache_addr => o_icache_addr,
-      i_icache_data => i_icache_data,
-      i_icache_data_ready => i_icache_data_ready,
+      o_icache_req => s_icache_req,
+      o_icache_addr => s_icache_addr,
+      i_icache_data => s_icache_read_data,
+      i_icache_data_ready => s_icache_read_data_ready,
 
       -- To ID stage (sync).
       o_pc => s_if_pc,
@@ -482,13 +504,13 @@ begin
       o_pccorr_adjusted_pc => s_ex1_pccorr_adjusted_pc,
 
       -- DCache interface.
-      o_dcache_req => o_dcache_req,
-      o_dcache_we => o_dcache_we,
-      o_dcache_byte_mask => o_dcache_byte_mask,
-      o_dcache_addr => o_dcache_addr,
-      o_dcache_write_data => o_dcache_write_data,
-      i_dcache_read_data => i_dcache_read_data,
-      i_dcache_read_data_ready => i_dcache_read_data_ready,
+      o_dcache_req => s_dcache_req,
+      o_dcache_we => s_dcache_we,
+      o_dcache_byte_mask => s_dcache_byte_mask,
+      o_dcache_addr => s_dcache_addr,
+      o_dcache_write_data => s_dcache_write_data,
+      i_dcache_read_data => s_dcache_read_data,
+      i_dcache_read_data_ready => s_dcache_read_data_ready,
 
       -- To WB stage (sync).
       o_result => s_ex3_result,
@@ -686,4 +708,75 @@ begin
   s_stall_id <= s_rf_stall or s_stall_rf;
   s_stall_if <= s_id_stall or s_stall_id;
   s_stall_pc <= s_if_stall or s_stall_if;
+
+
+  --------------------------------------------------------------------------------------------------
+  -- Caches and memory interface.
+  --------------------------------------------------------------------------------------------------
+
+  icache_0: entity work.dummy_icache
+    port map (
+      i_clk => i_clk,
+      i_rst => i_rst,
+
+      i_cpu_req => s_icache_req,
+      i_cpu_addr => s_icache_addr,
+      o_cpu_read_data => s_icache_read_data,
+      o_cpu_read_data_ready => s_icache_read_data_ready,
+
+      o_mem_req => s_icache_mem_req,
+      o_mem_addr => s_icache_mem_addr,
+      i_mem_read_data => s_icache_mem_read_data,
+      i_mem_read_data_ready => s_icache_mem_read_data_ready
+    );
+
+  dcache_0: entity work.dummy_dcache
+    port map (
+      i_clk => i_clk,
+      i_rst => i_rst,
+
+      i_cpu_req => s_dcache_req,
+      i_cpu_we => s_dcache_we,
+      i_cpu_byte_mask => s_dcache_byte_mask,
+      i_cpu_addr => s_dcache_addr,
+      i_cpu_write_data => s_dcache_write_data,
+      o_cpu_read_data => s_dcache_read_data,
+      o_cpu_read_data_ready => s_dcache_read_data_ready,
+
+      o_mem_req => s_dcache_mem_req,
+      o_mem_we => s_dcache_mem_we,
+      o_mem_byte_mask => s_dcache_mem_byte_mask,
+      o_mem_addr => s_dcache_mem_addr,
+      o_mem_write_data => s_dcache_mem_write_data,
+      i_mem_read_data => s_dcache_mem_read_data,
+      i_mem_read_data_ready => s_dcache_mem_read_data_ready
+    );
+
+  cache_access_arbitrator_0: entity work.cache_access_arbitrator
+    port map (
+      i_clk => i_clk,
+      i_rst => i_rst,
+
+      i_icache_req => s_icache_mem_req,
+      i_icache_addr => s_icache_mem_addr,
+      o_icache_read_data => s_icache_mem_read_data,
+      o_icache_read_data_ready => s_icache_mem_read_data_ready,
+
+      i_dcache_req => s_dcache_mem_req,
+      i_dcache_we => s_dcache_mem_we,
+      i_dcache_byte_mask => s_dcache_mem_byte_mask,
+      i_dcache_addr => s_dcache_mem_addr,
+      i_dcache_write_data => s_dcache_mem_write_data,
+      o_dcache_read_data => s_dcache_mem_read_data,
+      o_dcache_read_data_ready => s_dcache_mem_read_data_ready,
+
+      o_mem_req => o_mem_req,
+      o_mem_we => o_mem_we,
+      o_mem_byte_mask => o_mem_byte_mask,
+      o_mem_addr => o_mem_addr,
+      o_mem_write_data => o_mem_write_data,
+      i_mem_read_data => i_mem_read_data,
+      i_mem_read_data_ready => i_mem_read_data_ready
+    );
+
 end rtl;

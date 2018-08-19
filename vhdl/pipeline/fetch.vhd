@@ -40,7 +40,7 @@ entity fetch is
 
       -- ICache interface.
       o_icache_req : out std_logic;
-      o_icache_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_icache_addr : out std_logic_vector(C_WORD_SIZE-1 downto 2);
       i_icache_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_icache_data_ready : in std_logic;
 
@@ -60,7 +60,7 @@ architecture rtl of fetch is
 begin
   -- Instruction fetch from the ICache.
   o_icache_req <= '1';  -- We always read from the cache.
-  o_icache_addr <= i_pc;
+  o_icache_addr <= i_pc(C_WORD_SIZE-1 downto 2);
 
   -- Determine if we need to send a bubble down the pipeline.
   s_bubble <= i_cancel or not i_icache_data_ready;
