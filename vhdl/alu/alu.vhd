@@ -40,7 +40,10 @@ architecture rtl of alu is
   signal s_bic_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_xor_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_set_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_minmax_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_min_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_max_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_minu_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_maxu_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_shuf_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_rev_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_pack_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -60,11 +63,6 @@ architecture rtl of alu is
   signal s_compare_ltu : std_logic;
   signal s_compare_leu : std_logic;
   signal s_set_bit : std_logic;
-
-  -- Signals for min/max.
-  signal s_is_max_op : std_logic;
-  signal s_is_unsigned_minmax : std_logic;
-  signal s_minmax_sel_a : std_logic;
 
   -- Signals for packb/packh.
   signal s_packb_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -188,12 +186,10 @@ begin
   s_compare_leu <= s_compare_eq or s_compare_ltu;
 
   -- Min/Max operations.
-  s_is_max_op <= not i_op(0);
-  s_is_unsigned_minmax <= '1' when (i_op = C_ALU_MINU or i_op = C_ALU_MAXU) else '0';
-  s_minmax_sel_a <=
-      (not (s_compare_ltu xor s_is_max_op)) when s_is_unsigned_minmax = '1' else
-      (not (s_compare_lt xor s_is_max_op));
-  s_minmax_res <= i_src_a when s_minmax_sel_a = '1' else i_src_b;
+  s_min_res <= i_src_a when s_compare_lt = '0' else i_src_b;
+  s_max_res <= i_src_a when s_compare_lt = '1' else i_src_b;
+  s_minu_res <= i_src_a when s_compare_ltu = '0' else i_src_b;
+  s_maxu_res <= i_src_a when s_compare_ltu = '1' else i_src_b;
 
   -- Compare and set operations.
   CmpMux: with i_op select
@@ -204,7 +200,7 @@ begin
       s_compare_ltu when C_ALU_SLTU,
       s_compare_le when C_ALU_SLE,
       s_compare_leu when C_ALU_SLEU,
-      '0' when others;
+      '-' when others;
   s_set_res <= (others => s_set_bit);
 
 
@@ -239,14 +235,17 @@ begin
         s_xor_res when C_ALU_XOR,
         s_adder_result when C_ALU_ADD | C_ALU_SUB,
         s_set_res when C_ALU_SEQ | C_ALU_SNE | C_ALU_SLT | C_ALU_SLTU | C_ALU_SLE | C_ALU_SLEU,
-        s_minmax_res when C_ALU_MIN | C_ALU_MAX | C_ALU_MINU | C_ALU_MAXU,
+        s_min_res when C_ALU_MIN,
+        s_max_res when C_ALU_MAX,
+        s_minu_res when C_ALU_MINU,
+        s_maxu_res when C_ALU_MAXU,
         s_shifter_res when C_ALU_LSR | C_ALU_ASR | C_ALU_LSL,
         s_shuf_res when C_ALU_SHUF,
         s_clz_res when C_ALU_CLZ,
         s_rev_res when C_ALU_REV,
         s_pack_res when C_ALU_PACKB | C_ALU_PACKH,
         s_ldhi_res when C_ALU_LDHI | C_ALU_LDHIO,
-        (others => '0') when others;
+        (others => '-') when others;
 
 end rtl;
 
