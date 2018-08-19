@@ -19,10 +19,3 @@
 
 CACHE_PATH = cache
 
-SRCS += \
-    $(CACHE_PATH)/icache.vhd \
-    $(CACHE_PATH)/icache_tb.vhd
-
-TESTS += \
-    icache_tb
-
