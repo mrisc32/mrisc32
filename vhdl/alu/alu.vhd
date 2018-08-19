@@ -51,9 +51,8 @@ architecture rtl of alu is
   signal s_clz_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
   -- Signals for the adder.
-  signal s_adder_subtract : std_logic;
-  signal s_adder_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_adder_carry_out : std_logic;
+  signal s_add_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_sub_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
   -- Signals for the comparator.
   signal s_compare_eq : std_logic;
@@ -159,30 +158,16 @@ begin
   -- Arithmetic operations
   ------------------------------------------------------------------------------------------------
 
-  AluAdder: entity work.adder
-    generic map (
-      WIDTH => C_WORD_SIZE
-    )
-    port map (
-      i_subtract => s_adder_subtract,
-      i_src_a => i_src_a,
-      i_src_b => i_src_b,
-      o_result => s_adder_result,
-      o_c_out => s_adder_carry_out
-    );
-
-  -- Select if we're doing addition or subtraction.
-  NegAdderAMux: with i_op select
-    s_adder_subtract <=
-      '1' when C_ALU_SUB | C_ALU_SLT | C_ALU_SLTU | C_ALU_SLE | C_ALU_SLEU | C_ALU_MIN | C_ALU_MAX | C_ALU_MINU | C_ALU_MAXU,
-      '0' when others;
+  -- Add/sub.
+  s_add_res <= std_logic_vector(unsigned(i_src_b) + unsigned(i_src_a));
+  s_sub_res <= std_logic_vector(unsigned(i_src_b) - unsigned(i_src_a));
 
   -- Camparison results.
   s_compare_eq <= '1' when i_src_a = i_src_b else '0';
   s_compare_ne <= not s_compare_eq;
-  s_compare_lt <= s_adder_result(C_WORD_SIZE-1);
+  s_compare_lt <= '1' when signed(i_src_b) < signed(i_src_a) else '0';
   s_compare_le <= s_compare_eq or s_compare_lt;
-  s_compare_ltu <= not s_adder_carry_out;
+  s_compare_ltu <= '1' when unsigned(i_src_b) < unsigned(i_src_a) else '0';
   s_compare_leu <= s_compare_eq or s_compare_ltu;
 
   -- Min/Max operations.
@@ -233,7 +218,8 @@ begin
         s_and_res when C_ALU_AND,
         s_bic_res when C_ALU_BIC,
         s_xor_res when C_ALU_XOR,
-        s_adder_result when C_ALU_ADD | C_ALU_SUB,
+        s_add_res when C_ALU_ADD,
+        s_sub_res when C_ALU_SUB,
         s_set_res when C_ALU_SEQ | C_ALU_SNE | C_ALU_SLT | C_ALU_SLTU | C_ALU_SLE | C_ALU_SLEU,
         s_min_res when C_ALU_MIN,
         s_max_res when C_ALU_MAX,

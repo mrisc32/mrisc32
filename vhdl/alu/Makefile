@@ -20,8 +20,6 @@
 ALU_PATH = alu
 
 SRCS += \
-    $(ALU_PATH)/adder.vhd \
-    $(ALU_PATH)/adder_tb.vhd \
     $(ALU_PATH)/clz32.vhd \
     $(ALU_PATH)/clz32_tb.vhd \
     $(ALU_PATH)/shift32.vhd \
@@ -32,7 +30,6 @@ SRCS += \
     $(ALU_PATH)/alu_tb.vhd
 
 TESTS += \
-    adder_tb \
     clz32_tb \
     shift32_tb \
     shuf32_tb \
