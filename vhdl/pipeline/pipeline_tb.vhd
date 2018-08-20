@@ -142,7 +142,10 @@ begin
       v_write_mask(7 downto 0) := (others => s_mem_byte_mask(0));
       if s_mem_req = '1' then
         v_mem_idx := to_integer(unsigned(s_mem_addr));
-        if (v_mem_idx >= 0) and (v_mem_idx < C_MEM_NUM_WORDS) then
+        if v_mem_idx = 0 then
+          report "Simulation finished after " & integer'image(i) & " cycles.";
+          exit;
+        elsif (v_mem_idx > 0) and (v_mem_idx < C_MEM_NUM_WORDS) then
           v_data := v_mem_array(v_mem_idx);
         else
           v_data := X"00000000";
