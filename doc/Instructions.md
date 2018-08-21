@@ -82,6 +82,7 @@
 
 | Mnemonic | I | V | P | Operands | Operation | Description |
 |---|---|---|---|---|---|---|
+|MULQ|   | x | x | dst, src1, src2 | dst <= (src1 * src2) >> 31 | Fixed point multiplication (signed Q31 format, or Q15/Q7 for packed operations) |
 |MUL|   | x | x | dst, src1, src2 | dst <= src1 * src2 | Multiplication (signed or unsigned, low 32 bits) |
 |MULHI|   | x | x | dst, src1, src2 | dst <= (src1 * src2) >> 32 | Multiplication (signed, high 32 bits) |
 |MULHIU|   | x | x | dst, src1, src2 | dst <= (src1 * src2) >> 32 | Multiplication (unsigned, high 32 bits) |

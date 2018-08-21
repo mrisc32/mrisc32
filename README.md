@@ -34,8 +34,11 @@ This is an experimental, custom 32-bit RISC/Vector CPU, primarily inspired by th
   - Most integer and floating point instructions come in both scalar and vector variants.
   - Vector instructions can use both vector and scalar operands (including immediate values), which removes the overhead for transfering scalar data into vector registers.
 * In addition to vector operations, there are also packed operations that operate on small data types (byte and half-word).
+* Fixed point operations are supported:
+  - Single instruction multiplication of Q31, Q15 and Q7 fixed point numbers.
+  - Single instruction conversion between floating point and fixed point.
 
-Note: There is currently no HW support for 64-bit floating point operations (that is left for a 64-bit version of the ISA).
+Note: There is currently no support for 64-bit floating point operations (that is left for a 64-bit version of the ISA).
 
 
 # Documentation
