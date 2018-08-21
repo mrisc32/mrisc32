@@ -18,7 +18,8 @@
 ----------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------
--- This is a pipelined (two-stage) 32-bit multiplier for signed or unsigned integers.
+-- This is a pipelined (two-stage) 32-bit multiplier for signed or unsigned integers (including
+-- fixed point).
 ----------------------------------------------------------------------------------------------------
 
 library ieee;
@@ -46,10 +47,12 @@ entity mul32 is
 end mul32;
 
 architecture rtl of mul32 is
+  type T_RETURN_BITS is (Q_BITS, LO_BITS, HI_BITS);
+
   -- Decoded operation.
   signal s_signed_op : std_logic;
-  signal s_next_return_high_bits : std_logic;
-  signal s_return_high_bits : std_logic;
+  signal s_next_return_bits : T_RETURN_BITS;
+  signal s_return_bits : T_RETURN_BITS;
 
   -- Widened input arguments.
   signal s_src_a_wide : std_logic_vector(32 downto 0);
@@ -62,7 +65,12 @@ architecture rtl of mul32 is
 begin
   -- Decode the multiplication operation.
   s_signed_op <= not i_op(0);
-  s_next_return_high_bits <= i_op(1);
+
+  ReturnBitsMux: with i_op select
+    s_next_return_bits <=
+      Q_BITS when C_MUL_MULQ,
+      LO_BITS when C_MUL_MUL,
+      HI_BITS when others;
 
   -- Widen the input signals (extend with a sign-bit for signed operations, or zero for unsigned
   -- operations).
@@ -81,17 +89,22 @@ begin
   begin
     if i_rst = '1' then
       s_result <= (others => '0');
-      s_return_high_bits <= '0';
+      s_return_bits <= LO_BITS;
       o_result_ready <= '0';
     elsif rising_edge(i_clk) then
       if i_stall = '0' then
         s_result <= std_logic_vector(s_next_result(63 downto 0));
-        s_return_high_bits <= s_next_return_high_bits;
+        s_return_bits <= s_next_return_bits;
         o_result_ready <= i_enable;
       end if;
     end if;
   end process;
 
-  -- Select high or low word for the result.
-  o_result <= s_result(63 downto 32) when s_return_high_bits = '1' else s_result(31 downto 0);
+  -- Select which bits of the result to return.
+  ResultMux: with s_return_bits select
+    o_result <=
+      s_result(62 downto 31) when Q_BITS,
+      s_result(31 downto 0) when LO_BITS,
+      s_result(63 downto 32) when HI_BITS,
+      (others => '-') when others;
 end rtl;

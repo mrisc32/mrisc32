@@ -148,7 +148,8 @@ package common is
   constant C_MUL_OP_SIZE : integer := 2;
   subtype T_MUL_OP is std_logic_vector(C_MUL_OP_SIZE-1 downto 0);
 
-  constant C_MUL_MUL    : T_MUL_OP := "00";
+  constant C_MUL_MULQ   : T_MUL_OP := "00";
+  constant C_MUL_MUL    : T_MUL_OP := "01";
   constant C_MUL_MULHI  : T_MUL_OP := "10";
   constant C_MUL_MULHIU : T_MUL_OP := "11";
 
