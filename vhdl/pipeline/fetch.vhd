@@ -81,9 +81,11 @@ begin
         o_instr <= i_icache_data;
       end if;
 
-      -- If we're idling this cycle, we need to let ID know since it will continue running anyway.
-      -- I.e. don't let ID use the PC or instruction signals since they are not valid.
-      o_bubble <= s_bubble;
+      if i_stall = '0' then
+        -- If we're idling this cycle, we need to let ID know since it will continue running anyway.
+        -- I.e. don't let ID use the PC or instruction signals since they are not valid.
+        o_bubble <= s_bubble;
+      end if;
     end if;
   end process;
 
