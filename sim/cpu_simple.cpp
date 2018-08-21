@@ -668,9 +668,8 @@ uint32_t cpu_simple_t::run() {
         id_in.pc = instr_pc;
         id_in.instr = m_ram.at32(instr_pc);
 
-        // We terminate the simulation when we encounter an unconditional branch to the same PC
-        // (i.e. infinite loop).
-        if (id_in.instr == 0x38f80000) {
+        // We terminate the simulation when we encounter a jump to address zero.
+        if (instr_pc == 0x00000000) {
           m_terminate = true;
         }
 
