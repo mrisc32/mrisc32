@@ -204,6 +204,38 @@ inline uint32_t lsr8x4(const uint32_t a, const uint32_t b) {
   return b3 | b2 | b1 | b0;
 }
 
+inline uint32_t mulq31(const uint32_t a, const uint32_t b) {
+  const int64_t p =
+      static_cast<int64_t>(static_cast<int32_t>(a)) * static_cast<int64_t>(static_cast<int32_t>(b));
+  return static_cast<uint32_t>(p >> 31u);
+}
+
+inline uint32_t mulq15x2(const uint32_t a, const uint32_t b) {
+  const auto a1 = static_cast<int32_t>(static_cast<int16_t>(a >> 16u));
+  const auto a0 = static_cast<int32_t>(static_cast<int16_t>(a));
+  const auto b1 = static_cast<int32_t>(static_cast<int16_t>(b >> 16u));
+  const auto b0 = static_cast<int32_t>(static_cast<int16_t>(b));
+  const auto c1 = static_cast<uint32_t>((a1 * b1) << 1) & 0xffff0000u;
+  const auto c0 = static_cast<uint32_t>(a0 * b0) >> 15u;
+  return c1 | c0;
+}
+
+inline uint32_t mulq7x4(const uint32_t a, const uint32_t b) {
+  const auto a3 = static_cast<int32_t>(static_cast<int8_t>(a >> 24u));
+  const auto a2 = static_cast<int32_t>(static_cast<int8_t>(a >> 16u));
+  const auto a1 = static_cast<int32_t>(static_cast<int8_t>(a >> 8u));
+  const auto a0 = static_cast<int32_t>(static_cast<int8_t>(a));
+  const auto b3 = static_cast<int32_t>(static_cast<int8_t>(b >> 24u));
+  const auto b2 = static_cast<int32_t>(static_cast<int8_t>(b >> 16u));
+  const auto b1 = static_cast<int32_t>(static_cast<int8_t>(b >> 8u));
+  const auto b0 = static_cast<int32_t>(static_cast<int8_t>(b));
+  const auto c3 = (static_cast<uint32_t>(a3 * b3) & 0x00007f80u) << 17u;
+  const auto c2 = (static_cast<uint32_t>(a2 * b2) & 0x00007f80u) << 9u;
+  const auto c1 = (static_cast<uint32_t>(a1 * b1) & 0x00007f80u) << 1u;
+  const auto c0 = (static_cast<uint32_t>(a0 * b0) & 0x00007f80u) >> 7u;
+  return c3 | c2 | c1 | c0;
+}
+
 inline uint32_t mul32(const uint32_t a, const uint32_t b) {
   return a * b;
 }
@@ -1154,6 +1186,18 @@ uint32_t cpu_simple_t::run() {
           ex_result = packh32(ex_in.src_a, ex_in.src_b);
           break;
 
+        case EX_OP_MULQ:
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = mulq7x4(ex_in.src_a, ex_in.src_b);
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = mulq15x2(ex_in.src_a, ex_in.src_b);
+              break;
+            default:
+              ex_result = mulq31(ex_in.src_a, ex_in.src_b);
+          }
+          break;
         case EX_OP_MUL:
           switch (ex_in.packed_mode) {
             case PACKED_BYTE:
