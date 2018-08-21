@@ -127,6 +127,5 @@ exit:
     NOP
 
     ; End the simulation.
-.done:
-    B     .done
+    J     Z
 
