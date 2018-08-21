@@ -99,7 +99,8 @@ protected:
   static const uint32_t EX_OP_PACKB = 0x33u;
   static const uint32_t EX_OP_PACKH = 0x34u;
 
-  static const uint32_t EX_OP_MUL = 0x40u;
+  static const uint32_t EX_OP_MULQ = 0x40u;
+  static const uint32_t EX_OP_MUL = 0x41u;
   static const uint32_t EX_OP_MULHI = 0x42u;
   static const uint32_t EX_OP_MULHIU = 0x43u;
 
