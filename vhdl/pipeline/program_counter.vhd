@@ -47,6 +47,9 @@ entity program_counter is
 end program_counter;
 
 architecture rtl of program_counter is
+  -- Stall logic.
+  signal s_stall : std_logic;
+
   -- Internal PC signals.
   signal s_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);  -- Next PC.
   signal s_prev_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);  -- Previous PC.
@@ -63,6 +66,10 @@ architecture rtl of program_counter is
   constant C_RESET_PC_MINUS_4 : std_logic_vector(C_WORD_SIZE-1 downto 0) :=
       std_logic_vector(unsigned(C_RESET_PC) - 4);
 begin
+  -- Stall logic: A branch misprediction correction event needs to be serviced,
+  -- even when this pipeline stage is stalled.
+  s_stall <= i_stall and not i_pccorr_adjust;
+
   -- Branch target buffer.
   BTB: entity work.branch_target_buffer
     port map (
@@ -90,7 +97,7 @@ begin
   s_pc <= i_pccorr_adjusted_pc when i_pccorr_adjust = '1' else s_predicted_pc;
 
   -- Select the source PC to use for the BTB.
-  s_btb_read_pc <= s_prev_pc when i_stall = '1' else s_pc;
+  s_btb_read_pc <= s_prev_pc when s_stall = '1' else s_pc;
 
   -- Internal registered signals.
   process(i_clk, i_rst)
@@ -98,7 +105,7 @@ begin
     if i_rst = '1' then
       s_prev_pc <= C_RESET_PC_MINUS_4;
     elsif rising_edge(i_clk) then
-      if i_stall = '0' then
+      if s_stall = '0' then
         s_prev_pc <= s_pc;
       end if;
     end if;
@@ -110,7 +117,7 @@ begin
     if i_rst = '1' then
       o_pc <= C_RESET_PC;
     elsif rising_edge(i_clk) then
-      if i_stall = '0' then
+      if s_stall = '0' then
         o_pc <= s_pc;
       end if;
     end if;
