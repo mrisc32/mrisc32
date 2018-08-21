@@ -21,10 +21,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 use work.common.all;
 
-entity mul32_tb is
-end mul32_tb;
+entity mul_tb is
+end mul_tb;
  
-architecture behavioral of mul32_tb is
+architecture behavioral of mul_tb is
   signal s_clk : std_logic;
   signal s_rst : std_logic;
   signal s_enable : std_logic;
@@ -34,7 +34,10 @@ architecture behavioral of mul32_tb is
   signal s_result : std_logic_vector(31 downto 0);
   signal s_result_ready : std_logic;
 begin
-  mul32_0: entity work.mul32
+  mul_0: entity work.mul
+    generic map (
+      WIDTH => 32
+    )
     port map (
       i_clk => s_clk,
       i_rst => s_rst,
@@ -72,7 +75,11 @@ begin
 
         -- 99 x 99 = 9801
         ('1', C_MUL_MUL,    X"00000063", X"00000063", X"00000001", '0'),
-        ('1', C_MUL_MUL,    X"00000063", X"00000063", X"00002649", '1')
+        ('0', C_MUL_MUL,    X"00000063", X"00000063", X"00002649", '1'),
+
+        -- Fixed point.
+        ('1', C_MUL_MULQ,   X"01234000", X"01234000", X"00002649", '0'),
+        ('0', C_MUL_MULQ,   X"01234000", X"01234000", X"000296B5", '1')
       );
   begin
     -- Start by resetting the signals.

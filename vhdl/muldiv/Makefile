@@ -20,14 +20,14 @@
 MULDIV_PATH = muldiv
 
 SRCS += \
-    $(MULDIV_PATH)/mul32.vhd \
-    $(MULDIV_PATH)/mul32_tb.vhd \
+    $(MULDIV_PATH)/mul.vhd \
+    $(MULDIV_PATH)/mul_tb.vhd \
     $(MULDIV_PATH)/div_stage.vhd \
     $(MULDIV_PATH)/div_pipelined.vhd \
     $(MULDIV_PATH)/div_pipelined_tb.vhd
 
 
 TESTS += \
-    mul32_tb \
+    mul_tb \
     div_pipelined_tb
 
