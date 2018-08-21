@@ -473,13 +473,18 @@ _OPCODES = {
 
 
         # Multiplication operations.
-        'MUL':    {'descrs':
+        'MULQ':   {'descrs':
                     [[0x00000040, _REG1, _REG2, _REG3],
                      [0x80000040, _VREG1, _VREG2, _REG3],
                      [0xc0000040, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
-        # Note: MUL works for both signed and unsigned so no MULU is required.
+        'MUL':    {'descrs':
+                    [[0x00000041, _REG1, _REG2, _REG3],
+                     [0x80000041, _VREG1, _VREG2, _REG3],
+                     [0xc0000041, _VREG1, _VREG2, _VREG3]],
+                   'packed_op': True
+                  },
         'MULHI':  {'descrs':
                     [[0x00000042, _REG1, _REG2, _REG3],
                      [0x80000042, _VREG1, _VREG2, _REG3],
