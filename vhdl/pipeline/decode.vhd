@@ -238,8 +238,8 @@ begin
 
   -- Determine packed mode.
   -- Note: Only instructions that support packed operation will care about this value, so it is safe
-  -- to just pick bits 7 and 8 from the instruction word without masking agains instruction type.
-  s_packed_mode <= i_instr(8 downto 7);
+  -- to just pick bits 7 and 8 from the instruction word without masking against instruction type.
+  s_packed_mode <= i_instr(8 downto 7) when s_is_type_a = '1' else C_PACKED_NONE;
 
   -- What source registers are required for this operation?
   s_reg_a_required <= not s_is_type_c;
