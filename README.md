@@ -60,7 +60,7 @@ Use the assembler to compile programs, and use the simulator to run them.
 
 # Hardware/HDL
 
-A [VHDL implementation](vhdl/) of a single issue, in-order CPU is currently under development.
+A single issue, in-order CPU is currently under development. It's code name is [MRISC32-A1](mrisc32-a1/).
 
 
 # Goals
