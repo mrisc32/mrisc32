@@ -58,6 +58,9 @@ architecture rtl of pipeline is
 
   signal s_id_vl_requested : std_logic;
 
+  signal s_id_next_sreg_a_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_id_next_sreg_b_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_id_next_sreg_c_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_id_next_vreg_a_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_id_next_vreg_a_element : std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
   signal s_id_next_vreg_b_reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
@@ -308,6 +311,9 @@ begin
       i_wb_is_vector => s_ex2_dst_reg.is_vector,
 
       -- To the RF stage (async).
+      o_next_sreg_a_reg => s_id_next_sreg_a_reg,
+      o_next_sreg_b_reg => s_id_next_sreg_b_reg,
+      o_next_sreg_c_reg => s_id_next_sreg_c_reg,
       o_next_vreg_a_reg => s_id_next_vreg_a_reg,
       o_next_vreg_a_element => s_id_next_vreg_a_element,
       o_next_vreg_b_reg => s_id_next_vreg_b_reg,
@@ -358,6 +364,9 @@ begin
       i_cancel => s_cancel_speculative_instructions,
 
       -- From the ID stage (async).
+      i_next_sreg_a_reg => s_id_next_sreg_a_reg,
+      i_next_sreg_b_reg => s_id_next_sreg_b_reg,
+      i_next_sreg_c_reg => s_id_next_sreg_c_reg,
       i_next_vreg_a_reg => s_id_next_vreg_a_reg,
       i_next_vreg_a_element => s_id_next_vreg_a_element,
       i_next_vreg_b_reg => s_id_next_vreg_b_reg,

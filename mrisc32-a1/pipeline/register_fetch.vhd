@@ -37,6 +37,9 @@ entity register_fetch is
       i_cancel : in std_logic;
 
       -- From the ID stage (async).
+      i_next_sreg_a_reg : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      i_next_sreg_b_reg : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+      i_next_sreg_c_reg : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
       i_next_vreg_a_reg : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
       i_next_vreg_a_element : in std_logic_vector(C_LOG2_VEC_REG_ELEMENTS-1 downto 0);
       i_next_vreg_b_reg : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
@@ -204,9 +207,10 @@ begin
     port map (
       i_clk => i_clk,
       i_rst => i_rst,
-      i_sel_a => i_src_reg_a.reg,
-      i_sel_b => i_src_reg_b.reg,
-      i_sel_c => i_src_reg_c.reg,
+      i_stall => i_stall,
+      i_sel_a => i_next_sreg_a_reg,
+      i_sel_b => i_next_sreg_b_reg,
+      i_sel_c => i_next_sreg_c_reg,
       o_data_a => s_sreg_a_data,
       o_data_b => s_sreg_b_data,
       o_data_c => s_sreg_c_data,

@@ -29,6 +29,7 @@ use work.common.all;
 --  * There is a single write port.
 --  * Reading the VZ register always returns zero (0).
 --  * Writing to the VZ register has no effect (no operation).
+--  * Register content is undefined after reset.
 ---------------------------------------------------------------------------------------------------
 
 entity regs_vector is

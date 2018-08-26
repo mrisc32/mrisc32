@@ -28,6 +28,7 @@ end regs_scalar_tb;
 architecture behavioral of regs_scalar_tb is
   signal s_clk : std_logic;
   signal s_rst : std_logic;
+  signal s_stall : std_logic;
   signal s_sel_a : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_sel_b : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_sel_c : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
@@ -44,13 +45,14 @@ architecture behavioral of regs_scalar_tb is
 
   function reg(x: integer) return std_logic_vector is
   begin
-    return to_vector(x, C_NUM_REGS);
+    return to_vector(x, C_LOG2_NUM_REGS);
   end function;
 begin
   regs_scalar_0: entity work.regs_scalar
     port map (
       i_clk => s_clk,
       i_rst => s_rst,
+      i_stall => s_stall,
       i_sel_a => s_sel_a,
       i_sel_b => s_sel_b,
       i_sel_c => s_sel_c,
@@ -74,6 +76,7 @@ begin
     s_sel_w <= reg(0);
     s_pc <= "00000000000000000000000000000000";
     s_clk <= '0';
+    s_stall <= '0';
 
     -- Start by resetting the register file.
     s_rst <= '1';
@@ -86,22 +89,6 @@ begin
     s_clk <= '1';
     wait for C_HALF_PERIOD;
     s_clk <= '0';
-
-    -- Check that all writable registers are zero (reset).
-    for i in 1 to C_NUM_REGS-1 loop
-      s_sel_a <= std_logic_vector(to_unsigned(i, s_sel_a'length));
-
-      s_we <= '1';
-      wait for C_HALF_PERIOD;
-      s_clk <= '1';
-      wait for C_HALF_PERIOD;
-      s_clk <= '0';
-
-      assert s_data_a = "00000000000000000000000000000000"
-        report "Bad S" & integer'image(i) & ":" & lf &
-               "  " & to_string(s_data_a) & " (expected 00000000000000000000000000000000)"
-          severity error;
-    end loop;
 
     -- Write a value to register S1.
     s_data_w <= "00000000000000000000000000010101";
@@ -157,10 +144,10 @@ begin
     -- ...read registers Z, VL and PC, and check the results.
     s_sel_a <= reg(C_Z_REG);   -- Should return zero.
     s_sel_b <= reg(C_PC_REG);  -- Should return PC.
-    s_sel_c <= reg(C_VL_REG);  -- Should return what's being written (data forwarding).
-    s_sel_w <= reg(C_VL_REG);
+    s_sel_c <= reg(0);
+    s_sel_w <= reg(0);
     s_pc <= "00000000000001010100000000000100";
-    s_data_w <= "10000000000000000000000000000001";
+    s_data_w <= "00000000000000000000000000000000";
     s_we <= '1';
     wait for C_HALF_PERIOD;
     s_clk <= '1';
@@ -174,10 +161,6 @@ begin
     assert s_data_b = s_pc
       report "Bad PC value:" & lf &
              "  PC=" & to_string(s_data_b) & " (expected " & to_string(s_pc) & ")"
-        severity error;
-    assert s_data_c = s_data_w
-      report "Bad VL value:" & lf &
-             "  VL=" & to_string(s_data_c) & " (expected " & to_string(s_data_w) & ")"
         severity error;
 
     assert false report "End of test" severity note;

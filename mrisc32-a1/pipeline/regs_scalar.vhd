@@ -27,21 +27,24 @@ use work.common.all;
 --
 --  * There are three generic read ports.
 --  * There is a single write port.
---  * Data is forwarded from the write port to the read ports within the same cycle.
 --  * Reading the Z register always returns zero (0).
 --  * Reading the PC register returns the current PC (from the input i_pc).
 --  * Writing to the Z or PC registers has no effect (no operation).
+--  * Register content is undefined after reset.
 ---------------------------------------------------------------------------------------------------
 
 entity regs_scalar is
   port (
     i_clk : in std_logic;
     i_rst : in std_logic;
+    i_stall : in std_logic;
 
-    -- We have three generic read ports.
+    -- Asynchronous read requestes (three read ports).
     i_sel_a : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
     i_sel_b : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
     i_sel_c : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+
+    -- Output read data.
     o_data_a : out std_logic_vector(C_WORD_SIZE-1 downto 0);
     o_data_b : out std_logic_vector(C_WORD_SIZE-1 downto 0);
     o_data_c : out std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -57,42 +60,93 @@ entity regs_scalar is
 end regs_scalar;
 
 architecture rtl of regs_scalar is
-  -- Internal write-enable signals (one for each dynamic register, which excludes Z and PC).
-  type T_WE_ARRAY is array (1 to C_NUM_REGS-2) of std_logic;
-  signal s_we : T_WE_ARRAY;
+  signal s_next_sel_a : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_next_sel_b : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_next_sel_c : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
 
-  -- Internal register data signals for all registers.
-  type T_DATA_ARRAY is array (0 to C_NUM_REGS-1) of std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_data : T_DATA_ARRAY;
+  signal s_sel_a : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_sel_b : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_sel_c : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+
+  signal s_data_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_data_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_data_c : std_logic_vector(C_WORD_SIZE-1 downto 0);
 begin
-  -- Instantiate the registers.
-  -- Note: We only need registers that can be written (read-only registers are handled separately).
-  RegGen: for k in s_we'range generate
-    reg_x: entity work.reg
-      generic map (
-        WIDTH => C_WORD_SIZE
-      )
-      port map (
-        i_clk => i_clk,
-        i_rst => i_rst,
-        i_we => s_we(k),
-        i_data_w => i_data_w,
-        o_data => s_data(k)
-      );
-  end generate;
+  -- Latch the read addresses.
+  process(i_clk, i_rst)
+  begin
+    if i_rst = '1' then
+      s_sel_a <= (others => '0');
+      s_sel_b <= (others => '0');
+      s_sel_c <= (others => '0');
+    elsif rising_edge(i_clk) then
+      s_sel_a <= s_next_sel_a;
+      s_sel_b <= s_next_sel_b;
+      s_sel_c <= s_next_sel_c;
+    end if;
+  end process;
 
-  -- The write port of the register file is connected to all registers. Select which register to
-  -- write to by setting at most one of the register write-enable signals to '1'.
-  WEGen: for k in s_we'range generate
-    s_we(k) <= i_we when i_sel_w = std_logic_vector(to_unsigned(k, i_sel_w'length)) else '0';
-  end generate;
+  -- Handle stall: Use inputs or latched inputs from the previous cycle.
+  s_next_sel_a <= i_sel_a when i_stall = '0' else s_sel_a;
+  s_next_sel_b <= i_sel_b when i_stall = '0' else s_sel_b;
+  s_next_sel_c <= i_sel_c when i_stall = '0' else s_sel_c;
 
-  -- We hard-wire the values of the Z and PC registers to zero and the input PC respectively.
-  s_data(C_Z_REG) <= (others => '0');
-  s_data(C_PC_REG) <= i_pc;
+  -- One RAM for the A read port.
+  ram_a: entity work.ram_dual_port
+    generic map (
+      WIDTH => C_WORD_SIZE,
+      ADDR_BITS => C_LOG2_NUM_REGS
+    )
+    port map (
+      i_clk => i_clk,
+      i_write_data => i_data_w,
+      i_write_addr => i_sel_w,
+      i_we => i_we,
+      i_read_addr => s_next_sel_a,
+      o_read_data => s_data_a
+    );
+
+  -- One RAM for the B read port.
+  ram_b: entity work.ram_dual_port
+    generic map (
+      WIDTH => C_WORD_SIZE,
+      ADDR_BITS => C_LOG2_NUM_REGS
+    )
+    port map (
+      i_clk => i_clk,
+      i_write_data => i_data_w,
+      i_write_addr => i_sel_w,
+      i_we => i_we,
+      i_read_addr => s_next_sel_b,
+      o_read_data => s_data_b
+    );
+
+  -- One RAM for the C read port.
+  ram_c: entity work.ram_dual_port
+    generic map (
+      WIDTH => C_WORD_SIZE,
+      ADDR_BITS => C_LOG2_NUM_REGS
+    )
+    port map (
+      i_clk => i_clk,
+      i_write_data => i_data_w,
+      i_write_addr => i_sel_w,
+      i_we => i_we,
+      i_read_addr => s_next_sel_c,
+      o_read_data => s_data_c
+    );
 
   -- Read ports.
-  o_data_a <= s_data(to_integer(unsigned(i_sel_a)));
-  o_data_b <= s_data(to_integer(unsigned(i_sel_b)));
-  o_data_c <= s_data(to_integer(unsigned(i_sel_c)));
+  o_data_a <=
+      (others => '0') when s_sel_a = to_vector(C_Z_REG, C_LOG2_NUM_REGS) else
+      i_pc when s_sel_a = to_vector(C_PC_REG, C_LOG2_NUM_REGS) else
+      s_data_a;
+  o_data_b <=
+      (others => '0') when s_sel_b = to_vector(C_Z_REG, C_LOG2_NUM_REGS) else
+      i_pc when s_sel_b = to_vector(C_PC_REG, C_LOG2_NUM_REGS) else
+      s_data_b;
+  o_data_c <=
+      (others => '0') when s_sel_c = to_vector(C_Z_REG, C_LOG2_NUM_REGS) else
+      i_pc when s_sel_c = to_vector(C_PC_REG, C_LOG2_NUM_REGS) else
+      s_data_c;
 end rtl;
