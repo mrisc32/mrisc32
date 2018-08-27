@@ -22,7 +22,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.common.all;
 
-entity dummy_icache is
+entity icache is
   port(
       -- (ignored)
       i_clk : in std_logic;
@@ -40,9 +40,9 @@ entity dummy_icache is
       i_mem_read_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_mem_read_data_ready : in std_logic
     );
-end dummy_icache;
+end icache;
 
-architecture behavioural of dummy_icache is
+architecture behavioural of icache is
 begin
   -- We just forward all requests to the main memory interface.
   o_mem_req <= i_cpu_req;

@@ -734,7 +734,7 @@ begin
   -- Caches and memory interface.
   --------------------------------------------------------------------------------------------------
 
-  icache_0: entity work.dummy_icache
+  icache_0: entity work.icache
     port map (
       i_clk => i_clk,
       i_rst => i_rst,
@@ -750,7 +750,7 @@ begin
       i_mem_read_data_ready => s_icache_mem_read_data_ready
     );
 
-  dcache_0: entity work.dummy_dcache
+  dcache_0: entity work.dcache
     port map (
       i_clk => i_clk,
       i_rst => i_rst,
