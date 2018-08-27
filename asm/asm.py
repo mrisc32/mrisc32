@@ -534,6 +534,56 @@ _OPCODES = {
                    'packed_op': True
                   },
 
+        # DSP style saturating and halving arithmetic.
+        'ADDS':   {'descrs':
+                    [[0x00000048, _REG1, _REG2, _REG3],
+                     [0x80000048, _VREG1, _VREG2, _REG3],
+                     [0xc0000048, _VREG1, _VREG2, _VREG3]],
+                   'packed_op': True
+                  },
+        'ADDSU':  {'descrs':
+                    [[0x00000049, _REG1, _REG2, _REG3],
+                     [0x80000049, _VREG1, _VREG2, _REG3],
+                     [0xc0000049, _VREG1, _VREG2, _VREG3]],
+                   'packed_op': True
+                  },
+        'ADDH':   {'descrs':
+                    [[0x0000004a, _REG1, _REG2, _REG3],
+                     [0x8000004a, _VREG1, _VREG2, _REG3],
+                     [0xc000004a, _VREG1, _VREG2, _VREG3]],
+                   'packed_op': True
+                  },
+        'ADDHU':  {'descrs':
+                    [[0x0000004b, _REG1, _REG2, _REG3],
+                     [0x8000004b, _VREG1, _VREG2, _REG3],
+                     [0xc000004b, _VREG1, _VREG2, _VREG3]],
+                   'packed_op': True
+                  },
+        'SUBS':   {'descrs':
+                    [[0x0000004c, _REG1, _REG2, _REG3],
+                     [0x8000004c, _VREG1, _VREG2, _REG3],
+                     [0xc000004c, _VREG1, _VREG2, _VREG3]],
+                   'packed_op': True
+                  },
+        'SUBSU':  {'descrs':
+                    [[0x0000004d, _REG1, _REG2, _REG3],
+                     [0x8000004d, _VREG1, _VREG2, _REG3],
+                     [0xc000004d, _VREG1, _VREG2, _VREG3]],
+                   'packed_op': True
+                  },
+        'SUBH':   {'descrs':
+                    [[0x0000004e, _REG1, _REG2, _REG3],
+                     [0x8000004e, _VREG1, _VREG2, _REG3],
+                     [0xc000004e, _VREG1, _VREG2, _VREG3]],
+                   'packed_op': True
+                  },
+        'SUBHU':  {'descrs':
+                    [[0x0000004f, _REG1, _REG2, _REG3],
+                     [0x8000004f, _VREG1, _VREG2, _REG3],
+                     [0xc000004f, _VREG1, _VREG2, _VREG3]],
+                   'packed_op': True
+                  },
+
         # FP arithmetic.
         'ITOF':   {'descrs':
                     [[0x00000050, _REG1, _REG2],            # REG3 = Z (no exponent offset)
