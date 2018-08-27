@@ -48,7 +48,7 @@ Assuming that the arguments (c, a, b, n) are in registers S1, S2, S3 and S4 (acc
 abs_diff:
   BZ      S4, .done    ; n == 0, nothing to do
 
-  LDHIO   S12, 0x7fffffff
+  LDI     S12, 0x7fffffff
 
   LDI     S11, 0
 .loop:
@@ -76,7 +76,7 @@ abs_diff:
 
   BZ      S4, .done    ; n == 0, nothing to do
 
-  LDHIO   S10, 0x7fffffff
+  LDI     S10, 0x7fffffff
 
   ; Prepare the vector operation
   CPUID   S11, Z, Z    ; S11 is the max number of vector elements

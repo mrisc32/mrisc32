@@ -136,7 +136,7 @@ test_2:
   ldi    s1, 10
   bl     _putc
 
-  ldhi   s10, 0xbeef0000
+  ldi    s10, 0xbeef0000
   or     s10, s10, 0x42 ; s10 = 0xbeef0042
   sub    s10, s16, s10  ; s10 = s16 - s10
 
@@ -229,8 +229,8 @@ test_5:
   stw    s16, sp, 4
 
   ; Calculate 2 * PI
-  ldpcw  s9, .pi
-  ldpcw  s10, .two
+  ldw    s9, .pi
+  ldw    s10, .two
   fmul   s16, s9, s10  ; s16 = 2 * PI
 
   mov    s1, s16
@@ -239,7 +239,7 @@ test_5:
   bl     _putc
 
   ; Was the result 2 * PI?
-  ldpcw  s9, .twopi
+  ldw    s9, .twopi
   fsub   s9, s16, s9  ; s9 = (2 * PI) - .twopi
 
   ldw    lr, sp, 0
@@ -413,11 +413,11 @@ test_9:
   stw    s18, sp, 12
   stw    s19, sp, 16
 
-  ldhi   s16, 0x3fd98000    ; s16 = 1.6992188F
-  ldhio  s17, 0x41c5bfff    ; s17 = 24.718748F
+  ldi    s16, 0x3fd98000    ; s16 = 1.6992188F
+  ldi    s17, 0x41c5bfff    ; s17 = 24.718748F
   fmul   s18, s16, s17      ; s18 = 42.002561F (0x4228029f)
 
-  ldpcw  s9, .answer
+  ldw    s9, .answer
   sne    s19, s9, s18       ; Expected value?
 
   or     s1, s18, z

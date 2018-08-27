@@ -39,7 +39,7 @@ abs_diff_vectors:
 
   bz      s4, .done     ; n == 0, nothing to do
 
-  ldhio   s10, 0x7fffffff
+  ldi     s10, 0x7fffffff
 
   ; Prepare the vector operation
   cpuid   s11, z       ; s11 is the max number of vector elements
@@ -76,7 +76,7 @@ abs_diff_vectors_scalar:
 
   bz      s4, .done    ; n == 0, nothing to do
 
-  ldhio   s12, 0x7fffffff
+  ldi     s12, 0x7fffffff
 
   ldi     s11, 0
 .loop:

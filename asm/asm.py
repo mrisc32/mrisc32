@@ -186,6 +186,7 @@ _OPCODES = {
                      [0x80000001, _VREG1, _REG2, _REG3],
                      [0xc0000001, _VREG1, _REG2, _VREG3],
                      [0x01000000, _REG1, _REG2, _IMM14],
+                     [0x0107c000, _REG1, _PCREL14],        # Alias for _REG1, PC, offset
                      [0x81000000, _VREG1, _REG2, _IMM14]],
                    'packed_op': False
                   },
@@ -194,6 +195,7 @@ _OPCODES = {
                      [0x80000002, _VREG1, _REG2, _REG3],
                      [0xc0000002, _VREG1, _REG2, _VREG3],
                      [0x02000000, _REG1, _REG2, _IMM14],
+                     [0x0207c000, _REG1, _PCREL14],        # Alias for _REG1, PC, offset
                      [0x82000000, _VREG1, _REG2, _IMM14]],
                    'packed_op': False
                   },
@@ -202,6 +204,7 @@ _OPCODES = {
                      [0x80000003, _VREG1, _REG2, _REG3],
                      [0xc0000003, _VREG1, _REG2, _VREG3],
                      [0x03000000, _REG1, _REG2, _IMM14],
+                     [0x0307c000, _REG1, _PCREL14],        # Alias for _REG1, PC, offset
                      [0x83000000, _VREG1, _REG2, _IMM14]],
                    'packed_op': False
                   },
@@ -210,6 +213,7 @@ _OPCODES = {
                      [0x80000005, _VREG1, _REG2, _REG3],
                      [0xc0000005, _VREG1, _REG2, _VREG3],
                      [0x05000000, _REG1, _REG2, _IMM14],
+                     [0x0507c000, _REG1, _PCREL14],        # Alias for _REG1, PC, offset
                      [0x85000000, _VREG1, _REG2, _IMM14]],
                    'packed_op': False
                   },
@@ -218,12 +222,14 @@ _OPCODES = {
                      [0x80000006, _VREG1, _REG2, _REG3],
                      [0xc0000006, _VREG1, _REG2, _VREG3],
                      [0x06000000, _REG1, _REG2, _IMM14],
+                     [0x0607c000, _REG1, _PCREL14],        # Alias for _REG1, PC, offset
                      [0x86000000, _VREG1, _REG2, _IMM14]],
                    'packed_op': False
                   },
         'LDLW':   {'descrs':
-                    [[0x00000007, _REG1, _REG2, _REG3],      # Load linked
-                     [0x07000000, _REG1, _REG2, _IMM14]],
+                    [[0x00000007, _REG1, _REG2, _REG3],    # Load linked
+                     [0x07000000, _REG1, _REG2, _IMM14],
+                     [0x0707c000, _REG1, _PCREL14]],       # Alias for _REG1, PC, offset
                    'packed_op': False
                   },
         'STB':    {'descrs':
@@ -231,6 +237,7 @@ _OPCODES = {
                      [0x80000009, _VREG1, _REG2, _REG3],
                      [0xc0000009, _VREG1, _REG2, _VREG3],
                      [0x09000000, _REG1, _REG2, _IMM14],
+                     [0x0907c000, _REG1, _PCREL14],        # Alias for _REG1, PC, offset
                      [0x89000000, _VREG1, _REG2, _IMM14]],
                    'packed_op': False
                   },
@@ -239,6 +246,7 @@ _OPCODES = {
                      [0x8000000a, _VREG1, _REG2, _REG3],
                      [0xc000000a, _VREG1, _REG2, _VREG3],
                      [0x0a000000, _REG1, _REG2, _IMM14],
+                     [0x0a07c000, _REG1, _PCREL14],        # Alias for _REG1, PC, offset
                      [0x8a000000, _VREG1, _REG2, _IMM14]],
                    'packed_op': False
                   },
@@ -247,12 +255,14 @@ _OPCODES = {
                      [0x8000000b, _VREG1, _REG2, _REG3],
                      [0xc000000b, _VREG1, _REG2, _VREG3],
                      [0x0b000000, _REG1, _REG2, _IMM14],
+                     [0x0b07c000, _REG1, _PCREL14],        # Alias for _REG1, PC, offset
                      [0x8b000000, _VREG1, _REG2, _IMM14]],
                    'packed_op': False
                   },
         'STCW':   {'descrs':
-                    [[0x0000000f, _REG1, _REG2, _REG3],      # Store conditional
-                     [0x0f000000, _REG1, _REG2, _IMM14]],
+                    [[0x0000000f, _REG1, _REG2, _REG3],    # Store conditional
+                     [0x0f000000, _REG1, _REG2, _IMM14],
+                     [0x0f07c000, _REG1, _PCREL14]],       # Alias for _REG1, PC, offset
                    'packed_op': False
                   },
 
@@ -674,17 +684,11 @@ _OPCODES = {
         # Load immediate.
         'LDI':    {'descrs':
                     [[0x3a000000, _REG1, _IMM19],
-                     [0xba000000, _VREG1, _IMM19]],
-                   'packed_op': False
-                  },
-        'LDHI':   {'descrs':
-                    [[0x3b000000, _REG1, _IMM19HI],
-                     [0xbb000000, _VREG1, _IMM19HI]],
-                   'packed_op': False
-                  },
-        'LDHIO':  {'descrs':
-                    [[0x3c000000, _REG1, _IMM19HIO],
-                     [0xbc000000, _VREG1, _IMM19HIO]],
+                     [0x3b000000, _REG1, _IMM19HI],     # LDHI
+                     [0x3c000000, _REG1, _IMM19HIO],    # LDHIO
+                     [0xba000000, _VREG1, _IMM19],
+                     [0xbb000000, _VREG1, _IMM19HI],    # LDHI
+                     [0xbc000000, _VREG1, _IMM19HIO]],  # LDHIO
                    'packed_op': False
                   },
 
@@ -710,40 +714,6 @@ _OPCODES = {
         # Alias for: ADD _REG1, PC, offset
         'LEA':    {'descrs':
                     [[0x1507c000, _REG1, _PCREL14]],
-                   'packed_op': False
-                  },
-
-        # Load/store pc-relative (alias for: LD?/ST? _REG1, pc, offset).
-        'LDPCB':  {'descrs':
-                    [[0x0107c000, _REG1, _PCREL14]],
-                   'packed_op': False
-                  },
-        'LDPCH':  {'descrs':
-                    [[0x0207c000, _REG1, _PCREL14]],
-                   'packed_op': False
-                  },
-        'LDPCW':  {'descrs':
-                    [[0x0307c000, _REG1, _PCREL14]],
-                   'packed_op': False
-                  },
-        'LDPCUB': {'descrs':
-                    [[0x0507c000, _REG1, _PCREL14]],
-                   'packed_op': False
-                  },
-        'LDPCUH': {'descrs':
-                    [[0x0607c000, _REG1, _PCREL14]],
-                   'packed_op': False
-                  },
-        'STPCB':  {'descrs':
-                    [[0x0907c000, _REG1, _PCREL14]],
-                   'packed_op': False
-                  },
-        'STPCH':  {'descrs':
-                    [[0x0a07c000, _REG1, _PCREL14]],
-                   'packed_op': False
-                  },
-        'STPCW':  {'descrs':
-                    [[0x0b07c000, _REG1, _PCREL14]],
                    'packed_op': False
                   },
     }
