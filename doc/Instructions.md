@@ -45,6 +45,14 @@
 |REV|   | x |   | dst, src1 | dst <= rev(src1) | Reverse bit order |
 |PACKB|   | x |   | dst, src1, src2 | dst <=<br>((src1 & 0x00ff0000) << 8) \|<br>((src1 & 0x000000ff) << 16) \|<br>((src2 & 0x00ff0000) >> 8) \|<br>(src2 & 0x000000ff) | Pack four bytes into a word |
 |PACKH|   | x |   | dst, src1, src2 | dst <=<br>((src1 & 0x0000ffff) << 16) \|<br>(src2 & 0x0000ffff) | Pack two half-words into a word |
+|ADDS|   | x | x | dst, src1, src2 | dst <= saturate(src1 + src2) | Saturating addition (signed) |
+|ADDSU|   | x | x | dst, src1, src2 | dst <= saturate(src1 + src2) | Saturating addition (unsigned) |
+|ADDH|   | x | x | dst, src1, src2 | dst <= (src1 + src2) / 2 | Halving addition (signed) |
+|ADDHU|   | x | x | dst, src1, src2 | dst <= (src1 + src2) / 2 | Halving addition (unsigned) |
+|SUBS|   | x | x | dst, src1, src2 | dst <= saturate(src1 - src2) | Saturating subtraction (signed) |
+|SUBSU|   | x | x | dst, src1, src2 | dst <= saturate(src1 - src2) | Saturating subtraction (unsigned) |
+|SUBH|   | x | x | dst, src1, src2 | dst <= (src1 - src2) / 2 | Halving subtraction (signed) |
+|SUBHU|   | x | x | dst, src1, src2 | dst <= (src1 - src2) / 2 | Halving subtraction (unsigned) |
 |LDB| x | (1) |   | dst, src1, src2 | dst <= [src1 + src2] (byte) | Load signed byte |
 |LDUB| x | (1) |   | dst, src1, src2 | dst <= [src1 + src2] (byte) | Load unsigned byte |
 |LDH| x | (1) |   | dst, src1, src2 | dst <= [src1 + src2] (halfword) | Load signed halfword |

@@ -37,6 +37,7 @@ This is an experimental, custom 32-bit RISC/Vector CPU, primarily inspired by th
 * Fixed point operations are supported:
   - Single instruction multiplication of Q31, Q15 and Q7 fixed point numbers.
   - Single instruction conversion between floating point and fixed point.
+  - Saturating and halving addition and subtraction.
 
 Note: There is currently no support for 64-bit floating point operations (that is left for a 64-bit version of the ISA).
 
