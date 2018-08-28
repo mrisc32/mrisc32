@@ -204,6 +204,202 @@ inline uint32_t lsr8x4(const uint32_t a, const uint32_t b) {
   return b3 | b2 | b1 | b0;
 }
 
+inline uint32_t saturate32(const int64_t x) {
+  return (x > 0x000000007fffffff)
+             ? 0x7fffffffu
+             : ((x < -0x0000000080000000) ? 0x80000000u : static_cast<uint32_t>(x));
+}
+
+inline uint32_t saturate16(const int32_t x) {
+  return (x > 0x00007fff)
+             ? 0x7fffu
+             : ((x < -0x00008000) ? 0x8000u : (static_cast<uint32_t>(x) & 0x0000ffffu));
+}
+
+inline uint32_t saturate8(const int16_t x) {
+  return (x > 0x007f) ? 0x7fu : ((x < -0x0080) ? 0x80u : (static_cast<uint32_t>(x) & 0x00ffu));
+}
+
+inline uint32_t saturateu32(const uint64_t x) {
+  return (x > 0x8000000000000000u)
+             ? 0x00000000u
+             : ((x > 0x00000000ffffffffu) ? 0xffffffffu : static_cast<uint32_t>(x));
+}
+
+inline uint32_t saturateu16(const uint32_t x) {
+  return (x > 0x80000000u) ? 0x0000u : ((x > 0x0000ffffu) ? 0xffffu : static_cast<uint32_t>(x));
+}
+
+inline uint32_t saturateu8(const uint16_t x) {
+  return (x > 0x8000u) ? 0x00u : ((x > 0x00ffu) ? 0xffu : static_cast<uint32_t>(x));
+}
+
+inline uint32_t saturating_op_32(const uint32_t a,
+                                 const uint32_t b,
+                                 int64_t (*op)(int64_t, int64_t)) {
+  return saturate32(op(static_cast<int64_t>(a), static_cast<int64_t>(b)));
+}
+
+inline uint32_t saturating_op_16x2(const uint32_t a,
+                                   const uint32_t b,
+                                   int32_t (*op)(int32_t, int32_t)) {
+  const auto a1 = static_cast<int32_t>(static_cast<int16_t>(a >> 16));
+  const auto a2 = static_cast<int32_t>(static_cast<int16_t>(a));
+  const auto b1 = static_cast<int32_t>(static_cast<int16_t>(b >> 16));
+  const auto b2 = static_cast<int32_t>(static_cast<int16_t>(b));
+  const auto c1 = saturate16(op(a1, b1));
+  const auto c2 = saturate16(op(a2, b2));
+  return (c1 << 16) | c2;
+}
+
+inline uint32_t saturating_op_8x4(const uint32_t a,
+                                  const uint32_t b,
+                                  int16_t (*op)(int16_t, int16_t)) {
+  const auto a1 = static_cast<int16_t>(static_cast<int8_t>(a >> 24));
+  const auto a2 = static_cast<int16_t>(static_cast<int8_t>(a >> 16));
+  const auto a3 = static_cast<int16_t>(static_cast<int8_t>(a >> 8));
+  const auto a4 = static_cast<int16_t>(static_cast<int8_t>(a));
+  const auto b1 = static_cast<int16_t>(static_cast<int8_t>(b >> 24));
+  const auto b2 = static_cast<int16_t>(static_cast<int8_t>(b >> 16));
+  const auto b3 = static_cast<int16_t>(static_cast<int8_t>(b >> 8));
+  const auto b4 = static_cast<int16_t>(static_cast<int8_t>(b));
+  const auto c1 = saturate8(op(a1, b1));
+  const auto c2 = saturate8(op(a2, b2));
+  const auto c3 = saturate8(op(a3, b3));
+  const auto c4 = saturate8(op(a4, b4));
+  return (c1 << 24) | (c2 << 16) | (c3 << 8) | c4;
+}
+
+inline uint32_t saturating_op_u32(const uint32_t a,
+                                  const uint32_t b,
+                                  uint64_t (*op)(uint64_t, uint64_t)) {
+  return saturateu32(op(static_cast<uint64_t>(a), static_cast<uint64_t>(b)));
+}
+
+inline uint32_t saturating_op_u16x2(const uint32_t a,
+                                    const uint32_t b,
+                                    uint32_t (*op)(uint32_t, uint32_t)) {
+  const auto a1 = static_cast<uint32_t>(static_cast<uint16_t>(a >> 16));
+  const auto a2 = static_cast<uint32_t>(static_cast<uint16_t>(a));
+  const auto b1 = static_cast<uint32_t>(static_cast<uint16_t>(b >> 16));
+  const auto b2 = static_cast<uint32_t>(static_cast<uint16_t>(b));
+  const auto c1 = saturateu16(op(a1, b1));
+  const auto c2 = saturateu16(op(a2, b2));
+  return (c1 << 16) | c2;
+}
+
+inline uint32_t saturating_op_u8x4(const uint32_t a,
+                                   const uint32_t b,
+                                   uint16_t (*op)(uint16_t, uint16_t)) {
+  const auto a1 = static_cast<uint16_t>(static_cast<uint8_t>(a >> 24));
+  const auto a2 = static_cast<uint16_t>(static_cast<uint8_t>(a >> 16));
+  const auto a3 = static_cast<uint16_t>(static_cast<uint8_t>(a >> 8));
+  const auto a4 = static_cast<uint16_t>(static_cast<uint8_t>(a));
+  const auto b1 = static_cast<uint16_t>(static_cast<uint8_t>(b >> 24));
+  const auto b2 = static_cast<uint16_t>(static_cast<uint8_t>(b >> 16));
+  const auto b3 = static_cast<uint16_t>(static_cast<uint8_t>(b >> 8));
+  const auto b4 = static_cast<uint16_t>(static_cast<uint8_t>(b));
+  const auto c1 = saturateu8(op(a1, b1));
+  const auto c2 = saturateu8(op(a2, b2));
+  const auto c3 = saturateu8(op(a3, b3));
+  const auto c4 = saturateu8(op(a4, b4));
+  return (c1 << 24) | (c2 << 16) | (c3 << 8) | c4;
+}
+
+inline uint32_t halve32(const int64_t x) {
+  return static_cast<uint32_t>(static_cast<int32_t>(x >> 1));
+}
+
+inline uint32_t halve16(const int32_t x) {
+  return static_cast<uint32_t>(static_cast<int16_t>(x >> 1));
+}
+
+inline uint32_t halve8(const int16_t x) {
+  return static_cast<uint32_t>(static_cast<int16_t>(x >> 1));
+}
+
+inline uint32_t halveu32(const uint64_t x) {
+  return static_cast<uint32_t>(static_cast<uint32_t>(x >> 1));
+}
+
+inline uint32_t halveu16(const uint32_t x) {
+  return static_cast<uint32_t>(static_cast<uint16_t>(x >> 1));
+}
+
+inline uint32_t halveu8(const uint16_t x) {
+  return static_cast<uint32_t>(static_cast<uint16_t>(x >> 1));
+}
+
+inline uint32_t halving_op_32(const uint32_t a, const uint32_t b, int64_t (*op)(int64_t, int64_t)) {
+  return halve32(op(static_cast<int64_t>(a), static_cast<int64_t>(b)));
+}
+
+inline uint32_t halving_op_16x2(const uint32_t a,
+                                const uint32_t b,
+                                int32_t (*op)(int32_t, int32_t)) {
+  const auto a1 = static_cast<int32_t>(static_cast<int16_t>(a >> 16));
+  const auto a2 = static_cast<int32_t>(static_cast<int16_t>(a));
+  const auto b1 = static_cast<int32_t>(static_cast<int16_t>(b >> 16));
+  const auto b2 = static_cast<int32_t>(static_cast<int16_t>(b));
+  const auto c1 = halve16(op(a1, b1));
+  const auto c2 = halve16(op(a2, b2));
+  return (c1 << 16) | c2;
+}
+
+inline uint32_t halving_op_8x4(const uint32_t a,
+                               const uint32_t b,
+                               int16_t (*op)(int16_t, int16_t)) {
+  const auto a1 = static_cast<int16_t>(static_cast<int8_t>(a >> 24));
+  const auto a2 = static_cast<int16_t>(static_cast<int8_t>(a >> 16));
+  const auto a3 = static_cast<int16_t>(static_cast<int8_t>(a >> 8));
+  const auto a4 = static_cast<int16_t>(static_cast<int8_t>(a));
+  const auto b1 = static_cast<int16_t>(static_cast<int8_t>(b >> 24));
+  const auto b2 = static_cast<int16_t>(static_cast<int8_t>(b >> 16));
+  const auto b3 = static_cast<int16_t>(static_cast<int8_t>(b >> 8));
+  const auto b4 = static_cast<int16_t>(static_cast<int8_t>(b));
+  const auto c1 = halve8(op(a1, b1));
+  const auto c2 = halve8(op(a2, b2));
+  const auto c3 = halve8(op(a3, b3));
+  const auto c4 = halve8(op(a4, b4));
+  return (c1 << 24) | (c2 << 16) | (c3 << 8) | c4;
+}
+
+inline uint32_t halving_op_u32(const uint32_t a,
+                               const uint32_t b,
+                               uint64_t (*op)(uint64_t, uint64_t)) {
+  return halveu32(op(static_cast<uint64_t>(a), static_cast<uint64_t>(b)));
+}
+
+inline uint32_t halving_op_u16x2(const uint32_t a,
+                                 const uint32_t b,
+                                 uint32_t (*op)(uint32_t, uint32_t)) {
+  const auto a1 = static_cast<uint32_t>(static_cast<uint16_t>(a >> 16));
+  const auto a2 = static_cast<uint32_t>(static_cast<uint16_t>(a));
+  const auto b1 = static_cast<uint32_t>(static_cast<uint16_t>(b >> 16));
+  const auto b2 = static_cast<uint32_t>(static_cast<uint16_t>(b));
+  const auto c1 = halveu16(op(a1, b1));
+  const auto c2 = halveu16(op(a2, b2));
+  return (c1 << 16) | c2;
+}
+
+inline uint32_t halving_op_u8x4(const uint32_t a,
+                                const uint32_t b,
+                                uint16_t (*op)(uint16_t, uint16_t)) {
+  const auto a1 = static_cast<uint16_t>(static_cast<uint8_t>(a >> 24));
+  const auto a2 = static_cast<uint16_t>(static_cast<uint8_t>(a >> 16));
+  const auto a3 = static_cast<uint16_t>(static_cast<uint8_t>(a >> 8));
+  const auto a4 = static_cast<uint16_t>(static_cast<uint8_t>(a));
+  const auto b1 = static_cast<uint16_t>(static_cast<uint8_t>(b >> 24));
+  const auto b2 = static_cast<uint16_t>(static_cast<uint8_t>(b >> 16));
+  const auto b3 = static_cast<uint16_t>(static_cast<uint8_t>(b >> 8));
+  const auto b4 = static_cast<uint16_t>(static_cast<uint8_t>(b));
+  const auto c1 = halveu8(op(a1, b1));
+  const auto c2 = halveu8(op(a2, b2));
+  const auto c3 = halveu8(op(a3, b3));
+  const auto c4 = halveu8(op(a4, b4));
+  return (c1 << 24) | (c2 << 16) | (c3 << 8) | c4;
+}
+
 inline uint32_t mulq31(const uint32_t a, const uint32_t b) {
   const int64_t p =
       static_cast<int64_t>(static_cast<int32_t>(a)) * static_cast<int64_t>(static_cast<int32_t>(b));
@@ -1183,6 +1379,147 @@ uint32_t cpu_simple_t::run() {
           break;
         case EX_OP_PACKH:
           ex_result = packh32(ex_in.src_a, ex_in.src_b);
+          break;
+
+        case EX_OP_ADDS:
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = saturating_op_8x4(
+                  ex_in.src_a, ex_in.src_b, [](int16_t x, int16_t y) -> int16_t { return x + y; });
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = saturating_op_16x2(
+                  ex_in.src_a, ex_in.src_b, [](int32_t x, int32_t y) -> int32_t { return x + y; });
+              break;
+            default:
+              ex_result = saturating_op_32(
+                  ex_in.src_a, ex_in.src_b, [](int64_t x, int64_t y) -> int64_t { return x + y; });
+          }
+          break;
+        case EX_OP_ADDSU:
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = saturating_op_u8x4(
+                  ex_in.src_a, ex_in.src_b, [](uint16_t x, uint16_t y) -> uint16_t {
+                    return x + y;
+                  });
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = saturating_op_u16x2(
+                  ex_in.src_a, ex_in.src_b, [](uint32_t x, uint32_t y) -> uint32_t {
+                    return x + y;
+                  });
+              break;
+            default:
+              ex_result = saturating_op_u32(
+                  ex_in.src_a, ex_in.src_b, [](uint64_t x, uint64_t y) -> uint64_t {
+                    return x + y;
+                  });
+          }
+          break;
+        case EX_OP_ADDH:
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = halving_op_8x4(
+                  ex_in.src_a, ex_in.src_b, [](int16_t x, int16_t y) -> int16_t { return x + y; });
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = halving_op_16x2(
+                  ex_in.src_a, ex_in.src_b, [](int32_t x, int32_t y) -> int32_t { return x + y; });
+              break;
+            default:
+              ex_result = halving_op_32(
+                  ex_in.src_a, ex_in.src_b, [](int64_t x, int64_t y) -> int64_t { return x + y; });
+          }
+          break;
+        case EX_OP_ADDHU:
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = halving_op_u8x4(ex_in.src_a,
+                                          ex_in.src_b,
+                                          [](uint16_t x, uint16_t y) -> uint16_t { return x + y; });
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = halving_op_u16x2(
+                  ex_in.src_a, ex_in.src_b, [](uint32_t x, uint32_t y) -> uint32_t {
+                    return x + y;
+                  });
+              break;
+            default:
+              ex_result = halving_op_u32(ex_in.src_a,
+                                         ex_in.src_b,
+                                         [](uint64_t x, uint64_t y) -> uint64_t { return x + y; });
+          }
+          break;
+        case EX_OP_SUBS:
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = saturating_op_8x4(
+                  ex_in.src_a, ex_in.src_b, [](int16_t x, int16_t y) -> int16_t { return x - y; });
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = saturating_op_16x2(
+                  ex_in.src_a, ex_in.src_b, [](int32_t x, int32_t y) -> int32_t { return x - y; });
+              break;
+            default:
+              ex_result = saturating_op_32(
+                  ex_in.src_a, ex_in.src_b, [](int64_t x, int64_t y) -> int64_t { return x - y; });
+          }
+          break;
+        case EX_OP_SUBSU:
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = saturating_op_u8x4(
+                  ex_in.src_a, ex_in.src_b, [](uint16_t x, uint16_t y) -> uint16_t {
+                    return x - y;
+                  });
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = saturating_op_u16x2(
+                  ex_in.src_a, ex_in.src_b, [](uint32_t x, uint32_t y) -> uint32_t {
+                    return x - y;
+                  });
+              break;
+            default:
+              ex_result = saturating_op_u32(
+                  ex_in.src_a, ex_in.src_b, [](uint64_t x, uint64_t y) -> uint64_t {
+                    return x - y;
+                  });
+          }
+          break;
+        case EX_OP_SUBH:
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = halving_op_8x4(
+                  ex_in.src_a, ex_in.src_b, [](int16_t x, int16_t y) -> int16_t { return x - y; });
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = halving_op_16x2(
+                  ex_in.src_a, ex_in.src_b, [](int32_t x, int32_t y) -> int32_t { return x - y; });
+              break;
+            default:
+              ex_result = halving_op_32(
+                  ex_in.src_a, ex_in.src_b, [](int64_t x, int64_t y) -> int64_t { return x - y; });
+          }
+          break;
+        case EX_OP_SUBHU:
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = halving_op_u8x4(ex_in.src_a,
+                                          ex_in.src_b,
+                                          [](uint16_t x, uint16_t y) -> uint16_t { return x - y; });
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = halving_op_u16x2(
+                  ex_in.src_a, ex_in.src_b, [](uint32_t x, uint32_t y) -> uint32_t {
+                    return x + y;
+                  });
+              break;
+            default:
+              ex_result = halving_op_u32(ex_in.src_a,
+                                         ex_in.src_b,
+                                         [](uint64_t x, uint64_t y) -> uint64_t { return x - y; });
+          }
           break;
 
         case EX_OP_MULQ:
