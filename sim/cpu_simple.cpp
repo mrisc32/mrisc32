@@ -1606,6 +1606,7 @@ uint32_t cpu_simple_t::run() {
             default:
               ex_result = rem32(ex_in.src_a, ex_in.src_b);
           }
+          break;
         case EX_OP_REMU:
           switch (ex_in.packed_mode) {
             case PACKED_BYTE:
@@ -1617,6 +1618,7 @@ uint32_t cpu_simple_t::run() {
             default:
               ex_result = remu32(ex_in.src_a, ex_in.src_b);
           }
+          break;
 
         case EX_OP_ITOF:
           ex_result = itof32(ex_in.src_a, ex_in.src_b);

@@ -113,10 +113,10 @@ protected:
   static const uint32_t EX_OP_MULHI = 0x42u;
   static const uint32_t EX_OP_MULHIU = 0x43u;
 
-  static const uint32_t EX_OP_DIV = 0x48u;
-  static const uint32_t EX_OP_DIVU = 0x49u;
-  static const uint32_t EX_OP_REM = 0x4au;
-  static const uint32_t EX_OP_REMU = 0x4bu;
+  static const uint32_t EX_OP_DIV = 0x44u;
+  static const uint32_t EX_OP_DIVU = 0x45u;
+  static const uint32_t EX_OP_REM = 0x46u;
+  static const uint32_t EX_OP_REMU = 0x47u;
 
   static const uint32_t EX_OP_ITOF = 0x50u;
   static const uint32_t EX_OP_FTOI = 0x51u;
