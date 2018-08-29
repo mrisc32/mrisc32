@@ -15,10 +15,19 @@ _exit:
 ; putc(int c)
 ; -----------------------------------------------------------------------------
 _putc:
+  add    sp, sp, -8
+  stw    lr, sp, 0
+  stw    s16, sp, 4
+
   ; putc routine: 0xffff0004
-  ldi    s9, 0xffff0000  ; Upper 19 bits = 0b1111111111111111000
-  or     s9, s9, 4       ; Lower 13 bits = 0b                   0000000000100
-  j      s9
+  ldi    s16, 0xffff0000  ; Upper 19 bits = 0b1111111111111111000
+  or     s16, s16, 4      ; Lower 13 bits = 0b                   0000000000100
+  jl     s16
+
+  ldw    lr, sp, 0
+  ldw    s16, sp, 4
+  add    sp, sp, 8
+  j      lr
 
 
 ; -----------------------------------------------------------------------------
@@ -55,29 +64,33 @@ _puts:
 ; printhex(unsigned x)
 ; -----------------------------------------------------------------------------
 _printhex:
-  add    sp, sp, -16
+  add    sp, sp, -24
   stw    lr, sp, 0
-  stw    s16, sp, 4
-  stw    s17, sp, 8
-  stw    s18, sp, 12
+  stw    s1, sp, 4
+  stw    s16, sp, 8
+  stw    s17, sp, 12
+  stw    s18, sp, 16
+  stw    s19, sp, 20
 
   lea    s16, .hex_chars
   mov    s17, s1
   ldi    s18, 7
 .loop:
-  lsl    s9, s18, 2   ; s9 = s18 * 4
-  lsr    s9, s17, s9  ; s9 = x >> (s18 * 4)
-  and    s9, s9, 15   ; s9 = (x >> (s18 * 4)) & 15
-  ldb    s1, s16, s9  ; s1 = hex_chars[(x >> (s18 * 4)) & 15]
+  lsl    s19, s18, 2    ; s19 = s18 * 4
+  lsr    s19, s17, s19  ; s19 = x >> (s18 * 4)
+  and    s19, s19, 15   ; s19 = (x >> (s18 * 4)) & 15
+  ldb    s1, s16, s19   ; s1 = hex_chars[(x >> (s18 * 4)) & 15]
   add    s18, s18, -1
   bl     _putc
   bge    s18, .loop
 
   ldw    lr, sp, 0
-  ldw    s16, sp, 4
-  ldw    s17, sp, 8
-  ldw    s18, sp, 12
-  add    sp, sp, 16
+  ldw    s1, sp, 4
+  ldw    s16, sp, 8
+  ldw    s17, sp, 12
+  ldw    s18, sp, 16
+  ldw    s19, sp, 20
+  add    sp, sp, 24
   j      lr
 
 .hex_chars:
