@@ -30,7 +30,7 @@ GHDLWARNINGS = \
     -Wunused \
     -Werror
 GHDLFLAGS = --std=08 --work=work --workdir=$(WORKDIR) $(GHDLWARNINGS)
-ASM = ../asm/asm.py
+ASM = ../asm/mr32asm.py
 
 .PHONY: all clean
 

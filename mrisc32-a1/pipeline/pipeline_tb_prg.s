@@ -1,7 +1,7 @@
 ; -------------------------------------------------------------------------------------------------
 ; Test program for pipeline_tb.vhd
 ;
-; This program is compiled using asm.py, and loaded into the testbench.
+; This program is compiled using mr32asm.py, and loaded into the testbench.
 ; -------------------------------------------------------------------------------------------------
 
 boot:

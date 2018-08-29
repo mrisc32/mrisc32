@@ -1,6 +1,6 @@
 # Instructions
 
-**Note:** See [../asm/asm.py](../asm/asm.py) for a detailed list of instructions, their supported operands and instruction encodings.
+**Note:** See [mr32asm.py](../asm/mr32asm.py) for a detailed list of instructions, their supported operands and instruction encodings.
 
 ## Legend
 
