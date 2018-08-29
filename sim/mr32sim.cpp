@@ -61,7 +61,7 @@ uint32_t read_bin_file(const char* file_name, ram_t& ram) {
 }
 
 void print_help(const char* prg_name) {
-  std::cout << "sim - An MRISC32 CPU simulator\n";
+  std::cout << "mr32sim - An MRISC32 CPU simulator\n";
   std::cout << "Usage: " << prg_name << " [options] bin-file\n";
   std::cout << "Options:\n";
   std::cout << "  --help  Display this information.\n";

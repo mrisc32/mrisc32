@@ -16,5 +16,5 @@ cmake --build .
 ## Running
 
 ```bash
-./sim path/to/program.bin
+./mr32sim path/to/program.bin
 ```

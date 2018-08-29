@@ -5,12 +5,12 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_executable(sim
-               sim.cpp
+add_executable(mr32sim
+               mr32sim.cpp
                cpu.cpp
                cpu.hpp
                cpu_simple.cpp
                cpu_simple.hpp
                ram.cpp
                ram.hpp)
-target_include_directories(sim PRIVATE .)
+target_include_directories(mr32sim PRIVATE .)
