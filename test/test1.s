@@ -68,8 +68,9 @@ main:
 .test10_passed:
 
 .done:
-  ; exit(s16)
-  mov    s1, s16
+  ; exit(s16 != 0 ? 1 : 0)
+  sne    s1, s16, z
+  and    s1, s1, 1
   b      _exit
 
 
@@ -126,25 +127,18 @@ test_2:
   stw    s17, sp, 8
 
   lea    s16, .data
-  ldw    s1, s16, 0     ; s1 = data[0]
+  ldw    s1, s16, 0       ; s1 = data[0]
   ldw    s17, s16, 4
-  add    s1, s1, s17    ; s1 += data[1]
+  add    s1, s1, s17      ; s1 += data[1]
   ldw    s17, s16, 8
-  add    s1, s1, s17    ; s1 += data[2]
-  mov    s16, s1        ; Save the result for the comparison later
+  add    s1, s1, s17      ; s1 += data[2]
+  mov    s16, s1          ; Save the result for the comparison later
   bl     _printhex
   ldi    s1, 10
   bl     _putc
 
-  ldi    s10, 0xbeef0000
-  or     s10, s10, 0x42 ; s10 = 0xbeef0042
-  sub    s10, s16, s10  ; s10 = s16 - s10
-
-  ; return (s16 == 0xbeef0042) ? 0 : 1
-  ldi    s1, 0
-  bz     s10, .ok
-  ldi    s1, 1
-.ok:
+  ldi    s1, 0xbeef0042
+  sne    s1, s16, s1      ; Expected value?
 
   ldw    lr, sp, 0
   ldw    s16, sp, 4

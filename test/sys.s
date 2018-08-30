@@ -20,8 +20,7 @@ _putc:
   stw    s16, sp, 4
 
   ; putc routine: 0xffff0004
-  ldi    s16, 0xffff0000  ; Upper 19 bits = 0b1111111111111111000
-  or     s16, s16, 4      ; Lower 13 bits = 0b                   0000000000100
+  ldi    s16, 0xffff0004
   jl     s16
 
   ldw    lr, sp, 0

@@ -845,6 +845,11 @@ def translate_imm(operand, operand_type, line_no):
             _IMM19HI:  0xffffe000,
             _IMM19HIO: 0xffffffff,
         }[operand_type]
+
+    # Convert value to signed or unsigned.
+    if operand_type in [_IMM14, _IMM19] and value >= 2147483648:
+        value = -((~(value - 1)) & 0xffffffff)
+
     if value < value_min or value > value_max:
         raise AsmError(line_no, 'Immediate value out of range ({}..{}): {}'.format(value_min, value_max, operand))
     if operand_type == _IMM19HI and (value & 0x00001fff) != 0:
@@ -916,6 +921,28 @@ def translate_operation(operation, mnemonic, descr, packed_type, folding, addr, 
         raise AsmError(line_no, 'Packed operation not supported for immediate operands')
 
     return instr | (packed_type << 7)
+
+
+def imm_can_be_handled_by_single_ldi(imm):
+    upper_14 = imm & 0xfffc0000
+    lower_13 = imm & 0x00001fff
+    if (upper_14 == 0x00000000) or (upper_14 == 0xfffc0000):
+        # Covered by LDI.
+        return True
+    if (lower_13 == 0x0000) or (lower_13 == 0x1fff):
+        # Handled by LDHI or LDHIO.
+        return True
+    # Not handled.
+    return False
+
+
+def make_or_for_ldi(ldi_instr, imm):
+    # Create an OR instruction that complements the given LDI instruction.
+    vm = ldi_instr & 0xc0000000
+    op = 0x10000000  # OR
+    reg = ldi_instr & 0x00f80000
+    imm_low_bits = imm & 0x00001fff
+    return vm | op | reg | (reg >> 5) | imm_low_bits
 
 
 def read_file(file_name):
@@ -1139,6 +1166,18 @@ def compile_file(file_name, out_name, verbosity_level):
                     except KeyError as e:
                         raise AsmError(line_no, 'Bad mnemonic: {}'.format(full_mnemonic))
 
+                    # Special case: Expand LDI into LDI + OR?
+                    original_operation = list(operation)
+                    need_to_expand_ldi = False
+                    if full_mnemonic == 'LDI':
+                        try:
+                            ldi_imm = parse_integer(operation[2]) & 0xffffffff
+                            if not imm_can_be_handled_by_single_ldi(ldi_imm):
+                                operation[2] = '0x' + format(ldi_imm & 0xffffe000, '08x')
+                                need_to_expand_ldi = True
+                        except:
+                            pass
+
                     if compilation_pass == 2:
                         errors = []
                         translation_successful = False
@@ -1158,9 +1197,17 @@ def compile_file(file_name, out_name, verbosity_level):
                                 msg += '\n  Candidate: {}'.format(e)
                             raise AsmError(line_no, msg)
                         if verbosity_level >= 2:
-                            print format(addr, '08x') + ': ' + format(instr, '08x') + ' <= ' + '{}'.format(operation)
+                            extra_chars = ' \\ ' if need_to_expand_ldi else ' <='
+                            print format(addr, '08x') + ': ' + format(instr, '08x') + extra_chars + ' {}'.format(original_operation)
                         code += struct.pack('<L', instr)
-                    addr += 4
+
+                        if need_to_expand_ldi:
+                            or_instr = make_or_for_ldi(instr, ldi_imm)
+                            if verbosity_level >= 2:
+                                print format(addr + 4, '08x') + ': ' + format(or_instr, '08x') + ' /  (expanded to LDHI + OR)'
+                            code += struct.pack('<L', or_instr)
+
+                    addr += 8 if need_to_expand_ldi else 4
 
         with open(out_name, 'w') as f:
             f.write(code)
