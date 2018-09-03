@@ -28,9 +28,6 @@ use ieee.numeric_std.all;
 use work.common.all;
 
 entity mul is
-  generic(
-    WIDTH : positive := 32
-  );
   port(
     -- Control signals.
     i_clk : in std_logic;
@@ -39,73 +36,40 @@ entity mul is
 
     -- Inputs (async).
     i_enable : in std_logic;
-    i_op : in T_MUL_OP;                                  -- Operation
-    i_src_a : in std_logic_vector(WIDTH-1 downto 0);     -- Source operand A
-    i_src_b : in std_logic_vector(WIDTH-1 downto 0);     -- Source operand B
+    i_op : in T_MUL_OP;                                     -- Operation
+    i_src_a : in std_logic_vector(C_WORD_SIZE-1 downto 0);  -- Source operand A
+    i_src_b : in std_logic_vector(C_WORD_SIZE-1 downto 0);  -- Source operand B
 
     -- Outputs (async).
-    o_result : out std_logic_vector(WIDTH-1 downto 0) ;  -- Result
-    o_result_ready : out std_logic                       -- 1 when a result is produced
+    o_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);  -- Result
+    o_result_ready : out std_logic                            -- 1 when a result is produced
   );
 end mul;
 
 architecture rtl of mul is
-  type T_RETURN_BITS is (Q_BITS, LO_BITS, HI_BITS);
-
-  -- Decoded operation.
-  signal s_signed_op : std_logic;
-  signal s_next_return_bits : T_RETURN_BITS;
-  signal s_return_bits : T_RETURN_BITS;
-
-  -- Widened input arguments.
-  signal s_src_a_wide : std_logic_vector(WIDTH downto 0);
-  signal s_src_b_wide : std_logic_vector(WIDTH downto 0);
-
-  signal s_next_result : signed(WIDTH*2+1 downto 0);
-  signal s_result : std_logic_vector(WIDTH*2-1 downto 0);
-
-  signal s_next_result_ready : std_logic;
+  signal s_mul32_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_mul32_result_ready : std_logic;
 begin
-  -- Decode the multiplication operation.
-  s_signed_op <= not i_op(0);
+  -- 32-bit multiply pipeline
+  MUL32_0: entity work.mul_impl
+    generic map (
+      WIDTH => 32
+    )
+    port map (
+      i_clk => i_clk,
+      i_rst => i_rst,
+      i_stall => i_stall,
+      i_enable => i_enable,
+      i_op => i_op,
+      i_src_a => i_src_a,
+      i_src_b => i_src_b,
+      o_result => s_mul32_result,
+      o_result_ready => s_mul32_result_ready
+    );
 
-  ReturnBitsMux: with i_op select
-    s_next_return_bits <=
-      Q_BITS when C_MUL_MULQ,
-      LO_BITS when C_MUL_MUL,
-      HI_BITS when others;
+  -- TODO(m): Add 16-bit and 8-bit multiplication units too.
 
-  -- Widen the input signals (extend with a sign-bit for signed operations, or zero for unsigned
-  -- operations).
-  s_src_a_wide <= (i_src_a(WIDTH-1) and s_signed_op) & i_src_a;
-  s_src_b_wide <= (i_src_b(WIDTH-1) and s_signed_op) & i_src_b;
-
-  -- Perform the multiplication.
-  s_next_result <= signed(s_src_a_wide) * signed(s_src_b_wide);
-
-  -- Registers.
-  -- NOTE: These registers ensure that we utilize hardened DSP blocks optimally in FPGAs. Also, they
-  -- give us some extra headroom for operand forwarding.
-  process(i_clk, i_rst)
-  begin
-    if i_rst = '1' then
-      s_result <= (others => '0');
-      s_return_bits <= LO_BITS;
-      o_result_ready <= '0';
-    elsif rising_edge(i_clk) then
-      if i_stall = '0' then
-        s_result <= std_logic_vector(s_next_result(WIDTH*2-1 downto 0));
-        s_return_bits <= s_next_return_bits;
-        o_result_ready <= i_enable;
-      end if;
-    end if;
-  end process;
-
-  -- Select which bits of the result to return.
-  ResultMux: with s_return_bits select
-    o_result <=
-      s_result(WIDTH*2-2 downto WIDTH-1) when Q_BITS,
-      s_result(WIDTH-1 downto 0) when LO_BITS,
-      s_result(WIDTH*2-1 downto WIDTH) when HI_BITS,
-      (others => '-') when others;
+  -- Select outputs.
+  o_result <= s_mul32_result;
+  o_result_ready <= s_mul32_result_ready;
 end rtl;

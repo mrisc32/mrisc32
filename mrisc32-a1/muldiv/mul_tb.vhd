@@ -35,9 +35,6 @@ architecture behavioral of mul_tb is
   signal s_result_ready : std_logic;
 begin
   mul_0: entity work.mul
-    generic map (
-      WIDTH => 32
-    )
     port map (
       i_clk => s_clk,
       i_rst => s_rst,

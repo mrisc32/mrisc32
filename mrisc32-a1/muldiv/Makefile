@@ -20,6 +20,7 @@
 MULDIV_PATH = muldiv
 
 SRCS += \
+    $(MULDIV_PATH)/mul_impl.vhd \
     $(MULDIV_PATH)/mul.vhd \
     $(MULDIV_PATH)/mul_tb.vhd \
     $(MULDIV_PATH)/div_stage.vhd \

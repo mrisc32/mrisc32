@@ -183,10 +183,7 @@ begin
   --------------------------------------------------------------------------------------------------
 
   -- Instantiate the multiply unit.
-  mul32_1: entity work.mul
-    generic map (
-      WIDTH => 32
-    )
+  mul_1: entity work.mul
     port map (
       i_clk => i_clk,
       i_rst => i_rst,
