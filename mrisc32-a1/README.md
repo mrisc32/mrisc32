@@ -21,8 +21,8 @@ The CPU is still under development. So far, the following components have been i
   - Operand forwarding.
 * The integer ALU.
   - All single-cycle unpacked integer operations are supported.
-* A pipelined (two-cycle) multiply unit.
-  - Supports all unpacked integer multiplication operations.
+* A pipelined (three-cycle) multiply unit.
+  - Supports all packed and unpacked integer multiplication operations.
 * An FPU.
   - Currently only a subset of all the FPU instructions is implemented.
 * The scalar register file.

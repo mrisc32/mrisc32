@@ -179,7 +179,7 @@ begin
 
 
   --------------------------------------------------------------------------------------------------
-  -- Multi cycle units: MUL (2 cycles), FPU (1/3 cycles).
+  -- Multi cycle units: MUL (3 cycles), FPU (1/3 cycles).
   --------------------------------------------------------------------------------------------------
 
   -- Instantiate the multiply unit.
@@ -343,9 +343,8 @@ begin
 
   -- Select the result from the EX2 stage.
   s_ex2_next_result <= s_mem_data when s_ex1_mem_enable = '1' else
-                       s_mul_result when s_mul_result_ready = '1' else
                        s_ex1_result;
-  s_ex2_next_result_ready <= s_ex1_mem_enable or s_mul_result_ready or s_ex1_result_ready;
+  s_ex2_next_result_ready <= s_ex1_mem_enable or s_ex1_result_ready;
 
   -- Outputs to the EX3 stage (sync).
   process(i_clk, i_rst)
@@ -377,11 +376,12 @@ begin
 
 
   --------------------------------------------------------------------------------------------------
-  -- EX3: FPU (multi cycle operations).
+  -- EX3: MUL & FPU (multi cycle operations).
   --------------------------------------------------------------------------------------------------
 
-  -- Select the EX2 result or the FPU result.
+  -- Select the EX2, MUL or FPU result.
   s_ex3_next_result <= s_fpu_f3_result when s_fpu_f3_result_ready = '1' else
+                       s_mul_result when s_mul_result_ready = '1' else
                        s_ex2_result;
 
   -- Outputs to the WB stage (sync).
