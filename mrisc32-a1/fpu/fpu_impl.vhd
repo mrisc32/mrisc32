@@ -38,7 +38,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.common.all;
 
-entity fpu_pipe is
+entity fpu_impl is
   generic(
     WIDTH : positive := 32;
     EXP_BITS : positive := 8;
@@ -64,9 +64,9 @@ entity fpu_pipe is
     o_f3_next_result : out std_logic_vector(WIDTH-1 downto 0);
     o_f3_next_result_ready : out std_logic
   );
-end fpu_pipe;
+end fpu_impl;
 
-architecture rtl of fpu_pipe is
+architecture rtl of fpu_impl is
   -- Constants.
   constant SIGNIFICAND_BITS : positive := FRACT_BITS + 1;
 

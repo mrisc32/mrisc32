@@ -77,7 +77,7 @@ begin
   s_fpu8_enable <= i_enable when i_packed_mode = C_PACKED_BYTE else '0';
 
   -- 32-bit floating point pipeline.
-  FPU32_0: entity work.fpu_pipe
+  FPU32_0: entity work.fpu_impl
     generic map (
       WIDTH => F32_WIDTH,
       EXP_BITS => F32_EXP_BITS,
@@ -103,9 +103,9 @@ begin
   FPU16Gen: for k in 1 to 2 generate
     signal s_f1_next_result_ready : std_logic_vector(1 to 2);
     signal s_f3_next_result_ready : std_logic_vector(1 to 2);
-    signal s_fpu_pipe_stall : std_logic_vector(1 to 2);
+    signal s_fpu_impl_stall : std_logic_vector(1 to 2);
   begin
-    FPU16_1: entity work.fpu_pipe
+    FPU16_1: entity work.fpu_impl
       generic map (
         WIDTH => F16_WIDTH,
         EXP_BITS => F16_EXP_BITS,
@@ -116,7 +116,7 @@ begin
         i_clk => i_clk,
         i_rst => i_rst,
         i_stall => i_stall,
-        o_stall => s_fpu_pipe_stall(k),
+        o_stall => s_fpu_impl_stall(k),
         i_enable => s_fpu16_enable,
         i_op => i_op,
         i_src_a => i_src_a((16*k)-1 downto 16*(k-1)),
@@ -131,7 +131,7 @@ begin
       FPU16ExtractSignals: if k=1 generate
         s_f1_next_fpu16_result_ready <= s_f1_next_result_ready(1);
         s_f3_next_fpu16_result_ready <= s_f3_next_result_ready(1);
-        s_fpu16_stall <= s_fpu_pipe_stall(1);
+        s_fpu16_stall <= s_fpu_impl_stall(1);
       end generate;
   end generate;
 
@@ -139,9 +139,9 @@ begin
   FPU8Gen: for k in 1 to 4 generate
     signal s_f1_next_result_ready : std_logic_vector(1 to 4);
     signal s_f3_next_result_ready : std_logic_vector(1 to 4);
-    signal s_fpu_pipe_stall : std_logic_vector(1 to 4);
+    signal s_fpu_impl_stall : std_logic_vector(1 to 4);
   begin
-    FPU8_x: entity work.fpu_pipe
+    FPU8_x: entity work.fpu_impl
       generic map (
         WIDTH => F8_WIDTH,
         EXP_BITS => F8_EXP_BITS,
@@ -152,7 +152,7 @@ begin
         i_clk => i_clk,
         i_rst => i_rst,
         i_stall => i_stall,
-        o_stall => s_fpu_pipe_stall(k),
+        o_stall => s_fpu_impl_stall(k),
         i_enable => s_fpu8_enable,
         i_op => i_op,
         i_src_a => i_src_a((8*k)-1 downto 8*(k-1)),
@@ -167,7 +167,7 @@ begin
       FPU8ExtractSignals: if k=1 generate
         s_f1_next_fpu8_result_ready <= s_f1_next_result_ready(1);
         s_f3_next_fpu8_result_ready <= s_f3_next_result_ready(1);
-        s_fpu8_stall <= s_fpu_pipe_stall(1);
+        s_fpu8_stall <= s_fpu_impl_stall(1);
       end generate;
   end generate;
 
