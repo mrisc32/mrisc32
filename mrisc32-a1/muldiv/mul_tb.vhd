@@ -29,6 +29,7 @@ architecture behavioral of mul_tb is
   signal s_rst : std_logic;
   signal s_enable : std_logic;
   signal s_op : T_MUL_OP;
+  signal s_packed_mode : T_PACKED_MODE;
   signal s_src_a : std_logic_vector(31 downto 0);
   signal s_src_b : std_logic_vector(31 downto 0);
   signal s_result : std_logic_vector(31 downto 0);
@@ -41,6 +42,7 @@ begin
       i_stall => '0',
       i_enable => s_enable,
       i_op => s_op,
+      i_packed_mode => s_packed_mode,
       i_src_a => s_src_a,
       i_src_b => s_src_b,
       o_result => s_result,
@@ -53,6 +55,7 @@ begin
       -- Inputs
       enable : std_logic;
       op : T_MUL_OP;
+      packed_mode : T_PACKED_MODE;
       src_a : std_logic_vector(31 downto 0);
       src_b : std_logic_vector(31 downto 0);
 
@@ -65,18 +68,23 @@ begin
         -- TODO(m): Add more test vectors.
 
         -- 1 x 1 = 1
-        ('1', C_MUL_MUL,    X"00000001", X"00000001", X"00000000", '0'),
-        ('1', C_MUL_MUL,    X"FFFFFFFF", X"00000001", X"00000001", '1'),
-        ('1', C_MUL_MUL,    X"00000001", X"FFFFFFFF", X"FFFFFFFF", '1'),
-        ('0', C_MUL_MUL,    X"00000001", X"00000001", X"FFFFFFFF", '1'),
+        ('1', C_MUL_MUL,    C_PACKED_NONE,      X"00000001", X"00000001", X"00000000", '0'),
+        ('1', C_MUL_MUL,    C_PACKED_NONE,      X"FFFFFFFF", X"00000001", X"00000001", '1'),
+        ('1', C_MUL_MUL,    C_PACKED_NONE,      X"00000001", X"FFFFFFFF", X"FFFFFFFF", '1'),
+        ('0', C_MUL_MUL,    C_PACKED_NONE,      X"00000001", X"00000001", X"FFFFFFFF", '1'),
 
         -- 99 x 99 = 9801
-        ('1', C_MUL_MUL,    X"00000063", X"00000063", X"00000001", '0'),
-        ('0', C_MUL_MUL,    X"00000063", X"00000063", X"00002649", '1'),
+        ('1', C_MUL_MUL,    C_PACKED_NONE,      X"00000063", X"00000063", X"00000000", '0'),
+        ('0', C_MUL_MUL,    C_PACKED_NONE,      X"00000063", X"00000063", X"00002649", '1'),
 
         -- Fixed point.
-        ('1', C_MUL_MULQ,   X"01234000", X"01234000", X"00002649", '0'),
-        ('0', C_MUL_MULQ,   X"01234000", X"01234000", X"000296B5", '1')
+        ('1', C_MUL_MULQ,   C_PACKED_NONE,      X"01234000", X"01234000", X"00000000", '0'),
+        ('0', C_MUL_MULQ,   C_PACKED_NONE,      X"01234000", X"01234000", X"000296B5", '1'),
+
+        -- Packed operations.
+        ('1', C_MUL_MUL,    C_PACKED_BYTE,      X"01020304", X"04050607", X"00000000", '0'),
+        ('1', C_MUL_MUL,    C_PACKED_HALF_WORD, X"01020304", X"00040005", X"040A121C", '1'),
+        ('0', C_MUL_MUL,    C_PACKED_HALF_WORD, X"01020304", X"00040005", X"04080F14", '1')
       );
   begin
     -- Start by resetting the signals.
@@ -84,6 +92,7 @@ begin
     s_rst <= '1';
     s_enable <= '0';
     s_op <= (others => '0');
+    s_packed_mode <= C_PACKED_NONE;
     s_src_a <= (others => '0');
     s_src_b <= (others => '0');
 
@@ -102,6 +111,7 @@ begin
       --  Set the inputs.
       s_enable <= patterns(i).enable;
       s_op <= patterns(i).op;
+      s_packed_mode <= patterns(i).packed_mode;
       s_src_a <= patterns(i).src_a;
       s_src_b <= patterns(i).src_b;
 
@@ -109,7 +119,7 @@ begin
       wait for 1 ns;
 
       --  Check the outputs.
-      assert s_result = patterns(i).result
+      assert s_result = patterns(i).result or s_result_ready = '0'
         report "Bad result value (" & integer'image(i) & "):" & lf &
             "  a=" & to_string(s_src_a) & lf &
             "  b=" & to_string(s_src_b) & lf &

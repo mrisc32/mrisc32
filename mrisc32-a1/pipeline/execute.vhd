@@ -190,6 +190,7 @@ begin
       i_stall => s_stall_ex1,
       i_enable => i_mul_en,
       i_op => i_mul_op,
+      i_packed_mode => i_packed_mode,
       i_src_a => i_src_a,
       i_src_b => i_src_b,
       o_result => s_mul_result,
