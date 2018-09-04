@@ -52,14 +52,13 @@ mandelbrot:
     SUB   S5, S5, S18     ; |z|^2 > 4.0?
 
     ADD   S9, S9, 1
-    SUB   S10, S9, S17    ; num_iterations >= max_num_iterations?
+    SUB   S10, S17, S9    ; S9 = max_num_iterations - num_iterations = color
 
     BGT   S5, .inner_loop_done
-    BLT   S10, .inner_loop
+    BGT   S10, .inner_loop  ; max_num_iterations no reached yet?
 
 .inner_loop_done:
-    SUB   S9, S17, S9     ; S9 = max_num_iterations - num_iterations = color
-    LSL   S9, S9, 1       ; x2 for more intense levels
+    LSL   S9, S10, 1      ; x2 for more intense levels
 
     ; Write color to pixel matrix.
     STB   S9, S14, 0
@@ -88,6 +87,7 @@ vector_flip:
     LDI   S15, 0x00017FFC ; S15 = dst
 
     LDI   S18, 3          ; S18 = multiplication factor
+    SHUF  S18, S18, 0     ;       ...per byte
 
     LDI   S17, 128        ; S17 = loop counter for y
 
@@ -101,7 +101,7 @@ vector_flip:
 
     LDW   V1, S14, 4
     SHUF  V1, V1, 0x53    ; Reverse byte order
-    MUL   V1, V1, S18     ; Multiply by something
+    PBMUL V1, V1, S18     ; Multiply by something
     STW   V1, S15, -4     ; Store in reverse word order (stride = -4)
 
     ADD   S14, S14, S13   ; Increment src pointer
