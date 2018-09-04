@@ -97,6 +97,59 @@ _printhex:
 
 
 ; -----------------------------------------------------------------------------
+; printdec(int x)
+; -----------------------------------------------------------------------------
+_printdec:
+  add    sp, sp, -20
+  stw    lr, sp, 0
+  stw    s1, sp, 4
+  stw    s16, sp, 8
+  stw    s17, sp, 12
+  stw    s18, sp, 16
+
+  mov    s16, s1        ; s16 = x
+
+  slt    s17, s16, z    ; x < 0?
+  ldi    s1, 0x2d
+  bns    s17, .positive
+  bl     _putc          ; Print "-"
+  sub    s16, z, s16    ; x = -x
+.positive:
+
+  add    sp, sp, -12    ; Reserve space for 12 digits on the stack
+                        ; (max for 32-bit numbers is 10 digits, and then we
+                        ; have to align SP to a 4-byte boundary, so 12 it is)
+
+  ; Generate all the decimal digits onto the stack.
+  ldi    s17, 10
+  ldi    s18, 0         ; s18 = number of digits
+.loop1:
+  remu   s1, s16, s17   ; s1 = x % 10
+  divu   s16, s16, s17  ; x = x / 10
+  add    s1, s1, 48     ; Convert a number (0-9) to an ASCII char ('0'-'9').
+  stb    s1, sp, s18
+  add    s18, s18, 1
+  bnz    s16, .loop1
+
+  ; Print all the digits in reverse order.
+.loop2:
+  add    s18, s18, -1
+  ldub   s1, sp, s18
+  bl     _putc
+  bnz    s18, .loop2
+
+  add    sp, sp, 12     ; Restore the stack pointer
+
+  ldw    lr, sp, 0
+  ldw    s1, sp, 4
+  ldw    s16, sp, 8
+  ldw    s17, sp, 12
+  ldw    s18, sp, 16
+  add    sp, sp, 20
+  j      lr
+
+
+; -----------------------------------------------------------------------------
 ; unsigned mul32(unsigned a, unsigned b)
 ; -----------------------------------------------------------------------------
 _mul32:
