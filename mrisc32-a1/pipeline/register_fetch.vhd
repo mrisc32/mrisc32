@@ -100,7 +100,7 @@ entity register_fetch is
       i_reg_c_fwd_use_value : in std_logic;
       i_reg_c_fwd_value_ready : in std_logic;
 
-      -- WB data from the EX2 stage (sync).
+      -- WB data from the EX3 stage (async).
       i_wb_data_w : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_wb_we : in std_logic;
       i_wb_sel_w : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);

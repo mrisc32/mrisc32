@@ -80,11 +80,7 @@ entity execute is
     i_dcache_read_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
     i_dcache_read_data_ready : in std_logic;
 
-    -- To the WB stage (sync).
-    o_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-    o_dst_reg : out T_DST_REG;
-
-    -- To operand forward logic (async).
+    -- Outputs from the different pipeline stages (async).
     o_ex1_next_dst_reg : out T_DST_REG;
     o_ex1_next_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
     o_ex1_next_result_ready : out std_logic;
@@ -94,13 +90,15 @@ entity execute is
     o_ex3_next_dst_reg : out T_DST_REG;
     o_ex3_next_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
 
-    -- To operand forward logic (sync).
+    -- Outputs from the different pipeline stages (sync).
     o_ex1_dst_reg : out T_DST_REG;
     o_ex1_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
     o_ex1_result_ready : out std_logic;
     o_ex2_dst_reg : out T_DST_REG;
     o_ex2_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-    o_ex2_result_ready : out std_logic
+    o_ex2_result_ready : out std_logic;
+    o_ex3_dst_reg : out T_DST_REG;
+    o_ex3_result : out std_logic_vector(C_WORD_SIZE-1 downto 0)
   );
 end execute;
 
@@ -384,18 +382,18 @@ begin
                        s_mul_result when s_mul_result_ready = '1' else
                        s_ex2_result;
 
-  -- Outputs to the WB stage (sync).
+  -- Outputs from the EX3 stage (sync).
   process(i_clk, i_rst)
   begin
     if i_rst = '1' then
-      o_result <= (others => '0');
-      o_dst_reg.is_target <= '0';
-      o_dst_reg.reg <= (others => '0');
-      o_dst_reg.element <= (others => '0');
-      o_dst_reg.is_vector <= '0';
+      o_ex3_result <= (others => '0');
+      o_ex3_dst_reg.is_target <= '0';
+      o_ex3_dst_reg.reg <= (others => '0');
+      o_ex3_dst_reg.element <= (others => '0');
+      o_ex3_dst_reg.is_vector <= '0';
     elsif rising_edge(i_clk) then
-      o_result <= s_ex3_next_result;
-      o_dst_reg <= s_ex2_dst_reg;
+      o_ex3_result <= s_ex3_next_result;
+      o_ex3_dst_reg <= s_ex2_dst_reg;
     end if;
   end process;
 
