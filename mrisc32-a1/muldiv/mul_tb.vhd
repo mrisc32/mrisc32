@@ -69,21 +69,25 @@ begin
 
         -- 1 x 1 = 1
         ('1', C_MUL_MUL,    C_PACKED_NONE,      X"00000001", X"00000001", X"00000000", '0'),
-        ('1', C_MUL_MUL,    C_PACKED_NONE,      X"FFFFFFFF", X"00000001", X"00000001", '1'),
-        ('1', C_MUL_MUL,    C_PACKED_NONE,      X"00000001", X"FFFFFFFF", X"FFFFFFFF", '1'),
+        ('1', C_MUL_MUL,    C_PACKED_NONE,      X"FFFFFFFF", X"00000001", X"00000000", '0'),
+        ('1', C_MUL_MUL,    C_PACKED_NONE,      X"00000001", X"FFFFFFFF", X"00000001", '1'),
+        ('0', C_MUL_MUL,    C_PACKED_NONE,      X"00000001", X"00000001", X"FFFFFFFF", '1'),
         ('0', C_MUL_MUL,    C_PACKED_NONE,      X"00000001", X"00000001", X"FFFFFFFF", '1'),
 
         -- 99 x 99 = 9801
         ('1', C_MUL_MUL,    C_PACKED_NONE,      X"00000063", X"00000063", X"00000000", '0'),
+        ('0', C_MUL_MUL,    C_PACKED_NONE,      X"00000063", X"00000063", X"00000000", '0'),
         ('0', C_MUL_MUL,    C_PACKED_NONE,      X"00000063", X"00000063", X"00002649", '1'),
 
         -- Fixed point.
         ('1', C_MUL_MULQ,   C_PACKED_NONE,      X"01234000", X"01234000", X"00000000", '0'),
+        ('0', C_MUL_MULQ,   C_PACKED_NONE,      X"01234000", X"01234000", X"00000000", '0'),
         ('0', C_MUL_MULQ,   C_PACKED_NONE,      X"01234000", X"01234000", X"000296B5", '1'),
 
         -- Packed operations.
         ('1', C_MUL_MUL,    C_PACKED_BYTE,      X"01020304", X"04050607", X"00000000", '0'),
-        ('1', C_MUL_MUL,    C_PACKED_HALF_WORD, X"01020304", X"00040005", X"040A121C", '1'),
+        ('1', C_MUL_MUL,    C_PACKED_HALF_WORD, X"01020304", X"00040005", X"00000000", '0'),
+        ('0', C_MUL_MUL,    C_PACKED_HALF_WORD, X"01020304", X"00040005", X"040A121C", '1'),
         ('0', C_MUL_MUL,    C_PACKED_HALF_WORD, X"01020304", X"00040005", X"04080F14", '1')
       );
   begin
