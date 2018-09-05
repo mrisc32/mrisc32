@@ -11,3 +11,10 @@ To run the assmebler, you need Python (2.x).
 ```
 
 ...will produce `path/to/program.bin`.
+
+## Syntax Highlighting
+
+### gedit / GtkSourceView
+
+Copy `support/gtksourceview/mr32asm.lang` to `~/.local/share/gtksourceview-3.0/language-specs/`.
+

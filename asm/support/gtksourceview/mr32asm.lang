@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Language definition for MRISC32 assembler language.
+ https://github.com/mbitsnbites/mrisc32
+
+ Copyright (c) 2018 Marcus Geelnard
+
+ This software is provided 'as-is', without any express or implied warranty. In no event will the
+ authors be held liable for any damages arising from the use of this software.
+
+ Permission is granted to anyone to use this software for any purpose, including commercial
+ applications, and to alter it and redistribute it freely, subject to the following restrictions:
+
+  1. The origin of this software must not be misrepresented; you must not claim that you wrote
+     the original software. If you use this software in a product, an acknowledgment in the
+     product documentation would be appreciated but is not required.
+
+  2. Altered source versions must be plainly marked as such, and must not be misrepresented as
+     being the original software.
+
+  3. This notice may not be removed or altered from any source distribution.
+-->
+<language id="mr32asm" _name="MRISC32 Assembly Language" version="2.0" _section="Source">
+
+  <metadata>
+    <property name="globs">*.s</property>
+    <property name="line-comment-start">(;|//|#)</property>
+  </metadata>
+
+  <styles>
+    <style id="comment"           name="Comment"               map-to="def:comment"/>
+    <style id="string"            name="String"                map-to="def:string"/>
+    <style id="instruction"       name="Instruction"           map-to="def:keyword"/>
+    <style id="scalarreg"         name="Scalar Register"       map-to="def:builtin"/>
+    <style id="vectorreg"         name="Vector Register"       map-to="def:type"/>
+    <style id="data"              name="Data Type"             map-to="def:preprocessor"/>
+    <style id="directive"         name="Assembler Directive"   map-to="def:preprocessor"/>
+    <style id="label"             name="Label"/>
+    <style id="constant"          name="Constant"              map-to="def:constant"/>
+  </styles>
+
+  <default-regex-options case-sensitive="false"/>
+
+  <definitions>
+    <context id="comment" style-ref="comment" end-at-line-end="true" class="comment" class-disabled="no-spell-check">
+      <start>(;|//|#)</start>
+      <include>
+        <context ref="def:in-comment"/>
+      </include>
+    </context>
+
+    <context id="string" style-ref="string" class="string" class-disabled="no-spell-check">
+      <start>"</start>
+      <end>"</end>
+    </context>
+
+    <context id="hexadecimal" style-ref="constant">
+      <match extended="true">
+        (?&lt;![\w\.])
+        0[xX][a-fA-F0-9]+
+        (?![\w\.])
+      </match>
+    </context>
+
+    <context id="decimal" style-ref="constant">
+      <match extended="true">
+        (?&lt;![\w\.])
+        -*(0|[1-9][0-9]*)
+        (?![\w\.])
+      </match>
+    </context>
+
+    <context id="scalarreg" style-ref="scalarreg">
+      <keyword>s(\d|1\d|2\d|30|31)</keyword>
+      <keyword>z</keyword>
+      <keyword>vl</keyword>
+      <keyword>fp</keyword>
+      <keyword>tp</keyword>
+      <keyword>sp</keyword>
+      <keyword>lr</keyword>
+      <keyword>pc</keyword>
+    </context>
+
+    <context id="vectorreg" style-ref="vectorreg">
+      <keyword>v(\d|1\d|2\d|30|31)</keyword>
+      <keyword>vz</keyword>
+    </context>
+
+    <!-- TODO(m): Add support for folding suffix (".f"). -->
+    <context id="instruction" style-ref="instruction">
+      <!-- Integer arithemtic / logic -->
+      <keyword>cpuid</keyword>
+      <keyword>and</keyword>
+      <keyword>bic</keyword>
+      <keyword>or</keyword>
+      <keyword>nor</keyword>
+      <keyword>xor</keyword>
+      <keyword>(pb|bh)?asr</keyword>
+      <keyword>(pb|bh)?lsl</keyword>
+      <keyword>(pb|bh)?lsr</keyword>
+      <keyword>(pb|bh)?max</keyword>
+      <keyword>(pb|bh)?maxu</keyword>
+      <keyword>(pb|bh)?min</keyword>
+      <keyword>(pb|bh)?minu</keyword>
+      <keyword>(pb|bh)?add</keyword>
+      <keyword>(pb|bh)?addh</keyword>
+      <keyword>(pb|bh)?addhu</keyword>
+      <keyword>(pb|bh)?adds</keyword>
+      <keyword>(pb|bh)?addsu</keyword>
+      <keyword>(pb|bh)?sub</keyword>
+      <keyword>(pb|bh)?subh</keyword>
+      <keyword>(pb|bh)?subhu</keyword>
+      <keyword>(pb|bh)?subs</keyword>
+      <keyword>(pb|bh)?subsu</keyword>
+
+      <keyword>(pb|bh)?seq</keyword>
+      <keyword>(pb|bh)?sne</keyword>
+      <keyword>(pb|bh)?sle</keyword>
+      <keyword>(pb|bh)?sleu</keyword>
+      <keyword>(pb|bh)?slt</keyword>
+      <keyword>(pb|bh)?sltu</keyword>
+
+      <keyword>(pb|bh)?clz</keyword>
+      <keyword>(pb|bh)?rev</keyword>
+
+      <keyword>shuf</keyword>
+      <keyword>packb</keyword>
+      <keyword>packh</keyword>
+
+      <!-- Misc. -->
+      <keyword>gete</keyword>
+      <keyword>getm</keyword>
+
+      <!-- Load / store -->
+      <keyword>ldb</keyword>
+      <keyword>ldh</keyword>
+      <keyword>ldi</keyword>
+      <keyword>ldlw</keyword>
+      <keyword>ldub</keyword>
+      <keyword>lduh</keyword>
+      <keyword>ldw</keyword>
+      <keyword>stb</keyword>
+      <keyword>stcw</keyword>
+      <keyword>sth</keyword>
+      <keyword>stw</keyword>
+
+      <!-- Branch -->
+      <keyword>j</keyword>
+      <keyword>jl</keyword>
+      <keyword>b</keyword>
+      <keyword>bl</keyword>
+      <keyword>bs</keyword>
+      <keyword>bns</keyword>
+      <keyword>bz</keyword>
+      <keyword>bnz</keyword>
+      <keyword>bgt</keyword>
+      <keyword>bge</keyword>
+      <keyword>blt</keyword>
+      <keyword>ble</keyword>
+
+      <!-- Multiply / divide -->
+      <keyword>(pb|bh)?mul</keyword>
+      <keyword>(pb|bh)?mulhi</keyword>
+      <keyword>(pb|bh)?mulhiu</keyword>
+      <keyword>(pb|bh)?mulq</keyword>
+      <keyword>(pb|bh)?div</keyword>
+      <keyword>(pb|bh)?divu</keyword>
+      <keyword>(pb|bh)?rem</keyword>
+      <keyword>(pb|bh)?remu</keyword>
+
+      <!-- Floating point -->
+      <keyword>ftoi</keyword>
+      <keyword>itof</keyword>
+      <keyword>(pb|bh)?fadd</keyword>
+      <keyword>(pb|bh)?fdiv</keyword>
+      <keyword>(pb|bh)?fmax</keyword>
+      <keyword>(pb|bh)?fmin</keyword>
+      <keyword>(pb|bh)?fmul</keyword>
+      <keyword>(pb|bh)?fseq</keyword>
+      <keyword>(pb|bh)?fsle</keyword>
+      <keyword>(pb|bh)?fslt</keyword>
+      <keyword>(pb|bh)?fsnan</keyword>
+      <keyword>(pb|bh)?fsne</keyword>
+      <keyword>(pb|bh)?fsqrt</keyword>
+      <keyword>(pb|bh)?fsub</keyword>
+
+      <!-- Aliases -->
+      <keyword>nop</keyword>
+      <keyword>lea</keyword>
+      <keyword>mov</keyword>
+    </context>
+
+    <define-regex id="label">[a-zA-Z_][a-zA-Z0-9_]*</define-regex>
+
+    <context id="label-1" style-ref="label">
+      <match>\%{label}</match>
+    </context>
+
+    <context id="label-2" style-ref="label">
+      <match>\.\%{label}</match>
+    </context>
+
+    <context id="label">
+      <include>
+        <context ref="label-1"/>
+        <context ref="label-2"/>
+      </include>
+    </context>
+
+    <context id="data-1" style-ref="data">
+      <match>\.(i|u)(8|16|32)</match>
+    </context>
+
+    <context id="data-2" style-ref="data">
+      <match>\.(ascii|asciz|space|zero)</match>
+    </context>
+
+    <context id="data">
+      <include>
+        <context ref="data-1"/>
+        <context ref="data-2"/>
+      </include>
+    </context>
+
+    <context id="directive" style-ref="directive">
+      <match>\.(align|include)</match>
+    </context>
+
+    <context id="mr32asm" class="no-spell-check">
+      <include>
+        <context ref="comment"/>
+        <context ref="string"/>
+        <context ref="hexadecimal"/>
+        <context ref="decimal"/>
+        <context ref="instruction"/>
+        <context ref="scalarreg"/>
+        <context ref="vectorreg"/>
+        <context ref="data"/>
+        <context ref="directive"/>
+        <context ref="label"/>
+      </include>
+    </context>
+
+  </definitions>
+</language>
