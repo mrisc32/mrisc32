@@ -1,3 +1,4 @@
+; -*- mode: mr32asm; tab-width: 4; indent-tabs-mode: nil; -*-
 ; -------------------------------------------------------------------------------------------------
 ; Test program for pipeline_tb.vhd
 ;
@@ -6,126 +7,126 @@
 
 boot:
     ; Start by setting up the stack.
-    LDI   SP, 0x00020000  ; We grow down from 128KB.
+    ldi     sp, 0x00020000  ; We grow down from 128KB.
 
-    BL    mandelbrot
-    BL    vector_flip
-    B     exit
+    bl      mandelbrot
+    bl      vector_flip
+    b       exit
 
 
 ; -------------------------------------------------------------------------------------------------
 
 mandelbrot:
-    LDI   S13, 64         ; S13 = coord_step  = 4.0 / 256 = 0.015625
-    LDI   S17, 100        ; S17 = max_num_iterations
-    LDI   S18, 16384      ; S18 = max_distance^2 = 4.0
+    ldi     s13, 64         ; s13 = coord_step  = 4.0 / 256 = 0.015625
+    ldi     s17, 100        ; s17 = max_num_iterations
+    ldi     s18, 16384      ; s18 = max_distance^2 = 4.0
 
-    LDI   S14, 0x00008000 ; S14 = pixel_data (NOTE: must be after the program)
+    ldi     s14, 0x00008000 ; s14 = pixel_data (NOTE: must be after the program)
 
-    LDI   S2, -8192       ; S2 = im(c) = -2.0
-    LDI   S16, 128        ; S16 = loop counter for y
+    ldi     s2, -8192       ; s2 = im(c) = -2.0
+    ldi     s16, 128        ; s16 = loop counter for y
 
 .outer_loop_y:
-    LDI   S1, -10240      ; S1 = re(c) = -2.5
-    LDI   S15, 256        ; S15 = loop counter for x
+    ldi     s1, -10240      ; s1 = re(c) = -2.5
+    ldi     s15, 256        ; s15 = loop counter for x
 
 .outer_loop_x:
-    OR    S3, Z, Z        ; S3 = re(z) = 0.0
-    OR    S4, Z, Z        ; S4 = im(z) = 0.0
+    or      s3, z, z        ; s3 = re(z) = 0.0
+    or      s4, z, z        ; s4 = im(z) = 0.0
 
-    LDI   S9, 0           ; Iteration count.
+    ldi     s9, 0           ; Iteration count.
 
 .inner_loop:
-    MUL   S5, S3, S3
-    MUL   S6, S4, S4
-    MUL   S4, S3, S4
+    mul     s5, s3, s3
+    mul     s6, s4, s4
+    mul     s4, s3, s4
 
-    ASR   S5, S5, 12      ; S5 = re(z)^2
-    ASR   S6, S6, 12      ; S6 = im(z)^2
-    ASR   S4, S4, 11      ; S4 = 2*re(z)*im(z)
+    asr     s5, s5, 12      ; s5 = re(z)^2
+    asr     s6, s6, 12      ; s6 = im(z)^2
+    asr     s4, s4, 11      ; s4 = 2*re(z)*im(z)
 
-    ADD   S4, S4, S2      ; S4 = 2*re(z)*im(z) + im(c)
-    SUB   S3, S5, S6
-    ADD   S3, S3, S1      ; S3 = re(z)^2 - im(z)^2 + re(c)
+    add     s4, s4, s2      ; s4 = 2*re(z)*im(z) + im(c)
+    sub     s3, s5, s6
+    add     s3, s3, s1      ; s3 = re(z)^2 - im(z)^2 + re(c)
 
-    ADD   S5, S5, S6      ; S5 = |z|^2
-    SUB   S5, S5, S18     ; |z|^2 > 4.0?
+    add     s5, s5, s6      ; s5 = |z|^2
+    sub     s5, s5, s18     ; |z|^2 > 4.0?
 
-    ADD   S9, S9, 1
-    SUB   S10, S17, S9    ; S9 = max_num_iterations - num_iterations = color
+    add     s9, s9, 1
+    sub     s10, s17, s9    ; s9 = max_num_iterations - num_iterations = color
 
-    BGT   S5, .inner_loop_done
-    BGT   S10, .inner_loop  ; max_num_iterations no reached yet?
+    bgt     s5, .inner_loop_done
+    bgt     s10, .inner_loop    ; max_num_iterations no reached yet?
 
 .inner_loop_done:
-    LSL   S9, S10, 1      ; x2 for more intense levels
+    lsl     s9, s10, 1      ; x2 for more intense levels
 
     ; Write color to pixel matrix.
-    STB   S9, S14, 0
-    ADD   S14, S14, 1
+    stb     s9, s14, 0
+    add     s14, s14, 1
 
     ; Increment along the x axis.
-    ADD   S15, S15, -1
-    ADD   S1, S1, S13     ; re(c) = re(c) + coord_step
-    BGT   S15, .outer_loop_x
+    add     s15, s15, -1
+    add     s1, s1, s13     ; re(c) = re(c) + coord_step
+    bgt     s15, .outer_loop_x
 
     ; Increment along the y axis.
-    ADD   S16, S16, -1
-    ADD   S2, S2, S13     ; im(c) = im(c) + coord_step
-    BGT   S16, .outer_loop_y
+    add     s16, s16, -1
+    add     s2, s2, s13     ; im(c) = im(c) + coord_step
+    bgt     s16, .outer_loop_y
 
-    J     LR
+    j       lr
 
 
 ; -------------------------------------------------------------------------------------------------
 
 vector_flip:
-    CPUID S12, Z, Z       ; S12 = max VL
-    LSL   S13, S12, 2     ; Vector size in bytes
+    cpuid   s12, z, z       ; s12 = max VL
+    lsl     s13, s12, 2     ; Vector size in bytes
 
-    LDI   S14, 0x00008000 ; S14 = src
-    LDI   S15, 0x00017FFC ; S15 = dst
+    ldi     s14, 0x00008000 ; s14 = src
+    ldi     s15, 0x00017ffc ; s15 = dst
 
-    LDI   S18, 3          ; S18 = multiplication factor
-    SHUF  S18, S18, 0     ;       ...per byte
+    ldi     s18, 3          ; s18 = multiplication factor
+    shuf    s18, s18, 0     ;       ...per byte
 
-    LDI   S17, 128        ; S17 = loop counter for y
+    ldi     s17, 128        ; s17 = loop counter for y
 
 .loop_y:
-    LDI   S16, 64         ; S16 = loop counter for x
-    ADD   S17, S17, -1    ; Decrement the y counter
+    ldi     s16, 64         ; s16 = loop counter for x
+    add     s17, s17, -1    ; Decrement the y counter
 
 .loop_x:
-    MIN   VL, S12, S16
-    SUB   S16, S16, VL    ; Decrement the x counter
+    min     vl, s12, s16
+    sub     s16, s16, vl    ; Decrement the x counter
 
-    LDW   V1, S14, 4
-    SHUF  V1, V1, 0x53    ; Reverse byte order
-    PBMUL V1, V1, S18     ; Multiply by something
-    STW   V1, S15, -4     ; Store in reverse word order (stride = -4)
+    ldw     v1, s14, 4
+    shuf    v1, v1, 0x53    ; Reverse byte order
+    pbmul   v1, v1, s18     ; Multiply by something
+    stw     v1, s15, -4     ; Store in reverse word order (stride = -4)
 
-    ADD   S14, S14, S13   ; Increment src pointer
-    SUB   S15, S15, S13   ; Decrement dst pointer
-    BGT   S16, .loop_x
+    add     s14, s14, s13   ; Increment src pointer
+    sub     s15, s15, s13   ; Decrement dst pointer
+    bgt     s16, .loop_x
 
-    BGT   S17, .loop_y
+    bgt     s17, .loop_y
 
-    J     LR
+    j       lr
 
 
 ; -------------------------------------------------------------------------------------------------
 
 exit:
     ; Flush the pipeline.
-    NOP
-    NOP
-    NOP
-    NOP
-    NOP
-    NOP
-    NOP
-    NOP
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
 
     ; End the simulation.
-    J     Z
+    j       z
 
