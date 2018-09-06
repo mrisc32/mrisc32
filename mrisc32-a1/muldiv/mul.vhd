@@ -18,8 +18,7 @@
 ----------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------
--- This is a pipelined (two-stage) multiplier for signed or unsigned integers (including fixed
--- point).
+-- This is a pipelined integer multiplier for different data sizes (8, 16 and 32 bits).
 ----------------------------------------------------------------------------------------------------
 
 library ieee;
