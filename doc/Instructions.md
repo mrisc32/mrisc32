@@ -15,6 +15,41 @@
 | V | Supports vector operation |
 | P | Supports packed operation |
 
+## Load/store instructions
+
+| Mnemonic | I | V | P | Operands | Operation | Description |
+|---|---|---|---|---|---|---|
+|LDB| x | (1) |   | dst, src1, src2 | dst <= [src1 + src2] (byte) | Load signed byte |
+|LDUB| x | (1) |   | dst, src1, src2 | dst <= [src1 + src2] (byte) | Load unsigned byte |
+|LDH| x | (1) |   | dst, src1, src2 | dst <= [src1 + src2] (halfword) | Load signed halfword |
+|LDUH| x | (1) |   | dst, src1, src2 | dst <= [src1 + src2] (halfword) | Load unsigned halfword |
+|LDW| x | (1) |   | dst, src1, src2 | dst <= [src1 + src2] (word) | Load word |
+|STB| x | (1) |   | src1, src2, src3 | [src2 + src3] <= src1 (byte) | Store byte |
+|STH| x | (1) |   | src1, src2, src3 | [src2 + src3] <= src1 (halfword) | Store halfowrd |
+|STW| x | (1) |   | src1, src2, src3 | [src2 + src3] <= src1 (word) | Store word |
+|LDI| x | x |   | dst, i19 | dst <= signextend(i19) | Alt. 1: Load immediate (low 19 bits) |
+|   | x | x |   | dst, i19 | dst <= i19 << 13 | Alt. 2: Load immediate (high 19 bits) |
+|   | x | x |   | dst, i19 | dst <= (i19 << 13) \| 0x1fff | Alt. 3: Load immediate with low ones (high 19 bits) |
+
+**(1)**: The third operand in vector loads/stores is used as a stride or offset parameter (see [addressing modes](AddressingModes.md) for more details).
+
+## Branch and jump instructions
+
+| Mnemonic | I | V | P | Operands | Operation | Description |
+|---|---|---|---|---|---|---|
+|J|   |   |   | src1 | pc <= src1 | Jump to register address |
+|JL|   |   |   | src1 | lr <= pc+4, pc <= src1 | Jump to register address and link |
+|B| x |   |   | i19 | pc <= pc+signextend(i19)*4 | Unconditionally branch |
+|BL| x |   |   | i19 | lr <= pc+4, pc <= pc+signextend(i19)*4 | Unconditionally branch and link |
+|BZ| x |   |   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 == 0 | Conditionally branch if equal to zero |
+|BNZ| x |   |   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 != 0 | Conditionally branch if not equal to zero |
+|BS| x |   |   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 == 0xffffffff | Conditionally branch if set (all bits = 1) |
+|BNS| x |   |   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 != 0xffffffff | Conditionally branch if not set (at least one bit = 0) |
+|BLT| x |   |   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 < 0 | Conditionally branch if less than zero |
+|BGE| x |   |   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 >= 0 | Conditionally branch if greater than or equal to zero |
+|BLE| x |   |   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 <= 0 | Conditionally branch if less than or equal to zero |
+|BGT| x |   |   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 > 0 | Conditionally branch if greater than zero |
+
 ## Integer ALU instructions
 
 | Mnemonic | I | V | P | Operands | Operation | Description |
@@ -45,6 +80,13 @@
 |REV|   | x |   | dst, src1 | dst <= rev(src1) | Reverse bit order |
 |PACKB|   | x |   | dst, src1, src2 | dst <=<br>((src1 & 0x00ff0000) << 8) \|<br>((src1 & 0x000000ff) << 16) \|<br>((src2 & 0x00ff0000) >> 8) \|<br>(src2 & 0x000000ff) | Pack four bytes into a word |
 |PACKH|   | x |   | dst, src1, src2 | dst <=<br>((src1 & 0x0000ffff) << 16) \|<br>(src2 & 0x0000ffff) | Pack two half-words into a word |
+
+**(2)**: SHUF uses the four indices given in src2 to rearrange bytes from src1 into dst. The indcies are given in the lowest 12 bits of src2 (three bits per index, where the upper bit in each index can be set to 1 for filling the corresponding byte in dst with either zeros or the sign bit of the source byte, depending on the value of bit 12 in src2).
+
+## Saturating and halving arithmentic instructions
+
+| Mnemonic | I | V | P | Operands | Operation | Description |
+|---|---|---|---|---|---|---|
 |ADDS|   | x | x | dst, src1, src2 | dst <= saturate(src1 + src2) | Saturating addition (signed) |
 |ADDSU|   | x | x | dst, src1, src2 | dst <= saturate(src1 + src2) | Saturating addition (unsigned) |
 |ADDH|   | x | x | dst, src1, src2 | dst <= (src1 + src2) / 2 | Halving addition (signed) |
@@ -53,38 +95,6 @@
 |SUBSU|   | x | x | dst, src1, src2 | dst <= saturate(src1 - src2) | Saturating subtraction (unsigned) |
 |SUBH|   | x | x | dst, src1, src2 | dst <= (src1 - src2) / 2 | Halving subtraction (signed) |
 |SUBHU|   | x | x | dst, src1, src2 | dst <= (src1 - src2) / 2 | Halving subtraction (unsigned) |
-|LDB| x | (1) |   | dst, src1, src2 | dst <= [src1 + src2] (byte) | Load signed byte |
-|LDUB| x | (1) |   | dst, src1, src2 | dst <= [src1 + src2] (byte) | Load unsigned byte |
-|LDH| x | (1) |   | dst, src1, src2 | dst <= [src1 + src2] (halfword) | Load signed halfword |
-|LDUH| x | (1) |   | dst, src1, src2 | dst <= [src1 + src2] (halfword) | Load unsigned halfword |
-|LDW| x | (1) |   | dst, src1, src2 | dst <= [src1 + src2] (word) | Load word |
-|STB| x | (1) |   | src1, src2, src3 | [src2 + src3] <= src1 (byte) | Store byte |
-|STH| x | (1) |   | src1, src2, src3 | [src2 + src3] <= src1 (halfword) | Store halfowrd |
-|STW| x | (1) |   | src1, src2, src3 | [src2 + src3] <= src1 (word) | Store word |
-|LDI| x | x |   | dst, i19 | dst <= signextend(i19) | Alt. 1: Load immediate (low 19 bits) |
-|   | x | x |   | dst, i19 | dst <= i19 << 13 | Alt. 2: Load immediate (high 19 bits) |
-|   | x | x |   | dst, i19 | dst <= (i19 << 13) \| 0x1fff | Alt. 3: Load immediate with low ones (high 19 bits) |
-
-**(1)**: The third operand in vector loads/stores is used as a stride or offset parameter (see [addressing modes](AddressingModes.md) for more details).
-
-**(2)**: SHUF uses the four indices given in src2 to rearrange bytes from src1 into dst. The indcies are given in the lowest 12 bits of src2 (three bits per index, where the upper bit in each index can be set to 1 for filling the corresponding byte in dst with either zeros or the sign bit of the source byte, depending on the value of bit 12 in src2).
-
-## Branch and jump instructions
-
-| Mnemonic | I | V | P | Operands | Operation | Description |
-|---|---|---|---|---|---|---|
-|J|   |   |   | src1 | pc <= src1 | Jump to register address |
-|JL|   |   |   | src1 | lr <= pc+4, pc <= src1 | Jump to register address and link |
-|B| x |   |   | i19 | pc <= pc+signextend(i19)*4 | Unconditionally branch |
-|BL| x |   |   | i19 | lr <= pc+4, pc <= pc+signextend(i19)*4 | Unconditionally branch and link |
-|BZ| x |   |   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 == 0 | Conditionally branch if equal to zero |
-|BNZ| x |   |   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 != 0 | Conditionally branch if not equal to zero |
-|BS| x |   |   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 == 0xffffffff | Conditionally branch if set (all bits = 1) |
-|BNS| x |   |   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 != 0xffffffff | Conditionally branch if not set (at least one bit = 0) |
-|BLT| x |   |   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 < 0 | Conditionally branch if less than zero |
-|BGE| x |   |   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 >= 0 | Conditionally branch if greater than or equal to zero |
-|BLE| x |   |   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 <= 0 | Conditionally branch if less than or equal to zero |
-|BGT| x |   |   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 > 0 | Conditionally branch if greater than zero |
 
 ## Multiply and divide instructions
 

@@ -151,5 +151,5 @@ This is essentially the same principle as for SIMD ISAs such as SSE or NEON.
 It puts some more requirements on the hardware logic to be able to issue multiple elements per vector operation. In particular the hardware needs:
 * A sufficient number of execution units.
 * Wider read/write ports for the vector registers and the data cache(s).
-* More advanced data cache interface (e.g. for wide gater-scatter operations).
+* More advanced data cache interface (e.g. for wide gather-scatter operations).
 
