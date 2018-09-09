@@ -44,10 +44,12 @@ entity execute is
     i_packed_mode : in T_PACKED_MODE;
     i_alu_op : in T_ALU_OP;
     i_mem_op : in T_MEM_OP;
+    i_sau_op : in T_SAU_OP;
     i_mul_op : in T_MUL_OP;
     i_div_op : in T_DIV_OP;
     i_fpu_op : in T_FPU_OP;
     i_alu_en : in std_logic;
+    i_sau_en : in std_logic;
     i_mem_en : in std_logic;
     i_mul_en : in std_logic;
     i_div_en : in std_logic;
@@ -105,6 +107,8 @@ end execute;
 architecture rtl of execute is
   signal s_alu_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_agu_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_sau_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_sau_result_ready : std_logic;
   signal s_mul_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_mul_result_ready : std_logic;
   signal s_fpu_f1_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -177,8 +181,23 @@ begin
 
 
   --------------------------------------------------------------------------------------------------
-  -- Multi cycle units: MUL (3 cycles), FPU (1/3 cycles).
+  -- Multi cycle units: SAU (2 cycles), MUL (3 cycles), FPU (1/3 cycles).
   --------------------------------------------------------------------------------------------------
+
+  -- Instantiate the saturating arithmetic unit.
+  sau_1: entity work.sau
+    port map (
+      i_clk => i_clk,
+      i_rst => i_rst,
+      i_stall => s_stall_ex1,
+      i_enable => i_sau_en,
+      i_op => i_sau_op,
+      i_packed_mode => i_packed_mode,
+      i_src_a => i_src_a,
+      i_src_b => i_src_b,
+      o_next_result => s_sau_result,
+      o_next_result_ready => s_sau_result_ready
+    );
 
   -- Instantiate the multiply unit.
   mul_1: entity work.mul
@@ -341,6 +360,7 @@ begin
 
   -- Select the result from the EX2 stage.
   s_ex2_next_result <= s_mem_data when s_ex1_mem_enable = '1' else
+                       s_sau_result when s_sau_result_ready = '1' else
                        s_ex1_result;
   s_ex2_next_result_ready <= s_ex1_mem_enable or s_ex1_result_ready;
 

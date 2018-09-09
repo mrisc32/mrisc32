@@ -67,11 +67,13 @@ entity register_fetch is
       i_packed_mode : in T_PACKED_MODE;
       i_alu_op : in T_ALU_OP;
       i_mem_op : in T_MEM_OP;
+      i_sau_op : in T_SAU_OP;
       i_mul_op : in T_MUL_OP;
       i_div_op : in T_DIV_OP;
       i_fpu_op : in T_FPU_OP;
       i_alu_en : in std_logic;
       i_mem_en : in std_logic;
+      i_sau_en : in std_logic;
       i_mul_en : in std_logic;
       i_div_en : in std_logic;
       i_fpu_en : in std_logic;
@@ -126,11 +128,13 @@ entity register_fetch is
       o_packed_mode : out T_PACKED_MODE;
       o_alu_op : out T_ALU_OP;
       o_mem_op : out T_MEM_OP;
+      o_sau_op : out T_SAU_OP;
       o_mul_op : out T_MUL_OP;
       o_div_op : out T_DIV_OP;
       o_fpu_op : out T_FPU_OP;
       o_alu_en : out std_logic;
       o_mem_en : out std_logic;
+      o_sau_en : out std_logic;
       o_mul_en : out std_logic;
       o_div_en : out std_logic;
       o_fpu_en : out std_logic
@@ -192,6 +196,7 @@ architecture rtl of register_fetch is
   signal s_mem_op_masked : T_MEM_OP;
   signal s_alu_en_masked : std_logic;
   signal s_mem_en_masked : std_logic;
+  signal s_sau_en_masked : std_logic;
   signal s_mul_en_masked : std_logic;
   signal s_div_en_masked : std_logic;
   signal s_fpu_en_masked : std_logic;
@@ -357,6 +362,7 @@ begin
   s_mem_op_masked <= i_mem_op when s_bubble = '0' else (others => '0');
   s_alu_en_masked <= i_alu_en and not s_bubble;
   s_mem_en_masked <= i_mem_en and not s_bubble;
+  s_sau_en_masked <= i_sau_en and not s_bubble;
   s_mul_en_masked <= i_mul_en and not s_bubble;
   s_div_en_masked <= i_div_en and not s_bubble;
   s_fpu_en_masked <= i_fpu_en and not s_bubble;
@@ -380,11 +386,13 @@ begin
       o_packed_mode <= (others => '0');
       o_alu_op <= (others => '0');
       o_mem_op <= (others => '0');
+      o_sau_op <= (others => '0');
       o_mul_op <= (others => '0');
       o_div_op <= (others => '0');
       o_fpu_op <= (others => '0');
       o_alu_en <= '0';
       o_mem_en <= '0';
+      o_sau_en <= '0';
       o_mul_en <= '0';
       o_div_en <= '0';
       o_fpu_en <= '0';
@@ -407,11 +415,13 @@ begin
         o_packed_mode <= i_packed_mode;
         o_alu_op <= s_alu_op_masked;
         o_mem_op <= s_mem_op_masked;
+        o_sau_op <= i_sau_op;
         o_mul_op <= i_mul_op;
         o_div_op <= i_div_op;
         o_fpu_op <= i_fpu_op;
         o_alu_en <= s_alu_en_masked;
         o_mem_en <= s_mem_en_masked;
+        o_sau_en <= s_sau_en_masked;
         o_mul_en <= s_mul_en_masked;
         o_div_en <= s_div_en_masked;
         o_fpu_en <= s_fpu_en_masked;

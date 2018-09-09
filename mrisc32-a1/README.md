@@ -23,6 +23,8 @@ The CPU is still under development. So far, the following components have been i
   - All single-cycle unpacked integer operations are supported.
 * A pipelined (three-cycle) multiply unit.
   - Supports all packed and unpacked integer multiplication operations.
+* A pipelined (two-cycle) Saturating Arithmetic Unit (SAU).
+  - Supports all packed and unpacked saturating and halving arithmetic instructions.
 * An FPU.
   - Currently only a subset of all the FPU instructions is implemented.
 * The scalar register file.
@@ -35,7 +37,7 @@ The CPU is still under development. So far, the following components have been i
 * Branch prediction and correction.
   - The branch misprediction penalty is 3 cycles.
 
-**TODO**: Caches, divide, more FPU instrucions, packed operations, etc.
+**TODO**: Caches, divide, more FPU instrucions, packed ALU operations, etc.
 
 ## Preformance
 

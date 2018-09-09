@@ -87,11 +87,13 @@ architecture rtl of pipeline is
   signal s_id_packed_mode : T_PACKED_MODE;
   signal s_id_alu_op : T_ALU_OP;
   signal s_id_mem_op : T_MEM_OP;
+  signal s_id_sau_op : T_SAU_OP;
   signal s_id_mul_op : T_MUL_OP;
   signal s_id_div_op : T_DIV_OP;
   signal s_id_fpu_op : T_FPU_OP;
   signal s_id_alu_en : std_logic;
   signal s_id_mem_en : std_logic;
+  signal s_id_sau_en : std_logic;
   signal s_id_mul_en : std_logic;
   signal s_id_div_en : std_logic;
   signal s_id_fpu_en : std_logic;
@@ -123,11 +125,13 @@ architecture rtl of pipeline is
   signal s_rf_packed_mode : T_PACKED_MODE;
   signal s_rf_alu_op : T_ALU_OP;
   signal s_rf_mem_op : T_MEM_OP;
+  signal s_rf_sau_op : T_SAU_OP;
   signal s_rf_mul_op : T_MUL_OP;
   signal s_rf_div_op : T_DIV_OP;
   signal s_rf_fpu_op : T_FPU_OP;
   signal s_rf_alu_en : std_logic;
   signal s_rf_mem_en : std_logic;
+  signal s_rf_sau_en : std_logic;
   signal s_rf_mul_en : std_logic;
   signal s_rf_div_en : std_logic;
   signal s_rf_fpu_en : std_logic;
@@ -342,11 +346,13 @@ begin
       o_packed_mode => s_id_packed_mode,
       o_alu_op => s_id_alu_op,
       o_mem_op => s_id_mem_op,
+      o_sau_op => s_id_sau_op,
       o_mul_op => s_id_mul_op,
       o_div_op => s_id_div_op,
       o_fpu_op => s_id_fpu_op,
       o_alu_en => s_id_alu_en,
       o_mem_en => s_id_mem_en,
+      o_sau_en => s_id_sau_en,
       o_mul_en => s_id_mul_en,
       o_div_en => s_id_div_en,
       o_fpu_en => s_id_fpu_en
@@ -395,11 +401,13 @@ begin
       i_packed_mode => s_id_packed_mode,
       i_alu_op => s_id_alu_op,
       i_mem_op => s_id_mem_op,
+      i_sau_op => s_id_sau_op,
       i_mul_op => s_id_mul_op,
       i_div_op => s_id_div_op,
       i_fpu_op => s_id_fpu_op,
       i_alu_en => s_id_alu_en,
       i_mem_en => s_id_mem_en,
+      i_sau_en => s_id_sau_en,
       i_mul_en => s_id_mul_en,
       i_div_en => s_id_div_en,
       i_fpu_en => s_id_fpu_en,
@@ -454,11 +462,13 @@ begin
       o_packed_mode => s_rf_packed_mode,
       o_alu_op => s_rf_alu_op,
       o_mem_op => s_rf_mem_op,
+      o_sau_op => s_rf_sau_op,
       o_mul_op => s_rf_mul_op,
       o_div_op => s_rf_div_op,
       o_fpu_op => s_rf_fpu_op,
       o_alu_en => s_rf_alu_en,
       o_mem_en => s_rf_mem_en,
+      o_sau_en => s_rf_sau_en,
       o_mul_en => s_rf_mul_en,
       o_div_en => s_rf_div_en,
       o_fpu_en => s_rf_fpu_en
@@ -486,11 +496,13 @@ begin
       i_packed_mode => s_rf_packed_mode,
       i_alu_op => s_rf_alu_op,
       i_mem_op => s_rf_mem_op,
+      i_sau_op => s_rf_sau_op,
       i_mul_op => s_rf_mul_op,
       i_div_op => s_rf_div_op,
       i_fpu_op => s_rf_fpu_op,
       i_alu_en => s_rf_alu_en,
       i_mem_en => s_rf_mem_en,
+      i_sau_en => s_rf_sau_en,
       i_mul_en => s_rf_mul_en,
       i_div_en => s_rf_div_en,
       i_fpu_en => s_rf_fpu_en,
