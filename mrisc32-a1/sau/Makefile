@@ -17,47 +17,13 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ####################################################################################################
 
-WORKDIR = out
+SAU_PATH = sau
 
-GHDL = ghdl
-GHDLWARNINGS = \
-    -Wbinding \
-    -Wreserved \
-    -Wlibrary \
-    -Wvital-generic \
-    -Wbody \
-    -Wspecs \
-    -Wunused \
-    -Werror
-GHDLFLAGS = --std=08 --work=work --workdir=$(WORKDIR) $(GHDLWARNINGS)
-ASM = ../asm/mr32asm.py
+SRCS += \
+    $(SAU_PATH)/sau_impl.vhd \
+    $(SAU_PATH)/sau.vhd \
+    $(SAU_PATH)/sau_tb.vhd
 
-.PHONY: all clean
-
-default: all
-
-SRCS =
-TESTS =
-
-include common/Makefile
-include agu/Makefile
-include alu/Makefile
-include fpu/Makefile
-include muldiv/Makefile
-include sau/Makefile
-include cache/Makefile
-include pipeline/Makefile
-include benchmark/Makefile
-
-all: $(TESTS)
-
-$(TESTS): $(WORKDIR)/work-obj93.cf $(SRCS)
-	$(GHDL) -m $(GHDLFLAGS) $@
-
-clean:
-	$(GHDL) --clean
-	rm -rf *.o *_tb *.vcd *.ghw $(WORKDIR)/*.o $(WORKDIR)/*.cf $(WORKDIR)/*_tb $(WORKDIR)/*.vcd $(WORKDIR)/*.ghw
-
-$(WORKDIR)/work-obj93.cf: $(SRCS)
-	$(GHDL) -i $(GHDLFLAGS) $(SRCS)
+TESTS += \
+    sau_tb
 

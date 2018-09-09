@@ -144,6 +144,19 @@ package common is
   constant C_ALU_PACKB : T_ALU_OP := "110011";
   constant C_ALU_PACKH : T_ALU_OP := "110100";
 
+  -- SAU operations.
+  constant C_SAU_OP_SIZE : integer := 3;
+  subtype T_SAU_OP is std_logic_vector(C_SAU_OP_SIZE-1 downto 0);
+
+  constant C_SAU_ADDS  : T_SAU_OP := "000";
+  constant C_SAU_ADDSU : T_SAU_OP := "001";
+  constant C_SAU_ADDH  : T_SAU_OP := "010";
+  constant C_SAU_ADDHU : T_SAU_OP := "011";
+  constant C_SAU_SUBS  : T_SAU_OP := "100";
+  constant C_SAU_SUBSU : T_SAU_OP := "101";
+  constant C_SAU_SUBH  : T_SAU_OP := "110";
+  constant C_SAU_SUBHU : T_SAU_OP := "111";
+
   -- MUL operations.
   constant C_MUL_OP_SIZE : integer := 2;
   subtype T_MUL_OP is std_logic_vector(C_MUL_OP_SIZE-1 downto 0);
