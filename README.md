@@ -7,12 +7,12 @@ This is an experimental, custom 32-bit RISC/Vector CPU, primarily inspired by th
 
 * Unified scalar/vector/integer/floating point ISA.
 * There are two register files:
-  - There are 32 scalar registers, S0-S31, each 32 bits wide.
+  - **S0-S31**: 32 scalar registers, each 32 bits wide.
     - Four registers have special meaning in hardware: Z, PC, LR, VL.
     - 28 registers are general purpose (of which three are reserved: SP, TP, FP).
     - All registers can be used for all types (integers, addresses and floating point).
     - PC is user-visible (for arithmetic and addressing) but read-only (to simplify branching logic).
-  - There are 32 vector registers, V0-V31, each with *at least* 16 32-bit elements.
+  - **V0-V31**: 32 vector registers, each with *at least* 16 32-bit elements.
     - All registers can be used for all types (integers, addresses and floating point).
 * All instructions are 32 bits wide and easy to decode.
   - There are only three basic types of instruction encodings.
@@ -24,7 +24,7 @@ This is an experimental, custom 32-bit RISC/Vector CPU, primarily inspired by th
   - Compare instructions generate bit masks.
   - Branch instructions can act on bit masks (all bits set, all bits zero, etc) as well as signed quantities (less than zero, etc).
   - Bit masks are suitable for masking in conditional operations (for scalars, vectors and packed data types).
-* Unlike early RISC architectures, there are *no* delay slots.
+* Unlike early RISC architectures, there are no delay slots.
 * Many traditional floating point operations can be handled in whole or partially by integer operations, reducing the number of necessary instructions:
   - Load/store.
   - Branch.
@@ -39,7 +39,7 @@ This is an experimental, custom 32-bit RISC/Vector CPU, primarily inspired by th
   - Single instruction conversion between floating point and fixed point.
   - Saturating and halving addition and subtraction.
 
-Note: There is currently no support for 64-bit floating point operations (that is left for a 64-bit version of the ISA).
+Note: There is no support for 64-bit floating point operations (that is left for a 64-bit version of the ISA).
 
 
 # Documentation
