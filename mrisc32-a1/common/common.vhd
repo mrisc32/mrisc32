@@ -35,7 +35,7 @@ package common is
   constant C_CPU_HAS_VEC : boolean := true;
   constant C_CPU_HAS_PO : boolean := false;
   constant C_CPU_HAS_MUL : boolean := true;
-  constant C_CPU_HAS_DIV : boolean := false;
+  constant C_CPU_HAS_DIV : boolean := true;
   constant C_CPU_HAS_FP : boolean := false;
 
   -- The start PC after reset.

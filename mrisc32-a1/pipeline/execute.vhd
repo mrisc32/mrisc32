@@ -111,13 +111,17 @@ architecture rtl of execute is
   signal s_sau_result_ready : std_logic;
   signal s_mul_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_mul_result_ready : std_logic;
+  signal s_div_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_div_result_ready : std_logic;
+  signal s_div_stall : std_logic;
   signal s_fpu_f1_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_fpu_f1_result_ready : std_logic;
   signal s_fpu_f3_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_fpu_f3_result_ready : std_logic;
 
-  -- Should the EX1 stage be stalled by the EX2 stage?
-  signal s_stall_ex1 : std_logic;
+  -- Should the EX pipeline be stalled?
+  signal s_stall_ex : std_logic;
+  signal s_stall_div : std_logic;
 
   signal s_ex1_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ex1_next_result_ready : std_logic;
@@ -149,7 +153,6 @@ architecture rtl of execute is
   signal s_mem_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
   -- Signals from the EX2 to the EX3 stage (async).
-  signal s_ex2_stall : std_logic;
   signal s_ex2_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ex2_next_result_ready : std_logic;
   signal s_ex2_next_dst_reg : T_DST_REG;
@@ -181,7 +184,7 @@ begin
 
 
   --------------------------------------------------------------------------------------------------
-  -- Multi cycle units: SAU (2 cycles), MUL (3 cycles), FPU (1/3 cycles).
+  -- Multi cycle units: SAU (2 cycles), MUL (3 cycles), DIV (3+ cycles), FPU (1/3 cycles).
   --------------------------------------------------------------------------------------------------
 
   -- Instantiate the saturating arithmetic unit.
@@ -189,7 +192,7 @@ begin
     port map (
       i_clk => i_clk,
       i_rst => i_rst,
-      i_stall => s_stall_ex1,
+      i_stall => s_stall_ex,
       i_enable => i_sau_en,
       i_op => i_sau_op,
       i_packed_mode => i_packed_mode,
@@ -204,7 +207,7 @@ begin
     port map (
       i_clk => i_clk,
       i_rst => i_rst,
-      i_stall => s_stall_ex1,
+      i_stall => s_stall_ex,
       i_enable => i_mul_en,
       i_op => i_mul_op,
       i_packed_mode => i_packed_mode,
@@ -214,12 +217,28 @@ begin
       o_result_ready => s_mul_result_ready
     );
 
+  -- Instantiate the multiply unit.
+  div_1: entity work.div
+    port map (
+      i_clk => i_clk,
+      i_rst => i_rst,
+      i_stall => s_stall_div,
+      o_stall => s_div_stall,
+      i_enable => i_div_en,
+      i_op => i_div_op,
+      i_packed_mode => i_packed_mode,
+      i_src_a => i_src_a,
+      i_src_b => i_src_b,
+      o_next_result => s_div_result,
+      o_next_result_ready => s_div_result_ready
+    );
+
   -- Instantiate the floating point unit.
   fpu_1: entity work.fpu
     port map (
       i_clk => i_clk,
       i_rst => i_rst,
-      i_stall => s_stall_ex1,
+      i_stall => s_stall_ex,
       i_enable => i_fpu_en,
       i_op => i_fpu_op,
       i_packed_mode => i_packed_mode,
@@ -250,7 +269,7 @@ begin
     port map (
       i_clk => i_clk,
       i_rst => i_rst,
-      i_stall => s_stall_ex1,
+      i_stall => s_stall_ex,
 
       i_is_first_vector_op_cycle => i_is_first_vector_op_cycle,
       i_address_offset_is_stride => i_address_offset_is_stride,
@@ -303,7 +322,7 @@ begin
       s_ex1_dst_reg.element <= (others => '0');
       s_ex1_dst_reg.is_vector <= '0';
     elsif rising_edge(i_clk) then
-      if s_stall_ex1 = '0' then
+      if s_stall_ex = '0' then
         s_ex1_mem_op <= i_mem_op;
         s_ex1_mem_addr <= s_agu_result;
         s_ex1_mem_enable <= i_mem_en;
@@ -375,9 +394,11 @@ begin
       s_ex2_dst_reg.element <= (others => '0');
       s_ex2_dst_reg.is_vector <= '0';
     elsif rising_edge(i_clk) then
-      s_ex2_result <= s_ex2_next_result;
-      s_ex2_result_ready <= s_ex2_next_result_ready;
-      s_ex2_dst_reg <= s_ex1_dst_reg;
+      if s_stall_ex = '0' then
+        s_ex2_result <= s_ex2_next_result;
+        s_ex2_result_ready <= s_ex2_next_result_ready;
+        s_ex2_dst_reg <= s_ex1_dst_reg;
+      end if;
     end if;
   end process;
 
@@ -399,6 +420,7 @@ begin
 
   -- Select the EX2, MUL or FPU result.
   s_ex3_next_result <= s_fpu_f3_result when s_fpu_f3_result_ready = '1' else
+                       s_div_result when s_div_result_ready = '1' else
                        s_mul_result when s_mul_result_ready = '1' else
                        s_ex2_result;
 
@@ -412,8 +434,10 @@ begin
       o_ex3_dst_reg.element <= (others => '0');
       o_ex3_dst_reg.is_vector <= '0';
     elsif rising_edge(i_clk) then
-      o_ex3_result <= s_ex3_next_result;
-      o_ex3_dst_reg <= s_ex2_dst_reg;
+      if s_stall_ex = '0' then
+        o_ex3_result <= s_ex3_next_result;
+        o_ex3_dst_reg <= s_ex2_dst_reg;
+      end if;
     end if;
   end process;
 
@@ -422,8 +446,8 @@ begin
   o_ex3_next_result <= s_ex3_next_result;
 
   -- Stall logic (async).
-  s_ex2_stall <= s_mem_stall;
-  s_stall_ex1 <= s_ex2_stall;
-  o_stall <= s_stall_ex1;
+  s_stall_ex <= s_mem_stall or s_div_stall;
+  s_stall_div <= s_stall_ex and not s_div_stall;
+  o_stall <= s_stall_ex;
 end rtl;
 
