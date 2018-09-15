@@ -114,6 +114,7 @@ architecture rtl of execute is
   signal s_div_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_div_result_ready : std_logic;
   signal s_div_stall : std_logic;
+  signal s_fpu_stall : std_logic;
   signal s_fpu_f1_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_fpu_f1_result_ready : std_logic;
   signal s_fpu_f3_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -122,9 +123,7 @@ architecture rtl of execute is
   -- Should the EX pipeline be stalled?
   signal s_stall_ex : std_logic;
   signal s_stall_div : std_logic;
-
-  signal s_ex1_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_ex1_next_result_ready : std_logic;
+  signal s_stall_fpu : std_logic;
 
   -- Signals related to memory I/O.
   signal s_mem_byte_mask_unshifted : std_logic_vector(C_WORD_SIZE/8-1 downto 0);
@@ -136,6 +135,10 @@ architecture rtl of execute is
   signal s_pc_plus_4 : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_actual_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_mispredicted_pc : std_logic;
+
+  -- Signals from the EX1 to the EX2 stage (async).
+  signal s_ex1_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_ex1_next_result_ready : std_logic;
 
   -- Signals from the EX1 to the EX2 stage (sync).
   signal s_ex1_mem_op : T_MEM_OP;
@@ -151,6 +154,7 @@ architecture rtl of execute is
   -- Signals from the memory interface (async).
   signal s_mem_stall : std_logic;
   signal s_mem_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_mem_data_ready : std_logic;
 
   -- Signals from the EX2 to the EX3 stage (async).
   signal s_ex2_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -238,7 +242,8 @@ begin
     port map (
       i_clk => i_clk,
       i_rst => i_rst,
-      i_stall => s_stall_ex,
+      i_stall => s_stall_fpu,
+      o_stall => s_fpu_stall,
       i_enable => i_fpu_en,
       i_op => i_fpu_op,
       i_packed_mode => i_packed_mode,
@@ -374,14 +379,15 @@ begin
       i_dcache_read_data_ready => i_dcache_read_data_ready,
 
       -- Memory read data (async).
-      o_data => s_mem_data
+      o_data => s_mem_data,
+      o_data_ready => s_mem_data_ready
     );
 
   -- Select the result from the EX2 stage.
-  s_ex2_next_result <= s_mem_data when s_ex1_mem_enable = '1' else
+  s_ex2_next_result <= s_mem_data when s_mem_data_ready = '1' else
                        s_sau_result when s_sau_result_ready = '1' else
                        s_ex1_result;
-  s_ex2_next_result_ready <= s_ex1_mem_enable or s_ex1_result_ready;
+  s_ex2_next_result_ready <= s_mem_data_ready or s_ex1_result_ready;
 
   -- Outputs to the EX3 stage (sync).
   process(i_clk, i_rst)
@@ -446,8 +452,9 @@ begin
   o_ex3_next_result <= s_ex3_next_result;
 
   -- Stall logic (async).
-  s_stall_ex <= s_mem_stall or s_div_stall;
-  s_stall_div <= s_stall_ex and not s_div_stall;
+  s_stall_ex <= s_mem_stall or s_div_stall or s_fpu_stall;
+  s_stall_div <= s_mem_stall or s_fpu_stall;
+  s_stall_fpu <= s_mem_stall or s_div_stall;
   o_stall <= s_stall_ex;
 end rtl;
 
