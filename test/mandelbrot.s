@@ -1,8 +1,6 @@
 ; -*- mode: mr32asm; tab-width: 4; indent-tabs-mode: nil; -*-
 ; -------------------------------------------------------------------------------------------------
-; Test program for pipeline_tb.vhd
-;
-; This program is compiled using mr32asm.py, and loaded into the testbench.
+; This is a Mandelbrot fractal generator with a twist.
 ; -------------------------------------------------------------------------------------------------
 
 boot:

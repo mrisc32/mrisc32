@@ -52,8 +52,8 @@ TESTS += \
     program_counter_tb \
     pipeline_tb
 
-$(PIPELINE_PATH)/pipeline_tb_prg.bin: $(PIPELINE_PATH)/pipeline_tb_prg.s $(ASM)
-	$(ASM) $<
+$(PIPELINE_PATH)/pipeline_tb_prg.bin: ../test/super_test.s $(ASM)
+	$(ASM) $< -o $@
 
 pipeline_tb: $(PIPELINE_PATH)/pipeline_tb_prg.bin
 
