@@ -14,6 +14,12 @@ To run the assmebler, you need Python (2.x).
 
 ...will produce `path/to/program.bin`.
 
+Or you can specify an output file with `-o`:
+
+```bash
+./mr32asm.py path/to/program.s -o other/path/to/output.bin
+```
+
 ## Syntax Highlighting
 
 ### gedit / GtkSourceView

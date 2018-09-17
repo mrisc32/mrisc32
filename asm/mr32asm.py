@@ -1224,6 +1224,8 @@ def main():
     parser = argparse.ArgumentParser(description='A simple assembler for MRISC32')
     parser.add_argument('files', metavar='FILE', nargs='+',
                         help='the file(s) to process')
+    parser.add_argument('-o', '--output',
+                        help='output file')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='be verbose')
     parser.add_argument('-vv', '--extra-verbose', action='store_true',
@@ -1237,9 +1239,21 @@ def main():
     elif args.extra_verbose:
         verbosity_level = 2
 
-    for file_name in args.files:
-        out_name = base = os.path.splitext(file_name)[0] + '.bin'
-        if not compile_file(file_name, out_name, verbosity_level):
+    # Collect source -> output jobs.
+    jobs = []
+    if args.output is not None:
+        if len(args.files) != 1:
+            print 'Error: Only a single source file must be specified together with -o.'
+            sys.exit(1)
+        jobs.append({'src': args.files[0], 'out': args.output})
+    else:
+        for file_name in args.files:
+            out_name = os.path.splitext(file_name)[0] + '.bin'
+            jobs.append({'src': file_name, 'out': out_name})
+
+    # Perform compilations.
+    for job in jobs:
+        if not compile_file(job['src'], job['out'], verbosity_level):
             sys.exit(1)
 
 
