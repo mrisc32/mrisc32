@@ -143,15 +143,15 @@ For instance the integer instruction `ADD` has the following operation modes:
 
 ## Packed operation
 
-Many instructions support packed operation. Prefix the instruction with `PB` for packed byte operation (each word is treated as four bytes, and four operations are performed in parallel), or `PH` for packed half-word operation (each word is treated as two half-words, and two operations are performed in parallel).
+Many instructions support packed operation. Suffix the instruction with `.B` for packed byte operation (each word is treated as four bytes, and four operations are performed in parallel), or `.H` for packed half-word operation (each word is treated as two half-words, and two operations are performed in parallel).
 
 For instance, the following packed operations are possible for the `MAX` instruction:
-* `PBMAX Sd,Sa,Sb` - 4x packed byte MAX, scalar <= max(scalar, scalar)
-* `PBMAX Vd,Va,Sb` - 4x packed byte MAX, vector <= max(vector, scalar)
-* `PBMAX Vd,Va,Vb` - 4x packed byte MAX, vector <= max(vector, vector)
-* `PHMAX Sd,Sa,Sb` - 2x packed half-word MAX, scalar <= max(scalar, scalar)
-* `PHMAX Vd,Va,Sb` - 2x packed half-word MAX, vector <= max(vector, scalar)
-* `PHMAX Vd,Va,Vb` - 2x packed half-word MAX, vector <= max(vector, vector)
+* `MAX.B Sd,Sa,Sb` - 4x packed byte MAX, scalar <= max(scalar, scalar)
+* `MAX.B Vd,Va,Sb` - 4x packed byte MAX, vector <= max(vector, scalar)
+* `MAX.B Vd,Va,Vb` - 4x packed byte MAX, vector <= max(vector, vector)
+* `MAX.H Sd,Sa,Sb` - 2x packed half-word MAX, scalar <= max(scalar, scalar)
+* `MAX.H Vd,Va,Sb` - 2x packed half-word MAX, vector <= max(vector, scalar)
+* `MAX.H Vd,Va,Vb` - 2x packed half-word MAX, vector <= max(vector, vector)
 
 Note that immediate operands are not supported for packed operations.
 

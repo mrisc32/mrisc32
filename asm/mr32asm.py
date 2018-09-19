@@ -966,6 +966,27 @@ def preprocess(lines, file_dir):
     return result
 
 
+def decompose_mnemonic(full_mnemonic):
+    mnemonic = full_mnemonic
+
+    # Is this a folding operation?
+    folding = False
+    if mnemonic[-2:] == ':F':
+        folding = True
+        mnemonic = mnemonic[:-2]
+
+    # Is this a packed operation?
+    packed_type = _PACKED_NONE
+    if mnemonic[-2:] == '.B':
+        packed_type = _PACKED_BYTE
+        mnemonic = mnemonic[:-2]
+    elif mnemonic[-2:] == '.H':
+        packed_type = _PACKED_HALF_WORD
+        mnemonic = mnemonic[:-2]
+
+    return mnemonic, packed_type, folding
+
+
 def compile_file(file_name, out_name, verbosity_level):
     if verbosity_level >= 1:
         print "Compiling %s..." % (file_name)
@@ -1142,24 +1163,8 @@ def compile_file(file_name, out_name, verbosity_level):
                     # This is a machine code instruction.
                     operation = extract_parts(line)
                     full_mnemonic = operation[0].upper()
-
-                    # Is this a packed operation?
-                    packed_type = _PACKED_NONE
-                    if full_mnemonic[:2] == 'PB':
-                        packed_type = _PACKED_BYTE
-                        mnemonic = full_mnemonic[2:]
-                    elif full_mnemonic[:2] == 'PH':
-                        packed_type = _PACKED_HALF_WORD
-                        mnemonic = full_mnemonic[2:]
-                    else:
-                        mnemonic = full_mnemonic
+                    mnemonic, packed_type, folding = decompose_mnemonic(full_mnemonic)
                     packed_op = (packed_type != _PACKED_NONE)
-
-                    # Is this a folding operation?
-                    folding = False
-                    if full_mnemonic[-2:] == '.F':
-                        folding = True
-                        mnemonic = full_mnemonic[:-2]
 
                     try:
                         op_descr = _OPCODES[mnemonic]

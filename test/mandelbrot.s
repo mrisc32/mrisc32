@@ -161,7 +161,7 @@ vector_flip:
 
     ldw     v1, s14, 4
     shuf    v1, v1, 0x53    ; Reverse byte order
-    pbmul   v1, v1, s18     ; Multiply by something
+    mul.b   v1, v1, s18     ; Multiply by something
     stw     v1, s15, -4     ; Store in reverse word order (stride = -4)
 
     add     s14, s14, s13   ; Increment src pointer

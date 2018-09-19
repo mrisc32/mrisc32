@@ -103,7 +103,7 @@ test_1:
     lea     s9, .data
     ldw     s1, s9, 0
     ldw     s2, s9, 4
-    pbadd   s1, s1, s2
+    add.b   s1, s1, s2
     bl      _printhex
     ldi     s1, 10
     bl      _putc
@@ -463,7 +463,7 @@ test_10:
     add     s10, sp, 0
     stw     v3, s10, 4
     ldi     vl, 2
-    add.f   v4, v1, v2      ; v4 = [8, 8]
+    add:f   v4, v1, v2      ; v4 = [8, 8]
     add     s10, sp, 16
     stw     v4, s10, 4
 
