@@ -161,6 +161,8 @@ architecture rtl of register_fetch is
   signal s_branch_is_taken : std_logic;
   signal s_pc_plus_4 : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
+  signal s_stall_register_files : std_logic;
+
   -- Scalar register signals.
   signal s_scalar_we : std_logic;
   signal s_sreg_a_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -206,13 +208,16 @@ begin
   -- Register files.
   --------------------------------------------------------------------------------------------------
 
+  -- We need to stall the register files (latch the inputs) if the RF stage is being stalled.
+  s_stall_register_files <= i_stall or s_missing_fwd_operand;
+
   -- Instantiate the scalar register file.
   s_scalar_we <= i_wb_we and not i_wb_is_vector;
   regs_scalar_1: entity work.regs_scalar
     port map (
       i_clk => i_clk,
       i_rst => i_rst,
-      i_stall => i_stall,
+      i_stall => s_stall_register_files,
       i_sel_a => i_next_sreg_a_reg,
       i_sel_b => i_next_sreg_b_reg,
       i_sel_c => i_next_sreg_c_reg,
@@ -231,7 +236,7 @@ begin
     port map (
       i_clk => i_clk,
       i_rst => i_rst,
-      i_stall => i_stall,
+      i_stall => s_stall_register_files,
       i_sel_a => i_next_vreg_a_reg,
       i_element_a => i_next_vreg_a_element,
       i_sel_b => i_next_vreg_b_reg,

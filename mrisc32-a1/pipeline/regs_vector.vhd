@@ -59,6 +59,8 @@ end regs_vector;
 architecture rtl of regs_vector is
   constant C_ADDR_BITS : integer := C_LOG2_NUM_REGS + C_LOG2_VEC_REG_ELEMENTS;
 
+  signal s_we : std_logic;
+
   signal s_read_a_addr : std_logic_vector(C_ADDR_BITS-1 downto 0);
   signal s_read_b_addr : std_logic_vector(C_ADDR_BITS-1 downto 0);
   signal s_write_addr : std_logic_vector(C_ADDR_BITS-1 downto 0);
@@ -78,11 +80,15 @@ architecture rtl of regs_vector is
   signal s_data_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_data_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
 begin
-  -- Handle stall: Use inputs or latched inputs from the previous cycle.
+  -- Handle stall.
+  -- 1) Use inputs or latched inputs from the previous cycle.
   s_read_sel_a <= i_sel_a when i_stall = '0' else s_sel_a;
   s_read_element_a <= i_element_a when i_stall = '0' else s_element_a;
   s_read_sel_b <= i_sel_b when i_stall = '0' else s_sel_b;
   s_read_element_b <= i_element_b when i_stall = '0' else s_element_b;
+
+  -- 2) Disable the write ports during stall.
+  s_we <= i_we and not i_stall;
 
   -- Generate read & write addresses for the next clock cycle.
   s_read_a_addr <= s_read_sel_a & s_read_element_a;
@@ -99,7 +105,7 @@ begin
       i_clk => i_clk,
       i_write_data => i_data_w,
       i_write_addr => s_write_addr,
-      i_we => i_we,
+      i_we => s_we,
       i_read_addr => s_read_a_addr,
       o_read_data => s_data_a
     );
@@ -114,7 +120,7 @@ begin
       i_clk => i_clk,
       i_write_data => i_data_w,
       i_write_addr => s_write_addr,
-      i_we => i_we,
+      i_we => s_we,
       i_read_addr => s_read_b_addr,
       o_read_data => s_data_b
     );
@@ -128,10 +134,12 @@ begin
       s_sel_b <= (others => '0');
       s_element_b <= (others => '0');
     elsif rising_edge(i_clk) then
-      s_sel_a <= s_read_sel_a;
-      s_element_a <= s_read_element_a;
-      s_sel_b <= s_read_sel_b;
-      s_element_b <= s_read_element_b;
+      if i_stall = '0' then
+        s_sel_a <= s_read_sel_a;
+        s_element_a <= s_read_element_a;
+        s_sel_b <= s_read_sel_b;
+        s_element_b <= s_read_element_b;
+      end if;
     end if;
   end process;
 

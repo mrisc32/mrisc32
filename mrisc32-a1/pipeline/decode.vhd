@@ -266,13 +266,13 @@ begin
 
   -- Instantiate a register that holds the VL data (a mirror of the corresponding register in the
   -- scalar register file).
-  s_vl_we <= i_wb_we when i_wb_sel_w = to_vector(C_VL_REG, C_LOG2_NUM_REGS) and i_wb_is_vector = '0' else '0';
+  s_vl_we <= (i_wb_we and not (i_stall or i_wb_is_vector)) when i_wb_sel_w = to_vector(C_VL_REG, C_LOG2_NUM_REGS) else '0';
   process(i_clk, i_rst)
   begin
     if i_rst = '1' then
       s_vl_data <= (others => '0');
     elsif rising_edge(i_clk) then
-      if (s_vl_we = '1') then
+      if s_vl_we = '1' then
         s_vl_data <= i_wb_data_w;
       end if;
     end if;

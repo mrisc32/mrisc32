@@ -48,7 +48,8 @@ entity memory is
       i_dcache_read_data_ready : in std_logic;
 
       -- Outputs (async).
-      o_data : out std_logic_vector(C_WORD_SIZE-1 downto 0)
+      o_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_data_ready : out std_logic
     );
 end memory;
 
@@ -115,6 +116,7 @@ begin
 
   -- Output data signal (async).
   o_data <= s_adjusted_read_data;
+  o_data_ready <= i_mem_enable and (not i_mem_we) and i_dcache_read_data_ready;
 
   -- Do we need to stall the pipeline (async)?
   o_stall <= i_mem_enable and (not i_mem_we) and (not i_dcache_read_data_ready);
