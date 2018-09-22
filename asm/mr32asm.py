@@ -344,32 +344,32 @@ _OPCODES = {
                     [[0x00000019, _REG1, _REG3, _REG2],
                      [0x80000019, _VREG1, _REG3, _VREG2],
                      [0xc0000019, _VREG1, _VREG3, _VREG2],
-                     [0x19000000, _REG1, _IMM14, _REG2],
-                     [0x99000000, _VREG1, _IMM14, _VREG2]],
+                     [0x19000000, _REG1, _REG2, _IMM14],
+                     [0x99000000, _VREG1, _VREG2, _IMM14]],
                    'packed_op': True
                   },
         'SLTU':   {'descrs':
                     [[0x0000001a, _REG1, _REG3, _REG2],
                      [0x8000001a, _VREG1, _REG3, _VREG2],
                      [0xc000001a, _VREG1, _VREG3, _VREG2],
-                     [0x1a000000, _REG1, _IMM14, _REG2],
-                     [0x9a000000, _VREG1, _IMM14, _VREG2]],
+                     [0x1a000000, _REG1, _REG2, _IMM14],
+                     [0x9a000000, _VREG1, _VREG2, _IMM14]],
                    'packed_op': True
                   },
         'SLE':    {'descrs':
                     [[0x0000001b, _REG1, _REG3, _REG2],
                      [0x8000001b, _VREG1, _REG3, _VREG2],
                      [0xc000001b, _VREG1, _VREG3, _VREG2],
-                     [0x1b000000, _REG1, _IMM14, _REG2],
-                     [0x9b000000, _VREG1, _IMM14, _VREG2]],
+                     [0x1b000000, _REG1, _REG2, _IMM14],
+                     [0x9b000000, _VREG1, _VREG2, _IMM14]],
                    'packed_op': True
                   },
         'SLEU':   {'descrs':
                     [[0x0000001c, _REG1, _REG3, _REG2],
                      [0x8000001c, _VREG1, _REG3, _VREG2],
                      [0xc000001c, _VREG1, _VREG3, _VREG2],
-                     [0x1c000000, _REG1, _IMM14, _REG2],
-                     [0x9c000000, _VREG1, _IMM14, _VREG2]],
+                     [0x1c000000, _REG1, _REG2, _IMM14],
+                     [0x9c000000, _VREG1, _VREG2, _IMM14]],
                    'packed_op': True
                   },
         'MIN':    {'descrs':
