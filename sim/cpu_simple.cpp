@@ -805,22 +805,26 @@ uint32_t cpu_simple_t::cpuid32(const uint32_t a, const uint32_t b) {
         return NUM_VECTOR_ELEMENTS;
       } else if (b == 0x00000001u) {
         return LOG2_NUM_VECTOR_ELEMENTS;
+      } else {
+        return 0u;
       }
 
     case 0x00000001u:
-      // CPU features:
-      //   VEC (vector processor) = 1 << 0
-      //   PO (packed operations) = 1 << 1
-      //   MUL (integer mul)      = 1 << 2
-      //   DIV (integer mul)      = 1 << 3
-      //   FP (floating point)    = 1 << 4
-      return 0x0000001fu;
+      if (b == 0x00000000u) {
+        // CPU features:
+        //   VEC (vector processor) = 1 << 0
+        //   PO (packed operations) = 1 << 1
+        //   MUL (integer mul)      = 1 << 2
+        //   DIV (integer mul)      = 1 << 3
+        //   FP (floating point)    = 1 << 4
+        return 0x0000001fu;
+      } else {
+        return 0u;
+      }
 
     default:
       return 0u;
   }
-
-  return 0u;
 }
 
 uint32_t cpu_simple_t::run() {
