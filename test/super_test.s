@@ -79,9 +79,9 @@ start:
     ldi     s25, RESULTS_PTR    ; s20 points to the start of the result output area
 
     ; Prepare some registers with values to use in the tests.
-    ldi     s1, 1234
-    ldi     s2, 5678
-    ldi     s3, 1
+    ldi     s24, 1234
+    ldi     s23, 5678
+    ldi     s22, 1
     nop                         ; Use nop:s to skip operand forwarding logic.
     nop
     nop
@@ -95,39 +95,39 @@ start:
 
 test_alu:
     ; CPUID
-    cpuid   s4, z, z
-    cpuid   s5, z, s3
-    cpuid   s6, s3, z
-    cpuid   s7, s3, s3
+    cpuid   s1, z, z
+    cpuid   s2, z, s22
+    cpuid   s3, s22, z
+    cpuid   s4, s22, s22
 
-    stw     s4, s25, 0
-    stw     s5, s25, 4
-    stw     s6, s25, 8
-    stw     s7, s25, 12
+    stw     s1, s25, 0
+    stw     s2, s25, 4
+    stw     s3, s25, 8
+    stw     s4, s25, 12
     add     s25, s25, 16
 
     ; Bitwise operations
-    or      s4, s1, 0x1234
-    or      s5, s1, s2
-    nor     s6, s1, 0x1234
-    nor     s7, s1, s2
-    and     s8, s1, 0x1234
-    and     s9, s1, s2
-    bic     s10, s1, 0x1234
-    bic     s11, s1, s2
-    xor     s12, s1, 0x1234
-    xor     s13, s1, s2
+    or      s1, s24, 0x1234
+    or      s2, s24, s23
+    nor     s3, s24, 0x1234
+    nor     s4, s24, s23
+    and     s5, s24, 0x1234
+    and     s6, s24, s23
+    bic     s7, s24, 0x1234
+    bic     s8, s24, s23
+    xor     s9, s24, 0x1234
+    xor     s10, s24, s23
 
-    stw     s4, s25, 0
-    stw     s5, s25, 4
-    stw     s6, s25, 8
-    stw     s7, s25, 12
-    stw     s8, s25, 16
-    stw     s9, s25, 20
-    stw     s10, s25, 24
-    stw     s11, s25, 28
-    stw     s12, s25, 32
-    stw     s13, s25, 36
+    stw     s1, s25, 0
+    stw     s2, s25, 4
+    stw     s3, s25, 8
+    stw     s4, s25, 12
+    stw     s5, s25, 16
+    stw     s6, s25, 20
+    stw     s7, s25, 24
+    stw     s8, s25, 28
+    stw     s9, s25, 32
+    stw     s10, s25, 36
     add     s25, s25, 40
 
     ; Arithmetic operations
