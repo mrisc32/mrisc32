@@ -3,9 +3,12 @@
 ; This is test program that tries to test as many asptects of the CPU as possible.
 ; -------------------------------------------------------------------------------------------------
 
+STACK_START = 0x00020000  ; We grow down from 128KB.
+RESULTS_PTR = 0x10000     ; Start of memory area where the test results are stored.
+
 boot:
     ; Start by setting up the stack and clearing the registers.
-    ldi     sp, 0x00020000  ; We grow down from 128KB.
+    ldi     sp, STACK_START
     cpuid   vl, z, z
     ldi     s1, 0
     ldi     s2, 0
@@ -73,7 +76,7 @@ boot:
 ;--------------------------------------------------------------------------------------------------
 
 start:
-    ldi     s25, 0x10000        ; s20 points to the start of the result output area
+    ldi     s25, RESULTS_PTR    ; s20 points to the start of the result output area
 
     ; Prepare some registers with values to use in the tests.
     ldi     s1, 1234

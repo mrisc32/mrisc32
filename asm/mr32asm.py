@@ -815,11 +815,31 @@ def translate_reg(operand, operand_type, line_no):
         raise AsmError(line_no, 'Bad register type: {}'.format(operand_type))
 
 
-def translate_imm(operand, operand_type, line_no):
+def mangle_local_label(label, scope_label):
+    return '{}@{}'.format(scope_label, label[1:])
+
+
+def translate_addr_or_number(operand, labels, scope_label, line_no):
+    # Numeric literal?
     try:
-        value = parse_integer(operand)
+        return parse_integer(operand)
     except ValueError:
-        raise AsmError(line_no, 'Invalid integer value: {}'.format(operand))
+        pass
+
+    # Label?
+    # TODO(m): Add support for numerical offsets and relative +/- deltas.
+    try:
+        if operand.startswith('.'):
+            if not scope_label:
+                raise AsmError(line_no, 'No scope for local label: {}'.format(operand))
+            operand = mangle_local_label(operand, scope_label)
+        return labels[operand]
+    except KeyError as e:
+        raise AsmError(line_no, 'Bad label: {}'.format(operand))
+
+
+def translate_imm(operand, operand_type, labels, scope_label, line_no):
+    value = translate_addr_or_number(operand, labels, scope_label, line_no)
 
     value_bits = {
             _IMM14:    14,
@@ -860,21 +880,8 @@ def translate_imm(operand, operand_type, line_no):
     return (value >> value_shift) & ((1 << value_bits) - 1)
 
 
-def mangle_local_label(label, scope_label):
-    return '{}@{}'.format(scope_label, label[1:])
-
-
 def translate_pcrel(operand, operand_type, pc, labels, scope_label, line_no):
-    # TODO(m): Add support for numerical offsets and relative +/- deltas.
-    try:
-        if operand.startswith('.'):
-            if not scope_label:
-                raise AsmError(line_no, 'No scope for local label: {}'.format(operand))
-            operand = mangle_local_label(operand, scope_label)
-        target_address = labels[operand]
-    except KeyError as e:
-        raise AsmError(line_no, 'Bad label: {}'.format(operand))
-
+    target_address = translate_addr_or_number(operand, labels, scope_label, line_no)
     offset = target_address - pc
 
     if operand_type == _PCREL19x4:
@@ -903,7 +910,7 @@ def translate_operation(operation, mnemonic, descr, packed_type, folding, addr, 
         if operand_type in [_REG1, _REG2, _REG3, _VREG1, _VREG2, _VREG3, _XREG1, _XREG2]:
             instr = instr | translate_reg(operand, operand_type, line_no)
         elif operand_type in [_IMM14, _IMM19, _IMM19HI, _IMM19HIO]:
-            instr = instr | translate_imm(operand, operand_type, line_no)
+            instr = instr | translate_imm(operand, operand_type, labels, scope_label, line_no)
             is_immediate_op = True
         elif operand_type in [_PCREL14, _PCREL19x4]:
             instr = instr | translate_pcrel(operand, operand_type, addr, labels, scope_label, line_no)
@@ -987,6 +994,24 @@ def decompose_mnemonic(full_mnemonic):
     return mnemonic, packed_type, folding
 
 
+def parse_assigned_label(line, line_no):
+    parts_unfiltered = line.split('=')
+    parts = []
+    for part in parts_unfiltered:
+        part = part.strip()
+        if len(part) > 0:
+            parts.append(part)
+    if len(parts) != 2:
+        raise AsmError(line_no, 'Invalid label assignment: {}'.format(line))
+    label = parts[0]
+    try:
+        label_value = parse_integer(parts[1])
+    except ValueError:
+        raise AsmError(line_no, 'Invalid integer value: {}'.format(parts[1]))
+
+    return label, label_value
+
+
 def compile_file(file_name, out_name, verbosity_level):
     if verbosity_level >= 1:
         print "Compiling %s..." % (file_name)
@@ -1035,9 +1060,13 @@ def compile_file(file_name, out_name, verbosity_level):
                     # This is an empty line.
                     pass
 
-                elif line.endswith(':'):
+                elif line.endswith(':') or '=' in line:
                     # This is a label.
-                    label = line[:-1]
+                    if line.endswith(':'):
+                        label = line[:-1]
+                        label_value = addr
+                    else:
+                        label, label_value = parse_assigned_label(line, line_no)
                     if ' ' in label or '@' in label:
                         raise AsmError(line_no, 'Bad label "%s"' % label)
                     if label.startswith('.'):
@@ -1051,9 +1080,9 @@ def compile_file(file_name, out_name, verbosity_level):
                     if compilation_pass == 1:
                         if label in labels:
                             raise AsmError(line_no, 'Re-definition of label: {}'.format(label))
-                        labels[label] = addr
+                        labels[label] = label_value
                         if verbosity_level >= 2:
-                            print ' Label: ' + format(addr, '08x') + ' = {}'.format(label)
+                            print ' Label: {} = '.format(label) + format(label_value, '08x')
 
                 elif line.startswith('.'):
                     # This is a data directive.
