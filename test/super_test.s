@@ -176,15 +176,108 @@ test_alu_bitiwse:
 
 test_alu_arithmetic:
     ; Arithmetic operations
-    ; TODO(m): Implement me!
+    add     s1, s24, 0x1234
+    add     s2, s24, s23
+    sub     s3, 0x1234, s24
+    sub     s4, s24, s23
+
+    ; Compare results.
+    stw     s1, s25, 0
+    stw     s2, s25, 4
+    stw     s3, s25, 8
+    stw     s4, s25, 12
+
+    lea     s1, .correct_results
+    mov     s2, s25
+    bl      check_results
+
+    stw     s1, s25, 16
+    add     s25, s25, 20
+    b       test_alu_compare
+
+.correct_results:
+    .u32    4
+    .u32    0x00001706, 0x00001b00, 0x00000d62, 0xffffeea4
+
 
 test_alu_compare:
     ; Compare/set operations
-    ; TODO(m): Implement me!
+    seq     s1, s24, -1234
+    seq     s2, s24, s23
+    sne     s3, s24, -1234
+    sne     s4, s24, s23
+    slt     s5, s24, -1234
+    slt     s6, s24, s23
+    sltu    s7, s24, -1234
+    sltu    s8, s24, s23
+    sle     s9, s24, -1234
+    sle     s10, s24, s23
+    sleu    s11, s24, -1234
+    sleu    s12, s24, s23
+
+    ; Compare results.
+    stw     s1, s25, 0
+    stw     s2, s25, 4
+    stw     s3, s25, 8
+    stw     s4, s25, 12
+    stw     s5, s25, 16
+    stw     s6, s25, 20
+    stw     s7, s25, 24
+    stw     s8, s25, 28
+    stw     s9, s25, 32
+    stw     s10, s25, 36
+    stw     s11, s25, 40
+    stw     s12, s25, 44
+
+    lea     s1, .correct_results
+    mov     s2, s25
+    bl      check_results
+
+    stw     s1, s25, 48
+    add     s25, s25, 52
+    b       test_alu_min_max
+
+.correct_results:
+    .u32    12
+    .u32    0x00000000, 0x00000000, 0xffffffff, 0xffffffff
+    .u32    0xffffffff, 0xffffffff, 0x00000000, 0xffffffff
+    .u32    0xffffffff, 0xffffffff, 0x00000000, 0xffffffff
+
 
 test_alu_min_max:
     ; Min/max operations
-    ; TODO(m): Implement me!
+    min     s1, s24, 0x1234
+    min     s2, s24, s23
+    max     s3, s24, -1234
+    max     s4, s24, s23
+    minu    s5, s24, 0x1234
+    minu    s6, s24, s23
+    maxu    s7, s24, -1234
+    maxu    s8, s24, s23
+
+    ; Compare results.
+    stw     s1, s25, 0
+    stw     s2, s25, 4
+    stw     s3, s25, 8
+    stw     s4, s25, 12
+    stw     s5, s25, 16
+    stw     s6, s25, 20
+    stw     s7, s25, 24
+    stw     s8, s25, 28
+
+    lea     s1, .correct_results
+    mov     s2, s25
+    bl      check_results
+
+    stw     s1, s25, 32
+    add     s25, s25, 36
+    b       test_alu_shift
+
+.correct_results:
+    .u32    8
+    .u32    0x000004d2, 0x000004d2, 0x000004d2, 0x0000162e
+    .u32    0x000004d2, 0x000004d2, 0xfffffb2e, 0x0000162e
+
 
 test_alu_shift:
     ; Shift operations
