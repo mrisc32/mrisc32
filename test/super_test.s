@@ -84,6 +84,8 @@ main:
     stw     z, s1, 4
 
     ; Prepare some registers with values to use in the tests.
+    ldi     s18, 0x12345678
+    ldi     s19, 0xfedcba98
     ldi     s20, 1
     ldi     s21, 5678
     ldi     s22, 1234
@@ -132,6 +134,8 @@ main:
     .u32    test_alu_shuf
     .u32    test_alu_clz_rev
     .u32    test_sau
+    .u32    test_mul
+    .u32    test_div
     .u32    0
 
 
@@ -563,7 +567,44 @@ test_sau:
 
 test_mul:
     ; Multiplication operations
-    ; TODO(m): Implement me!
+    mulq    s1, s18, s19
+    mulq.h  s2, s18, s19
+    mulq.b  s3, s18, s19
+    mul     s4, s18, s19
+    mul.h   s5, s18, s19
+    mul.b   s6, s18, s19
+    mulhi   s7, s18, s19
+    mulhi.h s8, s18, s19
+    mulhi.b s9, s18, s19
+    mulhiu   s10, s18, s19
+    mulhiu.h s11, s18, s19
+    mulhiu.b s12, s18, s19
+
+    ; Store results.
+    stw     s1, s25, 0
+    stw     s2, s25, 4
+    stw     s3, s25, 8
+    stw     s4, s25, 12
+    stw     s5, s25, 16
+    stw     s6, s25, 20
+    stw     s7, s25, 24
+    stw     s8, s25, 28
+    stw     s9, s25, 32
+    stw     s10, s25, 36
+    stw     s11, s25, 40
+    stw     s12, s25, 44
+
+    ; Check results.
+    lea     s1, .correct_results
+    mov     s2, s25
+    add     s25, s25, 48
+    b       check_results
+
+.correct_results:
+    .u32    12
+    .u32    0xffd69324, 0xffd6d11d, 0xfff1d09e, 0x35068740
+    .u32    0x3cb08740, 0xdcb07c40, 0xffeb4992, 0xffebe88e
+    .u32    0xfff8e8cf, 0x121fa00a, 0x121f3f06, 0x112c3e47
 
 
 ;--------------------------------------------------------------------------------------------------
@@ -572,7 +613,57 @@ test_mul:
 
 test_div:
     ; Division/remainder operations
-    ; TODO(m): Implement me!
+    ; TODO(m): Remove the nop:s once we trust the hardware stalling implementation.
+    div     s1, s19, s22
+    nop
+    div.h   s2, s19, s22
+    nop
+    div.b   s3, s19, s22
+    nop
+    divu    s4, s19, s22
+    nop
+    divu.h  s5, s19, s22
+    nop
+    divu.b  s6, s19, s22
+    nop
+    rem     s7, s19, s22
+    nop
+    rem.h   s8, s19, s22
+    nop
+    rem.b   s9, s19, s22
+    nop
+    remu    s10, s19, s22
+    nop
+    remu.h  s11, s19, s22
+    nop
+    remu.b  s12, s19, s22
+    nop
+
+    ; Store results.
+    stw     s1, s25, 0
+    stw     s2, s25, 4
+    stw     s3, s25, 8
+    stw     s4, s25, 12
+    stw     s5, s25, 16
+    stw     s6, s25, 20
+    stw     s7, s25, 24
+    stw     s8, s25, 28
+    stw     s9, s25, 32
+    stw     s10, s25, 36
+    stw     s11, s25, 40
+    stw     s12, s25, 44
+
+    ; Check results.
+    lea     s1, .correct_results
+    mov     s2, s25
+    add     s25, s25, 48
+    b       check_results
+
+.correct_results:
+    .u32    12
+    .u32    0xffffc394, 0xfffffff2, 0xffffef02, 0x0034df5f
+    .u32    0xffff0026, 0xffff2e00, 0xfffffb30, 0xfedcfe14
+    .u32    0xfedcfef4, 0x000002aa, 0xfedc036c, 0xfedc0298
 
 
 ;--------------------------------------------------------------------------------------------------
