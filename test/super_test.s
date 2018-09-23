@@ -111,6 +111,7 @@ start:
     .u32    test_alu_compare
     .u32    test_alu_min_max
     .u32    test_alu_shift
+    .u32    test_alu_shuf
     .u32    0
 
 
@@ -407,7 +408,30 @@ test_alu_shift:
 
 test_alu_shuf:
     ; SHUF
-    ; TODO(m): Implement me!
+    shuf    s1, s22, s21
+    shuf    s2, s22, 0b0000000000000     ; 1 x u8 -> 4 x u8
+    shuf    s3, s22, 0b1100100100000     ; i8 -> i32
+    shuf    s4, s22, 0b0100100100000     ; u8 -> u32
+    shuf    s5, s22, 0b0000001010011     ; Reverse byte order
+
+    ; Store results.
+    stw     s1, s25, 0
+    stw     s2, s25, 4
+    stw     s3, s25, 8
+    stw     s4, s25, 12
+    stw     s5, s25, 16
+
+    ; Check results.
+    lea     s1, .correct_results
+    mov     s2, s25
+    add     s25, s25, 20
+    b       check_results
+
+.correct_results:
+    .u32    5
+    .u32    0x00d20000, 0xd2d2d2d2, 0xffffffd2, 0x000000d2
+    .u32    0xd2040000
+
 
 test_alu_clz:
     ; CLZ
