@@ -62,6 +62,14 @@
       </match>
     </context>
 
+    <context id="binary" style-ref="constant">
+      <match extended="true">
+        (?&lt;![\w\.])
+        0[bB][01]+
+        (?![\w\.])
+      </match>
+    </context>
+
     <context id="decimal" style-ref="constant">
       <match extended="true">
         (?&lt;![\w\.])
@@ -230,6 +238,7 @@
         <context ref="comment"/>
         <context ref="string"/>
         <context ref="hexadecimal"/>
+        <context ref="binary"/>
         <context ref="decimal"/>
         <context ref="instruction"/>
         <context ref="scalarreg"/>
