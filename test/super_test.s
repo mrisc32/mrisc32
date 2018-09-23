@@ -110,6 +110,7 @@ start:
     .u32    test_alu_arithmetic
     .u32    test_alu_compare
     .u32    test_alu_min_max
+    .u32    test_alu_shift
     .u32    0
 
 
@@ -216,16 +217,16 @@ test_cpuid:
     or      s3, s3, s5
     seq     s3, s3, z           ; s3 == 0 ?
 
-    ; Compare results.
+    ; Store results.
     stw     s1, s25, 0
     stw     s2, s25, 4
     stw     s3, s25, 8
 
+    ; Check results.
     lea     s1, .correct_results
     mov     s2, s25
     add     s25, s25, 12
     b       check_results
-
 
 .correct_results:
     .u32    3
@@ -251,7 +252,7 @@ test_alu_bitiwse:
     xor     s9, s22, 0x1234
     xor     s10, s22, s21
 
-    ; Compare results.
+    ; Store results.
     stw     s1, s25, 0
     stw     s2, s25, 4
     stw     s3, s25, 8
@@ -263,6 +264,7 @@ test_alu_bitiwse:
     stw     s9, s25, 32
     stw     s10, s25, 36
 
+    ; Check results.
     lea     s1, .correct_results
     mov     s2, s25
     add     s25, s25, 40
@@ -282,12 +284,13 @@ test_alu_arithmetic:
     sub     s3, 0x1234, s22
     sub     s4, s22, s21
 
-    ; Compare results.
+    ; Store results.
     stw     s1, s25, 0
     stw     s2, s25, 4
     stw     s3, s25, 8
     stw     s4, s25, 12
 
+    ; Check results.
     lea     s1, .correct_results
     mov     s2, s25
     add     s25, s25, 16
@@ -313,7 +316,7 @@ test_alu_compare:
     sleu    s11, s22, -1234
     sleu    s12, s22, s21
 
-    ; Compare results.
+    ; Store results.
     stw     s1, s25, 0
     stw     s2, s25, 4
     stw     s3, s25, 8
@@ -327,11 +330,11 @@ test_alu_compare:
     stw     s11, s25, 40
     stw     s12, s25, 44
 
+    ; Check results.
     lea     s1, .correct_results
     mov     s2, s25
     add     s25, s25, 48
     b       check_results
-
 
 .correct_results:
     .u32    12
@@ -351,7 +354,7 @@ test_alu_min_max:
     maxu    s7, s22, -1234
     maxu    s8, s22, s21
 
-    ; Compare results.
+    ; Store results.
     stw     s1, s25, 0
     stw     s2, s25, 4
     stw     s3, s25, 8
@@ -361,11 +364,11 @@ test_alu_min_max:
     stw     s7, s25, 24
     stw     s8, s25, 28
 
+    ; Check results.
     lea     s1, .correct_results
     mov     s2, s25
     add     s25, s25, 32
     b       check_results
-
 
 .correct_results:
     .u32    8
@@ -375,7 +378,32 @@ test_alu_min_max:
 
 test_alu_shift:
     ; Shift operations
-    ; TODO(m): Implement me!
+    asr     s1, s22, 5
+    asr     s2, s22, s21
+    lsl     s3, s22, 5
+    lsl     s4, s22, s21
+    lsr     s5, s22, 5
+    lsr     s6, s22, s21
+
+    ; Store results.
+    stw     s1, s25, 0
+    stw     s2, s25, 4
+    stw     s3, s25, 8
+    stw     s4, s25, 12
+    stw     s5, s25, 16
+    stw     s6, s25, 20
+
+    ; Check results.
+    lea     s1, .correct_results
+    mov     s2, s25
+    add     s25, s25, 24
+    b       check_results
+
+.correct_results:
+    .u32    6
+    .u32    0x00000026, 0x00000000, 0x00009a40, 0x01348000
+    .u32    0x00000026, 0x00000000
+
 
 test_alu_shuf:
     ; SHUF
