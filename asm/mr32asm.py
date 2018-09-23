@@ -819,23 +819,23 @@ def mangle_local_label(label, scope_label):
     return '{}@{}'.format(scope_label, label[1:])
 
 
-def translate_addr_or_number(operand, labels, scope_label, line_no):
+def translate_addr_or_number(string, labels, scope_label, line_no):
     # Numeric literal?
     try:
-        return parse_integer(operand)
+        return parse_integer(string)
     except ValueError:
         pass
 
     # Label?
     # TODO(m): Add support for numerical offsets and relative +/- deltas.
     try:
-        if operand.startswith('.'):
+        if string.startswith('.'):
             if not scope_label:
-                raise AsmError(line_no, 'No scope for local label: {}'.format(operand))
-            operand = mangle_local_label(operand, scope_label)
-        return labels[operand]
+                raise AsmError(line_no, 'No scope for local label: {}'.format(string))
+            string = mangle_local_label(string, scope_label)
+        return labels[string]
     except KeyError as e:
-        raise AsmError(line_no, 'Bad label: {}'.format(operand))
+        raise AsmError(line_no, 'Bad label: {}'.format(string))
 
 
 def translate_imm(operand, operand_type, labels, scope_label, line_no):
@@ -1111,6 +1111,8 @@ def compile_file(file_name, out_name, verbosity_level):
                         val_min = 0 if is_unsigned else -(1 << (num_bits - 1))
                         val_max = ((1 << num_bits) - 1) if is_unsigned else ((1 << (num_bits - 1)) - 1)
                         val_size = num_bits >> 3
+                        if not addr & (val_size - 1) == 0:
+                            raise AsmError(line_no, 'Data not aligned to a {} byte boundary'.format(val_size))
                         val_type = {
                           '.i8': 'b',
                           '.u8': 'B',
@@ -1120,16 +1122,15 @@ def compile_file(file_name, out_name, verbosity_level):
                           '.u32': '<L'
                         }[directive[0]];
                         for k in range(1, len(directive)):
-                            try:
-                                value = parse_integer(directive[k])
-                            except ValueError:
-                                raise AsmError(line_no, 'Invalid integer: {}'.format(directive[k]))
-                            if not addr & (val_size - 1) == 0:
-                                raise AsmError(line_no, 'Data not aligned to a {} byte boundary'.format(val_size))
-                            if value < val_min or value > val_max:
-                                raise AsmError(line_no, 'Value out of range: {}'.format(value))
                             addr += val_size
                             if compilation_pass == 2:
+                                try:
+                                    # value = parse_integer(directive[k])
+                                    value = translate_addr_or_number(directive[k], labels, scope_label, line_no)
+                                except ValueError:
+                                    raise AsmError(line_no, 'Invalid integer: {}'.format(directive[k]))
+                                if value < val_min or value > val_max:
+                                    raise AsmError(line_no, 'Value out of range: {}'.format(value))
                                 code += struct.pack(val_type, value)
 
                     elif directive[0] in ['.space', '.zero']:
