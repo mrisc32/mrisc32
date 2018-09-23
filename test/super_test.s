@@ -5,7 +5,8 @@
 
 STACK_START = 0x00020000  ; We grow down from 128KB.
 PASS_CNT = 0x10000        ; Location of the count of passed tests.
-RESULTS_PTR = 0x10004     ; Start of memory area where the test results are stored.
+PASS_FAIL = 0x10004       ; Start of memory area where the test pass/fail results are stored.
+TEST_OUTPUT = 0x11000     ; Start of memory area where the test output is stored.
 
 boot:
     ; Start by setting up the stack and clearing the registers.
@@ -77,7 +78,8 @@ boot:
 ;--------------------------------------------------------------------------------------------------
 
 start:
-    ldi     s25, RESULTS_PTR    ; s20 points to the start of the result output area
+    ldi     s25, TEST_OUTPUT    ; s25 points to the start of the result output area.
+    ldi     s20, PASS_FAIL      ; s20 points to the start of pass/fail results.
 
     ldi     s1, PASS_CNT
     stw     z, s1, 0            ; Clear the PASS_CNT counter.
@@ -86,6 +88,111 @@ start:
     ldi     s24, 1234
     ldi     s23, 5678
     ldi     s22, 1
+
+    ; Loop over all the tests.
+    lea     s21, .test_list
+.test_loop:
+    ; Call the next test.
+    ldw     s1, s21, 0
+    add     s21, s21, 4
+    bz      s1, end
+    jl      s1
+
+    ; Store the pass/fail result.
+    stw     s1, s20, 0
+    add     s20, s20, 4
+
+    b       .test_loop
+
+
+.test_list:
+    .u32    test_cpuid
+    .u32    test_alu_bitiwse
+    .u32    test_alu_arithmetic
+    .u32    test_alu_compare
+    .u32    test_alu_min_max
+    .u32    0
+
+
+
+;--------------------------------------------------------------------------------------------------
+; Check results.
+; s1 = correct results (first word is the results count).
+; s2 = actual results
+;
+; Note: We make excessive use of NOP:s to minimize potential pipeline issues (forwarding etc).
+;--------------------------------------------------------------------------------------------------
+
+check_results:
+    ldw     s3, s1, 0       ; s3 = the results count.
+    add     s1, s1, 4
+    nop
+    nop
+    nop
+    nop
+    ldi     s4, -1
+    bz      s3, .done
+
+.compare_loop:
+    ldw     s5, s1, 0
+    ldw     s6, s2, 0
+    add     s3, s3, -1
+    add     s1, s1, 4
+    add     s2, s2, 4
+    nop
+    seq     s5, s5, s6
+    nop
+    nop
+    nop
+    nop
+    and     s4, s4, s5
+    bnz     s3, .compare_loop
+
+.done:
+    nop
+    nop
+    nop
+    nop
+
+    ; Increase the PASS_CNT counter if the test passed.
+    ldi     s1, PASS_CNT
+    ldw     s2, s1, 0
+    and     s3, s4, 1
+    nop
+    nop
+    nop
+    nop
+    add     s2, s2, s3
+    nop
+    nop
+    nop
+    nop
+    stw     s2, s1, 0
+.results_mismatch:
+    mov     s1, s4
+    j       lr
+
+
+;--------------------------------------------------------------------------------------------------
+; End of test
+;--------------------------------------------------------------------------------------------------
+
+end:
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+
+    j       z       ; End the program
+
+    nop
+    nop
+    nop
+    nop
+    nop
+
 
 ;--------------------------------------------------------------------------------------------------
 ; CPU identification tests.
@@ -117,11 +224,9 @@ test_cpuid:
 
     lea     s1, .correct_results
     mov     s2, s25
-    bl      check_results
+    add     s25, s25, 12
+    b       check_results
 
-    stw     s1, s25, 12
-    add     s25, s25, 16
-    b       test_alu_bitiwse
 
 .correct_results:
     .u32    3
@@ -161,11 +266,8 @@ test_alu_bitiwse:
 
     lea     s1, .correct_results
     mov     s2, s25
-    bl      check_results
-
-    stw     s1, s25, 40
-    add     s25, s25, 44
-    b       test_alu_arithmetic
+    add     s25, s25, 40
+    b       check_results
 
 .correct_results:
     .u32    10
@@ -189,11 +291,8 @@ test_alu_arithmetic:
 
     lea     s1, .correct_results
     mov     s2, s25
-    bl      check_results
-
-    stw     s1, s25, 16
-    add     s25, s25, 20
-    b       test_alu_compare
+    add     s25, s25, 16
+    b       check_results
 
 .correct_results:
     .u32    4
@@ -231,11 +330,9 @@ test_alu_compare:
 
     lea     s1, .correct_results
     mov     s2, s25
-    bl      check_results
+    add     s25, s25, 48
+    b       check_results
 
-    stw     s1, s25, 48
-    add     s25, s25, 52
-    b       test_alu_min_max
 
 .correct_results:
     .u32    12
@@ -267,11 +364,9 @@ test_alu_min_max:
 
     lea     s1, .correct_results
     mov     s2, s25
-    bl      check_results
+    add     s25, s25, 32
+    b       check_results
 
-    stw     s1, s25, 32
-    add     s25, s25, 36
-    b       test_alu_shift
 
 .correct_results:
     .u32    8
@@ -351,86 +446,4 @@ test_vector_addressing:
 ;--------------------------------------------------------------------------------------------------
 
     ; TODO(m): Implement me!
-
-
-
-
-;--------------------------------------------------------------------------------------------------
-; End of test
-;--------------------------------------------------------------------------------------------------
-
-end:
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-
-    j       z       ; End the program
-
-    nop
-    nop
-    nop
-    nop
-    nop
-
-
-
-;--------------------------------------------------------------------------------------------------
-; Check results.
-; s1 = correct results (first word is the results count).
-; s2 = actual results
-;
-; Note: We make excessive use of NOP:s to minimize potential pipeline issues (forwarding etc).
-;--------------------------------------------------------------------------------------------------
-
-check_results:
-    ldw     s3, s1, 0       ; s3 = the results count.
-    add     s1, s1, 4
-    nop
-    nop
-    nop
-    nop
-    ldi     s4, -1
-    bz      s3, .done
-
-.compare_loop:
-    ldw     s5, s1, 0
-    ldw     s6, s2, 0
-    add     s3, s3, -1
-    add     s1, s1, 4
-    add     s2, s2, 4
-    nop
-    seq     s5, s5, s6
-    nop
-    nop
-    nop
-    nop
-    and     s4, s4, s5
-    bnz     s3, .compare_loop
-
-.done:
-    nop
-    nop
-    nop
-    nop
-
-    ; Increase the PASS_CNT counter if the test passed.
-    ldi     s1, PASS_CNT
-    ldw     s2, s1, 0
-    and     s3, s4, 1
-    nop
-    nop
-    nop
-    nop
-    add     s2, s2, s3
-    nop
-    nop
-    nop
-    nop
-    stw     s2, s1, 0
-.results_mismatch:
-    mov     s1, s4
-    j       lr
 
