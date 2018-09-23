@@ -4,8 +4,8 @@
 ; -------------------------------------------------------------------------------------------------
 
 STACK_START = 0x00020000  ; We grow down from 128KB.
-PASS_CNT = 0x10000        ; Location of the count of passed tests.
-PASS_FAIL = 0x10004       ; Start of memory area where the test pass/fail results are stored.
+PASS_FAIL_CNT = 0x10000   ; Location of the count of passed and failed tests.
+PASS_FAIL = 0x10008       ; Start of memory area where the test pass/fail results are stored.
 TEST_OUTPUT = 0x11000     ; Start of memory area where the test output is stored.
 
 boot:
@@ -78,8 +78,10 @@ boot:
 ;--------------------------------------------------------------------------------------------------
 
 start:
-    ldi     s1, PASS_CNT
-    stw     z, s1, 0            ; Clear the PASS_CNT counter.
+    ; Clear the pass/fail counters.
+    ldi     s1, PASS_FAIL_CNT
+    stw     z, s1, 0
+    stw     z, s1, 4
 
     ; Prepare some registers with values to use in the tests.
     ldi     s22, 1234
@@ -132,22 +134,22 @@ check_results:
     nop
     nop
     nop
-    ldi     s4, -1
+    ldi     s5, -1          ; s5 = are all values equal?
     bz      s3, .done
 
 .compare_loop:
-    ldw     s5, s1, 0
-    ldw     s6, s2, 0
+    ldw     s6, s1, 0       ; Reference value
+    ldw     s7, s2, 0       ; Actual value
     add     s3, s3, -1
     add     s1, s1, 4
     add     s2, s2, 4
     nop
-    seq     s5, s5, s6
+    seq     s6, s6, s7      ; Equal?
     nop
     nop
     nop
     nop
-    and     s4, s4, s5
+    and     s5, s5, s6      ; Are all values still equal?
     bnz     s3, .compare_loop
 
 .done:
@@ -156,22 +158,34 @@ check_results:
     nop
     nop
 
-    ; Increase the PASS_CNT counter if the test passed.
-    ldi     s1, PASS_CNT
-    ldw     s2, s1, 0
-    and     s3, s4, 1
+    ; Increase the pass/fail counters.
+    ldi     s1, PASS_FAIL_CNT
     nop
     nop
     nop
     nop
-    add     s2, s2, s3
+    ldw     s2, s1, 0       ; Load pass count.
+    ldw     s3, s1, 4       ; Load fail count.
+    and     s4, s5, 1       ; s4 = 1 for pass, 0 for fail.
     nop
     nop
     nop
     nop
-    stw     s2, s1, 0
-.results_mismatch:
-    mov     s1, s4
+    add     s2, s2, s4
+    xor     s4, s4, 1       ; s4 = 0 for pass, 1 for fail.
+    nop
+    nop
+    nop
+    nop
+    add     s3, s3, s4
+    nop
+    nop
+    nop
+    nop
+    stw     s2, s1, 0       ; Update pass count.
+    stw     s3, s1, 4       ; Update fail count.
+
+    mov     s1, s5          ; Return pass/fail in s1.
     j       lr
 
 
