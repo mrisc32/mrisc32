@@ -78,29 +78,28 @@ boot:
 ;--------------------------------------------------------------------------------------------------
 
 start:
-    ldi     s25, TEST_OUTPUT    ; s25 points to the start of the result output area.
-    ldi     s20, PASS_FAIL      ; s20 points to the start of pass/fail results.
-
     ldi     s1, PASS_CNT
     stw     z, s1, 0            ; Clear the PASS_CNT counter.
 
     ; Prepare some registers with values to use in the tests.
-    ldi     s24, 1234
-    ldi     s23, 5678
-    ldi     s22, 1
+    ldi     s22, 1234
+    ldi     s21, 5678
+    ldi     s20, 1
 
     ; Loop over all the tests.
-    lea     s21, .test_list
+    ldi     s25, TEST_OUTPUT    ; s25 points to the start of the result output area.
+    ldi     s24, PASS_FAIL      ; s24 points to the start of pass/fail results.
+    lea     s23, .test_list
 .test_loop:
     ; Call the next test.
-    ldw     s1, s21, 0
-    add     s21, s21, 4
+    ldw     s1, s23, 0
+    add     s23, s23, 4
     bz      s1, end
     jl      s1
 
     ; Store the pass/fail result.
-    stw     s1, s20, 0
-    add     s20, s20, 4
+    stw     s1, s24, 0
+    add     s24, s24, 4
 
     b       .test_loop
 
@@ -201,18 +200,18 @@ end:
 test_cpuid:
     ; MaxVectorLength should be 1 << Log2MaxVectorLength
     cpuid   s1, z, z            ; 0x00000000:0x00000000 GetMaxVectorLength
-    cpuid   s2, z, s22          ; 0x00000000:0x00000001 GetLog2MaxVectorLength
-    lsl     s2, s22, s2         ; s2 = 1 << s2
+    cpuid   s2, z, s20          ; 0x00000000:0x00000001 GetLog2MaxVectorLength
+    lsl     s2, s20, s2         ; s2 = 1 << s2
     seq     s1, s1, s2          ; s1 == s2 ?
 
     ; BaseFeatures should be != 0
-    cpuid   s2, s22, z          ; 0x00000001:0x00000000 GetBaseFeatures
+    cpuid   s2, s20, z          ; 0x00000001:0x00000000 GetBaseFeatures
     sne     s2, s2, z           ; s2 != 0 ?
 
     ; Undefined commands should return zero.
-    cpuid   s3, s22, s22        ; 0x00000001:0x00000001 - Undefiend
-    cpuid   s4, s23, s22        ; ... Undefiend
-    cpuid   s5, s23, s24        ; ... Undefiend
+    cpuid   s3, s20, s20        ; 0x00000001:0x00000001 - Undefiend
+    cpuid   s4, s21, s20        ; ... Undefiend
+    cpuid   s5, s21, s22        ; ... Undefiend
     or      s3, s3, s4
     or      s3, s3, s5
     seq     s3, s3, z           ; s3 == 0 ?
@@ -241,16 +240,16 @@ test_cpuid:
 
 test_alu_bitiwse:
     ; Bitwise operations
-    or      s1, s24, 0x1234
-    or      s2, s24, s23
-    nor     s3, s24, 0x1234
-    nor     s4, s24, s23
-    and     s5, s24, 0x1234
-    and     s6, s24, s23
-    bic     s7, s24, 0x1234
-    bic     s8, s24, s23
-    xor     s9, s24, 0x1234
-    xor     s10, s24, s23
+    or      s1, s22, 0x1234
+    or      s2, s22, s21
+    nor     s3, s22, 0x1234
+    nor     s4, s22, s21
+    and     s5, s22, 0x1234
+    and     s6, s22, s21
+    bic     s7, s22, 0x1234
+    bic     s8, s22, s21
+    xor     s9, s22, 0x1234
+    xor     s10, s22, s21
 
     ; Compare results.
     stw     s1, s25, 0
@@ -278,10 +277,10 @@ test_alu_bitiwse:
 
 test_alu_arithmetic:
     ; Arithmetic operations
-    add     s1, s24, 0x1234
-    add     s2, s24, s23
-    sub     s3, 0x1234, s24
-    sub     s4, s24, s23
+    add     s1, s22, 0x1234
+    add     s2, s22, s21
+    sub     s3, 0x1234, s22
+    sub     s4, s22, s21
 
     ; Compare results.
     stw     s1, s25, 0
@@ -301,18 +300,18 @@ test_alu_arithmetic:
 
 test_alu_compare:
     ; Compare/set operations
-    seq     s1, s24, -1234
-    seq     s2, s24, s23
-    sne     s3, s24, -1234
-    sne     s4, s24, s23
-    slt     s5, s24, -1234
-    slt     s6, s24, s23
-    sltu    s7, s24, -1234
-    sltu    s8, s24, s23
-    sle     s9, s24, -1234
-    sle     s10, s24, s23
-    sleu    s11, s24, -1234
-    sleu    s12, s24, s23
+    seq     s1, s22, -1234
+    seq     s2, s22, s21
+    sne     s3, s22, -1234
+    sne     s4, s22, s21
+    slt     s5, s22, -1234
+    slt     s6, s22, s21
+    sltu    s7, s22, -1234
+    sltu    s8, s22, s21
+    sle     s9, s22, -1234
+    sle     s10, s22, s21
+    sleu    s11, s22, -1234
+    sleu    s12, s22, s21
 
     ; Compare results.
     stw     s1, s25, 0
@@ -343,14 +342,14 @@ test_alu_compare:
 
 test_alu_min_max:
     ; Min/max operations
-    min     s1, s24, 0x1234
-    min     s2, s24, s23
-    max     s3, s24, -1234
-    max     s4, s24, s23
-    minu    s5, s24, 0x1234
-    minu    s6, s24, s23
-    maxu    s7, s24, -1234
-    maxu    s8, s24, s23
+    min     s1, s22, 0x1234
+    min     s2, s22, s21
+    max     s3, s22, -1234
+    max     s4, s22, s21
+    minu    s5, s22, 0x1234
+    minu    s6, s22, s21
+    maxu    s7, s22, -1234
+    maxu    s8, s22, s21
 
     ; Compare results.
     stw     s1, s25, 0
