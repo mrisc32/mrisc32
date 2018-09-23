@@ -112,6 +112,7 @@ start:
     .u32    test_alu_min_max
     .u32    test_alu_shift
     .u32    test_alu_shuf
+    .u32    test_alu_clz_rev
     .u32    0
 
 
@@ -433,13 +434,35 @@ test_alu_shuf:
     .u32    0xd2040000
 
 
-test_alu_clz:
+test_alu_clz_rev:
     ; CLZ
-    ; TODO(m): Implement me!
+    clz     s1, s20
+    clz     s2, s21
+    clz     s3, s22
 
-test_alu_rev:
     ; REV
-    ; TODO(m): Implement me!
+    rev     s4, s20
+    rev     s5, s21
+    rev     s6, s22
+
+    ; Store results.
+    stw     s1, s25, 0
+    stw     s2, s25, 4
+    stw     s3, s25, 8
+    stw     s4, s25, 12
+    stw     s5, s25, 16
+    stw     s6, s25, 20
+
+    ; Check results.
+    lea     s1, .correct_results
+    mov     s2, s25
+    add     s25, s25, 24
+    b       check_results
+
+.correct_results:
+    .u32    6
+    .u32    0x0000001f, 0x00000013, 0x00000015, 0x80000000
+    .u32    0x74680000, 0x4b200000
 
 
 test_sau:
