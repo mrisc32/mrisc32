@@ -238,6 +238,7 @@ package common is
   function to_std_logic(x: boolean) return std_logic;
   function to_string(x: std_logic_vector) return string;
   function to_string(x: std_logic) return string;
+  function is_zero(x: std_logic_vector) return std_logic;
 
 end package;
 
@@ -275,6 +276,16 @@ package body common is
   function to_string(x: std_logic) return string is
   begin
     return std_logic'image(x);
+  end function;
+
+  function is_zero(x: std_logic_vector) return std_logic is
+    constant ALL_ZEROS : std_logic_vector(x'range) := (others => '0');
+  begin
+    if x = ALL_ZEROS then
+      return '1';
+    else
+      return '0';
+    end if;
   end function;
 
 end package body;

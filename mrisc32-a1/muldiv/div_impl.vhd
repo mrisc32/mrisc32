@@ -65,6 +65,7 @@ architecture rtl of div_impl is
 
   -- D1 signals.
   signal s_is_unsigned_op : std_logic;
+  signal s_is_division_by_zero : std_logic;
   signal s_src_a_is_neg : std_logic;
   signal s_src_b_is_neg : std_logic;
 
@@ -124,6 +125,7 @@ begin
 
   -- Handle sign.
   s_is_unsigned_op <= i_op(0);
+  s_is_division_by_zero <= is_zero(i_src_b);
   s_src_a_is_neg <= i_src_a(WIDTH-1) and not s_is_unsigned_op;
   s_src_b_is_neg <= i_src_b(WIDTH-1) and not s_is_unsigned_op;
 
@@ -133,7 +135,7 @@ begin
   s_d1_next_state.q <= (others => '0');
   s_d1_next_state.r <= (others => '0');
   s_d1_next_op <= i_op;
-  s_d1_next_negate_q <= s_src_a_is_neg xor s_src_b_is_neg;
+  s_d1_next_negate_q <= (s_src_a_is_neg xor s_src_b_is_neg) and not s_is_division_by_zero;
   s_d1_next_negate_r <= s_src_a_is_neg;
 
   -- Start a new operation?
