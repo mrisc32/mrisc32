@@ -3,10 +3,10 @@
 ; This is test program that tries to test as many asptects of the CPU as possible.
 ; -------------------------------------------------------------------------------------------------
 
-STACK_START = 0x00020000  ; We grow down from 128KB.
-PASS_FAIL_CNT = 0x10000   ; Location of the count of passed and failed tests.
-PASS_FAIL = 0x10008       ; Start of memory area where the test pass/fail results are stored.
-TEST_OUTPUT = 0x11000     ; Start of memory area where the test output is stored.
+STACK_START   = 0x20000     ; We grow down from 128KB.
+PASS_FAIL_CNT = 0x10000     ; Location of the count of passed and failed tests (two words).
+PASS_FAIL     = 0x10008     ; Start of memory area where the test pass/fail results are stored.
+TEST_OUTPUT   = 0x11000     ; Start of memory area where the test output is stored.
 
 boot:
     ; Start by setting up the stack and clearing the registers.
@@ -74,19 +74,19 @@ boot:
 
 
 ;--------------------------------------------------------------------------------------------------
-; Start of test
+; Main program / test loop.
 ;--------------------------------------------------------------------------------------------------
 
-start:
+main:
     ; Clear the pass/fail counters.
     ldi     s1, PASS_FAIL_CNT
     stw     z, s1, 0
     stw     z, s1, 4
 
     ; Prepare some registers with values to use in the tests.
-    ldi     s22, 1234
-    ldi     s21, 5678
     ldi     s20, 1
+    ldi     s21, 5678
+    ldi     s22, 1234
 
     ; Loop over all the tests.
     ldi     s25, TEST_OUTPUT    ; s25 points to the start of the result output area.
@@ -96,7 +96,7 @@ start:
     ; Call the next test.
     ldw     s1, s23, 0
     add     s23, s23, 4
-    bz      s1, end
+    bz      s1, .end
     jl      s1
 
     ; Store the pass/fail result.
@@ -104,6 +104,22 @@ start:
     add     s24, s24, 4
 
     b       .test_loop
+
+.end:
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+
+    j       z       ; End the program
+
+    nop
+    nop
+    nop
+    nop
+    nop
 
 
 .test_list:
@@ -115,6 +131,7 @@ start:
     .u32    test_alu_shift
     .u32    test_alu_shuf
     .u32    test_alu_clz_rev
+    .u32    test_sau
     .u32    0
 
 
@@ -190,27 +207,6 @@ check_results:
 
 
 ;--------------------------------------------------------------------------------------------------
-; End of test
-;--------------------------------------------------------------------------------------------------
-
-end:
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-
-    j       z       ; End the program
-
-    nop
-    nop
-    nop
-    nop
-    nop
-
-
-;--------------------------------------------------------------------------------------------------
 ; CPU identification tests.
 ;--------------------------------------------------------------------------------------------------
 
@@ -253,6 +249,11 @@ test_cpuid:
 ; Instruction tests (scalar)
 ;
 ; These tests aim to test the individual instructions.
+;--------------------------------------------------------------------------------------------------
+
+
+;--------------------------------------------------------------------------------------------------
+; ALU
 ;--------------------------------------------------------------------------------------------------
 
 test_alu_bitiwse:
@@ -479,31 +480,120 @@ test_alu_clz_rev:
     .u32    0x74680000, 0x4b200000
 
 
+;--------------------------------------------------------------------------------------------------
+; SAU
+;--------------------------------------------------------------------------------------------------
+
 test_sau:
     ; Saturating operations
-    ; TODO(m): Implement me!
+    adds    s1, s20, s21
+    adds.h  s2, s20, s21
+    adds.b  s3, s20, s21
+    addsu   s4, s20, s21
+    addsu.h s5, s20, s21
+    addsu.b s6, s20, s21
+    subs    s7, s20, s21
+    subs.h  s8, s20, s21
+    subs.b  s9, s20, s21
+    subsu   s10, s20, s21
+    subsu.h s11, s20, s21
+    subsu.b s12, s20, s21
+
+    ; Store results.
+    stw     s1, s25, 0
+    stw     s2, s25, 4
+    stw     s3, s25, 8
+    stw     s4, s25, 12
+    stw     s5, s25, 16
+    stw     s6, s25, 20
+    stw     s7, s25, 24
+    stw     s8, s25, 28
+    stw     s9, s25, 32
+    stw     s10, s25, 36
+    stw     s11, s25, 40
+    stw     s12, s25, 44
 
     ; Halving operations
-    ; TODO(m): Implement me!
+    addh    s1, s20, s21
+    addh.h  s2, s20, s21
+    addh.b  s3, s20, s21
+    addhu   s4, s20, s21
+    addhu.h s5, s20, s21
+    addhu.b s6, s20, s21
+    subh    s7, s20, s21
+    subh.h  s8, s20, s21
+    subh.b  s9, s20, s21
+    subhu   s10, s20, s21
+    subhu.h s11, s20, s21
+    subhu.b s12, s20, s21
 
+    ; Store results.
+    stw     s1, s25, 48
+    stw     s2, s25, 52
+    stw     s3, s25, 56
+    stw     s4, s25, 60
+    stw     s5, s25, 64
+    stw     s6, s25, 68
+    stw     s7, s25, 72
+    stw     s8, s25, 76
+    stw     s9, s25, 80
+    stw     s10, s25, 84
+    stw     s11, s25, 88
+    stw     s12, s25, 92
+
+    ; Check results.
+    lea     s1, .correct_results
+    mov     s2, s25
+    add     s25, s25, 96
+    b       check_results
+
+.correct_results:
+    .u32    24
+    .u32    0x0000162f, 0x0000162f, 0x0000162f, 0x0000162f
+    .u32    0x0000162f, 0x0000162f, 0xffffe9d3, 0x0000e9d3
+    .u32    0x0000ead3, 0x00000000, 0x00000000, 0x00000000
+    .u32    0x00000b17, 0x00000b17, 0x00000b17, 0x00000b17
+    .u32    0x00000b17, 0x00000b17, 0xfffff4e9, 0x0000f4e9
+    .u32    0x0000f5e9, 0xfffff4e9, 0x0000f4e9, 0x0000f5e9
+
+
+;--------------------------------------------------------------------------------------------------
+; MUL
+;--------------------------------------------------------------------------------------------------
 
 test_mul:
     ; Multiplication operations
     ; TODO(m): Implement me!
 
 
+;--------------------------------------------------------------------------------------------------
+; DIV
+;--------------------------------------------------------------------------------------------------
+
 test_div:
     ; Division/remainder operations
     ; TODO(m): Implement me!
 
 
+;--------------------------------------------------------------------------------------------------
+; FPU
+;--------------------------------------------------------------------------------------------------
+
 test_fpu:
     ; TODO(m): Implement me!
 
 
+;--------------------------------------------------------------------------------------------------
+; Load/Store
+;--------------------------------------------------------------------------------------------------
+
 test_load_store:
     ; TODO(m): Implement me!
 
+
+;--------------------------------------------------------------------------------------------------
+; Branch
+;--------------------------------------------------------------------------------------------------
 
 test_branch:
     ; TODO(m): Implement me!
