@@ -501,8 +501,18 @@ inline uint32_t mulhiu8x4(const uint32_t a, const uint32_t b) {
   return b3 | b2 | b1 | b0;
 }
 
+template <typename T>
+inline T div_allow_zero(const T a, const T b) {
+  return b != static_cast<T>(0) ? (a / b) : static_cast<T>(-1);
+}
+
+template <typename T>
+inline T mod_allow_zero(const T a, const T b) {
+  return b != static_cast<T>(0) ? (a % b) : a;
+}
+
 inline uint32_t div32(const uint32_t a, const uint32_t b) {
-  return static_cast<uint32_t>(static_cast<int32_t>(a) / static_cast<int32_t>(b));
+  return static_cast<uint32_t>(div_allow_zero(static_cast<int32_t>(a), static_cast<int32_t>(b)));
 }
 
 inline uint32_t div16x2(const uint32_t a, const uint32_t b) {
@@ -510,8 +520,8 @@ inline uint32_t div16x2(const uint32_t a, const uint32_t b) {
   const auto a0 = static_cast<int32_t>(static_cast<int16_t>(a));
   const auto b1 = static_cast<int32_t>(static_cast<int16_t>(b >> 16u));
   const auto b0 = static_cast<int32_t>(static_cast<int16_t>(b));
-  const auto c1 = (static_cast<uint32_t>(a1 / b1) & 0x0000ffffu) << 16u;
-  const auto c0 = static_cast<uint32_t>(a0 / b0) & 0x0000ffffu;
+  const auto c1 = (static_cast<uint32_t>(div_allow_zero(a1, b1)) & 0x0000ffffu) << 16u;
+  const auto c0 = static_cast<uint32_t>(div_allow_zero(a0, b0)) & 0x0000ffffu;
   return c1 | c0;
 }
 
@@ -524,15 +534,15 @@ inline uint32_t div8x4(const uint32_t a, const uint32_t b) {
   const auto b2 = static_cast<int32_t>(static_cast<int8_t>(b >> 16u));
   const auto b1 = static_cast<int32_t>(static_cast<int8_t>(b >> 8u));
   const auto b0 = static_cast<int32_t>(static_cast<int8_t>(b));
-  const auto c3 = (static_cast<uint32_t>(a3 / b3) & 0x000000ffu) << 24u;
-  const auto c2 = (static_cast<uint32_t>(a2 / b2) & 0x000000ffu) << 16u;
-  const auto c1 = (static_cast<uint32_t>(a1 / b1) & 0x000000ffu) << 8u;
-  const auto c0 = static_cast<uint32_t>(a0 / b0) & 0x000000ffu;
+  const auto c3 = (static_cast<uint32_t>(div_allow_zero(a3, b3)) & 0x000000ffu) << 24u;
+  const auto c2 = (static_cast<uint32_t>(div_allow_zero(a2, b2)) & 0x000000ffu) << 16u;
+  const auto c1 = (static_cast<uint32_t>(div_allow_zero(a1, b1)) & 0x000000ffu) << 8u;
+  const auto c0 = static_cast<uint32_t>(div_allow_zero(a0, b0)) & 0x000000ffu;
   return c3 | c2 | c1 | c0;
 }
 
 inline uint32_t divu32(const uint32_t a, const uint32_t b) {
-  return a / b;
+  return div_allow_zero(a, b);
 }
 
 inline uint32_t divu16x2(const uint32_t a, const uint32_t b) {
@@ -540,8 +550,8 @@ inline uint32_t divu16x2(const uint32_t a, const uint32_t b) {
   const auto a0 = a & 0x0000ffff;
   const auto b1 = b >> 16u;
   const auto b0 = b & 0x0000ffff;
-  const auto c1 = (a1 / b1) << 16u;
-  const auto c0 = a0 / b0;
+  const auto c1 = div_allow_zero(a1, b1) << 16u;
+  const auto c0 = div_allow_zero(a0, b0);
   return c1 | c0;
 }
 
@@ -554,15 +564,15 @@ inline uint32_t divu8x4(const uint32_t a, const uint32_t b) {
   const auto b2 = (b >> 16u) & 0x000000ff;
   const auto b1 = (b >> 8u) & 0x000000ff;
   const auto b0 = b & 0x000000ff;
-  const auto c3 = (a3 / b3) << 24u;
-  const auto c2 = (a2 / b2) << 16u;
-  const auto c1 = (a1 / b1) << 8u;
-  const auto c0 = a0 / b0;
+  const auto c3 = div_allow_zero(a3, b3) << 24u;
+  const auto c2 = div_allow_zero(a2, b2) << 16u;
+  const auto c1 = div_allow_zero(a1, b1) << 8u;
+  const auto c0 = div_allow_zero(a0, b0);
   return c3 | c2 | c1 | c0;
 }
 
 inline uint32_t rem32(const uint32_t a, const uint32_t b) {
-  return static_cast<uint32_t>(static_cast<int32_t>(a) % static_cast<int32_t>(b));
+  return static_cast<uint32_t>(mod_allow_zero(static_cast<int32_t>(a), static_cast<int32_t>(b)));
 }
 
 inline uint32_t rem16x2(const uint32_t a, const uint32_t b) {
@@ -570,8 +580,8 @@ inline uint32_t rem16x2(const uint32_t a, const uint32_t b) {
   const auto a0 = static_cast<int32_t>(static_cast<int16_t>(a));
   const auto b1 = static_cast<int32_t>(static_cast<int16_t>(b >> 16u));
   const auto b0 = static_cast<int32_t>(static_cast<int16_t>(b));
-  const auto c1 = (static_cast<uint32_t>(a1 % b1) & 0x0000ffffu) << 16u;
-  const auto c0 = static_cast<uint32_t>(a0 % b0) & 0x0000ffffu;
+  const auto c1 = (static_cast<uint32_t>(mod_allow_zero(a1, b1)) & 0x0000ffffu) << 16u;
+  const auto c0 = static_cast<uint32_t>(mod_allow_zero(a0, b0)) & 0x0000ffffu;
   return c1 | c0;
 }
 
@@ -584,15 +594,15 @@ inline uint32_t rem8x4(const uint32_t a, const uint32_t b) {
   const auto b2 = static_cast<int32_t>(static_cast<int8_t>(b >> 16u));
   const auto b1 = static_cast<int32_t>(static_cast<int8_t>(b >> 8u));
   const auto b0 = static_cast<int32_t>(static_cast<int8_t>(b));
-  const auto c3 = (static_cast<uint32_t>(a3 % b3) & 0x000000ffu) << 24u;
-  const auto c2 = (static_cast<uint32_t>(a2 % b2) & 0x000000ffu) << 16u;
-  const auto c1 = (static_cast<uint32_t>(a1 % b1) & 0x000000ffu) << 8u;
-  const auto c0 = static_cast<uint32_t>(a0 % b0) & 0x000000ffu;
+  const auto c3 = (static_cast<uint32_t>(mod_allow_zero(a3, b3)) & 0x000000ffu) << 24u;
+  const auto c2 = (static_cast<uint32_t>(mod_allow_zero(a2, b2)) & 0x000000ffu) << 16u;
+  const auto c1 = (static_cast<uint32_t>(mod_allow_zero(a1, b1)) & 0x000000ffu) << 8u;
+  const auto c0 = static_cast<uint32_t>(mod_allow_zero(a0, b0)) & 0x000000ffu;
   return c3 | c2 | c1 | c0;
 }
 
 inline uint32_t remu32(const uint32_t a, const uint32_t b) {
-  return a % b;
+  return mod_allow_zero(a, b);
 }
 
 inline uint32_t remu16x2(const uint32_t a, const uint32_t b) {
@@ -600,8 +610,8 @@ inline uint32_t remu16x2(const uint32_t a, const uint32_t b) {
   const auto a0 = a & 0x0000ffff;
   const auto b1 = b >> 16u;
   const auto b0 = b & 0x0000ffff;
-  const auto c1 = (a1 % b1) << 16u;
-  const auto c0 = a0 % b0;
+  const auto c1 = mod_allow_zero(a1, b1) << 16u;
+  const auto c0 = mod_allow_zero(a0, b0);
   return c1 | c0;
 }
 
@@ -614,10 +624,10 @@ inline uint32_t remu8x4(const uint32_t a, const uint32_t b) {
   const auto b2 = (b >> 16u) & 0x000000ff;
   const auto b1 = (b >> 8u) & 0x000000ff;
   const auto b0 = b & 0x000000ff;
-  const auto c3 = (a3 % b3) << 24u;
-  const auto c2 = (a2 % b2) << 16u;
-  const auto c1 = (a1 % b1) << 8u;
-  const auto c0 = a0 % b0;
+  const auto c3 = mod_allow_zero(a3, b3) << 24u;
+  const auto c2 = mod_allow_zero(a2, b2) << 16u;
+  const auto c1 = mod_allow_zero(a1, b1) << 8u;
+  const auto c0 = mod_allow_zero(a0, b0);
   return c3 | c2 | c1 | c0;
 }
 
