@@ -772,7 +772,7 @@ begin
       i_mem_read_data_ready => s_dcache_mem_read_data_ready
     );
 
-  cache_access_arbitrator_0: entity work.cache_access_arbitrator
+  cache_access_arbiter_0: entity work.cache_access_arbiter
     port map (
       i_clk => i_clk,
       i_rst => i_rst,
