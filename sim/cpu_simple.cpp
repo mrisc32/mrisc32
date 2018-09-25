@@ -205,9 +205,9 @@ inline uint32_t lsr8x4(const uint32_t a, const uint32_t b) {
 }
 
 inline uint32_t saturate32(const int64_t x) {
-  return (x > 0x000000007fffffff)
+  return (x > INT64_C(0x000000007fffffff))
              ? 0x7fffffffu
-             : ((x < -0x0000000080000000) ? 0x80000000u : static_cast<uint32_t>(x));
+             : ((x < INT64_C(-0x0000000080000000)) ? 0x80000000u : static_cast<uint32_t>(x));
 }
 
 inline uint32_t saturate16(const int32_t x) {
@@ -221,9 +221,9 @@ inline uint32_t saturate8(const int16_t x) {
 }
 
 inline uint32_t saturateu32(const uint64_t x) {
-  return (x > 0x8000000000000000u)
+  return (x > UINT64_C(0x8000000000000000))
              ? 0x00000000u
-             : ((x > 0x00000000ffffffffu) ? 0xffffffffu : static_cast<uint32_t>(x));
+             : ((x > UINT64_C(0x00000000ffffffff)) ? 0xffffffffu : static_cast<uint32_t>(x));
 }
 
 inline uint32_t saturateu16(const uint32_t x) {
@@ -307,19 +307,19 @@ inline uint32_t saturating_op_u8x4(const uint32_t a,
 }
 
 inline uint32_t halve32(const int64_t x) {
-  return static_cast<uint32_t>(static_cast<int32_t>(x >> 1));
+  return static_cast<uint32_t>(x >> 1);
 }
 
 inline uint32_t halve16(const int32_t x) {
-  return static_cast<uint32_t>(static_cast<int16_t>(x >> 1));
+  return static_cast<uint32_t>(static_cast<uint16_t>(x >> 1));
 }
 
 inline uint32_t halve8(const int16_t x) {
-  return static_cast<uint32_t>(static_cast<int16_t>(x >> 1));
+  return static_cast<uint32_t>(static_cast<uint8_t>(x >> 1));
 }
 
 inline uint32_t halveu32(const uint64_t x) {
-  return static_cast<uint32_t>(static_cast<uint32_t>(x >> 1));
+  return static_cast<uint32_t>(x >> 1);
 }
 
 inline uint32_t halveu16(const uint32_t x) {
@@ -327,7 +327,7 @@ inline uint32_t halveu16(const uint32_t x) {
 }
 
 inline uint32_t halveu8(const uint16_t x) {
-  return static_cast<uint32_t>(static_cast<uint16_t>(x >> 1));
+  return static_cast<uint32_t>(static_cast<uint8_t>(x >> 1));
 }
 
 inline uint32_t halving_op_32(const uint32_t a, const uint32_t b, int64_t (*op)(int64_t, int64_t)) {
@@ -1526,7 +1526,7 @@ uint32_t cpu_simple_t::run() {
             case PACKED_HALF_WORD:
               ex_result = halving_op_u16x2(
                   ex_in.src_a, ex_in.src_b, [](uint32_t x, uint32_t y) -> uint32_t {
-                    return x + y;
+                    return x - y;
                   });
               break;
             default:
