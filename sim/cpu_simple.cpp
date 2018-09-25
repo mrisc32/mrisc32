@@ -412,7 +412,7 @@ inline uint32_t mulq15x2(const uint32_t a, const uint32_t b) {
   const auto b1 = static_cast<int32_t>(static_cast<int16_t>(b >> 16u));
   const auto b0 = static_cast<int32_t>(static_cast<int16_t>(b));
   const auto c1 = static_cast<uint32_t>((a1 * b1) << 1) & 0xffff0000u;
-  const auto c0 = static_cast<uint32_t>(a0 * b0) >> 15u;
+  const auto c0 = (static_cast<uint32_t>(a0 * b0) >> 15u) & 0x0000ffffu;
   return c1 | c0;
 }
 
