@@ -33,6 +33,7 @@ entity register_fetch is
       i_clk : in std_logic;
       i_rst : in std_logic;
       i_stall : in std_logic;
+      i_stall_id : in std_logic;  -- The stall signal to ID (we need it for the register files).
       o_stall : out std_logic;
       i_cancel : in std_logic;
 
@@ -208,8 +209,10 @@ begin
   -- Register files.
   --------------------------------------------------------------------------------------------------
 
-  -- We need to stall the register files (latch the inputs) if the RF stage is being stalled.
-  s_stall_register_files <= i_stall or s_missing_fwd_operand;
+  -- We need to stall the register files (latch the inputs) if the ID stage is being stalled. This
+  -- is because the inputs to the register files coming from the ID stage come from *before* the ID
+  -- pipeline stage output registers.
+  s_stall_register_files <= i_stall_id;
 
   -- Instantiate the scalar register file.
   s_scalar_we <= i_wb_we and not i_wb_is_vector;

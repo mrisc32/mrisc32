@@ -367,6 +367,7 @@ begin
       i_clk => i_clk,
       i_rst => i_rst,
       i_stall => s_stall_rf,
+      i_stall_id => s_stall_id,
       o_stall => s_rf_stall,
       i_cancel => s_cancel_speculative_instructions,
 

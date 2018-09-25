@@ -613,31 +613,18 @@ test_mul:
 
 test_div:
     ; Division/remainder operations
-    ; TODO(m): Remove the nop:s once we trust the hardware stalling implementation.
     div     s1, s19, s22
-    nop
     div.h   s2, s19, s22
-    nop
     div.b   s3, s19, s22
-    nop
     divu    s4, s19, s22
-    nop
     divu.h  s5, s19, s22
-    nop
     divu.b  s6, s19, s22
-    nop
     rem     s7, s19, s22
-    nop
     rem.h   s8, s19, s22
-    nop
     rem.b   s9, s19, s22
-    nop
     remu    s10, s19, s22
-    nop
     remu.h  s11, s19, s22
-    nop
     remu.b  s12, s19, s22
-    nop
 
     ; Store results.
     stw     s1, s25, 0

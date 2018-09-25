@@ -67,6 +67,10 @@ architecture rtl of div is
   signal s_next_div8_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_next_div8_result_ready : std_logic;
   signal s_div8_stall : std_logic;
+
+  signal s_stall_div32 : std_logic;
+  signal s_stall_div16 : std_logic;
+  signal s_stall_div8 : std_logic;
 begin
   -- Select division width.
   s_div32_enable <= i_enable when i_packed_mode = C_PACKED_NONE else '0';
@@ -83,7 +87,7 @@ begin
     port map (
       i_clk => i_clk,
       i_rst => i_rst,
-      i_stall => i_stall,
+      i_stall => s_stall_div32,
       o_stall => s_div32_stall,
       i_enable => s_div32_enable,
       i_op => i_op,
@@ -107,7 +111,7 @@ begin
       port map (
         i_clk => i_clk,
         i_rst => i_rst,
-        i_stall => i_stall,
+        i_stall => s_stall_div16,
         o_stall => s_stall(k),
         i_enable => s_div16_enable,
         i_op => i_op,
@@ -138,7 +142,7 @@ begin
       port map (
         i_clk => i_clk,
         i_rst => i_rst,
-        i_stall => i_stall,
+        i_stall => s_stall_div8,
         o_stall => s_stall(k),
         i_enable => s_div8_enable,
         i_op => i_op,
@@ -154,6 +158,11 @@ begin
         s_div8_stall <= s_stall(1);
       end generate;
   end generate;
+
+  -- Internal stall logic. Only ONE division loop can be running at a time!
+  s_stall_div32 <= i_stall or s_div16_stall or s_div8_stall;
+  s_stall_div16 <= i_stall or s_div32_stall or s_div8_stall;
+  s_stall_div8 <= i_stall or s_div32_stall or s_div16_stall;
 
   -- Select the output signals.
   o_next_result <=
