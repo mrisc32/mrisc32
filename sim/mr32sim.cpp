@@ -17,6 +17,7 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //--------------------------------------------------------------------------------------------------
 
+#include "config.hpp"
 #include "cpu_simple.hpp"
 #include "ram.hpp"
 
@@ -29,7 +30,7 @@
 #include <cstring>
 
 namespace {
-uint32_t read_bin_file(const char* file_name, ram_t& ram) {
+void read_bin_file(const char* file_name, ram_t& ram) {
   std::ifstream f(file_name, std::fstream::in | std::fstream::binary);
   if (f.bad()) {
     throw std::runtime_error("Unable to open the binary file.");
@@ -57,7 +58,6 @@ uint32_t read_bin_file(const char* file_name, ram_t& ram) {
   std::cout << "Read " << total_bytes_read << " bytes from " << file_name << " into RAM @ 0x"
             << std::hex << std::setw(8) << std::setfill('0') << start_addr << "\n";
   std::cout << std::resetiosflags(std::ios::hex);
-  return start_addr;
 }
 
 void print_help(const char* prg_name) {
@@ -99,10 +99,10 @@ int main(const int argc, const char** argv) {
 
   try {
     // Initialize the RAM.
-    ram_t ram;
+    ram_t ram(config_t::instance().ram_size());
 
     // Load the program file into RAM.
-    const uint32_t start_addr = read_bin_file(bin_file, ram);
+    read_bin_file(bin_file, ram);
 
     // Initialize the CPU.
     cpu_simple_t cpu(ram);

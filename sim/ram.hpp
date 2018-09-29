@@ -20,35 +20,45 @@
 #ifndef SIM_RAM_HPP_
 #define SIM_RAM_HPP_
 
-#include <array>
 #include <cstdint>
+#include <stdexcept>
+#include <vector>
 
 /// @brief Simulated RAM.
 ///
-/// The memory is 32-bit addressable, and is 4GB in size (all elements are zero upon creation). The
-/// memory is allocated on demand from the host machine.
+/// The memory is 32-bit addressable. All memory is allocated up front from the host machine.
 class ram_t {
 public:
-  ram_t();
+  ram_t(const uint32_t ram_size) : m_memory(ram_size, 0u) {
+  }
 
-  ~ram_t();
-
-  uint8_t& at8(const uint32_t byte_addr);
+  uint8_t& at8(const uint32_t byte_addr) {
+    if (static_cast<std::vector<uint8_t>::size_type>(byte_addr) >= m_memory.size()) {
+      throw std::runtime_error("Out of range memory access.");
+    }
+    return m_memory[byte_addr];
+  }
 
   // Note: These functions are host machine endian dependent. Consider converting them to read/write
   // methods instead.
-  uint16_t& at16(const uint32_t byte_addr);
-  uint32_t& at32(const uint32_t byte_addr);
+  uint16_t& at16(const uint32_t byte_addr) {
+    if ((byte_addr % 2u) != 0u) {
+      throw std::runtime_error("Unaligned 16-bit memory access.");
+    }
+    auto& data8 = at8(byte_addr);
+    return reinterpret_cast<uint16_t&>(data8);
+  }
+
+  uint32_t& at32(const uint32_t byte_addr) {
+    if ((byte_addr % 4u) != 0u) {
+      throw std::runtime_error("Unaligned 32-bit memory access.");
+    }
+    auto& data8 = at8(byte_addr);
+    return reinterpret_cast<uint32_t&>(data8);
+  }
 
 private:
-  // The total 4GB RAM is divided into smaller blocks in the simulator to avoid using more host RAM
-  // than necessary. Each block is allocated on demand on first use.
-  static const uint32_t BLOCK_SIZE = 1048576u;  // 1 MB per block
-  static const uint32_t NUM_BLOCKS = 4096u;     // ...for a total of 4 GB.
-
-  using block_t = std::array<uint8_t, BLOCK_SIZE>;
-
-  std::array<block_t*, NUM_BLOCKS> m_blocks;
+  std::vector<uint8_t> m_memory;
 
   // The RAM object is non-copyable.
   ram_t(const ram_t&) = delete;
