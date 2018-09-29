@@ -21,13 +21,14 @@
 #include "cpu_simple.hpp"
 #include "ram.hpp"
 
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
 #include <exception>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <cstdint>
-#include <cstdlib>
-#include <cstring>
+#include <thread>
 
 namespace {
 void read_bin_file(const char* file_name, ram_t& ram) {
@@ -107,10 +108,21 @@ int main(const int argc, const char** argv) {
     // Initialize the CPU.
     cpu_simple_t cpu(ram);
 
-    // Run until the program returns.
-    std::cout << "--------------------------------------------------------------------------\n";
-    const int exit_code = static_cast<int>(cpu.run());
-    std::cout << "--------------------------------------------------------------------------\n";
+    // Start the CPU in a separate thread.
+    uint32_t cpu_exit_code = 0;
+    std::thread cpu_thread([&cpu_exit_code, &cpu] {
+      try {
+        // Run until the program returns.
+        cpu_exit_code = cpu.run();
+      } catch (std::exception& e) {
+        std::cerr << "Exception in CPU thread: " << e.what() << "\n";
+        std::exit(1);
+      }
+    });
+
+    // Wait for the cpu thread to finish.
+    cpu_thread.join();
+    const int exit_code = static_cast<int>(cpu_exit_code);
 
     // Show some stats.
     cpu.dump_stats();
