@@ -5,7 +5,23 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+set(MR32SIM_DEFINES)
+set(MR32SIM_LIBS)
+
+# Optionally use GLFW + OpenGL for graphics.
+find_package(glfw3 QUIET)
+find_package(OpenGL QUIET)
+if(glfw3_FOUND AND OpenGL_FOUND)
+  list(APPEND MR32SIM_DEFINES ENABLE_GUI)
+  list(APPEND MR32SIM_LIBS glfw
+                           ${OPENGL_gl_LIBRARY})
+else()
+  message(WARNING "Due to missing dependencies there will be no GUI support.")
+endif()
+
+# We need C++ threads.
 find_package(Threads REQUIRED)
+list(APPEND MR32SIM_LIBS ${CMAKE_THREAD_LIBS_INIT})
 
 add_executable(mr32sim
                mr32sim.cpp
@@ -17,4 +33,5 @@ add_executable(mr32sim
                cpu_simple.hpp
                ram.hpp)
 target_include_directories(mr32sim PRIVATE .)
-target_link_libraries(mr32sim ${CMAKE_THREAD_LIBS_INIT})
+target_compile_definitions(mr32sim PRIVATE ${MR32SIM_DEFINES})
+target_link_libraries(mr32sim ${MR32SIM_LIBS})

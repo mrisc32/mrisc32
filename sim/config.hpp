@@ -30,13 +30,43 @@ public:
     return m_ram_size;
   }
 
+  bool gfx_enabled() const {
+    return m_gfx_enabled;
+  }
+
+  uint32_t gfx_addr() const {
+    return m_gfx_addr;
+  }
+
+  uint32_t gfx_width() const {
+    return m_gfx_width;
+  }
+
+  uint32_t gfx_height() const {
+    return m_gfx_height;
+  }
+
+  uint32_t gfx_depth() const {
+    return m_gfx_depth;
+  }
+
 private:
   config_t() {}
 
   // Default values.
   static const uint32_t DEFAULT_RAM_SIZE = 0x1000000u;  // 16 MiB
+  static const bool DEFAULT_GFX_ENABLED = true;
+  static const uint32_t DEFAULT_GFX_ADDR = 0x0800000u;
+  static const uint32_t DEFAULT_GFX_WIDTH = 1024u;
+  static const uint32_t DEFAULT_GFX_HEIGHT = 576u;
+  static const uint32_t DEFAULT_GFX_DEPTH = 32u;
 
   uint32_t m_ram_size = DEFAULT_RAM_SIZE;
+  bool m_gfx_enabled = DEFAULT_GFX_ENABLED;
+  uint32_t m_gfx_addr = DEFAULT_GFX_ADDR;
+  uint32_t m_gfx_width = DEFAULT_GFX_WIDTH;
+  uint32_t m_gfx_height = DEFAULT_GFX_HEIGHT;
+  uint32_t m_gfx_depth = DEFAULT_GFX_DEPTH;
 };
 
 #endif  // SIM_CONFIG_HPP_
