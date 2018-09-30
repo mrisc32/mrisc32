@@ -22,6 +22,7 @@
 #include "ram.hpp"
 
 #ifdef ENABLE_GUI
+#include "gpu.hpp"
 #include <GLFW/glfw3.h>
 #endif
 
@@ -163,11 +164,14 @@ int main(const int argc, const char** argv) {
         // Enable vsync.
         glfwSwapInterval(1);
 
+        // Init the "GPU".
+        gpu_t gpu(ram);
+
         // Main loop.
         bool simulation_finished = false;
         while (!glfwWindowShouldClose(window)) {
           // Update graphics.
-          // TODO(m): Implement me!
+          gpu.paint();
 
           // Swap front/back buffers and poll window events.
           glfwSwapBuffers(window);
