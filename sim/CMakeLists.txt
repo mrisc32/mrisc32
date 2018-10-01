@@ -26,7 +26,8 @@ if(glfw3_FOUND AND OpenGL_FOUND)
   list(APPEND MR32SIM_DEFINES ENABLE_GUI)
   list(APPEND MR32SIM_LIBS glfw
                            glad
-                           ${OPENGL_gl_LIBRARY})
+                           ${OPENGL_gl_LIBRARY}
+                           ${CMAKE_DL_LIBS})
 else()
   message(WARNING "Due to missing dependencies there will be no GUI support.")
 endif()

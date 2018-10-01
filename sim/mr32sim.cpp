@@ -183,8 +183,14 @@ int main(const int argc, const char** argv) {
           // Main loop.
           bool simulation_finished = false;
           while (!glfwWindowShouldClose(window)) {
+            // Get the actual window framebuffer size (note: this is important on systems that use
+            // coordinate scaling, such as on macos with retina display).
+            int actual_fb_width;
+            int actual_fb_height;
+            glfwGetFramebufferSize(window, &actual_fb_width, &actual_fb_height);
+
             // Update graphics.
-            gpu.paint();
+            gpu.paint(actual_fb_width, actual_fb_height);
 
             // Swap front/back buffers and poll window events.
             glfwSwapBuffers(window);
@@ -201,6 +207,9 @@ int main(const int argc, const char** argv) {
               glfwSetWindowShouldClose(window, GLFW_TRUE);
             }
           }
+
+          // Clean up GPU resources before we close the window.
+          gpu.cleanup();
 
           // Close the window.
           glfwDestroyWindow(window);

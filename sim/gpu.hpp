@@ -22,15 +22,38 @@
 
 #include "ram.hpp"
 
+#include <glad/glad.h>
+
+#include <cstdint>
+
 class gpu_t {
 public:
   gpu_t(ram_t& ram);
-  ~gpu_t();
+  void cleanup();
 
-  void paint();
+  void paint(const int actual_fb_width, const int actual_fb_height);
 
 private:
+  void check_gfx_config();
+
   ram_t& m_ram;
+
+  uint32_t m_gfx_ram_start;
+  uint32_t m_width;
+  uint32_t m_height;
+  uint32_t m_bytes_per_pixel;
+
+  GLint m_tex_internalformat;
+  GLenum m_tex_format;
+  GLenum m_tex_type;
+
+  GLuint m_program = 0u;
+  GLuint m_fb_tex = 0u;
+  GLuint m_vertex_array = 0u;
+  GLuint m_vertex_buffer = 0u;
+  GLint m_resolution_uniform = 0;
+  GLint m_sampler_uniform = 0;
+  GLint m_monochrome_uniform = 0;
 };
 
 #endif // SIM_GPU_HPP_
