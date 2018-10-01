@@ -20,10 +20,12 @@ set(MR32SIM_LIBS)
 find_package(glfw3 QUIET)
 find_package(OpenGL QUIET)
 if(glfw3_FOUND AND OpenGL_FOUND)
+  add_subdirectory(glad)
   list(APPEND MR32SIM_SRC gpu.cpp
                           gpu.hpp)
   list(APPEND MR32SIM_DEFINES ENABLE_GUI)
   list(APPEND MR32SIM_LIBS glfw
+                           glad
                            ${OPENGL_gl_LIBRARY})
 else()
   message(WARNING "Due to missing dependencies there will be no GUI support.")

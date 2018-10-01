@@ -19,6 +19,8 @@
 
 #include "gpu.hpp"
 
+#include <glad/glad.h>
+
 gpu_t::gpu_t(ram_t& ram) : m_ram(ram) {
   // TODO(m): Implement me!
 }
