@@ -56,10 +56,10 @@ private:
   // Default values.
   static const uint32_t DEFAULT_RAM_SIZE = 0x1000000u;  // 16 MiB
   static const bool DEFAULT_GFX_ENABLED = true;
-  static const uint32_t DEFAULT_GFX_ADDR = 0x0800000u;
-  static const uint32_t DEFAULT_GFX_WIDTH = 1024u;
-  static const uint32_t DEFAULT_GFX_HEIGHT = 576u;
-  static const uint32_t DEFAULT_GFX_DEPTH = 32u;
+  static const uint32_t DEFAULT_GFX_ADDR = 0x0008000u;
+  static const uint32_t DEFAULT_GFX_WIDTH = 256u;
+  static const uint32_t DEFAULT_GFX_HEIGHT = 256u;
+  static const uint32_t DEFAULT_GFX_DEPTH = 8u;
 
   uint32_t m_ram_size = DEFAULT_RAM_SIZE;
   bool m_gfx_enabled = DEFAULT_GFX_ENABLED;
