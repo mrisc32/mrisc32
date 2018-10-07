@@ -17,56 +17,43 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //--------------------------------------------------------------------------------------------------
 
-#ifndef SIM_CONFIG_HPP_
-#define SIM_CONFIG_HPP_
+#ifndef SIM_GPU_HPP_
+#define SIM_GPU_HPP_
+
+#include "ram.hpp"
+
+#include <glad/glad.h>
 
 #include <cstdint>
 
-class config_t {
+class gpu_t {
 public:
-  static config_t& instance();
+  gpu_t(ram_t& ram);
+  void cleanup();
 
-  uint32_t ram_size() const {
-    return m_ram_size;
-  }
-
-  bool gfx_enabled() const {
-    return m_gfx_enabled;
-  }
-
-  uint32_t gfx_addr() const {
-    return m_gfx_addr;
-  }
-
-  uint32_t gfx_width() const {
-    return m_gfx_width;
-  }
-
-  uint32_t gfx_height() const {
-    return m_gfx_height;
-  }
-
-  uint32_t gfx_depth() const {
-    return m_gfx_depth;
-  }
+  void paint(const int actual_fb_width, const int actual_fb_height);
 
 private:
-  config_t() {}
+  void check_gfx_config();
 
-  // Default values.
-  static const uint32_t DEFAULT_RAM_SIZE = 0x1000000u;  // 16 MiB
-  static const bool DEFAULT_GFX_ENABLED = true;
-  static const uint32_t DEFAULT_GFX_ADDR = 0x0008000u;
-  static const uint32_t DEFAULT_GFX_WIDTH = 256u;
-  static const uint32_t DEFAULT_GFX_HEIGHT = 256u;
-  static const uint32_t DEFAULT_GFX_DEPTH = 8u;
+  ram_t& m_ram;
 
-  uint32_t m_ram_size = DEFAULT_RAM_SIZE;
-  bool m_gfx_enabled = DEFAULT_GFX_ENABLED;
-  uint32_t m_gfx_addr = DEFAULT_GFX_ADDR;
-  uint32_t m_gfx_width = DEFAULT_GFX_WIDTH;
-  uint32_t m_gfx_height = DEFAULT_GFX_HEIGHT;
-  uint32_t m_gfx_depth = DEFAULT_GFX_DEPTH;
+  uint32_t m_gfx_ram_start;
+  uint32_t m_width;
+  uint32_t m_height;
+  uint32_t m_bytes_per_pixel;
+
+  GLint m_tex_internalformat;
+  GLenum m_tex_format;
+  GLenum m_tex_type;
+
+  GLuint m_program = 0u;
+  GLuint m_fb_tex = 0u;
+  GLuint m_vertex_array = 0u;
+  GLuint m_vertex_buffer = 0u;
+  GLint m_resolution_uniform = 0;
+  GLint m_sampler_uniform = 0;
+  GLint m_monochrome_uniform = 0;
 };
 
-#endif  // SIM_CONFIG_HPP_
+#endif // SIM_GPU_HPP_

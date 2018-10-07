@@ -21,6 +21,14 @@
 #include "cpu_simple.hpp"
 #include "ram.hpp"
 
+#ifdef ENABLE_GUI
+#include <glad/glad.h>
+// Note: Keep this comment to convince clang-format to include glad.h before glfw3.h.
+#include <GLFW/glfw3.h>
+#include "gpu.hpp"
+#endif
+
+#include <atomic>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -72,6 +80,7 @@ void print_help(const char* prg_name) {
 
 int main(const int argc, const char** argv) {
   // Parse command line options.
+  // TODO(m): Add options for graphics (e.g. framebuffer size).
   const char* bin_file = static_cast<const char*>(0);
   for (int k = 1; k < argc; ++k) {
     if (argv[k][0] == '-') {
@@ -108,17 +117,109 @@ int main(const int argc, const char** argv) {
     // Initialize the CPU.
     cpu_simple_t cpu(ram);
 
-    // Start the CPU in a separate thread.
-    uint32_t cpu_exit_code = 0;
-    std::thread cpu_thread([&cpu_exit_code, &cpu] {
+    // Run the CPU in a separate thread.
+    std::atomic_bool cpu_done(false);
+    uint32_t cpu_exit_code = 0u;
+    std::thread cpu_thread([&cpu_exit_code, &cpu, &cpu_done] {
       try {
         // Run until the program returns.
         cpu_exit_code = cpu.run();
       } catch (std::exception& e) {
         std::cerr << "Exception in CPU thread: " << e.what() << "\n";
-        std::exit(1);
+        cpu_exit_code = 1u;
       }
+      cpu_done = true;
     });
+
+#ifdef ENABLE_GUI
+    if (config_t::instance().gfx_enabled()) {
+      try {
+        // Initialize GLFW.
+        if (glfwInit() != GLFW_TRUE) {
+          throw std::runtime_error("Unable to initialize GLFW.");
+        }
+
+        // The window should note be resizeable.
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
+        // We want the display to be 24-bit RGB.
+        glfwWindowHint(GLFW_RED_BITS, 8);
+        glfwWindowHint(GLFW_GREEN_BITS, 8);
+        glfwWindowHint(GLFW_BLUE_BITS, 8);
+        glfwWindowHint(GLFW_ALPHA_BITS, GLFW_DONT_CARE);
+        glfwWindowHint(GLFW_DEPTH_BITS, GLFW_DONT_CARE);
+        glfwWindowHint(GLFW_STENCIL_BITS, GLFW_DONT_CARE);
+
+        // The GL context should support the 3.2 core profile (forward compatible).
+        // This ensures that we get a modern GL context on macOS.
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+        // Create a GLFW window.
+        auto* window = glfwCreateWindow(static_cast<int>(config_t::instance().gfx_width()),
+                                        static_cast<int>(config_t::instance().gfx_height()),
+                                        "MRISC32 Simulator",
+                                        nullptr,
+                                        nullptr);
+        if (window != nullptr) {
+          glfwMakeContextCurrent(window);
+
+          // Initialize GLAD.
+          if (gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)) == 0) {
+            glfwDestroyWindow(window);
+            glfwTerminate();
+            throw std::runtime_error("Unable to initialize GLAD.");
+          }
+          std::cerr << "OpenGL version: " << GLVersion.major << "." << GLVersion.minor << "\n";
+
+          // Init the "GPU".
+          gpu_t gpu(ram);
+
+          // Enable vsync.
+          glfwSwapInterval(1);
+
+          // Main loop.
+          bool simulation_finished = false;
+          while (!glfwWindowShouldClose(window)) {
+            // Get the actual window framebuffer size (note: this is important on systems that use
+            // coordinate scaling, such as on macos with retina display).
+            int actual_fb_width;
+            int actual_fb_height;
+            glfwGetFramebufferSize(window, &actual_fb_width, &actual_fb_height);
+
+            // Update graphics.
+            gpu.paint(actual_fb_width, actual_fb_height);
+
+            // Swap front/back buffers and poll window events.
+            glfwSwapBuffers(window);
+            glfwPollEvents();
+
+            // Simulation finished?
+            if (cpu_done && !simulation_finished) {
+              glfwSetWindowTitle(window, "MRISC32 Simulator - Finished");
+              simulation_finished = true;
+            }
+
+            // ESC pressed?
+            if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+              glfwSetWindowShouldClose(window, GLFW_TRUE);
+            }
+          }
+
+          // Clean up GPU resources before we close the window.
+          gpu.cleanup();
+
+          // Close the window.
+          glfwDestroyWindow(window);
+          glfwTerminate();
+        }
+      } catch (std::exception& e) {
+        std::cerr << "Graphics error: " << e.what() << "\n";
+      }
+    }
+#endif
 
     // Wait for the cpu thread to finish.
     cpu_thread.join();
