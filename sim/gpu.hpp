@@ -67,6 +67,7 @@ private:
   uint32_t m_width = 0u;
   uint32_t m_height = 0u;
   uint32_t m_depth = 0u;
+  uint32_t m_frame_no = 0u;
 
   uint32_t m_bytes_per_pixel;
   GLint m_tex_internalformat;

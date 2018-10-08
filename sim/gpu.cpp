@@ -28,10 +28,11 @@
 namespace {
 // Memory mapped I/O: GPU configuration registers.
 const uint32_t MMIO_GPU_BASE = 0x00000100u;
-const uint32_t MMIO_GPU_ADDR = MMIO_GPU_BASE + 0u;    // Start of the framebuffer memory area.
-const uint32_t MMIO_GPU_WIDTH = MMIO_GPU_BASE + 4u;   // Width of the framebuffer (in pixels).
-const uint32_t MMIO_GPU_HEIGHT = MMIO_GPU_BASE + 8u;  // Height of the framebuffer (in pixels).
-const uint32_t MMIO_GPU_DEPTH = MMIO_GPU_BASE + 12u;  // Number of bits per pixel.
+const uint32_t MMIO_GPU_ADDR = MMIO_GPU_BASE + 0u;       // Start of the framebuffer memory area.
+const uint32_t MMIO_GPU_WIDTH = MMIO_GPU_BASE + 4u;      // Width of the framebuffer (in pixels).
+const uint32_t MMIO_GPU_HEIGHT = MMIO_GPU_BASE + 8u;     // Height of the framebuffer (in pixels).
+const uint32_t MMIO_GPU_DEPTH = MMIO_GPU_BASE + 12u;     // Number of bits per pixel.
+const uint32_t MMIO_GPU_FRAME_NO = MMIO_GPU_BASE + 32u;  // Current frame number (32 bits).
 
 const GLchar* VERTEX_SRC =
     "#version 150\n"
@@ -307,4 +308,8 @@ void gpu_t::paint(const int actual_fb_width, const int actual_fb_height) {
   glDrawArrays(GL_TRIANGLES, 0, 6);  // 6 vertices -> 2 triangles
   glDisableVertexAttribArray(0);
   check_gl_error();
+
+  // Update the frame number.
+  ++m_frame_no;
+  m_ram.at32(MMIO_GPU_FRAME_NO) = m_frame_no;
 }
