@@ -148,6 +148,7 @@
       <keyword>stb</keyword>
       <keyword>sth</keyword>
       <keyword>stw</keyword>
+      <keyword>stride</keyword>
 
       <!-- Branch -->
       <keyword>j</keyword>
