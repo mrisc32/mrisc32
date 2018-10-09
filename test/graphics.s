@@ -34,14 +34,11 @@ boot:
 
 main:
     cpuid   s13, z, z
-    min     s13, s13, 64    ; We only support up to 64 elements (due to fixed size .ramp array)
     mov     vl, s13
     lsl     s14, s13, 2     ; s14 = memory stride per vector operation
 
-    lea     s1, .ramp
-    add     s2, s14, -4
-    add     s1, s1, s2
-    ldw     v4, s1, -4      ; v4 is a ramp from vl-1 downto 0
+    add     s1, s13, -1
+    stride  v4, s1, -1      ; v4 is a ramp from vl-1 downto 0
 
     lea     s21, .sine1024  ; s21 = start of 1024-entry sine table
     ldi     s12, 0          ; s12 = last frame number
@@ -90,12 +87,6 @@ main:
 
     b       .begin_new_frame
 
-
-.ramp:
-    .i32    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
-    .i32    16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
-    .i32    32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47
-    .i32    48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63
 
 .sine1024:
     ; This is a 1024-entry LUT of sin(x), in Q15 format.
