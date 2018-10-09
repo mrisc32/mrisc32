@@ -226,10 +226,9 @@ _OPCODES = {
                      [0x86000000, _VREG1, _REG2, _IMM14]],
                    'packed_op': False
                   },
-        'LDLW':   {'descrs':
-                    [[0x00000007, _REG1, _REG2, _REG3],    # Load linked
-                     [0x07000000, _REG1, _REG2, _IMM14],
-                     [0x0707c000, _REG1, _PCREL14]],       # Alias for _REG1, PC, offset
+        'STRIDE': {'descrs':
+                    [[0x80000007, _VREG1, _REG2, _REG3],
+                     [0x87000000, _VREG1, _REG2, _IMM14]],
                    'packed_op': False
                   },
         'STB':    {'descrs':
@@ -257,12 +256,6 @@ _OPCODES = {
                      [0x0b000000, _REG1, _REG2, _IMM14],
                      [0x0b07c000, _REG1, _PCREL14],        # Alias for _REG1, PC, offset
                      [0x8b000000, _VREG1, _REG2, _IMM14]],
-                   'packed_op': False
-                  },
-        'STCW':   {'descrs':
-                    [[0x0000000f, _REG1, _REG2, _REG3],    # Store conditional
-                     [0x0f000000, _REG1, _REG2, _IMM14],
-                     [0x0f07c000, _REG1, _PCREL14]],       # Alias for _REG1, PC, offset
                    'packed_op': False
                   },
 

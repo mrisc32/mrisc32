@@ -142,14 +142,13 @@
       <keyword>ldb</keyword>
       <keyword>ldh</keyword>
       <keyword>ldi</keyword>
-      <keyword>ldlw</keyword>
       <keyword>ldub</keyword>
       <keyword>lduh</keyword>
       <keyword>ldw</keyword>
       <keyword>stb</keyword>
-      <keyword>stcw</keyword>
       <keyword>sth</keyword>
       <keyword>stw</keyword>
+      <keyword>stride</keyword>
 
       <!-- Branch -->
       <keyword>j</keyword>

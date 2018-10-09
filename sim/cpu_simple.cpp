@@ -1814,6 +1814,9 @@ uint32_t cpu_simple_t::run() {
         case MEM_OP_LOAD32:
           mem_result = m_ram.at32(mem_in.mem_addr);
           break;
+        case MEM_OP_STRIDE:
+          mem_result = mem_in.mem_addr;
+          break;
         case MEM_OP_STORE8:
           m_ram.at8(mem_in.mem_addr) = static_cast<uint8_t>(mem_in.store_data);
           break;

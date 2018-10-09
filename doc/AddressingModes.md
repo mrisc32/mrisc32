@@ -22,7 +22,7 @@ There are three different addressing modes for loads and stores to/from scalar r
 
 ## Vector load/store
 
-There are four different addressing modes for loads and stores to/from vector registers:
+There are six different addressing modes for loads and stores to/from vector registers:
 
 1. Base register plus immediate stride.
    - `Vd[k] <= MEM[Sa + imm * k]`
@@ -37,6 +37,11 @@ There are four different addressing modes for loads and stores to/from vector re
 4. Immediate (load only).
    - `Vd[k] <= imm`
    - `imm` is a signed 19-bit value that can optionally be shifted left 13 bits with either zero- or one-filled lower 13 bits.
+5. Immediate stride (load only).
+   - `Vd[k] <= Sa + imm * k`
+   - `imm` is a signed 14-bit stride value.
+6. Register stride (load only).
+   - `Vd[k] <= Sa + Sb * k`
 
 
 ## Branch and jump instructions

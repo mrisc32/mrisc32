@@ -224,6 +224,7 @@ package common is
   constant C_MEM_OP_LOAD32  : T_MEM_OP := "0011";
   constant C_MEM_OP_LOADU8  : T_MEM_OP := "0101";
   constant C_MEM_OP_LOADU16 : T_MEM_OP := "0110";
+  constant C_MEM_OP_STRIDE  : T_MEM_OP := "0111";
   constant C_MEM_OP_STORE8  : T_MEM_OP := "1001";
   constant C_MEM_OP_STORE16 : T_MEM_OP := "1010";
   constant C_MEM_OP_STORE32 : T_MEM_OP := "1011";
