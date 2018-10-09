@@ -107,6 +107,7 @@ end execute;
 architecture rtl of execute is
   signal s_alu_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_agu_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_agu_address_is_result : std_logic;
   signal s_sau_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_sau_result_ready : std_logic;
   signal s_mul_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -139,6 +140,7 @@ architecture rtl of execute is
   -- Signals from the EX1 to the EX2 stage (async).
   signal s_ex1_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ex1_next_result_ready : std_logic;
+  signal s_ex1_next_mem_enable : std_logic;
 
   -- Signals from the EX1 to the EX2 stage (sync).
   signal s_ex1_mem_op : T_MEM_OP;
@@ -283,6 +285,10 @@ begin
       o_result => s_agu_result
     );
 
+  -- Should the AGU result be used for the memory unit or directly?
+  s_agu_address_is_result <= i_mem_en when i_mem_op = C_MEM_OP_STRIDE else '0';
+  s_ex1_next_mem_enable <= i_mem_en and not s_agu_address_is_result;
+
   -- Prepare the byte mask for the MEM stage.
   ByteMaskMux: with i_mem_op(1 downto 0) select
     s_mem_byte_mask_unshifted <=
@@ -307,8 +313,9 @@ begin
 
   -- Select the result from the EX1 stage.
   s_ex1_next_result <= s_fpu_f1_result when s_fpu_f1_result_ready = '1' else
+                       s_agu_result when s_agu_address_is_result = '1' else
                        s_alu_result;
-  s_ex1_next_result_ready <= i_alu_en or s_fpu_f1_result_ready;
+  s_ex1_next_result_ready <= s_fpu_f1_result_ready or s_agu_address_is_result or i_alu_en;
 
   -- Outputs to the EX2 stage (sync).
   process(i_clk, i_rst)
@@ -330,7 +337,7 @@ begin
       if s_stall_ex = '0' then
         s_ex1_mem_op <= i_mem_op;
         s_ex1_mem_addr <= s_agu_result;
-        s_ex1_mem_enable <= i_mem_en;
+        s_ex1_mem_enable <= s_ex1_next_mem_enable;
         s_ex1_mem_we <= i_mem_op(3);
         s_ex1_mem_byte_mask <= s_mem_byte_mask;
         s_ex1_result <= s_ex1_next_result;
