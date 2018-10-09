@@ -140,11 +140,10 @@ protected:
   static const uint32_t MEM_OP_LOAD32 = 0x3u;
   static const uint32_t MEM_OP_LOADU8 = 0x5u;
   static const uint32_t MEM_OP_LOADU16 = 0x6u;
-  // TODO(m): LOAD32_LINKED
+  static const uint32_t MEM_OP_STRIDE = 0x07u;
   static const uint32_t MEM_OP_STORE8 = 0x9u;
   static const uint32_t MEM_OP_STORE16 = 0xau;
   static const uint32_t MEM_OP_STORE32 = 0xbu;
-  // TODO(m): STORE32_CONDITIONAL
 
   // Packed operation modes.
   static const uint32_t PACKED_NONE = 0u;
