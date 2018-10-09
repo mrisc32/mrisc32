@@ -30,7 +30,7 @@
 |LDI| x | x |   | dst, i19 | dst <= signextend(i19) | Alt. 1: Load immediate (low 19 bits) |
 |   | x | x |   | dst, i19 | dst <= i19 << 13 | Alt. 2: Load immediate (high 19 bits) |
 |   | x | x |   | dst, i19 | dst <= (i19 << 13) \| 0x1fff | Alt. 3: Load immediate with low ones (high 19 bits) |
-|STRIDE| x | x |   | dst, src1, src2 | dst[k] <= src1 + src2 * k | Generate a linear stride (vector instruction) |
+|LDSTRD| x | x |   | dst, src1, src2 | dst[k] <= src1 + src2 * k | Load a linear stride (vector instruction) |
 
 **(1)**: The third operand in vector loads/stores is used as a stride or offset parameter (see [addressing modes](AddressingModes.md) for more details).
 

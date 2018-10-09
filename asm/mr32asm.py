@@ -226,7 +226,7 @@ _OPCODES = {
                      [0x86000000, _VREG1, _REG2, _IMM14]],
                    'packed_op': False
                   },
-        'STRIDE': {'descrs':
+        'LDSTRD': {'descrs':
                     [[0x80000007, _VREG1, _REG2, _REG3],
                      [0x87000000, _VREG1, _REG2, _IMM14]],
                    'packed_op': False

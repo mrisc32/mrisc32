@@ -286,7 +286,7 @@ begin
     );
 
   -- Should the AGU result be used for the memory unit or directly?
-  s_agu_address_is_result <= i_mem_en when i_mem_op = C_MEM_OP_STRIDE else '0';
+  s_agu_address_is_result <= i_mem_en when i_mem_op = C_MEM_OP_LDSTRD else '0';
   s_ex1_next_mem_enable <= i_mem_en and not s_agu_address_is_result;
 
   -- Prepare the byte mask for the MEM stage.
