@@ -56,8 +56,8 @@ begin
     );
 
   process
-    -- We have a memory array that represents 128KB or RAM (for program and data).
-    constant C_MEM_NUM_WORDS : integer := 2**15;
+    -- We have a memory array that represents 512KB or RAM (for program and data).
+    constant C_MEM_NUM_WORDS : integer := 2**17;
     type T_MEM_ARRAY is array (0 to C_MEM_NUM_WORDS-1) of std_logic_vector(C_WORD_SIZE-1 downto 0);
     variable v_mem_array : T_MEM_ARRAY;
 
