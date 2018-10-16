@@ -41,7 +41,7 @@ const GLchar* VERTEX_SRC =
     "uniform vec2 u_resolution;"
     "void main(void)"
     "{"
-    "  v_uv = ((1.0 - a_pos) * 0.5) * u_resolution;"
+    "  v_uv = (vec2(a_pos.x + 1.0, 1.0 - a_pos.y) * 0.5) * u_resolution;"
     "  gl_Position = vec4(a_pos, 1.0, 1.0);"
     "}";
 
