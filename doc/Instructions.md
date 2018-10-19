@@ -76,13 +76,11 @@
 |ASR| x | x | x | dst, src1, src2 | dst <= src1 >> src2 (signed) | Arithmetic shift right |
 |LSL| x | x | x | dst, src1, src2 | dst <= src1 << src2 | Logic shift left |
 |LSR| x | x | x | dst, src1, src2 | dst <= src1 >> src2 (unsigned) | Logic shift right |
-|SHUF| x | x |   | dst, src1, src2 | dst <= shuffle(src1, src2) | Shuffle bytes according to the shuffle descriptor in src2 (2) |
+|SHUF| x | x |   | dst, src1, src2 | dst <= shuffle(src1, src2) | Shuffle bytes according to the shuffle descriptor in src2 (see [SHUF](SHUF.md)) |
 |CLZ|   | x |   | dst, src1 | dst <= clz(src1) | Count leading zeros |
 |REV|   | x |   | dst, src1 | dst <= rev(src1) | Reverse bit order |
 |PACKB|   | x |   | dst, src1, src2 | dst <=<br>((src1 & 0x00ff0000) << 8) \|<br>((src1 & 0x000000ff) << 16) \|<br>((src2 & 0x00ff0000) >> 8) \|<br>(src2 & 0x000000ff) | Pack four bytes into a word |
 |PACKH|   | x |   | dst, src1, src2 | dst <=<br>((src1 & 0x0000ffff) << 16) \|<br>(src2 & 0x0000ffff) | Pack two half-words into a word |
-
-**(2)**: SHUF uses the four indices given in src2 to rearrange bytes from src1 into dst. The indcies are given in the lowest 12 bits of src2 (three bits per index, where the upper bit in each index can be set to 1 for filling the corresponding byte in dst with either zeros or the sign bit of the source byte, depending on the value of bit 12 in src2).
 
 ## Saturating and halving arithmentic instructions
 
