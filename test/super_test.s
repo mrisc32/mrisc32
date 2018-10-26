@@ -136,6 +136,7 @@ main:
     .u32    test_sau
     .u32    test_mul
     .u32    test_div
+    .u32    test_load_store
     .u32    0
 
 
@@ -666,7 +667,63 @@ test_fpu:
 ;--------------------------------------------------------------------------------------------------
 
 test_load_store:
-    ; TODO(m): Implement me!
+    ; Allocate stack space.
+    add     sp, sp, -8
+
+    ; Store data of different types to memory.
+    ldi     s10, -56
+    ldi     s11, -78
+    ldi     s12, -1234
+    ldi     s13, 12345678
+
+    ; Immediate offset.
+    stb     s10, sp, 0
+    stb     s11, sp, 1
+
+    ; Register offset.
+    ldi     s10, 2
+    ldi     s11, 4
+    sth     s12, sp, s10
+    stw     s13, sp, s11
+
+    ; Load data of different types from memory.
+
+    ; Immediate offset.
+    ldb     s1, sp, 0
+    ldb     s2, sp, 1
+    ldub    s3, sp, 0
+    ldub    s4, sp, 1
+
+    ; Register offset.
+    ldi     s10, 2
+    ldi     s11, 4
+    ldh     s5, sp, s10
+    lduh    s6, sp, s10
+    ldw     s7, sp, s11
+
+    ; Free stack space.
+    add     sp, sp, 8
+
+    ; Store results.
+    stw     s1, s25, 0
+    stw     s2, s25, 4
+    stw     s3, s25, 8
+    stw     s4, s25, 12
+    stw     s5, s25, 16
+    stw     s6, s25, 20
+    stw     s7, s25, 24
+
+    ; Check results.
+    lea     s1, .correct_results
+    mov     s2, s25
+    add     s25, s25, 28
+    b       check_results
+
+
+.correct_results:
+    .u32    7
+    .u32    0xffffffc8, 0xffffffb2, 0x000000c8, 0x000000b2
+    .u32    0xfffffb2e, 0x0000fb2e, 0x00bc614e
 
 
 ;--------------------------------------------------------------------------------------------------
