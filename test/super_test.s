@@ -137,6 +137,7 @@ main:
     .u32    test_mul
     .u32    test_div
     .u32    test_load_store
+    .u32    test_branch
     .u32    0
 
 
@@ -731,7 +732,38 @@ test_load_store:
 ;--------------------------------------------------------------------------------------------------
 
 test_branch:
-    ; TODO(m): Implement me!
+    ; Speculative instructions are cancelled
+    ldi     s1, 0x1000
+    ldw     s2, .value1
+    ldw     s3, .value2
+    b       .skip
+    ldi     s3, 0x2000
+    ldi     s3, 0x3000
+    ldi     s3, 0x4000
+.skip:
+    ldi     s4, 0x1003
+
+    ; Store results.
+    stw     s1, s25, 0
+    stw     s2, s25, 4
+    stw     s3, s25, 8
+    stw     s4, s25, 12
+
+    ; Check results.
+    lea     s1, .correct_results
+    mov     s2, s25
+    add     s25, s25, 16
+    b       check_results
+
+.value1:
+    .u32    0x1001
+.value2:
+    .u32    0x1002
+
+.correct_results:
+    .u32    4
+    .u32    0x1000, 0x1001, 0x1002, 0x1003
+
 
 
 ;--------------------------------------------------------------------------------------------------
