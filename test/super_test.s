@@ -40,37 +40,37 @@ boot:
     ldi     s26, 0
     ldi     s27, 0
     ldi     s30, 0
-    ldi     v1, 0
-    ldi     v2, 0
-    ldi     v3, 0
-    ldi     v4, 0
-    ldi     v5, 0
-    ldi     v6, 0
-    ldi     v7, 0
-    ldi     v8, 0
-    ldi     v9, 0
-    ldi     v10, 0
-    ldi     v11, 0
-    ldi     v12, 0
-    ldi     v13, 0
-    ldi     v14, 0
-    ldi     v15, 0
-    ldi     v16, 0
-    ldi     v17, 0
-    ldi     v18, 0
-    ldi     v19, 0
-    ldi     v20, 0
-    ldi     v21, 0
-    ldi     v22, 0
-    ldi     v23, 0
-    ldi     v24, 0
-    ldi     v25, 0
-    ldi     v26, 0
-    ldi     v27, 0
-    ldi     v28, 0
-    ldi     v29, 0
-    ldi     v30, 0
-    ldi     v31, 0
+    or      v1, vz, 0
+    or      v2, vz, 0
+    or      v3, vz, 0
+    or      v4, vz, 0
+    or      v5, vz, 0
+    or      v6, vz, 0
+    or      v7, vz, 0
+    or      v8, vz, 0
+    or      v9, vz, 0
+    or      v10, vz, 0
+    or      v11, vz, 0
+    or      v12, vz, 0
+    or      v13, vz, 0
+    or      v14, vz, 0
+    or      v15, vz, 0
+    or      v16, vz, 0
+    or      v17, vz, 0
+    or      v18, vz, 0
+    or      v19, vz, 0
+    or      v20, vz, 0
+    or      v21, vz, 0
+    or      v22, vz, 0
+    or      v23, vz, 0
+    or      v24, vz, 0
+    or      v25, vz, 0
+    or      v26, vz, 0
+    or      v27, vz, 0
+    or      v28, vz, 0
+    or      v29, vz, 0
+    or      v30, vz, 0
+    or      v31, vz, 0
 
 
 ;--------------------------------------------------------------------------------------------------
