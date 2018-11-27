@@ -891,36 +891,35 @@ uint32_t cpu_simple_t::run() {
 
     // ID/RF
     {
-      // Get the scalar instruction (mask off vector control bits).
-      const uint32_t sclar_instr = id_in.instr & 0x3fffffffu;
+      // Get the instruction word.
+      const uint32_t iword = id_in.instr;
+
+      // Detect encoding class (A, B or C).
+      const bool op_class_A = ((iword & 0xfc000000u) == 0x00000000u);
+      const bool op_class_C = ((iword & 0xc0000000u) == 0xc0000000u);
+      const bool op_class_B = !op_class_A && !op_class_C;
 
       // Is this a vector operation?
-      const uint32_t vector_mode = id_in.instr >> 30u;
+      const uint32_t vec_mask = op_class_A ? 3u : (op_class_B ? 2u : 0u);
+      const uint32_t vector_mode = (iword >> 14u) & vec_mask;
       const bool is_vector_op = (vector_mode != 0u);
       const bool is_folding_vector_op = (vector_mode == 1u);
 
-      // Detect encoding class (A, B or C).
-      const bool op_class_A = ((sclar_instr & 0x3f000000u) == 0x00000000u);
-      const bool op_class_C = ((sclar_instr & 0x30000000u) == 0x30000000u);
-      const bool op_class_B = !op_class_A && !op_class_C;
-
       // Is this a packed operation?
-      const uint32_t packed_mode = (op_class_A ? ((sclar_instr & 0x00000180u) >> 7) : 0u);
+      const uint32_t packed_mode = (op_class_A ? ((iword & 0x00000180u) >> 7) : 0u);
 
       // Extract parts of the instruction.
       // NOTE: These may or may not be valid, depending on the instruction type.
-      const uint32_t reg1 = (sclar_instr >> 19u) & 31u;
-      const uint32_t reg2 = (sclar_instr >> 14u) & 31u;
-      const uint32_t reg3 = (sclar_instr >> 9u) & 31u;
-      const uint32_t imm14 =
-          (sclar_instr & 0x00003fffu) | ((sclar_instr & 0x00002000u) ? 0xffffc000u : 0u);
-      const uint32_t imm19 =
-          (sclar_instr & 0x0007ffffu) | ((sclar_instr & 0x00040000u) ? 0xfff80000u : 0u);
+      const uint32_t reg1 = (iword >> 21u) & 31u;
+      const uint32_t reg2 = (iword >> 16u) & 31u;
+      const uint32_t reg3 = (iword >> 9u) & 31u;
+      const uint32_t imm15 = (iword & 0x00007fffu) | ((iword & 0x00004000u) ? 0xffff8000u : 0u);
+      const uint32_t imm21 = (iword & 0x001fffffu) | ((iword & 0x00100000u) ? 0xffe00000u : 0u);
 
       // == VECTOR STATE HANDLING ==
 
       if (is_vector_op) {
-        const uint32_t vector_stride = op_class_B ? imm14 : m_regs[reg3];
+        const uint32_t vector_stride = op_class_B ? imm15 : m_regs[reg3];
 
         // Start a new or continue an ongoing vector operartion?
         if (!vector.active) {
@@ -941,20 +940,19 @@ uint32_t cpu_simple_t::run() {
 
       // == BRANCH ==
 
-      const bool is_bcc = ((sclar_instr & 0x38000000u) == 0x30000000u);
-      const bool is_j = ((sclar_instr & 0x3e000000u) == 0x38000000u);
-      const bool is_subroutine_branch = ((sclar_instr & 0x3f000000u) == 0x39000000u);
+      const bool is_bcc = ((iword & 0xe0000000u) == 0xc0000000u);
+      const bool is_j = ((iword & 0xf8000000u) == 0xe0000000u);
+      const bool is_subroutine_branch = ((iword & 0xfc000000u) == 0xe4000000u);
       const bool is_branch = is_bcc || is_j;
 
       // Branch source register is reg1 (for b[cc] and j/jl/b/bl).
       const uint32_t branch_cond_reg = is_branch ? reg1 : REG_Z;
 
       // Read the branch/condition register.
-      // TODO(m): We should share a register read-port with the other register reads further down.
       const uint32_t branch_cond_value = m_regs[branch_cond_reg];
 
       // Evaluate condition (for b[cc]).
-      const uint32_t condition = (sclar_instr >> 24u) & 0x0000003fu;
+      const uint32_t condition = (iword >> 26u) & 0x0000003fu;
       bool condition_satisfied = false;
       switch (condition) {
         case 0x30u:  // bz
@@ -991,13 +989,13 @@ uint32_t cpu_simple_t::run() {
       // b[cc]?
       if (is_bcc) {
         branch_taken = condition_satisfied;
-        branch_target = id_in.pc + (imm19 << 2u);
+        branch_target = id_in.pc + (imm21 << 2u);
       }
 
       // j/jl/b/bl?
       if (is_j) {
         branch_taken = true;
-        branch_target = branch_cond_value + (imm19 << 2u);
+        branch_target = branch_cond_value + (imm21 << 2u);
       }
 
       next_pc = branch_taken ? branch_target : (id_in.pc + 4u);
@@ -1005,13 +1003,13 @@ uint32_t cpu_simple_t::run() {
       // == DECODE ==
 
       // Is this a mem load/store operation?
-      const bool is_ldx = ((sclar_instr & 0x3f0001f8u) == 0x00000000u) &&
-                          ((sclar_instr & 0x00000007u) != 0x00000000u);
-      const bool is_ld = ((sclar_instr & 0x38000000u) == 0x00000000u) &&
-                         ((sclar_instr & 0x07000000u) != 0x00000000u);
+      const bool is_ldx =
+          ((iword & 0xfc0001f8u) == 0x00000000u) && ((iword & 0x00000007u) != 0x00000000u);
+      const bool is_ld =
+          ((iword & 0xe0000000u) == 0x00000000u) && ((iword & 0x1c000000u) != 0x00000000u);
       const bool is_mem_load = is_ldx || is_ld;
-      const bool is_stx = ((sclar_instr & 0x3f0001f8u) == 0x00000008u);
-      const bool is_st = ((sclar_instr & 0x38000000u) == 0x08000000u);
+      const bool is_stx = ((iword & 0xfc0001f8u) == 0x00000008u);
+      const bool is_st = ((iword & 0xe0000000u) == 0x20000000u);
       const bool is_mem_store = is_stx || is_st;
       const bool is_mem_op = (is_mem_load || is_mem_store);
 
@@ -1037,19 +1035,19 @@ uint32_t cpu_simple_t::run() {
       uint32_t ex_op = EX_OP_CPUID;
       if (is_subroutine_branch || is_mem_op) {
         ex_op = EX_OP_ADD;
-      } else if (op_class_A && ((sclar_instr & 0x000001f0u) != 0x00000000u)) {
-        ex_op = sclar_instr & 0x000001ffu;
-      } else if (op_class_B && ((sclar_instr & 0x30000000u) != 0x00000000u)) {
-        ex_op = sclar_instr >> 24u;
+      } else if (op_class_A && ((iword & 0x000001f0u) != 0x00000000u)) {
+        ex_op = iword & 0x000001ffu;
+      } else if (op_class_B && ((iword & 0xc0000000u) != 0x00000000u)) {
+        ex_op = iword >> 26u;
       } else if (op_class_C) {
-        switch (sclar_instr & 0x3f000000u) {
-          case 0x3a000000u:  // ldi
+        switch (iword & 0xfc000000u) {
+          case 0xe8000000u:  // ldi
             ex_op = EX_OP_OR;
             break;
-          case 0x3b000000u:  // ldhi
+          case 0xec000000u:  // ldhi
             ex_op = EX_OP_LDHI;
             break;
-          case 0x3c000000u:  // ldhio
+          case 0xf0000000u:  // ldhio
             ex_op = EX_OP_LDHIO;
             break;
         }
@@ -1063,9 +1061,9 @@ uint32_t cpu_simple_t::run() {
       // Determine MEM operation.
       uint32_t mem_op = MEM_OP_NONE;
       if (is_mem_load) {
-        mem_op = (is_ldx ? (sclar_instr & 0x000001ffu) : (sclar_instr >> 24u));
+        mem_op = (is_ldx ? (iword & 0x000001ffu) : (iword >> 26u));
       } else if (is_mem_store) {
-        mem_op = (is_stx ? (sclar_instr & 0x000001ffu) : (sclar_instr >> 24u));
+        mem_op = (is_stx ? (iword & 0x000001ffu) : (iword >> 26u));
       }
 
       // Check what type of registers should be used (vector or scalar).
@@ -1091,7 +1089,7 @@ uint32_t cpu_simple_t::run() {
                         ? 4
                         : ((is_vector_op && is_mem_op)
                                ? vector_addr_offset
-                               : (op_class_B ? imm14 : (op_class_C ? imm19 : reg_b_data)));
+                               : (op_class_B ? imm15 : (op_class_C ? imm21 : reg_b_data)));
       ex_in.src_c = reg_c_data;
       ex_in.dst_reg = dst_reg;
       ex_in.dst_idx = vector.idx;
@@ -1112,10 +1110,10 @@ uint32_t cpu_simple_t::run() {
           break;
 
         case EX_OP_LDHI:
-          ex_result = ex_in.src_b << 13u;
+          ex_result = ex_in.src_b << 11u;
           break;
         case EX_OP_LDHIO:
-          ex_result = (ex_in.src_b << 13u) | 0x1fffu;
+          ex_result = (ex_in.src_b << 11u) | 0x7ffu;
           break;
 
         case EX_OP_OR:
