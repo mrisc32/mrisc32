@@ -143,8 +143,8 @@ begin
   s_pack_res <= s_packb_res when i_op(0) = '1' else s_packh_res;
 
   -- C_ALU_LDHI, C_ALU_LDHIO
-  s_ldhi_res(C_WORD_SIZE-1 downto C_WORD_SIZE-19) <= i_src_a(18 downto 0);
-  s_ldhi_res(C_WORD_SIZE-20 downto 0) <= (others => i_op(1));  -- C_ALU_LDHI="000001", C_ALU_LDHIO="000010"
+  s_ldhi_res(C_WORD_SIZE-1 downto C_WORD_SIZE-21) <= i_src_a(20 downto 0);
+  s_ldhi_res(C_WORD_SIZE-22 downto 0) <= (others => i_op(1));  -- C_ALU_LDHI="000001", C_ALU_LDHIO="000010"
 
   -- C_ALU_CLZ
   AluCLZ32: entity work.clz32

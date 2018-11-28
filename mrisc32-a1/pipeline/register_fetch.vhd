@@ -270,9 +270,10 @@ begin
 
   -- Calculate the offset branch target.
   pc_plus_offset_0: entity work.pc_plus_offset
+    generic map (OFFSET_SIZE => 21)
     port map (
       i_pc => i_pc,
-      i_offset => i_imm(18 downto 0),
+      i_offset => i_imm(20 downto 0),
       o_result => s_branch_offset_addr
     );
 

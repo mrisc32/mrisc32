@@ -18,9 +18,9 @@
 ----------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------
--- Increment a PC by a 19-bit signed word-offset.
+-- Increment a PC by a 21-bit signed word-offset.
 --
--- This is implemented as a (19+11)-bit adder, and the two least significant bits are set to zero.
+-- This is implemented as a (21+9)-bit adder, and the two least significant bits are set to zero.
 ----------------------------------------------------------------------------------------------------
 
 library ieee;
@@ -30,7 +30,7 @@ use work.common.all;
 
 entity pc_plus_offset is
   generic(
-      OFFSET_SIZE : integer := 19  -- Number of bits for the offset signal.
+      OFFSET_SIZE : integer := 21  -- Number of bits for the offset signal.
     );
   port(
       i_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
