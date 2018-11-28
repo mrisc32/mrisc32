@@ -732,7 +732,7 @@ test_load_store:
 ;--------------------------------------------------------------------------------------------------
 
 test_branch:
-    ; Speculative instructions are cancelled
+    ; Speculative instructions are cancelled.
     ldi     s1, 0x1000
     ldw     s2, .value1
     ldw     s3, .value2
@@ -743,16 +743,29 @@ test_branch:
 .skip:
     ldi     s4, 0x1003
 
+    ; Operand forwarding for conditional branches.
+    ldi     s5, 0
+    nop
+    nop
+    nop
+    nop
+    nop
+    add     s5, s5, 0x1004
+    bnz     s5, .ofwd_correct
+    ldi     s5, 0x5000
+.ofwd_correct:
+
     ; Store results.
     stw     s1, s25, 0
     stw     s2, s25, 4
     stw     s3, s25, 8
     stw     s4, s25, 12
+    stw     s5, s25, 16
 
     ; Check results.
     lea     s1, .correct_results
     mov     s2, s25
-    add     s25, s25, 16
+    add     s25, s25, 20
     b       check_results
 
 .value1:
@@ -761,8 +774,9 @@ test_branch:
     .u32    0x1002
 
 .correct_results:
-    .u32    4
+    .u32    5
     .u32    0x1000, 0x1001, 0x1002, 0x1003
+    .u32    0x1004
 
 
 
