@@ -22,7 +22,7 @@ There are three different addressing modes for loads and stores to/from scalar r
 
 ## Vector load/store
 
-There are six different addressing modes for loads and stores to/from vector registers:
+There are five different addressing modes for loads and stores to/from vector registers:
 
 1. Base register plus immediate stride.
    - `Vd[k] <= MEM[Sa + imm * k]`
