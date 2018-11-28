@@ -114,6 +114,7 @@ package common is
 
   constant C_ALU_LDHI  : T_ALU_OP := "000001";
   constant C_ALU_LDHIO : T_ALU_OP := "000010";
+  constant C_ALU_ADDHI : T_ALU_OP := "000011";
 
   constant C_ALU_OR    : T_ALU_OP := "010000";
   constant C_ALU_NOR   : T_ALU_OP := "010001";

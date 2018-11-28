@@ -48,6 +48,7 @@ architecture rtl of alu is
   signal s_rev_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_pack_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ldhi_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_addhi_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_clz_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
   -- Signals for the adder.
@@ -189,6 +190,13 @@ begin
       '-' when others;
   s_set_res <= (others => s_set_bit);
 
+  -- Add high immediate (C_ALU_ADDHI): Add lower 21 bits of src_b to upper 21 bits of src_a.
+  s_addhi_res(C_WORD_SIZE-1 downto C_WORD_SIZE-21) <=
+      std_logic_vector(
+          unsigned(i_src_b(20 downto 0)) + unsigned(i_src_a(C_WORD_SIZE-1 downto C_WORD_SIZE-21))
+      );
+  s_addhi_res(C_WORD_SIZE-22 downto 0) <= i_src_a(C_WORD_SIZE-22 downto 0);
+
 
   ------------------------------------------------------------------------------------------------
   -- Shift operations
@@ -232,6 +240,7 @@ begin
         s_rev_res when C_ALU_REV,
         s_pack_res when C_ALU_PACKB | C_ALU_PACKH,
         s_ldhi_res when C_ALU_LDHI | C_ALU_LDHIO,
+        s_addhi_res when C_ALU_ADDHI,
         (others => '-') when others;
 
 end rtl;
