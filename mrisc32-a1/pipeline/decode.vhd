@@ -102,7 +102,7 @@ end decode;
 architecture rtl of decode is
   -- Instruction decode signals.
   signal s_op_high : std_logic_vector(5 downto 0);
-  signal s_op_low : std_logic_vector(8 downto 0);
+  signal s_op_low : std_logic_vector(6 downto 0);
   signal s_reg_a : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_reg_b : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_reg_c : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
@@ -197,8 +197,8 @@ begin
   --------------------------------------------------------------------------------------------------
 
   -- Extract operation codes.
-  s_op_high <= i_instr(29 downto 24);
-  s_op_low <= i_instr(8 downto 0);
+  s_op_high <= i_instr(31 downto 26);
+  s_op_low <= i_instr(6 downto 0);
 
   -- Determine encoding type.
   s_is_type_a <= '1' when s_op_high = "000000" else '0';
@@ -206,17 +206,17 @@ begin
   s_is_type_b <= not (s_is_type_a or s_is_type_c);
 
   -- Extract immediate.
-  s_imm(13 downto 0) <= i_instr(13 downto 0);
-  s_imm(18 downto 14) <= i_instr(18 downto 14) when s_is_type_c = '1' else (others => i_instr(13));
-  s_imm(31 downto 19) <= (others => s_imm(18));
+  s_imm(14 downto 0) <= i_instr(14 downto 0);
+  s_imm(20 downto 15) <= i_instr(20 downto 15) when s_is_type_c = '1' else (others => i_instr(14));
+  s_imm(31 downto 21) <= (others => s_imm(20));
 
   -- Extract register numbers.
-  s_reg_a <= i_instr(18 downto 14);
+  s_reg_a <= i_instr(20 downto 16);
   s_reg_b <= i_instr(13 downto 9);
-  s_reg_c <= i_instr(23 downto 19);  -- Usually destination, somtimes source.
+  s_reg_c <= i_instr(25 downto 21);  -- Usually destination, somtimes source.
 
   -- Determine MEM operation.
-  s_mem_op_type(0) <= s_is_type_a when (s_op_low(8 downto 4) = "00000") and (s_op_low(3 downto 0) /= "0000") else '0';
+  s_mem_op_type(0) <= s_is_type_a when (s_op_low(6 downto 4) = "000") and (s_op_low(3 downto 0) /= "0000") else '0';
   s_mem_op_type(1) <= s_is_type_b when (s_op_high(5 downto 4) = "00") else '0';
   MemOpMux: with s_mem_op_type select
     s_mem_op <=
@@ -238,7 +238,8 @@ begin
   s_is_fpu_op <= '1' when (s_is_type_a = '1' and s_op_low(6 downto 4) = "101") else '0';
 
   -- Determine vector mode.
-  s_vector_mode <= i_instr(31 downto 30);
+  s_vector_mode(1) <= i_instr(15) and not s_is_type_c;
+  s_vector_mode(0) <= i_instr(14) and s_is_type_a;
   s_is_vector_op <= '1' when s_vector_mode /= "00" else '0';
   s_reg_a_is_vector <= s_is_vector_op and not s_is_mem_op;
   s_reg_b_is_vector <= s_vector_mode(0);
