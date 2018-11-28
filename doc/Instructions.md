@@ -51,6 +51,14 @@
 |BLE| x |   |   | src1, i21 | pc <= pc+signextend(i21)*4 if src1 <= 0 | Conditionally branch if less than or equal to zero |
 |BGT| x |   |   | src1, i21 | pc <= pc+signextend(i21)*4 if src1 > 0 | Conditionally branch if greater than zero |
 
+## Special PC-addition
+
+| Mnemonic | I | V | P | Operands | Operation | Description |
+|---|---|---|---|---|---|---|
+|ADDPCHI| x |   |   | dst, i21 | dst <= pc + (i21 << 11) | Add high immediate to PC |
+
+Note: `ADDPCHI` can be used together with load/store instructions to perform 32-bit PC-relative addressing in just two instructions.
+
 ## Integer ALU instructions
 
 | Mnemonic | I | V | P | Operands | Operation | Description |
