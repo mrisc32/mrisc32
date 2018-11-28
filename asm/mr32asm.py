@@ -745,6 +745,12 @@ _OPCODES = {
                    'packed_op': False
                   },
 
+        # "Add PC high immediate": Sd = PC +(IMM21 << 11)
+        'ADDPCHI': {'descrs':
+                    [[0xf4000000, _REG1, _IMM21HI]],
+                   'packed_op': False
+                  },
+
 
         # ---------------------------------------------------------------------
         # === ALIASES ===
