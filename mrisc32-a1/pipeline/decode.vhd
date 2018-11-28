@@ -146,9 +146,10 @@ architecture rtl of decode is
   signal s_is_div_op : std_logic;
   signal s_is_fpu_op : std_logic;
 
+  signal s_is_ldi : std_logic;
   signal s_is_ldhi : std_logic;
   signal s_is_ldhio : std_logic;
-  signal s_is_ldi : std_logic;
+  signal s_is_addpchi : std_logic;
 
   -- VL register signals.
   signal s_vl_we : std_logic;
@@ -227,9 +228,10 @@ begin
   s_is_mem_store <= s_is_mem_op and s_mem_op(3);
 
   -- Is this an immediate load?
-  s_is_ldi   <= '1' when s_op_high = 6X"3a" else '0';
-  s_is_ldhi  <= '1' when s_op_high = 6X"3b" else '0';
-  s_is_ldhio <= '1' when s_op_high = 6X"3c" else '0';
+  s_is_ldi     <= '1' when s_op_high = 6X"3a" else '0';
+  s_is_ldhi    <= '1' when s_op_high = 6X"3b" else '0';
+  s_is_ldhio   <= '1' when s_op_high = 6X"3c" else '0';
+  s_is_addpchi <= '1' when s_op_high = 6X"3d" else '0';
 
   -- Is this a SAU, MUL, DIV or FPU op?
   s_is_sau_op <= '1' when (s_is_type_a = '1' and s_op_low(6 downto 3) = "0111") else '0';
@@ -343,8 +345,9 @@ begin
   --------------------------------------------------------------------------------------------------
 
   -- Select source data that the RF stage should pass to the EX stage.
-  -- Note: For linking branches we use the ALU to calculate PC + 4.
-  s_src_a_mode <= C_SRC_A_PC when s_is_link_branch = '1' else
+  -- Note 1: For linking branches we use the ALU to calculate PC + 4.
+  -- Note 2: For ADDPCHI we use the ALU to calculate PC + (imm21 << 11).
+  s_src_a_mode <= C_SRC_A_PC when (s_is_link_branch or s_is_addpchi) = '1' else
                   C_SRC_A_REG when s_is_type_c = '0' else
                   C_SRC_A_IMM;
   s_src_b_mode <= C_SRC_B_FOUR when s_is_link_branch = '1' else
@@ -384,6 +387,9 @@ begin
 
       -- LDHIO has a special ALU op.
       C_ALU_LDHIO when s_is_ldhio = '1' else
+
+      -- ADDPCHI has a special ALU op.
+      C_ALU_ADDHI when s_is_addpchi = '1' else
 
       -- LDI can use the OR operator (i.e. just move the immediate value to the target reg).
       C_ALU_OR when s_is_ldi = '1' else

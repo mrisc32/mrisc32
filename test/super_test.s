@@ -306,23 +306,26 @@ test_alu_arithmetic:
     add     s2, s22, s21
     sub     s3, 0x1234, s22
     sub     s4, s22, s21
+    addpchi s5, 0x98765000
+    sub     s5, s5, pc
 
     ; Store results.
     stw     s1, s25, 0
     stw     s2, s25, 4
     stw     s3, s25, 8
     stw     s4, s25, 12
+    stw     s5, s25, 16
 
     ; Check results.
     lea     s1, .correct_results
     mov     s2, s25
-    add     s25, s25, 16
+    add     s25, s25, 20
     b       check_results
 
 .correct_results:
-    .u32    4
+    .u32    5
     .u32    0x00001706, 0x00001b00, 0x00000d62, 0xffffeea4
-
+    .u32    0x98764ffc
 
 test_alu_compare:
     ; Compare/set operations

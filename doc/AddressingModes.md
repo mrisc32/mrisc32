@@ -2,7 +2,7 @@
 
 The MRISC32 is a [load/store architecture](https://en.wikipedia.org/wiki/Load/store_architecture), and has a limited but powerful set of addressing modes.
 
-Note that the program counter (PC) can be used as a source operand, so PC-relative addressing is possible for all scalar load and store operations. For extending the PC-relative range beyond ±16 KiB (using a regular 15-bit immediate offset), use one extra instruction to load a 21-bit offset into a register for a range of ±1 MiB, or two extra instructions for loading a full 32-bit offset into a register.
+Note that the program counter (PC) can be used as a source operand, so PC-relative addressing is possible for all scalar load and store operations. For extending the PC-relative range beyond ±16 KiB (using a regular 15-bit immediate offset), use an extra `ADDPCHI` instruction to form a full 32-bit offset.
 
 ## Scalar load/store
 
