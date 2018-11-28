@@ -1013,6 +1013,9 @@ uint32_t cpu_simple_t::run() {
       const bool is_mem_store = is_stx || is_st;
       const bool is_mem_op = (is_mem_load || is_mem_store);
 
+      // Is this ADDPCHI?
+      const bool is_addpchi = ((iword & 0xfc000000u) == 0xf4000000u);
+
       // Should we use reg1 as a source (special case)?
       const bool reg1_is_src = is_mem_store || is_branch;
 
@@ -1026,7 +1029,7 @@ uint32_t cpu_simple_t::run() {
       const bool reg1_is_dst = !reg1_is_src;
 
       // Determine the source & destination register numbers (zero for none).
-      const uint32_t src_reg_a = is_subroutine_branch ? REG_PC : (reg2_is_src ? reg2 : REG_Z);
+      const uint32_t src_reg_a = (is_subroutine_branch || is_addpchi) ? REG_PC : (reg2_is_src ? reg2 : REG_Z);
       const uint32_t src_reg_b = reg3_is_src ? reg3 : REG_Z;
       const uint32_t src_reg_c = reg1_is_src ? reg1 : REG_Z;
       const uint32_t dst_reg = is_subroutine_branch ? REG_LR : (reg1_is_dst ? reg1 : REG_Z);
@@ -1049,6 +1052,9 @@ uint32_t cpu_simple_t::run() {
             break;
           case 0xf0000000u:  // ldhio
             ex_op = EX_OP_LDHIO;
+            break;
+          case 0xf4000000u:  // addpchi
+            ex_op = EX_OP_ADDPCHI;
             break;
         }
       }
@@ -1114,6 +1120,9 @@ uint32_t cpu_simple_t::run() {
           break;
         case EX_OP_LDHIO:
           ex_result = (ex_in.src_b << 11u) | 0x7ffu;
+          break;
+        case EX_OP_ADDPCHI:
+          ex_result = ex_in.src_a + (ex_in.src_b << 11u);
           break;
 
         case EX_OP_OR:
