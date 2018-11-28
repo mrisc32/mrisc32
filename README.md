@@ -16,8 +16,8 @@ This is an experimental, custom 32-bit RISC/Vector CPU, primarily inspired by th
     - All registers can be used for all types (integers, addresses and floating point).
 * All instructions are 32 bits wide and easy to decode.
   - There are only three basic types of instruction encodings.
-  - There is room for 512 register-based and 62 immediate-based instructions.
-  - Space has been reserved for future double-word instruction encodings, for an additional 8192 register + 8192 immediate instructions (or more).
+  - There is room for 128 register-based and 62 immediate-based instructions.
+  - Space has been reserved for future double-word instruction encodings (for an almost endless number of instructions).
 * Instructions are non-destructive 3-operand (two sources, one destination).
 * All conditionals are based on register content.
   - There are no condition code flags (carry, overflow, ...).

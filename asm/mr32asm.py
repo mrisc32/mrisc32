@@ -26,38 +26,52 @@ import sys
 
 
 # Instruction formats:
-#      3             2               1
-#     |1| | | | | | |4| | | | | | | |6| | | | | | | |8| | | | | | | |0|
-#     +---+-----------+---------+---------+---------+-----------------+
-# A:  |VM |0 0 0 0 0 0|REG1     |REG2     |REG3     |OP (9b)          |
-#     +---+-----------+---------+---------+---------+-----------------+
-# B:  |VM |OP (6b)    |REG1     |REG2     |IMM (14b)                  |
-#     +---+---+-------+---------+---------+---------------------------+
-# C:  |VM |1 1|OP (4b)|REG1     |IMM (19b)                            |
-#     +---+---+-------+---------+-------------------------------------+
-#
-# Reserved multi-word encodings for future extensions:
 #
 #      3             2               1
 #     |1| | | | | | |4| | | | | | | |6| | | | | | | |8| | | | | | | |0|
-#     +---+-----------+---------+---------+---------+-+---------------+
-# A2: |VM |1 1 1 1 1 1|REG1     |REG2     |REG3     |0|OP (8b)        | [31:0]
-#     +---+-----+-----+---------+---------+---------+-+---------------+
-#     |OP (5b)  |                        (tbd)                        | [63:32]
-#     +---+-----+-----+---------+---------+---------+-+---------------+
-# B2: |VM |1 1 1 1 1 1|REG1     |REG2     |OP (5b)  |1|OP (8b)        | [31:0]
-#     +---+-----------+---------+---------+---------+-+---------------+
-#     |IMM (32b)                                                      | [63:32]
-#     +---------------------------------------------------------------+
+#     +-----------+---------+---------+---+---------+---+-------------+
+# A:  |0 0 0 0 0 0|REG1     |REG2     |VM |REG3     |PM | OP (7b)     |
+#     +-----------+---------+---------+-+-+---------+---+-------------+
+# B:  |OP (6b)    |REG1     |REG2     |V|IMM (15b)                    |
+#     +---+-------+---------+---------+-+-----------------------------+
+# C:  |1 1|OP (4b)|REG1     |IMM (21b)                                |
+#     +---+-------+---------+-----------------------------------------+
 #
-# VM:   Vector mode:
-#         00: scalar <= op(scalar,scalar)
-#         10: vector <= op(vector,scalar)
-#         11: vector <= op(vector,vector)
-#         01: vector <= op(vector,fold(vector))
+# The format of the instruction is determined by the 6 most significant bits:
+#   000000:         Format A (128 instructions)
+#   000001..101111: Format B (47 instructions)
+#   110000..111110: Format C (15 instructions)
+#   111111:         (Reserved for future multi-word encodings)
+#
 # OP:   Operation
 # REGn: Register (5 bit identifier)
 # IMM:  Immediate value
+#
+# VM: Vector mode (2-bit):
+#   00: scalar <= op(scalar,scalar)
+#   10: vector <= op(vector,scalar)
+#   11: vector <= op(vector,vector)
+#   01: vector <= op(vector,fold(vector))
+#
+# V: Vector mode (1-bit):
+#    0: scalar <= op(scalar,scalar)
+#    1: vector <= op(vector,scalar)
+#
+# PM: Packed mode:
+#   00: None (1 x 32 bits)
+#   01: Byte (4 x 8 bits)
+#   10: Half-word (2 x 16 bits)
+#   11: (reserved)
+#
+# Possible multi-word encoding:
+#
+#      3             2               1
+#     |1| | | | | | |4| | | | | | | |6| | | | | | | |8| | | | | | | |0|
+#     +-----------+---------+---------+---+---------+---+-------------+
+# X:  |1 1 1 1 1 1|REG1     |REG2     |VM |REG3     |PM | OP (7b)     | [31:0]
+#     +-----------+---------+---------+---+---------+---+-------------+
+#     |                             (tbd)                             | [63:32]
+#     +---------------------------------------------------------------+
 
 # Supported operand types.
 _REG1 = 1
@@ -68,12 +82,12 @@ _VREG2 = 5
 _VREG3 = 6
 _XREG1 = 7
 _XREG2 = 8
-_IMM14 = 9       # -8192..8191
-_IMM19 = 10      # -262144..262143
-_IMM19HI = 11    # 0x00000000..0xffffe000 (in steps of 0x00002000)
-_IMM19HIO = 12   # 0x0001ffff..0xffffffff (in steps of 0x00002000)
-_PCREL14 = 13    # -8192..8191
-_PCREL19x4 = 14  # -1048576..1048572 (in steps of 4)
+_IMM15 = 9       # -16384..16383
+_IMM21 = 10      # -1048576..1048575
+_IMM21HI = 11    # 0x00000000..0xfffff800 (in steps of 0x00000800)
+_IMM21HIO = 12   # 0x000007ff..0xffffffff (in steps of 0x00000800)
+_PCREL15 = 13    # -16384..16383
+_PCREL21x4 = 14  # -4194304..4194303 (in steps of 4)
 
 # Supported packed operation types.
 _PACKED_NONE = 0
@@ -183,259 +197,259 @@ _OPCODES = {
         # Load/store.
         'LDB':    {'descrs':
                     [[0x00000001, _REG1, _REG2, _REG3],
-                     [0x80000001, _VREG1, _REG2, _REG3],
-                     [0xc0000001, _VREG1, _REG2, _VREG3],
-                     [0x01000000, _REG1, _REG2, _IMM14],
-                     [0x0107c000, _REG1, _PCREL14],        # Alias for _REG1, PC, offset
-                     [0x81000000, _VREG1, _REG2, _IMM14]],
+                     [0x00008001, _VREG1, _REG2, _REG3],
+                     [0x0000c001, _VREG1, _REG2, _VREG3],
+                     [0x04000000, _REG1, _REG2, _IMM15],
+                     [0x041f0000, _REG1, _PCREL15],        # Alias for _REG1, PC, offset
+                     [0x04008000, _VREG1, _REG2, _IMM15]],
                    'packed_op': False
                   },
         'LDH':    {'descrs':
                     [[0x00000002, _REG1, _REG2, _REG3],
-                     [0x80000002, _VREG1, _REG2, _REG3],
-                     [0xc0000002, _VREG1, _REG2, _VREG3],
-                     [0x02000000, _REG1, _REG2, _IMM14],
-                     [0x0207c000, _REG1, _PCREL14],        # Alias for _REG1, PC, offset
-                     [0x82000000, _VREG1, _REG2, _IMM14]],
+                     [0x00008002, _VREG1, _REG2, _REG3],
+                     [0x0000c002, _VREG1, _REG2, _VREG3],
+                     [0x08000000, _REG1, _REG2, _IMM15],
+                     [0x081f0000, _REG1, _PCREL15],        # Alias for _REG1, PC, offset
+                     [0x08008000, _VREG1, _REG2, _IMM15]],
                    'packed_op': False
                   },
         'LDW':    {'descrs':
                     [[0x00000003, _REG1, _REG2, _REG3],
-                     [0x80000003, _VREG1, _REG2, _REG3],
-                     [0xc0000003, _VREG1, _REG2, _VREG3],
-                     [0x03000000, _REG1, _REG2, _IMM14],
-                     [0x0307c000, _REG1, _PCREL14],        # Alias for _REG1, PC, offset
-                     [0x83000000, _VREG1, _REG2, _IMM14]],
+                     [0x00008003, _VREG1, _REG2, _REG3],
+                     [0x0000c003, _VREG1, _REG2, _VREG3],
+                     [0x0c000000, _REG1, _REG2, _IMM15],
+                     [0x0c1f0000, _REG1, _PCREL15],        # Alias for _REG1, PC, offset
+                     [0x0c008000, _VREG1, _REG2, _IMM15]],
                    'packed_op': False
                   },
         'LDUB':   {'descrs':
                     [[0x00000005, _REG1, _REG2, _REG3],
-                     [0x80000005, _VREG1, _REG2, _REG3],
-                     [0xc0000005, _VREG1, _REG2, _VREG3],
-                     [0x05000000, _REG1, _REG2, _IMM14],
-                     [0x0507c000, _REG1, _PCREL14],        # Alias for _REG1, PC, offset
-                     [0x85000000, _VREG1, _REG2, _IMM14]],
+                     [0x00008005, _VREG1, _REG2, _REG3],
+                     [0x0000c005, _VREG1, _REG2, _VREG3],
+                     [0x14000000, _REG1, _REG2, _IMM15],
+                     [0x141f0000, _REG1, _PCREL15],        # Alias for _REG1, PC, offset
+                     [0x14008000, _VREG1, _REG2, _IMM15]],
                    'packed_op': False
                   },
         'LDUH':   {'descrs':
                     [[0x00000006, _REG1, _REG2, _REG3],
-                     [0x80000006, _VREG1, _REG2, _REG3],
-                     [0xc0000006, _VREG1, _REG2, _VREG3],
-                     [0x06000000, _REG1, _REG2, _IMM14],
-                     [0x0607c000, _REG1, _PCREL14],        # Alias for _REG1, PC, offset
-                     [0x86000000, _VREG1, _REG2, _IMM14]],
+                     [0x00008006, _VREG1, _REG2, _REG3],
+                     [0x0000c006, _VREG1, _REG2, _VREG3],
+                     [0x18000000, _REG1, _REG2, _IMM15],
+                     [0x181f0000, _REG1, _PCREL15],        # Alias for _REG1, PC, offset
+                     [0x18008000, _VREG1, _REG2, _IMM15]],
                    'packed_op': False
                   },
         'LDSTRD': {'descrs':
-                    [[0x80000007, _VREG1, _REG2, _REG3],
-                     [0x87000000, _VREG1, _REG2, _IMM14]],
+                    [[0x00008007, _VREG1, _REG2, _REG3],
+                     [0x1c008000, _VREG1, _REG2, _IMM15]],
                    'packed_op': False
                   },
         'STB':    {'descrs':
                     [[0x00000009, _REG1, _REG2, _REG3],
-                     [0x80000009, _VREG1, _REG2, _REG3],
-                     [0xc0000009, _VREG1, _REG2, _VREG3],
-                     [0x09000000, _REG1, _REG2, _IMM14],
-                     [0x0907c000, _REG1, _PCREL14],        # Alias for _REG1, PC, offset
-                     [0x89000000, _VREG1, _REG2, _IMM14]],
+                     [0x00008009, _VREG1, _REG2, _REG3],
+                     [0x0000c009, _VREG1, _REG2, _VREG3],
+                     [0x24000000, _REG1, _REG2, _IMM15],
+                     [0x241f0000, _REG1, _PCREL15],        # Alias for _REG1, PC, offset
+                     [0x24008000, _VREG1, _REG2, _IMM15]],
                    'packed_op': False
                   },
         'STH':    {'descrs':
                     [[0x0000000a, _REG1, _REG2, _REG3],
-                     [0x8000000a, _VREG1, _REG2, _REG3],
-                     [0xc000000a, _VREG1, _REG2, _VREG3],
-                     [0x0a000000, _REG1, _REG2, _IMM14],
-                     [0x0a07c000, _REG1, _PCREL14],        # Alias for _REG1, PC, offset
-                     [0x8a000000, _VREG1, _REG2, _IMM14]],
+                     [0x0000800a, _VREG1, _REG2, _REG3],
+                     [0x0000c00a, _VREG1, _REG2, _VREG3],
+                     [0x28000000, _REG1, _REG2, _IMM15],
+                     [0x281f0000, _REG1, _PCREL15],        # Alias for _REG1, PC, offset
+                     [0x28008000, _VREG1, _REG2, _IMM15]],
                    'packed_op': False
                   },
         'STW':    {'descrs':
                     [[0x0000000b, _REG1, _REG2, _REG3],
-                     [0x8000000b, _VREG1, _REG2, _REG3],
-                     [0xc000000b, _VREG1, _REG2, _VREG3],
-                     [0x0b000000, _REG1, _REG2, _IMM14],
-                     [0x0b07c000, _REG1, _PCREL14],        # Alias for _REG1, PC, offset
-                     [0x8b000000, _VREG1, _REG2, _IMM14]],
+                     [0x0000800b, _VREG1, _REG2, _REG3],
+                     [0x0000c00b, _VREG1, _REG2, _VREG3],
+                     [0x2c000000, _REG1, _REG2, _IMM15],
+                     [0x2c1f0000, _REG1, _PCREL15],        # Alias for _REG1, PC, offset
+                     [0x2c008000, _VREG1, _REG2, _IMM15]],
                    'packed_op': False
                   },
 
         # Integer ALU ops.
         'OR':     {'descrs':
                     [[0x00000010, _REG1, _REG2, _REG3],
-                     [0x80000010, _VREG1, _VREG2, _REG3],
-                     [0xc0000010, _VREG1, _VREG2, _VREG3],
-                     [0x10000000, _REG1, _REG2, _IMM14],
-                     [0x90000000, _VREG1, _VREG2, _IMM14]],
+                     [0x00008010, _VREG1, _VREG2, _REG3],
+                     [0x0000c010, _VREG1, _VREG2, _VREG3],
+                     [0x40000000, _REG1, _REG2, _IMM15],
+                     [0x40008000, _VREG1, _VREG2, _IMM15]],
                    'packed_op': False
                   },
         'NOR':    {'descrs':
                     [[0x00000011, _REG1, _REG2, _REG3],
-                     [0x80000011, _VREG1, _VREG2, _REG3],
-                     [0xc0000011, _VREG1, _VREG2, _VREG3],
-                     [0x11000000, _REG1, _REG2, _IMM14],
-                     [0x91000000, _VREG1, _VREG2, _IMM14]],
+                     [0x00008011, _VREG1, _VREG2, _REG3],
+                     [0x0000c011, _VREG1, _VREG2, _VREG3],
+                     [0x44000000, _REG1, _REG2, _IMM15],
+                     [0x44008000, _VREG1, _VREG2, _IMM15]],
                    'packed_op': False
                   },
         'AND':    {'descrs':
                     [[0x00000012, _REG1, _REG2, _REG3],
-                     [0x80000012, _VREG1, _VREG2, _REG3],
-                     [0xc0000012, _VREG1, _VREG2, _VREG3],
-                     [0x12000000, _REG1, _REG2, _IMM14],
-                     [0x92000000, _VREG1, _VREG2, _IMM14]],
+                     [0x00008012, _VREG1, _VREG2, _REG3],
+                     [0x0000c012, _VREG1, _VREG2, _VREG3],
+                     [0x48000000, _REG1, _REG2, _IMM15],
+                     [0x48008000, _VREG1, _VREG2, _IMM15]],
                    'packed_op': False
                   },
         'BIC':    {'descrs':
                     [[0x00000013, _REG1, _REG2, _REG3],
-                     [0x80000013, _VREG1, _VREG2, _REG3],
-                     [0xc0000013, _VREG1, _VREG2, _VREG3],
-                     [0x13000000, _REG1, _REG2, _IMM14],
-                     [0x93000000, _VREG1, _VREG2, _IMM14]],
+                     [0x00008013, _VREG1, _VREG2, _REG3],
+                     [0x0000c013, _VREG1, _VREG2, _VREG3],
+                     [0x4c000000, _REG1, _REG2, _IMM15],
+                     [0x4c008000, _VREG1, _VREG2, _IMM15]],
                    'packed_op': False
                   },
         'XOR':    {'descrs':
                     [[0x00000014, _REG1, _REG2, _REG3],
-                     [0x80000014, _VREG1, _VREG2, _REG3],
-                     [0xc0000014, _VREG1, _VREG2, _VREG3],
-                     [0x14000000, _REG1, _REG2, _IMM14],
-                     [0x94000000, _VREG1, _VREG2, _IMM14]],
+                     [0x00008014, _VREG1, _VREG2, _REG3],
+                     [0x0000c014, _VREG1, _VREG2, _VREG3],
+                     [0x50000000, _REG1, _REG2, _IMM15],
+                     [0x50008000, _VREG1, _VREG2, _IMM15]],
                    'packed_op': False
                   },
         'ADD':    {'descrs':
                     [[0x00000015, _REG1, _REG2, _REG3],
-                     [0x80000015, _VREG1, _VREG2, _REG3],
-                     [0xc0000015, _VREG1, _VREG2, _VREG3],
-                     [0x15000000, _REG1, _REG2, _IMM14],
-                     [0x95000000, _VREG1, _VREG2, _IMM14]],
+                     [0x00008015, _VREG1, _VREG2, _REG3],
+                     [0x0000c015, _VREG1, _VREG2, _VREG3],
+                     [0x54000000, _REG1, _REG2, _IMM15],
+                     [0x54008000, _VREG1, _VREG2, _IMM15]],
                    'packed_op': True
                   },
         'SUB':    {'descrs':
                     [[0x00000016, _REG1, _REG3, _REG2],
-                     [0x80000016, _VREG1, _REG3, _VREG2],
-                     [0xc0000016, _VREG1, _VREG3, _VREG2],
-                     [0x16000000, _REG1, _IMM14, _REG2],
-                     [0x96000000, _VREG1, _IMM14, _VREG2]],
+                     [0x00008016, _VREG1, _REG3, _VREG2],
+                     [0x0000c016, _VREG1, _VREG3, _VREG2],
+                     [0x58000000, _REG1, _IMM15, _REG2],
+                     [0x58008000, _VREG1, _IMM15, _VREG2]],
                    'packed_op': True
                   },
 
         'SEQ':    {'descrs':
                     [[0x00000017, _REG1, _REG2, _REG3],
-                     [0x80000017, _VREG1, _VREG2, _REG3],
-                     [0xc0000017, _VREG1, _VREG2, _VREG3],
-                     [0x17000000, _REG1, _REG2, _IMM14],
-                     [0x97000000, _VREG1, _VREG2, _IMM14]],
+                     [0x00008017, _VREG1, _VREG2, _REG3],
+                     [0x0000c017, _VREG1, _VREG2, _VREG3],
+                     [0x5c000000, _REG1, _REG2, _IMM15],
+                     [0x5c008000, _VREG1, _VREG2, _IMM15]],
                    'packed_op': True
                   },
         'SNE':    {'descrs':
                     [[0x00000018, _REG1, _REG2, _REG3],
-                     [0x80000018, _VREG1, _VREG2, _REG3],
-                     [0xc0000018, _VREG1, _VREG2, _VREG3],
-                     [0x18000000, _REG1, _REG2, _IMM14],
-                     [0x98000000, _VREG1, _VREG2, _IMM14]],
+                     [0x00008018, _VREG1, _VREG2, _REG3],
+                     [0x0000c018, _VREG1, _VREG2, _VREG3],
+                     [0x60000000, _REG1, _REG2, _IMM15],
+                     [0x60008000, _VREG1, _VREG2, _IMM15]],
                    'packed_op': True
                   },
         'SLT':    {'descrs':
                     [[0x00000019, _REG1, _REG3, _REG2],
-                     [0x80000019, _VREG1, _REG3, _VREG2],
-                     [0xc0000019, _VREG1, _VREG3, _VREG2],
-                     [0x19000000, _REG1, _REG2, _IMM14],
-                     [0x99000000, _VREG1, _VREG2, _IMM14]],
+                     [0x00008019, _VREG1, _REG3, _VREG2],
+                     [0x0000c019, _VREG1, _VREG3, _VREG2],
+                     [0x64000000, _REG1, _REG2, _IMM15],
+                     [0x64008000, _VREG1, _VREG2, _IMM15]],
                    'packed_op': True
                   },
         'SLTU':   {'descrs':
                     [[0x0000001a, _REG1, _REG3, _REG2],
-                     [0x8000001a, _VREG1, _REG3, _VREG2],
-                     [0xc000001a, _VREG1, _VREG3, _VREG2],
-                     [0x1a000000, _REG1, _REG2, _IMM14],
-                     [0x9a000000, _VREG1, _VREG2, _IMM14]],
+                     [0x0000801a, _VREG1, _REG3, _VREG2],
+                     [0x0000c01a, _VREG1, _VREG3, _VREG2],
+                     [0x68000000, _REG1, _REG2, _IMM15],
+                     [0x68008000, _VREG1, _VREG2, _IMM15]],
                    'packed_op': True
                   },
         'SLE':    {'descrs':
                     [[0x0000001b, _REG1, _REG3, _REG2],
-                     [0x8000001b, _VREG1, _REG3, _VREG2],
-                     [0xc000001b, _VREG1, _VREG3, _VREG2],
-                     [0x1b000000, _REG1, _REG2, _IMM14],
-                     [0x9b000000, _VREG1, _VREG2, _IMM14]],
+                     [0x0000801b, _VREG1, _REG3, _VREG2],
+                     [0x0000c01b, _VREG1, _VREG3, _VREG2],
+                     [0x6c000000, _REG1, _REG2, _IMM15],
+                     [0x6c008000, _VREG1, _VREG2, _IMM15]],
                    'packed_op': True
                   },
         'SLEU':   {'descrs':
                     [[0x0000001c, _REG1, _REG3, _REG2],
-                     [0x8000001c, _VREG1, _REG3, _VREG2],
-                     [0xc000001c, _VREG1, _VREG3, _VREG2],
-                     [0x1c000000, _REG1, _REG2, _IMM14],
-                     [0x9c000000, _VREG1, _VREG2, _IMM14]],
+                     [0x0000801c, _VREG1, _REG3, _VREG2],
+                     [0x0000c01c, _VREG1, _VREG3, _VREG2],
+                     [0x70000000, _REG1, _REG2, _IMM15],
+                     [0x70008000, _VREG1, _VREG2, _IMM15]],
                    'packed_op': True
                   },
         'MIN':    {'descrs':
                     [[0x0000001d, _REG1, _REG2, _REG3],
-                     [0x8000001d, _VREG1, _VREG2, _REG3],
-                     [0xc000001d, _VREG1, _VREG2, _VREG3],
-                     [0x1d000000, _REG1, _REG2, _IMM14],
-                     [0x9d000000, _VREG1, _VREG2, _IMM14]],
+                     [0x0000801d, _VREG1, _VREG2, _REG3],
+                     [0x0000c01d, _VREG1, _VREG2, _VREG3],
+                     [0x74000000, _REG1, _REG2, _IMM15],
+                     [0x74008000, _VREG1, _VREG2, _IMM15]],
                    'packed_op': True
                   },
         'MAX':    {'descrs':
                     [[0x0000001e, _REG1, _REG2, _REG3],
-                     [0x8000001e, _VREG1, _VREG2, _REG3],
-                     [0xc000001e, _VREG1, _VREG2, _VREG3],
-                     [0x1e000000, _REG1, _REG2, _IMM14],
-                     [0x9e000000, _VREG1, _VREG2, _IMM14]],
+                     [0x0000801e, _VREG1, _VREG2, _REG3],
+                     [0x0000c01e, _VREG1, _VREG2, _VREG3],
+                     [0x78000000, _REG1, _REG2, _IMM15],
+                     [0x78008000, _VREG1, _VREG2, _IMM15]],
                    'packed_op': True
                   },
         'MINU':   {'descrs':
                     [[0x0000001f, _REG1, _REG2, _REG3],
-                     [0x8000001f, _VREG1, _VREG2, _REG3],
-                     [0xc000001f, _VREG1, _VREG2, _VREG3],
-                     [0x1f000000, _REG1, _REG2, _IMM14],
-                     [0x9f000000, _VREG1, _VREG2, _IMM14]],
+                     [0x0000801f, _VREG1, _VREG2, _REG3],
+                     [0x0000c01f, _VREG1, _VREG2, _VREG3],
+                     [0x7c000000, _REG1, _REG2, _IMM15],
+                     [0x7c008000, _VREG1, _VREG2, _IMM15]],
                    'packed_op': True
                   },
         'MAXU':   {'descrs':
                     [[0x00000020, _REG1, _REG2, _REG3],
-                     [0x80000020, _VREG1, _VREG2, _REG3],
-                     [0xc0000020, _VREG1, _VREG2, _VREG3],
-                     [0x20000000, _REG1, _REG2, _IMM14],
-                     [0xa0000000, _VREG1, _VREG2, _IMM14]],
+                     [0x00008020, _VREG1, _VREG2, _REG3],
+                     [0x0000c020, _VREG1, _VREG2, _VREG3],
+                     [0x80000000, _REG1, _REG2, _IMM15],
+                     [0x80008000, _VREG1, _VREG2, _IMM15]],
                    'packed_op': True
                   },
 
         'ASR':    {'descrs':
                     [[0x00000021, _REG1, _REG2, _REG3],
-                     [0x80000021, _VREG1, _VREG2, _REG3],
-                     [0xc0000021, _VREG1, _VREG2, _VREG3],
-                     [0x21000000, _REG1, _REG2, _IMM14],
-                     [0xa1000000, _VREG1, _VREG2, _IMM14]],
+                     [0x00008021, _VREG1, _VREG2, _REG3],
+                     [0x0000c021, _VREG1, _VREG2, _VREG3],
+                     [0x84000000, _REG1, _REG2, _IMM15],
+                     [0x84008000, _VREG1, _VREG2, _IMM15]],
                    'packed_op': True
                   },
         'LSL':    {'descrs':
                     [[0x00000022, _REG1, _REG2, _REG3],
-                     [0x80000022, _VREG1, _VREG2, _REG3],
-                     [0xc0000022, _VREG1, _VREG2, _VREG3],
-                     [0x22000000, _REG1, _REG2, _IMM14],
-                     [0xa2000000, _VREG1, _VREG2, _IMM14]],
+                     [0x00008022, _VREG1, _VREG2, _REG3],
+                     [0x0000c022, _VREG1, _VREG2, _VREG3],
+                     [0x88000000, _REG1, _REG2, _IMM15],
+                     [0x88008000, _VREG1, _VREG2, _IMM15]],
                    'packed_op': True
                   },
         'LSR':    {'descrs':
                     [[0x00000023, _REG1, _REG2, _REG3],
-                     [0x80000023, _VREG1, _VREG2, _REG3],
-                     [0xc0000023, _VREG1, _VREG2, _VREG3],
-                     [0x23000000, _REG1, _REG2, _IMM14],
-                     [0xa3000000, _VREG1, _VREG2, _IMM14]],
+                     [0x00008023, _VREG1, _VREG2, _REG3],
+                     [0x0000c023, _VREG1, _VREG2, _VREG3],
+                     [0x8c000000, _REG1, _REG2, _IMM15],
+                     [0x8c008000, _VREG1, _VREG2, _IMM15]],
                    'packed_op': True
                   },
         'SHUF':   {'descrs':
                     [[0x00000024, _REG1, _REG2, _REG3],
-                     [0x80000024, _VREG1, _VREG2, _REG3],
-                     [0xc0000024, _VREG1, _VREG2, _VREG3],
-                     [0x24000000, _REG1, _REG2, _IMM14],
-                     [0xa4000000, _VREG1, _VREG2, _IMM14]],
+                     [0x00008024, _VREG1, _VREG2, _REG3],
+                     [0x0000c024, _VREG1, _VREG2, _VREG3],
+                     [0x90000000, _REG1, _REG2, _IMM15],
+                     [0x90008000, _VREG1, _VREG2, _IMM15]],
                    'packed_op': False
                   },
 
         # Get a vector register element.
         # NOTE: The interpretation of the vector mode bits is non standard!
         'GETE':  {'descrs':
-                    [[0x28000000, _REG1, _VREG2, _IMM14],
-                     [0xa8000000, _VREG1, _VREG2, _IMM14]],
+                    [[0x28000000, _REG1, _VREG2, _IMM15],
+                     [0xa8000000, _VREG1, _VREG2, _IMM15]],
                    'packed_op': False
                   },
 
@@ -446,133 +460,133 @@ _OPCODES = {
         # type instructions).
         'CLZ':    {'descrs':
                     [[0x00000031, _REG1, _REG2],          # 3rd reg is always z
-                     [0x80000031, _VREG1, _VREG2]],
+                     [0x00008031, _VREG1, _VREG2]],
                    'packed_op': False
                   },
         'REV':    {'descrs':
                     [[0x00000032, _REG1, _REG2],          # 3rd reg is always z
-                     [0x80000032, _VREG1, _VREG2]],
+                     [0x00008032, _VREG1, _VREG2]],
                    'packed_op': False
                   },
         'PACKB':  {'descrs':
                     [[0x00000033, _REG1, _REG2, _REG3],
-                     [0x80000033, _VREG1, _VREG2, _REG3],
-                     [0xc0000033, _VREG1, _VREG2, _VREG3]],
+                     [0x00008033, _VREG1, _VREG2, _REG3],
+                     [0x0000c033, _VREG1, _VREG2, _VREG3]],
                    'packed_op': False
                   },
         'PACKH':  {'descrs':
                     [[0x00000034, _REG1, _REG2, _REG3],
-                     [0x80000034, _VREG1, _VREG2, _REG3],
-                     [0xc0000034, _VREG1, _VREG2, _VREG3]],
+                     [0x00008034, _VREG1, _VREG2, _REG3],
+                     [0x0000c034, _VREG1, _VREG2, _VREG3]],
                    'packed_op': False
                   },
 
         # Query the vector register mask.
         # NOTE: The interpretation of the vector mode bits is non standard!
         'GETM':   {'descrs':
-                    [[0xc0000035, _REG1, _VREG2, _VREG3]],
+                    [[0x0000c035, _REG1, _VREG2, _VREG3]],
                    'packed_op': False
                   },
 
         # DSP style saturating and halving arithmetic.
         'ADDS':   {'descrs':
                     [[0x00000038, _REG1, _REG2, _REG3],
-                     [0x80000038, _VREG1, _VREG2, _REG3],
-                     [0xc0000038, _VREG1, _VREG2, _VREG3]],
+                     [0x00008038, _VREG1, _VREG2, _REG3],
+                     [0x0000c038, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
         'ADDSU':  {'descrs':
                     [[0x00000039, _REG1, _REG2, _REG3],
-                     [0x80000039, _VREG1, _VREG2, _REG3],
-                     [0xc0000039, _VREG1, _VREG2, _VREG3]],
+                     [0x00008039, _VREG1, _VREG2, _REG3],
+                     [0x0000c039, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
         'ADDH':   {'descrs':
                     [[0x0000003a, _REG1, _REG2, _REG3],
-                     [0x8000003a, _VREG1, _VREG2, _REG3],
-                     [0xc000003a, _VREG1, _VREG2, _VREG3]],
+                     [0x0000803a, _VREG1, _VREG2, _REG3],
+                     [0x0000c03a, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
         'ADDHU':  {'descrs':
                     [[0x0000003b, _REG1, _REG2, _REG3],
-                     [0x8000003b, _VREG1, _VREG2, _REG3],
-                     [0xc000003b, _VREG1, _VREG2, _VREG3]],
+                     [0x0000803b, _VREG1, _VREG2, _REG3],
+                     [0x0000c03b, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
         'SUBS':   {'descrs':
                     [[0x0000003c, _REG1, _REG2, _REG3],
-                     [0x8000003c, _VREG1, _VREG2, _REG3],
-                     [0xc000003c, _VREG1, _VREG2, _VREG3]],
+                     [0x0000803c, _VREG1, _VREG2, _REG3],
+                     [0x0000c03c, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
         'SUBSU':  {'descrs':
                     [[0x0000003d, _REG1, _REG2, _REG3],
-                     [0x8000003d, _VREG1, _VREG2, _REG3],
-                     [0xc000003d, _VREG1, _VREG2, _VREG3]],
+                     [0x0000803d, _VREG1, _VREG2, _REG3],
+                     [0x0000c03d, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
         'SUBH':   {'descrs':
                     [[0x0000003e, _REG1, _REG2, _REG3],
-                     [0x8000003e, _VREG1, _VREG2, _REG3],
-                     [0xc000003e, _VREG1, _VREG2, _VREG3]],
+                     [0x0000803e, _VREG1, _VREG2, _REG3],
+                     [0x0000c03e, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
         'SUBHU':  {'descrs':
                     [[0x0000003f, _REG1, _REG2, _REG3],
-                     [0x8000003f, _VREG1, _VREG2, _REG3],
-                     [0xc000003f, _VREG1, _VREG2, _VREG3]],
+                     [0x0000803f, _VREG1, _VREG2, _REG3],
+                     [0x0000c03f, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
 
         # Multiplication operations.
         'MULQ':   {'descrs':
                     [[0x00000040, _REG1, _REG2, _REG3],
-                     [0x80000040, _VREG1, _VREG2, _REG3],
-                     [0xc0000040, _VREG1, _VREG2, _VREG3]],
+                     [0x00008040, _VREG1, _VREG2, _REG3],
+                     [0x0000c040, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
         'MUL':    {'descrs':
                     [[0x00000041, _REG1, _REG2, _REG3],
-                     [0x80000041, _VREG1, _VREG2, _REG3],
-                     [0xc0000041, _VREG1, _VREG2, _VREG3]],
+                     [0x00008041, _VREG1, _VREG2, _REG3],
+                     [0x0000c041, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
         'MULHI':  {'descrs':
                     [[0x00000042, _REG1, _REG2, _REG3],
-                     [0x80000042, _VREG1, _VREG2, _REG3],
-                     [0xc0000042, _VREG1, _VREG2, _VREG3]],
+                     [0x00008042, _VREG1, _VREG2, _REG3],
+                     [0x0000c042, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
         'MULHIU': {'descrs':
                     [[0x00000043, _REG1, _REG2, _REG3],
-                     [0x80000043, _VREG1, _VREG2, _REG3],
-                     [0xc0000043, _VREG1, _VREG2, _VREG3]],
+                     [0x00008043, _VREG1, _VREG2, _REG3],
+                     [0x0000c043, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
 
         # Division operations.
         'DIV':    {'descrs':
                     [[0x00000044, _REG1, _REG2, _REG3],
-                     [0x80000044, _VREG1, _VREG2, _REG3],
-                     [0xc0000044, _VREG1, _VREG2, _VREG3]],
+                     [0x00008044, _VREG1, _VREG2, _REG3],
+                     [0x0000c044, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
         'DIVU':   {'descrs':
                     [[0x00000045, _REG1, _REG2, _REG3],
-                     [0x80000045, _VREG1, _VREG2, _REG3],
-                     [0xc0000045, _VREG1, _VREG2, _VREG3]],
+                     [0x00008045, _VREG1, _VREG2, _REG3],
+                     [0x0000c045, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
         'REM':    {'descrs':
                     [[0x00000046, _REG1, _REG2, _REG3],
-                     [0x80000046, _VREG1, _VREG2, _REG3],
-                     [0xc0000046, _VREG1, _VREG2, _VREG3]],
+                     [0x00008046, _VREG1, _VREG2, _REG3],
+                     [0x0000c046, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
         'REMU':   {'descrs':
                     [[0x00000047, _REG1, _REG2, _REG3],
-                     [0x80000047, _VREG1, _VREG2, _REG3],
-                     [0xc0000047, _VREG1, _VREG2, _VREG3]],
+                     [0x00008047, _VREG1, _VREG2, _REG3],
+                     [0x0000c047, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
 
@@ -580,88 +594,88 @@ _OPCODES = {
         'ITOF':   {'descrs':
                     [[0x00000050, _REG1, _REG2],            # REG3 = Z (no exponent offset)
                      [0x00000050, _REG1, _REG2, _REG3],
-                     [0x80000050, _VREG1, _VREG2],          # REG3 = Z (no exponent offset)
-                     [0x80000050, _VREG1, _VREG2, _REG3],
-                     [0xc0000050, _VREG1, _VREG2, _VREG3]],
+                     [0x00008050, _VREG1, _VREG2],          # REG3 = Z (no exponent offset)
+                     [0x00008050, _VREG1, _VREG2, _REG3],
+                     [0x0000c050, _VREG1, _VREG2, _VREG3]],
                    'packed_op': False
                   },
         'FTOI':   {'descrs':
                     [[0x00000051, _REG1, _REG2],            # REG3 = Z (no exponent offset)
                      [0x00000051, _REG1, _REG2, _REG3],
-                     [0x80000051, _VREG1, _VREG2],          # REG3 = Z (no exponent offset)
-                     [0x80000051, _VREG1, _VREG2, _REG3],
-                     [0xc0000051, _VREG1, _VREG2, _VREG3]],
+                     [0x00008051, _VREG1, _VREG2],          # REG3 = Z (no exponent offset)
+                     [0x00008051, _VREG1, _VREG2, _REG3],
+                     [0x0000c051, _VREG1, _VREG2, _VREG3]],
                    'packed_op': False
                   },
         'FADD':   {'descrs':
                     [[0x00000052, _REG1, _REG2, _REG3],
-                     [0x80000052, _VREG1, _VREG2, _REG3],
-                     [0xc0000052, _VREG1, _VREG2, _VREG3]],
+                     [0x00008052, _VREG1, _VREG2, _REG3],
+                     [0x0000c052, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
         'FSUB':   {'descrs':
                     [[0x00000053, _REG1, _REG2, _REG3],
-                     [0x80000053, _VREG1, _VREG2, _REG3],
-                     [0xc0000053, _VREG1, _VREG2, _VREG3]],
+                     [0x00008053, _VREG1, _VREG2, _REG3],
+                     [0x0000c053, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
         'FMUL':   {'descrs':
                     [[0x00000054, _REG1, _REG2, _REG3],
-                     [0x80000054, _VREG1, _VREG2, _REG3],
-                     [0xc0000054, _VREG1, _VREG2, _VREG3]],
+                     [0x00008054, _VREG1, _VREG2, _REG3],
+                     [0x0000c054, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
         'FDIV':   {'descrs':
                     [[0x00000055, _REG1, _REG2, _REG3],
-                     [0x80000055, _VREG1, _VREG2, _REG3],
-                     [0xc0000055, _VREG1, _VREG2, _VREG3]],
+                     [0x00008055, _VREG1, _VREG2, _REG3],
+                     [0x0000c055, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
         'FSQRT': {'descrs':
                     [[0x00000056, _REG1, _REG2],      # REG3 = Z (operand is unused)
-                     [0xc0000056, _VREG1, _VREG2]],   # VREG3 = VZ (operand is unused)
+                     [0x0000c056, _VREG1, _VREG2]],   # VREG3 = VZ (operand is unused)
                    'packed_op': True
                   },
         'FSEQ':   {'descrs':
                     [[0x00000058, _REG1, _REG2, _REG3],
-                     [0x80000058, _VREG1, _VREG2, _REG3],
-                     [0xc0000058, _VREG1, _VREG2, _VREG3]],
+                     [0x00008058, _VREG1, _VREG2, _REG3],
+                     [0x0000c058, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
         'FSNE':   {'descrs':
                     [[0x00000059, _REG1, _REG2, _REG3],
-                     [0x80000059, _VREG1, _VREG2, _REG3],
-                     [0xc0000059, _VREG1, _VREG2, _VREG3]],
+                     [0x00008059, _VREG1, _VREG2, _REG3],
+                     [0x0000c059, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
         'FSLT':   {'descrs':
                     [[0x0000005a, _REG1, _REG2, _REG3],
-                     [0x8000005a, _VREG1, _VREG2, _REG3],
-                     [0xc000005a, _VREG1, _VREG2, _VREG3]],
+                     [0x0000805a, _VREG1, _VREG2, _REG3],
+                     [0x0000c05a, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
         'FSLE':   {'descrs':
                     [[0x0000005b, _REG1, _REG2, _REG3],
-                     [0x8000005b, _VREG1, _VREG2, _REG3],
-                     [0xc000005b, _VREG1, _VREG2, _VREG3]],
+                     [0x0000805b, _VREG1, _VREG2, _REG3],
+                     [0x0000c05b, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
         'FSNAN':  {'descrs':
                     [[0x0000005c, _REG1, _REG2, _REG3],
-                     [0x8000005c, _VREG1, _VREG2, _REG3],
-                     [0xc000005c, _VREG1, _VREG2, _VREG3]],
+                     [0x0000805c, _VREG1, _VREG2, _REG3],
+                     [0x0000c05c, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
         'FMIN':   {'descrs':
                     [[0x0000005d, _REG1, _REG2, _REG3],
-                     [0x8000005d, _VREG1, _VREG2, _REG3],
-                     [0xc000005d, _VREG1, _VREG2, _VREG3]],
+                     [0x0000805d, _VREG1, _VREG2, _REG3],
+                     [0x0000c05d, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
         'FMAX':   {'descrs':
                     [[0x0000005e, _REG1, _REG2, _REG3],
-                     [0x8000005e, _VREG1, _VREG2, _REG3],
-                     [0xc000005e, _VREG1, _VREG2, _VREG3]],
+                     [0x0000805e, _VREG1, _VREG2, _REG3],
+                     [0x0000c05e, _VREG1, _VREG2, _VREG3]],
                    'packed_op': True
                   },
 
@@ -669,35 +683,35 @@ _OPCODES = {
 
         # Conditional branches.
         'BZ':     {'descrs':
-                    [[0x30000000, _REG1, _PCREL19x4]],
+                    [[0xc0000000, _REG1, _PCREL21x4]],
                    'packed_op': False
                   },
         'BNZ':    {'descrs':
-                    [[0x31000000, _REG1, _PCREL19x4]],
+                    [[0xc4000000, _REG1, _PCREL21x4]],
                    'packed_op': False
                   },
         'BS':     {'descrs':
-                    [[0x32000000, _REG1, _PCREL19x4]],
+                    [[0xc8000000, _REG1, _PCREL21x4]],
                    'packed_op': False
                   },
         'BNS':    {'descrs':
-                    [[0x33000000, _REG1, _PCREL19x4]],
+                    [[0xcc000000, _REG1, _PCREL21x4]],
                    'packed_op': False
                   },
         'BLT':    {'descrs':
-                    [[0x34000000, _REG1, _PCREL19x4]],
+                    [[0xd0000000, _REG1, _PCREL21x4]],
                    'packed_op': False
                   },
         'BGE':    {'descrs':
-                    [[0x35000000, _REG1, _PCREL19x4]],
+                    [[0xd4000000, _REG1, _PCREL21x4]],
                    'packed_op': False
                   },
         'BLE':    {'descrs':
-                    [[0x36000000, _REG1, _PCREL19x4]],
+                    [[0xd8000000, _REG1, _PCREL21x4]],
                    'packed_op': False
                   },
         'BGT':    {'descrs':
-                    [[0x37000000, _REG1, _PCREL19x4]],
+                    [[0xdc000000, _REG1, _PCREL21x4]],
                    'packed_op': False
                   },
 
@@ -707,30 +721,27 @@ _OPCODES = {
         # call the instruction B/BL instead). For all other registers, the offset
         # is forcibly zero.
         'J':      {'descrs':
-                    [[0x38000000, _REG1]],
+                    [[0xe0000000, _REG1]],
                    'packed_op': False
                   },
         'B':      {'descrs':
-                    [[0x38f80000, _PCREL19x4]],
+                    [[0xe3e00000, _PCREL21x4]],
                    'packed_op': False
                   },
         'JL':     {'descrs':
-                    [[0x39000000, _REG1]],
+                    [[0xe4000000, _REG1]],
                    'packed_op': False
                   },
         'BL':     {'descrs':
-                    [[0x39f80000, _PCREL19x4]],
+                    [[0xe7e00000, _PCREL21x4]],
                    'packed_op': False
                   },
 
         # Load immediate.
         'LDI':    {'descrs':
-                    [[0x3a000000, _REG1, _IMM19],
-                     [0x3b000000, _REG1, _IMM19HI],     # LDHI
-                     [0x3c000000, _REG1, _IMM19HIO],    # LDHIO
-                     [0xba000000, _VREG1, _IMM19],
-                     [0xbb000000, _VREG1, _IMM19HI],    # LDHI
-                     [0xbc000000, _VREG1, _IMM19HIO]],  # LDHIO
+                    [[0xe8000000, _REG1, _IMM21],
+                     [0xec000000, _REG1, _IMM21HI],     # LDHI
+                     [0xf0000000, _REG1, _IMM21HIO]],   # LDHIO
                    'packed_op': False
                   },
 
@@ -748,14 +759,14 @@ _OPCODES = {
         # Alias for: OR _REG1, _REG2, Z
         'MOV':    {'descrs':
                     [[0x00000010, _REG1, _REG2],
-                     [0x80000010, _VREG1, _REG2],
-                     [0xc0000010, _VREG1, _VREG2]],
+                     [0x00008010, _VREG1, _REG2],
+                     [0x0000c010, _VREG1, _VREG2]],
                    'packed_op': False
                   },
 
         # Alias for: ADD _REG1, PC, offset
         'LEA':    {'descrs':
-                    [[0x1507c000, _REG1, _PCREL14]],
+                    [[0x541f0000, _REG1, _PCREL15]],
                    'packed_op': False
                   },
     }
@@ -787,21 +798,21 @@ def translate_reg(operand, operand_type, line_no):
             reg_no = _REGS[operand.upper()]
         except KeyError as e:
             raise AsmError(line_no, 'Bad register: {}'.format(operand))
-        shift = 19 if operand_type == _REG1 else (14 if operand_type == _REG2 else 9)
+        shift = 21 if operand_type == _REG1 else (16 if operand_type == _REG2 else 9)
         return reg_no << shift
     elif operand_type in [_VREG1, _VREG2, _VREG3]:
         try:
             reg_no = _VREGS[operand.upper()]
         except KeyError as e:
             raise AsmError(line_no, 'Bad vector register: {}'.format(operand))
-        shift = 19 if operand_type == _VREG1 else (14 if operand_type == _VREG2 else 9)
+        shift = 21 if operand_type == _VREG1 else (16 if operand_type == _VREG2 else 9)
         return reg_no << shift
     elif operand_type in [_XREG1, _XREG2]:
         try:
             reg_no = _XREGS[operand.upper()]
         except KeyError as e:
             raise AsmError(line_no, 'Bad control register: {}'.format(operand))
-        shift = 19 if operand_type == _XREG1 else 14
+        shift = 21 if operand_type == _XREG1 else 16
         return reg_no << shift
     else:
         # Internal error.
@@ -835,40 +846,40 @@ def translate_imm(operand, operand_type, labels, scope_label, line_no):
     value = translate_addr_or_number(operand, labels, scope_label, line_no)
 
     value_bits = {
-            _IMM14:    14,
-            _IMM19:    19,
-            _IMM19HI:  19,
-            _IMM19HIO: 19,
+            _IMM15:    15,
+            _IMM21:    21,
+            _IMM21HI:  21,
+            _IMM21HIO: 21,
         }[operand_type]
     value_shift = {
-            _IMM14:    0,
-            _IMM19:    0,
-            _IMM19HI:  13,
-            _IMM19HIO: 13,
+            _IMM15:    0,
+            _IMM21:    0,
+            _IMM21HI:  11,
+            _IMM21HIO: 11,
         }[operand_type]
     value_min = {
-            _IMM14:    -(1 << 13),
-            _IMM19:    -(1 << 18),
-            _IMM19HI:  0x00000000,
-            _IMM19HIO: 0x00001fff,
+            _IMM15:    -(1 << 14),
+            _IMM21:    -(1 << 20),
+            _IMM21HI:  0x00000000,
+            _IMM21HIO: 0x000007ff,
         }[operand_type]
     value_max = {
-            _IMM14:    (1 << 13) - 1,
-            _IMM19:    (1 << 18) - 1,
-            _IMM19HI:  0xffffe000,
-            _IMM19HIO: 0xffffffff,
+            _IMM15:    (1 << 14) - 1,
+            _IMM21:    (1 << 20) - 1,
+            _IMM21HI:  0xfffff800,
+            _IMM21HIO: 0xffffffff,
         }[operand_type]
 
     # Convert value to signed or unsigned.
-    if operand_type in [_IMM14, _IMM19] and value >= 2147483648:
+    if operand_type in [_IMM15, _IMM21] and value >= 2147483648:
         value = -((~(value - 1)) & 0xffffffff)
 
     if value < value_min or value > value_max:
         raise AsmError(line_no, 'Immediate value out of range ({}..{}): {}'.format(value_min, value_max, operand))
-    if operand_type == _IMM19HI and (value & 0x00001fff) != 0:
-        raise AsmError(line_no, 'Immediate value must have the lower 13 bits cleared: {}'.format(operand))
-    if operand_type == _IMM19HIO and (value & 0x00001fff) != 0x00001fff:
-        raise AsmError(line_no, 'Immediate value must have the lower 13 bits set: {}'.format(operand))
+    if operand_type == _IMM21HI and (value & 0x000007ff) != 0:
+        raise AsmError(line_no, 'Immediate value must have the lower 11 bits cleared: {}'.format(operand))
+    if operand_type == _IMM21HIO and (value & 0x000007ff) != 0x000007ff:
+        raise AsmError(line_no, 'Immediate value must have the lower 11 bits set: {}'.format(operand))
 
     return (value >> value_shift) & ((1 << value_bits) - 1)
 
@@ -877,14 +888,14 @@ def translate_pcrel(operand, operand_type, pc, labels, scope_label, line_no):
     target_address = translate_addr_or_number(operand, labels, scope_label, line_no)
     offset = target_address - pc
 
-    if operand_type == _PCREL19x4:
+    if operand_type == _PCREL21x4:
         if (target_address & 3) != 0:
             raise AsmError(line_no, 'Targe address ({}) is not aligned to 4 bytes'.format(operand))
         offset = offset / 4
 
     offset_max = {
-            _PCREL14:   1 << 13,
-            _PCREL19x4: 1 << 18,
+            _PCREL15:   1 << 14,
+            _PCREL21x4: 1 << 20,
         }[operand_type]
     if (offset < -offset_max or offset >= offset_max):
         raise AsmError(line_no, 'Too large offset: {}'.format(offset))
@@ -902,18 +913,18 @@ def translate_operation(operation, mnemonic, descr, packed_type, folding, addr, 
         operand_type = descr[k]
         if operand_type in [_REG1, _REG2, _REG3, _VREG1, _VREG2, _VREG3, _XREG1, _XREG2]:
             instr = instr | translate_reg(operand, operand_type, line_no)
-        elif operand_type in [_IMM14, _IMM19, _IMM19HI, _IMM19HIO]:
+        elif operand_type in [_IMM15, _IMM21, _IMM21HI, _IMM21HIO]:
             instr = instr | translate_imm(operand, operand_type, labels, scope_label, line_no)
             is_immediate_op = True
-        elif operand_type in [_PCREL14, _PCREL19x4]:
+        elif operand_type in [_PCREL15, _PCREL21x4]:
             instr = instr | translate_pcrel(operand, operand_type, addr, labels, scope_label, line_no)
             is_immediate_op = True
 
     # Folding.
     if folding:
-        if not ((instr >> 30) == 3):
+        if is_immediate_op:
             raise AsmError(line_no, 'Folding not supported for these operands')
-        instr = (instr & 0x3fffffff) | 0x40000000
+        instr = (instr & 0xffff3fff) | 0x00004000
 
     # TODO(m): This check is kind of coarse. More specifically packed operations are only supported
     # for A-type encodings, but we don't have that information here.
@@ -924,12 +935,12 @@ def translate_operation(operation, mnemonic, descr, packed_type, folding, addr, 
 
 
 def imm_can_be_handled_by_single_ldi(imm):
-    upper_14 = imm & 0xfffc0000
-    lower_13 = imm & 0x00001fff
-    if (upper_14 == 0x00000000) or (upper_14 == 0xfffc0000):
+    upper_12 = imm & 0xfff00000
+    lower_11 = imm & 0x000007ff
+    if (upper_12 == 0x00000000) or (upper_12 == 0xfff00000):
         # Covered by LDI.
         return True
-    if (lower_13 == 0x0000) or (lower_13 == 0x1fff):
+    if (lower_11 == 0x0000) or (lower_11 == 0x07ff):
         # Handled by LDHI or LDHIO.
         return True
     # Not handled.
@@ -938,11 +949,10 @@ def imm_can_be_handled_by_single_ldi(imm):
 
 def make_or_for_ldi(ldi_instr, imm):
     # Create an OR instruction that complements the given LDI instruction.
-    vm = ldi_instr & 0xc0000000
-    op = 0x10000000  # OR
-    reg = ldi_instr & 0x00f80000
-    imm_low_bits = imm & 0x00001fff
-    return vm | op | reg | (reg >> 5) | imm_low_bits
+    op = 0x40000000  # OR
+    reg = ldi_instr & 0x03e00000
+    imm_low_bits = imm & 0x000007ff
+    return op | reg | (reg >> 5) | imm_low_bits
 
 
 def read_file(file_name):
@@ -1201,7 +1211,7 @@ def compile_file(file_name, out_name, verbosity_level):
                         try:
                             ldi_imm = parse_integer(operation[2]) & 0xffffffff
                             if not imm_can_be_handled_by_single_ldi(ldi_imm):
-                                operation[2] = '0x' + format(ldi_imm & 0xffffe000, '08x')
+                                operation[2] = '0x' + format(ldi_imm & 0xfffff800, '08x')
                                 need_to_expand_ldi = True
                         except:
                             pass

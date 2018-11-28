@@ -10,7 +10,7 @@
 | src1 | Source operand 1 |
 | src2 | Source operand 2 |
 | src3 | Source operand 3 |
-| i19 | 19-bit immediate value |
+| i21 | 21-bit immediate value |
 | I | Supports immediate operand |
 | V | Supports vector operation |
 | P | Supports packed operation |
@@ -27,9 +27,9 @@
 |STB| x | (1) |   | src1, src2, src3 | [src2 + src3] <= src1 (byte) | Store byte |
 |STH| x | (1) |   | src1, src2, src3 | [src2 + src3] <= src1 (halfword) | Store halfowrd |
 |STW| x | (1) |   | src1, src2, src3 | [src2 + src3] <= src1 (word) | Store word |
-|LDI| x | x |   | dst, i19 | dst <= signextend(i19) | Alt. 1: Load immediate (low 19 bits) |
-|   | x | x |   | dst, i19 | dst <= i19 << 13 | Alt. 2: Load immediate (high 19 bits) |
-|   | x | x |   | dst, i19 | dst <= (i19 << 13) \| 0x1fff | Alt. 3: Load immediate with low ones (high 19 bits) |
+|LDI| x | x |   | dst, i21 | dst <= signextend(i21) | Alt. 1: Load immediate (low 21 bits) |
+|   | x | x |   | dst, i21 | dst <= i21 << 11 | Alt. 2: Load immediate (high 21 bits) |
+|   | x | x |   | dst, i21 | dst <= (i21 << 11) \| 0x7ff | Alt. 3: Load immediate with low ones (high 21 bits) |
 |LDSTRD| x | x |   | dst, src1, src2 | dst[k] <= src1 + src2 * k | Load a linear stride (vector instruction) |
 
 **(1)**: The third operand in vector loads/stores is used as a stride or offset parameter (see [addressing modes](AddressingModes.md) for more details).
@@ -40,16 +40,16 @@
 |---|---|---|---|---|---|---|
 |J|   |   |   | src1 | pc <= src1 | Jump to register address |
 |JL|   |   |   | src1 | lr <= pc+4, pc <= src1 | Jump to register address and link |
-|B| x |   |   | i19 | pc <= pc+signextend(i19)*4 | Unconditionally branch |
-|BL| x |   |   | i19 | lr <= pc+4, pc <= pc+signextend(i19)*4 | Unconditionally branch and link |
-|BZ| x |   |   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 == 0 | Conditionally branch if equal to zero |
-|BNZ| x |   |   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 != 0 | Conditionally branch if not equal to zero |
-|BS| x |   |   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 == 0xffffffff | Conditionally branch if set (all bits = 1) |
-|BNS| x |   |   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 != 0xffffffff | Conditionally branch if not set (at least one bit = 0) |
-|BLT| x |   |   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 < 0 | Conditionally branch if less than zero |
-|BGE| x |   |   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 >= 0 | Conditionally branch if greater than or equal to zero |
-|BLE| x |   |   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 <= 0 | Conditionally branch if less than or equal to zero |
-|BGT| x |   |   | src1, i19 | pc <= pc+signextend(i19)*4 if src1 > 0 | Conditionally branch if greater than zero |
+|B| x |   |   | i21 | pc <= pc+signextend(i21)*4 | Unconditionally branch |
+|BL| x |   |   | i21 | lr <= pc+4, pc <= pc+signextend(i21)*4 | Unconditionally branch and link |
+|BZ| x |   |   | src1, i21 | pc <= pc+signextend(i21)*4 if src1 == 0 | Conditionally branch if equal to zero |
+|BNZ| x |   |   | src1, i21 | pc <= pc+signextend(i21)*4 if src1 != 0 | Conditionally branch if not equal to zero |
+|BS| x |   |   | src1, i21 | pc <= pc+signextend(i21)*4 if src1 == 0xffffffff | Conditionally branch if set (all bits = 1) |
+|BNS| x |   |   | src1, i21 | pc <= pc+signextend(i21)*4 if src1 != 0xffffffff | Conditionally branch if not set (at least one bit = 0) |
+|BLT| x |   |   | src1, i21 | pc <= pc+signextend(i21)*4 if src1 < 0 | Conditionally branch if less than zero |
+|BGE| x |   |   | src1, i21 | pc <= pc+signextend(i21)*4 if src1 >= 0 | Conditionally branch if greater than or equal to zero |
+|BLE| x |   |   | src1, i21 | pc <= pc+signextend(i21)*4 if src1 <= 0 | Conditionally branch if less than or equal to zero |
+|BGT| x |   |   | src1, i21 | pc <= pc+signextend(i21)*4 if src1 > 0 | Conditionally branch if greater than zero |
 
 ## Integer ALU instructions
 

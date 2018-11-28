@@ -3,11 +3,11 @@
 | Problem | Solution |
 |---|---|
 | No operation (NOP) | CPUID Z,Z,Z |
-| Load full 32-bit immediate | LDI rd,upper\_19\_bits<br>OR rd,rd,lower\_13\_bits |
+| Load full 32-bit immediate | LDI rd,upper\_21\_bits<br>OR rd,rd,lower\_11\_bits |
 | Move register | OR rd,ra,Z |
 | Negate value | SUB rd,Z,ra |
 | Integer absolute value | SUB rd,Z,ra<br>MAX rd,ra,rd |
-| Subtract immediate from register | ADD rd,ra,-i14 |
+| Subtract immediate from register | ADD rd,ra,-i15 |
 | Zero-extend byte to word | SHUF rd,ra,0x0920 |
 | Zero-extend halfword to word | SHUF rd,ra,0x0b48 |
 | Sign-extend byte to word | SHUF rd,ra,0x1920 |
@@ -22,7 +22,7 @@
 | Floating point negation | LDI tmp,0x80000000<br>XOR rd,ra,tmp<br>*(or alternatively)*<br>FSUB rd,Z,ra |
 | Floating point absolute value | LDI tmp,0x7fffffff<br>AND rd,ra,tmp |
 | Floating point compare and branch | FS[cond] tmp,ra,rb<br>BS tmp,branch\_target |
-| Load simple floating point immediate (19 most significant bits) | LDI |
+| Load simple floating point immediate (21 most significant bits) | LDI |
 | Bitwise select (1): rd <= (ra & rc) \| (rb & ~rc) | XOR rd,ra,rb<br>AND rd,rd,rc<br>XOR rd,rd,rb |
 | Conditional addition | S[cond] re,ra,rb<br>AND re,rc,re<br>ADD re,rd,re |
 

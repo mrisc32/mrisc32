@@ -296,7 +296,7 @@ test_6:
     ldw     v9, s9, 4
 
     ; Initialize v10 to a constant value
-    ldi     v10, 0x1234
+    add     v10, vz, 0x1234
 
     ; Add vectors v9 and v10
     add     v9, v9, v10
