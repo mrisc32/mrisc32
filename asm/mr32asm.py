@@ -716,7 +716,7 @@ _OPCODES = {
                   },
 
         # Unconditional branches and jumps.
-        # Note: With this encoding we could support J/JL REG+OFFSET19x4 for any
+        # Note: With this encoding we could support J/JL REG+OFFSET21x4 for any
         # register, but right now we only support offsets when REG is PC (and
         # call the instruction B/BL instead). For all other registers, the offset
         # is forcibly zero.
