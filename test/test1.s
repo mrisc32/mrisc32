@@ -289,23 +289,16 @@ test_6:
     cpuid   s10, z          # s10 is the max number of vector elements
     lsl     s12, s10, $2    # s12 is the memory increment per vector operation
 
-.vector_loop:
-    min     vl, s10, s11    # VL = min(s10, s11)
-
-    # Load v9 from memory
-    ldw     v9, s9, $4
-
     # Initialize v10 to a constant value
     add     v10, vz, $0x1234
 
-    # Add vectors v9 and v10
-    add     v9, v9, v10
+.vector_loop:
+    min     vl, s10, s11    # vl = min(s10, s11)
 
-    # Subtract a scalar from v9
-    add     v9, v9, $-8
-
-    # Store the result to memory
-    stw     v9, s16, $4
+    ldw     v9, s9, $4      # Load v9 from memory
+    add     v9, v9, v10     # Add vectors v9 and v10
+    add     v9, v9, $-8     # Subtract a scalar from v9
+    stw     v9, s16, $4     # Store the result to memory
 
     sub     s11, s11, s10   # Decrement the loop counter
     add     s9, s9, s12     # Increment the memory pointers
