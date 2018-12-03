@@ -196,7 +196,6 @@
 
       <!-- Aliases -->
       <keyword>nop</keyword>
-      <keyword>lea</keyword>
       <keyword>mov</keyword>
     </context>
 

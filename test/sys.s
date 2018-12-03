@@ -74,7 +74,7 @@ _printhex:
     stw     s18, sp, #16
     stw     s19, sp, #20
 
-    lea     s16, #2$
+    add     s16, pc, #2$@pc
     mov     s17, s1
     ldi     s18, #7
 1$:

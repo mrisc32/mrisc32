@@ -95,7 +95,7 @@ main:
     ; Loop over all the tests.
     ldi     s25, #TEST_OUTPUT   ; s25 points to the start of the result output area.
     ldi     s24, #PASS_FAIL     ; s24 points to the start of pass/fail results.
-    lea     s23, #test_list
+    add     s23, pc, #test_list@pc
 1$:
     ; Call the next test.
     ldw     s1, s23, #0
@@ -243,7 +243,7 @@ test_cpuid:
     stw     s3, s25, #8
 
     ; Check results.
-    lea     s1, #test_cpuid_correct_results
+    add     s1, pc, #test_cpuid_correct_results@pc
     mov     s2, s25
     add     s25, s25, #12
     b       #check_results
@@ -290,7 +290,7 @@ test_alu_bitiwse:
     stw     s10, s25, #36
 
     ; Check results.
-    lea     s1, #test_alu_bitiwse_correct_results
+    add     s1, pc, #test_alu_bitiwse_correct_results@pc
     mov     s2, s25
     add     s25, s25, #40
     b       #check_results
@@ -319,7 +319,7 @@ test_alu_arithmetic:
     stw     s5, s25, #16
 
     ; Check results.
-    lea     s1, #test_alu_arithmetic_correct_results
+    add     s1, pc, #test_alu_arithmetic_correct_results@pc
     mov     s2, s25
     add     s25, s25, #20
     b       #check_results
@@ -360,7 +360,7 @@ test_alu_compare:
     stw     s12, s25, #44
 
     ; Check results.
-    lea     s1, #test_alu_compare_correct_results
+    add     s1, pc, #test_alu_compare_correct_results@pc
     mov     s2, s25
     add     s25, s25, #48
     b       #check_results
@@ -394,7 +394,7 @@ test_alu_min_max:
     stw     s8, s25, #28
 
     ; Check results.
-    lea     s1, #test_alu_min_max_correct_results
+    add     s1, pc, #test_alu_min_max_correct_results@pc
     mov     s2, s25
     add     s25, s25, #32
     b       #check_results
@@ -423,7 +423,7 @@ test_alu_shift:
     stw     s6, s25, #20
 
     ; Check results.
-    lea     s1, #test_alu_shift_correct_results
+    add     s1, pc, #test_alu_shift_correct_results@pc
     mov     s2, s25
     add     s25, s25, #24
     b       #check_results
@@ -450,7 +450,7 @@ test_alu_shuf:
     stw     s5, s25, #16
 
     ; Check results.
-    lea     s1, #test_alu_shuf_correct_results
+    add     s1, pc, #test_alu_shuf_correct_results@pc
     mov     s2, s25
     add     s25, s25, #20
     b       #check_results
@@ -481,7 +481,7 @@ test_alu_clz_rev:
     stw     s6, s25, #20
 
     ; Check results.
-    lea     s1, #test_alu_clz_rev_correct_results
+    add     s1, pc, #test_alu_clz_rev_correct_results@pc
     mov     s2, s25
     add     s25, s25, #24
     b       #check_results
@@ -554,7 +554,7 @@ test_sau:
     stw     s12, s25, #92
 
     ; Check results.
-    lea     s1, #test_sau_correct_results
+    add     s1, pc, #test_sau_correct_results@pc
     mov     s2, s25
     add     s25, s25, #96
     b       #check_results
@@ -603,7 +603,7 @@ test_mul:
     stw     s12, s25, #44
 
     ; Check results.
-    lea     s1, #test_mul_correct_results
+    add     s1, pc, #test_mul_correct_results@pc
     mov     s2, s25
     add     s25, s25, #48
     b       #check_results
@@ -649,7 +649,7 @@ test_div:
     stw     s12, s25, #44
 
     ; Check results.
-    lea     s1, #test_div_correct_results
+    add     s1, pc, #test_div_correct_results@pc
     mov     s2, s25
     add     s25, s25, #48
     b       #check_results
@@ -721,7 +721,7 @@ test_load_store:
     stw     s7, s25, #24
 
     ; Check results.
-    lea     s1, #test_load_store_correct_results
+    add     s1, pc, #test_load_store_correct_results@pc
     mov     s2, s25
     add     s25, s25, #28
     b       #check_results
@@ -769,7 +769,7 @@ test_branch:
     stw     s5, s25, #16
 
     ; Check results.
-    lea     s1, #test_branch_correct_results
+    add     s1, pc, #test_branch_correct_results@pc
     mov     s2, s25
     add     s25, s25, #20
     b       #check_results

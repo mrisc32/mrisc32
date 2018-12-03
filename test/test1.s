@@ -77,7 +77,7 @@ test10_passed:
 
 
 test_failed:
-    lea     s1, #fail_msg
+    add     s1, pc, #fail_msg@pc
     b       #_puts
 
 
@@ -101,7 +101,7 @@ test_1:
     add     s10, s10, #-1
     bnz     s10, #1$
 
-    lea     s9, #2$
+    add     s9, pc, #2$@pc
     ldw     s1, s9, #0
     ldw     s2, s9, #4
     add.b   s1, s1, s2
@@ -128,7 +128,7 @@ test_2:
     stw     s16, sp, #4
     stw     s17, sp, #8
 
-    lea     s16, #1$
+    add     s16, pc, #1$@pc
     ldw     s1, s16, #0     ; s1 = data[0]
     ldw     s17, s16, #4
     add     s1, s1, s17     ; s1 += data[1]
@@ -161,7 +161,7 @@ test_3:
     add     sp, sp, #-4
     stw     lr, sp, #0
 
-    lea     s1, #1$
+    add     s1, pc, #1$@pc
     bl      #_puts
 
     ldw     lr, sp, #0
@@ -184,10 +184,10 @@ test_4:
     stw     s16, sp, #4
 
     ; Load two 64-bit numbers into s11:s10 and s13:s12
-    lea     s9, #1$
+    add     s9, pc, #1$@pc
     ldw     s10, s9, #0     ; s10 = low bits
     ldw     s11, s9, #4     ; s11 = high bits
-    lea     s9, #2$
+    add     s9, pc, #2$@pc
     ldw     s12, s9, #0     ; s12 = low bits
     ldw     s13, s9, #4     ; s13 = high bits
 
@@ -273,7 +273,7 @@ test_6:
     stw     s18, sp, #16
 
     ; Print the maximum vector length
-    lea     s1, #test_6_vector_length_text
+    add     s1, pc #test_6_vector_length_text@pc
     bl      #_puts
     cpuid   s1, z
     bl      #_printhex
@@ -281,8 +281,8 @@ test_6:
     bl      #_putc
 
     ; Prepare scalars
-    lea     s9, #test_6_in
-    lea     s16, #test_6_result
+    add     s9, pc, #test_6_in@pc
+    add     s16, pc, #test_6_result@pc
 
     ldi     s11, #37        ; We want to process 37 elements
 
@@ -307,7 +307,7 @@ test_6:
     bgt     s11, #1$
 
     ; Print the result
-    lea     s16, #test_6_result
+    add     s16, pc, #test_6_result@pc
     ldi     s17, #0
 2$:
     lsl     s9, s17, #2
@@ -448,8 +448,8 @@ test_10:
     add     sp, sp, #-24
 
     ldi     vl, #4
-    lea     s9, #test_10_data1
-    lea     s10, #test_10_data2
+    add     s9, pc, #test_10_data1@pc
+    add     s10, pc, #test_10_data2@pc
     ldw     v1, s9, #4      ; v1 = [1, 2, 3, 4]
     ldw     v2, s10, #4     ; v2 = [9, 8, 7, 6]
 
@@ -463,7 +463,7 @@ test_10:
 
     ldi     s1, #-1
 
-    lea     s9, #test_10_answer1
+    add     s9, pc, #test_10_answer1@pc
     add     s10, sp, #0
     ldw     s2, s10, #0
     ldw     s3, s9, #0
@@ -482,7 +482,7 @@ test_10:
     seq     s2, s2, s3
     and     s1, s1, s2
 
-    lea     s9, #test_10_answer2
+    add     s9, pc, #test_10_answer2@pc
     add     s10, sp, #16
     ldw     s2, s10, #0
     ldw     s3, s9, #0

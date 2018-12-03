@@ -94,6 +94,14 @@ _PACKED_NONE = 0
 _PACKED_BYTE = 1
 _PACKED_HALF_WORD = 2
 
+# Supported operand modifiers (e.g. "#foo@pc" -> _MOD_PC).
+_MOD_NONE = 0
+_MOD_HI = 1
+_MOD_LO = 2
+_MOD_PCHI = 3
+_MOD_PCLO = 4
+_MOD_PC = 5
+
 # Names of general purpose registers.
 _REGS = {
         'Z':  0,  # Read-only: Zero
@@ -777,12 +785,6 @@ _OPCODES = {
                      [0x0000c010, _VREG1, _VREG2]],
                    'packed_op': False
                   },
-
-        # Alias for: ADD _REG1, PC, offset
-        'LEA':    {'descrs':
-                    [[0x541f0000, _REG1, _PCREL15]],
-                   'packed_op': False
-                  },
     }
 
 
@@ -936,6 +938,42 @@ def translate_pcrel(operand, operand_type, pc, labels, scope_label, line_no):
     return offset & (offset_max * 2 - 1)
 
 
+def extract_modifier(operand, line_no):
+    parts = operand.split('@')
+    if len(parts) == 1:
+        return operand, _MOD_NONE
+    elif len(parts) != 2:
+        raise AsmError(line_no, 'Invalid @-modifier usage: {}'.format(operand))
+
+    operand = parts[0]
+    if parts[1] == 'hi':
+        modifier = _MOD_HI
+    elif parts[1] == 'lo':
+        modifier = _MOD_LO
+    elif parts[1] == 'pchi':
+        modifier = _MOD_PCHI
+    elif parts[1] == 'pclo':
+        modifier = _MOD_PCLO
+    elif parts[1] == 'pc':
+        modifier = _MOD_PC
+    else:
+        raise AsmError(line_no, 'Invalid @-modifier: {}'.format(operand))
+
+    return operand, modifier
+
+
+def modify_operand_type(operand_type, modifier, line_no):
+    # TODO(m): Implement this properly.
+    if modifier == _MOD_PC:
+        if operand_type == _IMM15:
+            return _PCREL15
+        else:
+            raise AsmError(line_no, 'Unhandled @-modifier')
+    elif modifier != _MOD_NONE:
+        raise AsmError(line_no, 'Unhandled @-modifier')
+    return operand_type
+
+
 def translate_operation(operation, mnemonic, descr, packed_type, folding, addr, line_no, labels, scope_label):
     if len(operation) != len(descr):
         raise AsmError(line_no, 'Expected {} arguments for {}'.format(len(descr) - 1, mnemonic))
@@ -943,7 +981,9 @@ def translate_operation(operation, mnemonic, descr, packed_type, folding, addr, 
     is_immediate_op = False
     for k in range(1, len(descr)):
         operand = operation[k]
+        operand, modifier = extract_modifier(operand, line_no)
         operand_type = descr[k]
+        operand_type = modify_operand_type(operand_type, modifier, line_no)
         if operand_type in [_REG1, _REG2, _REG3, _VREG1, _VREG2, _VREG3, _XREG1, _XREG2]:
             instr = instr | translate_reg(operand, operand_type, line_no)
         elif operand_type in [_IMM15, _IMM21, _IMM21HI, _IMM21HIO]:
