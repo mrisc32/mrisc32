@@ -19,38 +19,38 @@ VID_DEPTH  = 32
 
 boot:
     ; Set up the stack.
-    ldi     sp, 0x00020000  ; We grow down from 128KB.
+    ldi     sp, $0x00020000  ; We grow down from 128KB.
 
     ; Set up the graphics mode.
-    ldi     s10, MMIO_GPU_BASE
-    ldi     s11, VID_MEM
-    stw     s11, s10, MMIO_GPU_ADDR
-    ldi     s11, VID_WIDTH
-    stw     s11, s10, MMIO_GPU_WIDTH
-    ldi     s11, VID_HEIGHT
-    stw     s11, s10, MMIO_GPU_HEIGHT
-    ldi     s11, VID_DEPTH
-    stw     s11, s10, MMIO_GPU_DEPTH
+    ldi     s10, $MMIO_GPU_BASE
+    ldi     s11, $VID_MEM
+    stw     s11, s10, $MMIO_GPU_ADDR
+    ldi     s11, $VID_WIDTH
+    stw     s11, s10, $MMIO_GPU_WIDTH
+    ldi     s11, $VID_HEIGHT
+    stw     s11, s10, $MMIO_GPU_HEIGHT
+    ldi     s11, $VID_DEPTH
+    stw     s11, s10, $MMIO_GPU_DEPTH
 
 main:
     cpuid   s13, z, z
     mov     vl, s13
-    lsl     s14, s13, 2     ; s14 = memory stride per vector operation
+    lsl     s14, s13, $2    ; s14 = memory stride per vector operation
 
-    add     s1, s13, -1
-    ldstrd  v4, s1, -1      ; v4 is a ramp from vl-1 downto 0
+    add     s1, s13, $-1
+    ldstrd  v4, s1, $-1     ; v4 is a ramp from vl-1 downto 0
 
-    lea     s21, .sine1024  ; s21 = start of 1024-entry sine table
-    ldi     s12, 0          ; s12 = last frame number
+    lea     s21, $.sine1024 ; s21 = start of 1024-entry sine table
+    ldi     s12, $0         ; s12 = last frame number
 
 .begin_new_frame:
-    ldi     s6, VID_MEM     ; s6 = video frame buffer
+    ldi     s6, $VID_MEM    ; s6 = video frame buffer
 
-    ldi     s8, VID_HEIGHT  ; s8 = y counter
+    ldi     s8, $VID_HEIGHT ; s8 = y counter
 .loop_y:
-    add     s8, s8, -1      ; Decrement the y counter
+    add     s8, s8, $-1     ; Decrement the y counter
 
-    ldi     s7, VID_WIDTH   ; s7 = x counter
+    ldi     s7, $VID_WIDTH  ; s7 = x counter
 .loop_x:
     min     vl, s13, s7
     sub     s7, s7, vl      ; Decrement the x counter
@@ -58,11 +58,11 @@ main:
     ; Some funky kind of test pattern...
     add     v7, v4, s7
 
-    lsl     s20, s12, 1
+    lsl     s20, s12, $1
     add     s20, s7, s20
     add     v9, v4, s20
-    and     v8, v9, 1023
-    lsl     v8, v8, 1
+    and     v8, v9, $1023
+    lsl     v8, v8, $1
     ldh     v8, s21, v8
     mulq.h  v7, v7, v8
 
@@ -70,22 +70,22 @@ main:
     add     v1, v7, s9
     shuf    v1, v7, v1
 
-    shuf    v8, v9, 0b0000000001010
+    shuf    v8, v9, $0b0000000001010
     adds.b  v1, v1, v8
 
-    stw     v1, s6, 4
+    stw     v1, s6, $4
     add     s6, s6, s14     ; Increment the memory pointer
 
-    bgt     s7, .loop_x
-    bgt     s8, .loop_y
+    bgt     s7, $.loop_x
+    bgt     s8, $.loop_y
 
 .wait_vblank:
-    ldw     s11, s10, MMIO_GPU_FRAME_NO
+    ldw     s11, s10, $MMIO_GPU_FRAME_NO
     sne     s1, s11, s12
-    bns     s1, .wait_vblank
+    bns     s1, $.wait_vblank
     mov     s12, s11
 
-    b       .begin_new_frame
+    b       $.begin_new_frame
 
 
 .sine1024:
