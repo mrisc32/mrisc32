@@ -463,7 +463,7 @@ test_10:
     add     s10, sp, $0
     stw     v3, s10, $4
     ldi     vl, $2
-    add:f   v4, v1, v2      # v4 = [8, 8]
+    add/f   v4, v1, v2      # v4 = [8, 8]
     add     s10, sp, $16
     stw     v4, s10, $4
 

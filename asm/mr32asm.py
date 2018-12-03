@@ -997,7 +997,7 @@ def decompose_mnemonic(full_mnemonic):
 
     # Is this a folding operation?
     folding = False
-    if mnemonic[-2:] == ':F':
+    if mnemonic[-2:] == '/F':
         folding = True
         mnemonic = mnemonic[:-2]
 

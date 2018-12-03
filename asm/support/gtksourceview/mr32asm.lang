@@ -102,33 +102,33 @@
       <keyword>or</keyword>
       <keyword>nor</keyword>
       <keyword>xor</keyword>
-      <keyword>asr(\.b|\.h)?(:f)?</keyword>
-      <keyword>lsl(\.b|\.h)?(:f)?</keyword>
-      <keyword>lsr(\.b|\.h)?(:f)?</keyword>
-      <keyword>max(\.b|\.h)?(:f)?</keyword>
-      <keyword>maxu(\.b|\.h)?(:f)?</keyword>
-      <keyword>min(\.b|\.h)?(:f)?</keyword>
-      <keyword>minu(\.b|\.h)?(:f)?</keyword>
-      <keyword>add(\.b|\.h)?(:f)?</keyword>
-      <keyword>addh(\.b|\.h)?(:f)?</keyword>
-      <keyword>addhu(\.b|\.h)?(:f)?</keyword>
-      <keyword>adds(\.b|\.h)?(:f)?</keyword>
-      <keyword>addsu(\.b|\.h)?(:f)?</keyword>
-      <keyword>sub(\.b|\.h)?(:f)?</keyword>
-      <keyword>subh(\.b|\.h)?(:f)?</keyword>
-      <keyword>subhu(\.b|\.h)?(:f)?</keyword>
-      <keyword>subs(\.b|\.h)?(:f)?</keyword>
-      <keyword>subsu(\.b|\.h)?(:f)?</keyword>
+      <keyword>asr(\.b|\.h)?(/f)?</keyword>
+      <keyword>lsl(\.b|\.h)?(/f)?</keyword>
+      <keyword>lsr(\.b|\.h)?(/f)?</keyword>
+      <keyword>max(\.b|\.h)?(/f)?</keyword>
+      <keyword>maxu(\.b|\.h)?(/f)?</keyword>
+      <keyword>min(\.b|\.h)?(/f)?</keyword>
+      <keyword>minu(\.b|\.h)?(/f)?</keyword>
+      <keyword>add(\.b|\.h)?(/f)?</keyword>
+      <keyword>addh(\.b|\.h)?(/f)?</keyword>
+      <keyword>addhu(\.b|\.h)?(/f)?</keyword>
+      <keyword>adds(\.b|\.h)?(/f)?</keyword>
+      <keyword>addsu(\.b|\.h)?(/f)?</keyword>
+      <keyword>sub(\.b|\.h)?(/f)?</keyword>
+      <keyword>subh(\.b|\.h)?(/f)?</keyword>
+      <keyword>subhu(\.b|\.h)?(/f)?</keyword>
+      <keyword>subs(\.b|\.h)?(/f)?</keyword>
+      <keyword>subsu(\.b|\.h)?(/f)?</keyword>
 
-      <keyword>seq(\.b|\.h)?(:f)?</keyword>
-      <keyword>sne(\.b|\.h)?(:f)?</keyword>
-      <keyword>sle(\.b|\.h)?(:f)?</keyword>
-      <keyword>sleu(\.b|\.h)?(:f)?</keyword>
-      <keyword>slt(\.b|\.h)?(:f)?</keyword>
-      <keyword>sltu(\.b|\.h)?(:f)?</keyword>
+      <keyword>seq(\.b|\.h)?(/f)?</keyword>
+      <keyword>sne(\.b|\.h)?(/f)?</keyword>
+      <keyword>sle(\.b|\.h)?(/f)?</keyword>
+      <keyword>sleu(\.b|\.h)?(/f)?</keyword>
+      <keyword>slt(\.b|\.h)?(/f)?</keyword>
+      <keyword>sltu(\.b|\.h)?(/f)?</keyword>
 
-      <keyword>clz(\.b|\.h)?(:f)?</keyword>
-      <keyword>rev(\.b|\.h)?(:f)?</keyword>
+      <keyword>clz(\.b|\.h)?(/f)?</keyword>
+      <keyword>rev(\.b|\.h)?(/f)?</keyword>
 
       <keyword>shuf</keyword>
       <keyword>packb</keyword>
@@ -167,30 +167,30 @@
       <keyword>ble</keyword>
 
       <!-- Multiply / divide -->
-      <keyword>mul(\.b|\.h)?(:f)?</keyword>
-      <keyword>mulhi(\.b|\.h)?(:f)?</keyword>
-      <keyword>mulhiu(\.b|\.h)?(:f)?</keyword>
-      <keyword>mulq(\.b|\.h)?(:f)?</keyword>
-      <keyword>div(\.b|\.h)?(:f)?</keyword>
-      <keyword>divu(\.b|\.h)?(:f)?</keyword>
-      <keyword>rem(\.b|\.h)?(:f)?</keyword>
-      <keyword>remu(\.b|\.h)?(:f)?</keyword>
+      <keyword>mul(\.b|\.h)?(/f)?</keyword>
+      <keyword>mulhi(\.b|\.h)?(/f)?</keyword>
+      <keyword>mulhiu(\.b|\.h)?(/f)?</keyword>
+      <keyword>mulq(\.b|\.h)?(/f)?</keyword>
+      <keyword>div(\.b|\.h)?(/f)?</keyword>
+      <keyword>divu(\.b|\.h)?(/f)?</keyword>
+      <keyword>rem(\.b|\.h)?(/f)?</keyword>
+      <keyword>remu(\.b|\.h)?(/f)?</keyword>
 
       <!-- Floating point -->
       <keyword>ftoi</keyword>
       <keyword>itof</keyword>
-      <keyword>fadd(\.b|\.h)?(:f)?</keyword>
-      <keyword>fdiv(\.b|\.h)?(:f)?</keyword>
-      <keyword>fmax(\.b|\.h)?(:f)?</keyword>
-      <keyword>fmin(\.b|\.h)?(:f)?</keyword>
-      <keyword>fmul(\.b|\.h)?(:f)?</keyword>
-      <keyword>fseq(\.b|\.h)?(:f)?</keyword>
-      <keyword>fsle(\.b|\.h)?(:f)?</keyword>
-      <keyword>fslt(\.b|\.h)?(:f)?</keyword>
-      <keyword>fsnan(\.b|\.h)?(:f)?</keyword>
-      <keyword>fsne(\.b|\.h)?(:f)?</keyword>
-      <keyword>fsqrt(\.b|\.h)?(:f)?</keyword>
-      <keyword>fsub(\.b|\.h)?(:f)?</keyword>
+      <keyword>fadd(\.b|\.h)?(/f)?</keyword>
+      <keyword>fdiv(\.b|\.h)?(/f)?</keyword>
+      <keyword>fmax(\.b|\.h)?(/f)?</keyword>
+      <keyword>fmin(\.b|\.h)?(/f)?</keyword>
+      <keyword>fmul(\.b|\.h)?(/f)?</keyword>
+      <keyword>fseq(\.b|\.h)?(/f)?</keyword>
+      <keyword>fsle(\.b|\.h)?(/f)?</keyword>
+      <keyword>fslt(\.b|\.h)?(/f)?</keyword>
+      <keyword>fsnan(\.b|\.h)?(/f)?</keyword>
+      <keyword>fsne(\.b|\.h)?(/f)?</keyword>
+      <keyword>fsqrt(\.b|\.h)?(/f)?</keyword>
+      <keyword>fsub(\.b|\.h)?(/f)?</keyword>
 
       <!-- Aliases -->
       <keyword>nop</keyword>
