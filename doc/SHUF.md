@@ -19,7 +19,7 @@ Whether a filled sub-byte should be zero- or sign-filled is selected by the sign
 As an example, the least significant signed byte of register `S1` can be sign extended to a 32-bit word (stored in `S2`) using the following instruction (details below):
 
 ```
-    SHUF S2, S1, 0b1100100100000
+    shuf s2, s1, $0b1100100100000
 ```
 
 More examples of different operations are given below.
