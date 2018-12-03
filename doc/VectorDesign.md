@@ -46,62 +46,62 @@ Assuming that the arguments (c, a, b, n) are in registers S1, S2, S3 and S4 (acc
 
 ```
 abs_diff:
-  BZ      S4, .done    ; n == 0, nothing to do
+  bz      s4, $.done   # n == 0, nothing to do
 
-  LDI     S12, 0x7fffffff
+  ldi     s12, $0x7fffffff
 
-  LDI     S11, 0
+  ldi     s11, $0
 .loop:
-  ADD     S4, S4, -1   ; Decrement the loop counter
+  add     s4, s4, $-1  # Decrement the loop counter
 
-  LDW     S9, S2, S11  ; S9  = a
-  LDW     S10, S3, S11 ; S10 = b
-  FSUB    S9, S9, S10  ; S9  = a - b
-  AND     S9, S9, S12  ; S9  = abs(a - b) (i.e. clear the sign bit)
-  STW     S9, S1, S11  ; c   = abs(a - b)
+  ldw     s9, s2, s11  # s9  = a
+  ldw     s10, s3, s11 # s10 = b
+  fsub    s9, s9, s10  # s9  = a - b
+  and     s9, s9, s12  # s9  = abs(a - b) (i.e. clear the sign bit)
+  stw     s9, s1, s11  # c   = abs(a - b)
 
-  ADD     S11, S11, 4  ; Increment the array offset
-  BGT     S4, .loop
+  add     s11, s11, $4 # Increment the array offset
+  bgt     s4, $.loop
 
 .done:
-  J       LR
+  j       lr
 ```
 
 ...or using vector operations as:
 
 ```
 abs_diff:
-  ADD     SP, SP, -4
-  STW     VL, SP, 0
+  add     sp, sp, $-4
+  stw     vl, sp, $0
 
-  BZ      S4, .done    ; n == 0, nothing to do
+  bz      s4, $.done   # n == 0, nothing to do
 
-  LDI     S10, 0x7fffffff
+  ldi     s10, $0x7fffffff
 
-  ; Prepare the vector operation
-  CPUID   S11, Z, Z    ; S11 is the max number of vector elements
-  LSL     S12, S11, 2  ; S12 is the memory increment per vector operation
+  # Prepare the vector operation
+  cpuid   s11, z, z    # s11 is the max number of vector elements
+  lsl     s12, s11, $2 # s12 is the memory increment per vector operation
 
 .loop:
-  MIN     VL, S4, S11  ; VL = min(S4, S11)
+  min     vl, s4, s11  # vl = min(s4, s11)
 
-  SUB     S4, S4, S11  ; Decrement the loop counter
+  sub     s4, s4, s11  # Decrement the loop counter
 
-  LDW     V9, S2, 4    ; V9  = a
-  LDW     V10, S3, 4   ; V10 = b
-  FSUB    V9, V9, V10  ; V9  = a - b
-  AND     V9, V9, S10  ; V9  = abs(a - b) (i.e. clear the sign bit)
-  STW     V9, S1, 4    ; c   = abs(a - b)
+  ldw     v9, s2, $4   # v9  = a
+  ldw     v10, s3, $4  # v10 = b
+  fsub    v9, v9, v10  # v9  = a - b
+  and     v9, v9, s10  # v9  = abs(a - b) (i.e. clear the sign bit)
+  stw     v9, s1, $4   # c   = abs(a - b)
 
-  ADD     S1, S1, S12  ; Increment the memory pointers
-  ADD     S2, S2, S12
-  ADD     S3, S3, S12
-  BGT     S4, .loop
+  add     s1, s1, s12  # Increment the memory pointers
+  add     s2, s2, s12
+  add     s3, s3, s12
+  bgt     s4, $.loop
 
 .done:
-  LDW     VL, SP, 0
-  ADD     SP, SP, 4
-  J       LR
+  ldw     vl, sp, $0
+  add     sp, sp, $4
+  j       lr
 ```
 
 Notice that the same instructions are used in both cases, only with vector operands for the vector version. Also notice that it is easy to mix scalar and vector operands for vector operations.
