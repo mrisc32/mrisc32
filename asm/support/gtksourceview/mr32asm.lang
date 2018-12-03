@@ -134,6 +134,8 @@
       <keyword>packb</keyword>
       <keyword>packh</keyword>
 
+      <keyword>addpchi</keyword>
+
       <!-- Misc. -->
       <keyword>gete</keyword>
       <keyword>getm</keyword>
