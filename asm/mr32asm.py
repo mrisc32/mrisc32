@@ -849,6 +849,11 @@ def translate_addr_or_number(string, labels, scope_label, line_no):
 
 
 def translate_imm(operand, operand_type, labels, scope_label, line_no):
+    # Immediates need to be prefixed with "$".
+    if operand[0] != '$':
+        raise AsmError(line_no, 'Missing $ prefix for immediate: {}'.format(operand))
+    operand = operand[1:]
+
     value = translate_addr_or_number(operand, labels, scope_label, line_no)
 
     value_bits = {
@@ -891,6 +896,11 @@ def translate_imm(operand, operand_type, labels, scope_label, line_no):
 
 
 def translate_pcrel(operand, operand_type, pc, labels, scope_label, line_no):
+    # Immediates need to be prefixed with "$".
+    if operand[0] != '$':
+        raise AsmError(line_no, 'Missing $ prefix for immediate: {}'.format(operand))
+    operand = operand[1:]
+
     target_address = translate_addr_or_number(operand, labels, scope_label, line_no)
     offset = target_address - pc
 
@@ -1134,7 +1144,6 @@ def compile_file(file_name, out_name, verbosity_level):
                             addr += val_size
                             if compilation_pass == 2:
                                 try:
-                                    # value = parse_integer(directive[k])
                                     value = translate_addr_or_number(directive[k], labels, scope_label, line_no)
                                 except ValueError:
                                     raise AsmError(line_no, 'Invalid integer: {}'.format(directive[k]))
@@ -1211,14 +1220,18 @@ def compile_file(file_name, out_name, verbosity_level):
                         raise AsmError(line_no, 'Bad mnemonic: {}'.format(full_mnemonic))
 
                     # Special case: Expand LDI into LDI + OR?
+                    # TODO(m): We can currently only handle numeric literals, not labels. We could
+                    # could potentially handle labels by assuming that undefined labels require
+                    # 32 bits.
                     original_operation = list(operation)
                     need_to_expand_ldi = False
                     if full_mnemonic == 'LDI':
                         try:
-                            ldi_imm = parse_integer(operation[2]) & 0xffffffff
-                            if not imm_can_be_handled_by_single_ldi(ldi_imm):
-                                operation[2] = '0x' + format(ldi_imm & 0xfffff800, '08x')
-                                need_to_expand_ldi = True
+                            if operation[2][0] == '$':
+                                ldi_imm = parse_integer(operation[2][1:]) & 0xffffffff
+                                if not imm_can_be_handled_by_single_ldi(ldi_imm):
+                                    operation[2] = '$0x' + format(ldi_imm & 0xfffff800, '08x')
+                                    need_to_expand_ldi = True
                         except:
                             pass
 
