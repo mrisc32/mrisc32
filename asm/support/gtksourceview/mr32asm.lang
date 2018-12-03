@@ -24,7 +24,7 @@
 
   <metadata>
     <property name="globs">*.s</property>
-    <property name="line-comment-start">(;|//|#)</property>
+    <property name="line-comment-start">(//|#)</property>
   </metadata>
 
   <styles>

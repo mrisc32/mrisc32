@@ -1062,10 +1062,7 @@ def compile_file(file_name, out_name, verbosity_level):
                 line = raw_line
 
                 # Remove comment.
-                comment_pos = line.find(';')
-                comment_pos2 = line.find('#')
-                if comment_pos2 >= 0 and (comment_pos2 < comment_pos or comment_pos < 0):
-                    comment_pos = comment_pos2
+                comment_pos = line.find('#')
                 comment_pos2 = line.find('//')
                 if comment_pos2 >= 0 and (comment_pos2 < comment_pos or comment_pos < 0):
                     comment_pos = comment_pos2
@@ -1139,7 +1136,7 @@ def compile_file(file_name, out_name, verbosity_level):
                           '.u16': '<H',
                           '.i32': '<l',
                           '.u32': '<L'
-                        }[directive[0]];
+                        }[directive[0]]
                         for k in range(1, len(directive)):
                             addr += val_size
                             if compilation_pass == 2:
