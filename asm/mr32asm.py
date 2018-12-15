@@ -744,6 +744,14 @@ _OPCODES = {
                      [0xf0000000, _REG1, _IMM21HIO]],   # LDHIO
                    'packed_op': False
                   },
+        'LDHI':   {'descrs':
+                    [[0xec000000, _REG1, _IMM21HI]],
+                   'packed_op': False
+                  },
+        'LDHIO':  {'descrs':
+                    [[0xf0000000, _REG1, _IMM21HIO]],
+                   'packed_op': False
+                  },
 
         # "Add PC high immediate": Sd = PC +(IMM21 << 11)
         'ADDPCHI': {'descrs':
@@ -1210,6 +1218,9 @@ def compile_file(file_name, out_name, verbosity_level):
                             addr += 1
                             if compilation_pass == 2:
                                 code += struct.pack('B', 0)
+
+                    elif directive[0] in ['.text', '.data', '.global']:
+                        print 'Ignoring directive: {}'.format(directive[0])
 
                     else:
                         raise AsmError(line_no, 'Unknown directive: {}'.format(directive[0]))
