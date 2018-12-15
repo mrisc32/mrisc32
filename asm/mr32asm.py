@@ -1121,9 +1121,19 @@ def compile_file(file_name, out_name, verbosity_level):
                             if verbosity_level >= 2:
                                 print 'Aligned pc to: {} (padded by {} bytes)'.format(addr, num_pad_bytes)
 
-                    elif directive[0] in ['.i8', '.u8', '.i16', '.u16', '.i32', '.u32']:
-                        num_bits = parse_integer(directive[0][2:])
-                        is_unsigned = (directive[0][1] == 'u')
+                    elif directive[0] in ['.i8', '.u8', '.i16', '.u16', '.i32', '.u32', '.byte', '.half', '.short', '.word', '.long', '.int']:
+                        # Convert GNU as style directives to MRISC32 directives.
+                        # TODO(m): Allow both signed and unsigned.
+                        pseudo_op = directive[0]
+                        if pseudo_op in ['.byte']:
+                            pseudo_op = '.u8'
+                        elif pseudo_op in ['.half', '.short']:
+                            pseudo_op = '.i16'
+                        elif pseudo_op in ['.word', '.long', '.int']:
+                            pseudo_op = '.i32'
+
+                        num_bits = parse_integer(pseudo_op[2:])
+                        is_unsigned = (pseudo_op[1] == 'u')
                         val_min = 0 if is_unsigned else -(1 << (num_bits - 1))
                         val_max = ((1 << num_bits) - 1) if is_unsigned else ((1 << (num_bits - 1)) - 1)
                         val_size = num_bits >> 3
@@ -1136,7 +1146,7 @@ def compile_file(file_name, out_name, verbosity_level):
                           '.u16': '<H',
                           '.i32': '<l',
                           '.u32': '<L'
-                        }[directive[0]]
+                        }[pseudo_op];
                         for k in range(1, len(directive)):
                             addr += val_size
                             if compilation_pass == 2:
