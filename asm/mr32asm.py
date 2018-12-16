@@ -833,8 +833,19 @@ def translate_reg(operand, operand_type, line_no):
         raise AsmError(line_no, 'Bad register type: {}'.format(operand_type))
 
 
+def is_local_label(label):
+    # We support gas style '123$' dollar local labels.
+    if label.endswith('$'):
+        try:
+            int(label[:-1])
+            return True
+        except ValueError:
+            return False;
+    return False
+
+
 def mangle_local_label(label, scope_label):
-    return '{}@{}'.format(scope_label, label[1:])
+    return '{}@{}'.format(scope_label, label[:-1])
 
 
 def translate_addr_or_number(string, labels, scope_label, line_no):
@@ -847,7 +858,7 @@ def translate_addr_or_number(string, labels, scope_label, line_no):
     # Label?
     # TODO(m): Add support for numerical offsets and relative +/- deltas.
     try:
-        if string.startswith('.'):
+        if is_local_label(string):
             if not scope_label:
                 raise AsmError(line_no, 'No scope for local label: {}'.format(string))
             string = mangle_local_label(string, scope_label)
@@ -857,10 +868,9 @@ def translate_addr_or_number(string, labels, scope_label, line_no):
 
 
 def translate_imm(operand, operand_type, labels, scope_label, line_no):
-    # Immediates need to be prefixed with "$".
-    if operand[0] != '$':
-        raise AsmError(line_no, 'Missing $ prefix for immediate: {}'.format(operand))
-    operand = operand[1:]
+    # Drop the optional "#" prefix.
+    if operand[0] == '#':
+        operand = operand[1:]
 
     value = translate_addr_or_number(operand, labels, scope_label, line_no)
 
@@ -904,10 +914,9 @@ def translate_imm(operand, operand_type, labels, scope_label, line_no):
 
 
 def translate_pcrel(operand, operand_type, pc, labels, scope_label, line_no):
-    # Immediates need to be prefixed with "$".
-    if operand[0] != '$':
-        raise AsmError(line_no, 'Missing $ prefix for immediate: {}'.format(operand))
-    operand = operand[1:]
+    # Drop the optional "#" prefix.
+    if operand[0] == '#':
+        operand = operand[1:]
 
     target_address = translate_addr_or_number(operand, labels, scope_label, line_no)
     offset = target_address - pc
@@ -1070,7 +1079,7 @@ def compile_file(file_name, out_name, verbosity_level):
                 line = raw_line
 
                 # Remove comment.
-                comment_pos = line.find('#')
+                comment_pos = line.find(';')
                 comment_pos2 = line.find('//')
                 if comment_pos2 >= 0 and (comment_pos2 < comment_pos or comment_pos < 0):
                     comment_pos = comment_pos2
@@ -1092,8 +1101,8 @@ def compile_file(file_name, out_name, verbosity_level):
                     else:
                         label, label_value = parse_assigned_label(line, line_no)
                     if ' ' in label or '@' in label:
-                        raise AsmError(line_no, 'Bad label "%s"' % label)
-                    if label.startswith('.'):
+                        raise AsmError(line_no, 'Bad label "{}"'.format(label))
+                    if is_local_label(label):
                         # This is a local label - make it global.
                         if not scope_label:
                             raise AsmError(line_no, 'No scope for local label: {}'.format(label))
@@ -1130,15 +1139,19 @@ def compile_file(file_name, out_name, verbosity_level):
                                 print 'Aligned pc to: {} (padded by {} bytes)'.format(addr, num_pad_bytes)
 
                     elif directive[0] in ['.i8', '.u8', '.i16', '.u16', '.i32', '.u32', '.byte', '.half', '.short', '.word', '.long', '.int']:
+                        check_limits = True
+
                         # Convert GNU as style directives to MRISC32 directives.
-                        # TODO(m): Allow both signed and unsigned.
                         pseudo_op = directive[0]
                         if pseudo_op in ['.byte']:
                             pseudo_op = '.u8'
+                            check_limits = False
                         elif pseudo_op in ['.half', '.short']:
-                            pseudo_op = '.i16'
+                            pseudo_op = '.u16'
+                            check_limits = False
                         elif pseudo_op in ['.word', '.long', '.int']:
-                            pseudo_op = '.i32'
+                            pseudo_op = '.u32'
+                            check_limits = False
 
                         num_bits = parse_integer(pseudo_op[2:])
                         is_unsigned = (pseudo_op[1] == 'u')
@@ -1162,8 +1175,12 @@ def compile_file(file_name, out_name, verbosity_level):
                                     value = translate_addr_or_number(directive[k], labels, scope_label, line_no)
                                 except ValueError:
                                     raise AsmError(line_no, 'Invalid integer: {}'.format(directive[k]))
-                                if value < val_min or value > val_max:
+                                if check_limits and (value < val_min or value > val_max):
                                     raise AsmError(line_no, 'Value out of range: {}'.format(value))
+                                if not check_limits:
+                                    # Convert value to unsigned.
+                                    if value < 0:
+                                        value = (1 << num_bits) + value
                                 code += struct.pack(val_type, value)
 
                     elif directive[0] in ['.space', '.zero']:
@@ -1220,7 +1237,8 @@ def compile_file(file_name, out_name, verbosity_level):
                                 code += struct.pack('B', 0)
 
                     elif directive[0] in ['.text', '.data', '.global']:
-                        print 'Ignoring directive: {}'.format(directive[0])
+                        if verbosity_level >= 1 and compilation_pass == 2:
+                            print '{}:{}: WARNING: Ignoring directive: {}'.format(file_name, line_no, directive[0])
 
                     else:
                         raise AsmError(line_no, 'Unknown directive: {}'.format(directive[0]))
@@ -1245,10 +1263,10 @@ def compile_file(file_name, out_name, verbosity_level):
                     need_to_expand_ldi = False
                     if full_mnemonic == 'LDI':
                         try:
-                            if operation[2][0] == '$':
+                            if operation[2][0] == '#':
                                 ldi_imm = parse_integer(operation[2][1:]) & 0xffffffff
                                 if not imm_can_be_handled_by_single_ldi(ldi_imm):
-                                    operation[2] = '$0x' + format(ldi_imm & 0xfffff800, '08x')
+                                    operation[2] = '#0x' + format(ldi_imm & 0xfffff800, '08x')
                                     need_to_expand_ldi = True
                         except:
                             pass
