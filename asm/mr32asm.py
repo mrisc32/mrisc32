@@ -868,10 +868,9 @@ def translate_addr_or_number(string, labels, scope_label, line_no):
 
 
 def translate_imm(operand, operand_type, labels, scope_label, line_no):
-    # Immediates need to be prefixed with "#".
-    if operand[0] != '#':
-        raise AsmError(line_no, 'Missing # prefix for immediate: {}'.format(operand))
-    operand = operand[1:]
+    # Drop the optional "#" prefix.
+    if operand[0] == '#':
+        operand = operand[1:]
 
     value = translate_addr_or_number(operand, labels, scope_label, line_no)
 
@@ -915,10 +914,9 @@ def translate_imm(operand, operand_type, labels, scope_label, line_no):
 
 
 def translate_pcrel(operand, operand_type, pc, labels, scope_label, line_no):
-    # Immediates need to be prefixed with "#".
-    if operand[0] != '#':
-        raise AsmError(line_no, 'Missing # prefix for immediate: {}'.format(operand))
-    operand = operand[1:]
+    # Drop the optional "#" prefix.
+    if operand[0] == '#':
+        operand = operand[1:]
 
     target_address = translate_addr_or_number(operand, labels, scope_label, line_no)
     offset = target_address - pc
@@ -1103,7 +1101,7 @@ def compile_file(file_name, out_name, verbosity_level):
                     else:
                         label, label_value = parse_assigned_label(line, line_no)
                     if ' ' in label or '@' in label:
-                        raise AsmError(line_no, 'Bad label "%s"' % label)
+                        raise AsmError(line_no, 'Bad label "{}"'.format(label))
                     if is_local_label(label):
                         # This is a local label - make it global.
                         if not scope_label:
@@ -1231,7 +1229,8 @@ def compile_file(file_name, out_name, verbosity_level):
                                 code += struct.pack('B', 0)
 
                     elif directive[0] in ['.text', '.data', '.global']:
-                        print 'Ignoring directive: {}'.format(directive[0])
+                        if verbosity_level >= 1 and compilation_pass == 2:
+                            print '{}:{}: WARNING: Ignoring directive: {}'.format(file_name, line_no, directive[0])
 
                     else:
                         raise AsmError(line_no, 'Unknown directive: {}'.format(directive[0]))
