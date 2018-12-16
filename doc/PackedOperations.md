@@ -31,20 +31,20 @@ Packed operations are part of the scalar instruction set, and just as other inst
 For instance, the following code (which adds the number seven to 64 bytes in memory) is perfectly valid:
 
 ```
-  ldi    s10, $7
-  shuf   s10, s10, $0  # s10 = 0x07070707
+  ldi    s10, #7
+  shuf   s10, s10, #0  ; s10 = 0x07070707
 
-  ldi    vl, $16       # Vector Length = 16 words, i.e. 64 bytes
-  ldw    v10, s1, $4   # Load source operands, X, into v10
-  add.b  v10, v10, s10 # Calculate the byte-wise addition of X and 0x07070707
-  stw    v10, s1, $4   # Store the result back into memory
+  ldi    vl, #16       ; Vector Length = 16 words, i.e. 64 bytes
+  ldw    v10, s1, #4   ; Load source operands, X, into v10
+  add.b  v10, v10, s10 ; Calculate the byte-wise addition of X and 0x07070707
+  stw    v10, s1, #4   ; Store the result back into memory
 ```
 
 ## Floating point
 
 Most floating point operations may also act on packed data. The natural size for floating point operations is 32 bits ([IEEE 754 binary32](https://en.wikipedia.org/wiki/Single-precision_floating-point_format)), but with packed operations the MRISC32 ISA also supports 16-bit floating point ([IEEE 754 binary16](https://en.wikipedia.org/wiki/Half-precision_floating-point_format)) and 8-bit floating point (non-standard).
 
-For instance, `FADD.H` performs two 16-bit (half precision) floating point additions, and `FMUL.B` performs four 8-bit floating point multiplications.
+For instance, `fadd.h` performs two 16-bit (half precision) floating point additions, and `fmul.b` performs four 8-bit floating point multiplications.
 
 ### Floating point formats
 
@@ -58,4 +58,4 @@ For instance, `FADD.H` performs two 16-bit (half precision) floating point addit
 ## The 64-bit perspective
 If the MRISC32 ISA is extended into an MRISC64 ISA, packed operations would be the natural way to support 32-bit floating point and 32-bit integer arithmetic. In fact, there is room in the current ISA for Packed Word operations (though they make no sense with 32-bit registers), which could be used in a 64-bit ISA.
 
-E.g. `FADD.W` would do two 32-bit floating point additions, whereas `FADD` would do a single 64-bit floating point addition. Similarly `ADD.W` would do two 32-bit integer additions, whereas `ADD` would do a single 64-bit integer addition.
+E.g. `fadd.w` would do two 32-bit floating point additions, whereas `fadd` would do a single 64-bit floating point addition. Similarly `add.w` would do two 32-bit integer additions, whereas `add` would do a single 64-bit integer addition.

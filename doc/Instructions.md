@@ -27,9 +27,9 @@
 |STB| x | (1) |   | src1, src2, src3 | [src2 + src3] <= src1 (byte) | Store byte |
 |STH| x | (1) |   | src1, src2, src3 | [src2 + src3] <= src1 (halfword) | Store halfowrd |
 |STW| x | (1) |   | src1, src2, src3 | [src2 + src3] <= src1 (word) | Store word |
-|LDI| x | x |   | dst, $i21 | dst <= signextend(i21) | Alt. 1: Load immediate (low 21 bits) |
-|   | x | x |   | dst, $i21 | dst <= i21 << 11 | Alt. 2: Load immediate (high 21 bits) |
-|   | x | x |   | dst, $i21 | dst <= (i21 << 11) \| 0x7ff | Alt. 3: Load immediate with low ones (high 21 bits) |
+|LDI| x | x |   | dst, #i21 | dst <= signextend(i21) | Alt. 1: Load immediate (low 21 bits) |
+|   | x | x |   | dst, #i21 | dst <= i21 << 11 | Alt. 2: Load immediate (high 21 bits) |
+|   | x | x |   | dst, #i21 | dst <= (i21 << 11) \| 0x7ff | Alt. 3: Load immediate with low ones (high 21 bits) |
 |LDSTRD| x | x |   | dst, src1, src2 | dst[k] <= src1 + src2 * k | Load a linear stride (vector instruction) |
 
 **(1)**: The third operand in vector loads/stores is used as a stride or offset parameter (see [addressing modes](AddressingModes.md) for more details).
@@ -40,22 +40,22 @@
 |---|---|---|---|---|---|---|
 |J|   |   |   | src1 | pc <= src1 | Jump to register address |
 |JL|   |   |   | src1 | lr <= pc+4, pc <= src1 | Jump to register address and link |
-|B| x |   |   | $i21 | pc <= pc+signextend(i21)*4 | Unconditionally branch |
-|BL| x |   |   | $i21 | lr <= pc+4, pc <= pc+signextend(i21)*4 | Unconditionally branch and link |
-|BZ| x |   |   | src1, $i21 | pc <= pc+signextend(i21)*4 if src1 == 0 | Conditionally branch if equal to zero |
-|BNZ| x |   |   | src1, $i21 | pc <= pc+signextend(i21)*4 if src1 != 0 | Conditionally branch if not equal to zero |
-|BS| x |   |   | src1, $i21 | pc <= pc+signextend(i21)*4 if src1 == 0xffffffff | Conditionally branch if set (all bits = 1) |
-|BNS| x |   |   | src1, $i21 | pc <= pc+signextend(i21)*4 if src1 != 0xffffffff | Conditionally branch if not set (at least one bit = 0) |
-|BLT| x |   |   | src1, $i21 | pc <= pc+signextend(i21)*4 if src1 < 0 | Conditionally branch if less than zero |
-|BGE| x |   |   | src1, $i21 | pc <= pc+signextend(i21)*4 if src1 >= 0 | Conditionally branch if greater than or equal to zero |
-|BLE| x |   |   | src1, $i21 | pc <= pc+signextend(i21)*4 if src1 <= 0 | Conditionally branch if less than or equal to zero |
-|BGT| x |   |   | src1, $i21 | pc <= pc+signextend(i21)*4 if src1 > 0 | Conditionally branch if greater than zero |
+|B| x |   |   | #i21 | pc <= pc+signextend(i21)*4 | Unconditionally branch |
+|BL| x |   |   | #i21 | lr <= pc+4, pc <= pc+signextend(i21)*4 | Unconditionally branch and link |
+|BZ| x |   |   | src1, #i21 | pc <= pc+signextend(i21)*4 if src1 == 0 | Conditionally branch if equal to zero |
+|BNZ| x |   |   | src1, #i21 | pc <= pc+signextend(i21)*4 if src1 != 0 | Conditionally branch if not equal to zero |
+|BS| x |   |   | src1, #i21 | pc <= pc+signextend(i21)*4 if src1 == 0xffffffff | Conditionally branch if set (all bits = 1) |
+|BNS| x |   |   | src1, #i21 | pc <= pc+signextend(i21)*4 if src1 != 0xffffffff | Conditionally branch if not set (at least one bit = 0) |
+|BLT| x |   |   | src1, #i21 | pc <= pc+signextend(i21)*4 if src1 < 0 | Conditionally branch if less than zero |
+|BGE| x |   |   | src1, #i21 | pc <= pc+signextend(i21)*4 if src1 >= 0 | Conditionally branch if greater than or equal to zero |
+|BLE| x |   |   | src1, #i21 | pc <= pc+signextend(i21)*4 if src1 <= 0 | Conditionally branch if less than or equal to zero |
+|BGT| x |   |   | src1, #i21 | pc <= pc+signextend(i21)*4 if src1 > 0 | Conditionally branch if greater than zero |
 
 ## Special PC-addition
 
 | Mnemonic | I | V | P | Operands | Operation | Description |
 |---|---|---|---|---|---|---|
-|ADDPCHI| x |   |   | dst, $i21 | dst <= pc + (i21 << 11) | Add high immediate to PC |
+|ADDPCHI| x |   |   | dst, #i21 | dst <= pc + (i21 << 11) | Add high immediate to PC |
 
 Note: `ADDPCHI` can be used together with load/store instructions to perform 32-bit PC-relative addressing in just two instructions.
 
@@ -141,9 +141,9 @@ Most instructions (excluding branch instructions) can be executed in both scalar
 
 For instance the integer instruction `ADD` has the following operation modes:
 * `ADD Sd,Sa,Sb` - scalar <= scalar + scalar
-* `ADD Sd,Sa,$IMM` - scalar <= scalar + scalar
+* `ADD Sd,Sa,#IMM` - scalar <= scalar + scalar
 * `ADD Vd,Va,Sb` - vector <= vector + scalar
-* `ADD Vd,Va,$IMM` - vector <= vector + scalar
+* `ADD Vd,Va,#IMM` - vector <= vector + scalar
 * `ADD Vd,Va,Vb` - vector <= vector + vector
 
 *See [Vector Design](VectorDesign.md) for more information.*
