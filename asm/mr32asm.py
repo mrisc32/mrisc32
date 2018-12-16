@@ -857,9 +857,9 @@ def translate_addr_or_number(string, labels, scope_label, line_no):
 
 
 def translate_imm(operand, operand_type, labels, scope_label, line_no):
-    # Immediates need to be prefixed with "$".
-    if operand[0] != '$':
-        raise AsmError(line_no, 'Missing $ prefix for immediate: {}'.format(operand))
+    # Immediates need to be prefixed with "#".
+    if operand[0] != '#':
+        raise AsmError(line_no, 'Missing # prefix for immediate: {}'.format(operand))
     operand = operand[1:]
 
     value = translate_addr_or_number(operand, labels, scope_label, line_no)
@@ -904,9 +904,9 @@ def translate_imm(operand, operand_type, labels, scope_label, line_no):
 
 
 def translate_pcrel(operand, operand_type, pc, labels, scope_label, line_no):
-    # Immediates need to be prefixed with "$".
-    if operand[0] != '$':
-        raise AsmError(line_no, 'Missing $ prefix for immediate: {}'.format(operand))
+    # Immediates need to be prefixed with "#".
+    if operand[0] != '#':
+        raise AsmError(line_no, 'Missing # prefix for immediate: {}'.format(operand))
     operand = operand[1:]
 
     target_address = translate_addr_or_number(operand, labels, scope_label, line_no)
@@ -1070,7 +1070,7 @@ def compile_file(file_name, out_name, verbosity_level):
                 line = raw_line
 
                 # Remove comment.
-                comment_pos = line.find('#')
+                comment_pos = line.find(';')
                 comment_pos2 = line.find('//')
                 if comment_pos2 >= 0 and (comment_pos2 < comment_pos or comment_pos < 0):
                     comment_pos = comment_pos2
@@ -1245,10 +1245,10 @@ def compile_file(file_name, out_name, verbosity_level):
                     need_to_expand_ldi = False
                     if full_mnemonic == 'LDI':
                         try:
-                            if operation[2][0] == '$':
+                            if operation[2][0] == '#':
                                 ldi_imm = parse_integer(operation[2][1:]) & 0xffffffff
                                 if not imm_can_be_handled_by_single_ldi(ldi_imm):
-                                    operation[2] = '$0x' + format(ldi_imm & 0xfffff800, '08x')
+                                    operation[2] = '#0x' + format(ldi_imm & 0xfffff800, '08x')
                                     need_to_expand_ldi = True
                         except:
                             pass
