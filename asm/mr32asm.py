@@ -833,8 +833,19 @@ def translate_reg(operand, operand_type, line_no):
         raise AsmError(line_no, 'Bad register type: {}'.format(operand_type))
 
 
+def is_local_label(label):
+    # We support gas style '123$' dollar local labels.
+    if label.endswith('$'):
+        try:
+            int(label[:-1])
+            return True
+        except ValueError:
+            return False;
+    return False
+
+
 def mangle_local_label(label, scope_label):
-    return '{}@{}'.format(scope_label, label[1:])
+    return '{}@{}'.format(scope_label, label[:-1])
 
 
 def translate_addr_or_number(string, labels, scope_label, line_no):
@@ -847,7 +858,7 @@ def translate_addr_or_number(string, labels, scope_label, line_no):
     # Label?
     # TODO(m): Add support for numerical offsets and relative +/- deltas.
     try:
-        if string.startswith('.'):
+        if is_local_label(string):
             if not scope_label:
                 raise AsmError(line_no, 'No scope for local label: {}'.format(string))
             string = mangle_local_label(string, scope_label)
@@ -1093,7 +1104,7 @@ def compile_file(file_name, out_name, verbosity_level):
                         label, label_value = parse_assigned_label(line, line_no)
                     if ' ' in label or '@' in label:
                         raise AsmError(line_no, 'Bad label "%s"' % label)
-                    if label.startswith('.'):
+                    if is_local_label(label):
                         # This is a local label - make it global.
                         if not scope_label:
                             raise AsmError(line_no, 'No scope for local label: {}'.format(label))
