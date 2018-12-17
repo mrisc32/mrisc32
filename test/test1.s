@@ -225,8 +225,8 @@ test_5:
     stw     s16, sp, #4
 
     ; Calculate 2 * PI
-    ldw     s9, #test_5_pi
-    ldw     s10, #test_5_two
+    ldw     s9, pc, #test_5_pi@pc
+    ldw     s10, pc, #test_5_two@pc
     fmul    s16, s9, s10    ; s16 = 2 * PI
 
     mov     s1, s16
@@ -235,7 +235,7 @@ test_5:
     bl      #_putc
 
     ; Was the result 2 * PI?
-    ldw     s9, #test_5_twopi
+    ldw     s9, pc, #test_5_twopi@pc
     fsub    s9, s16, s9     ; s9 = (2 * PI) - test_5_twopi
 
     ldw     lr, sp, #0
@@ -273,9 +273,9 @@ test_6:
     stw     s18, sp, #16
 
     ; Print the maximum vector length
-    add     s1, pc #test_6_vector_length_text@pc
+    add     s1, pc, #test_6_vector_length_text@pc
     bl      #_puts
-    cpuid   s1, z
+    cpuid   s1, z, z
     bl      #_printhex
     ldi     s1, #10
     bl      #_putc
@@ -287,7 +287,7 @@ test_6:
     ldi     s11, #37        ; We want to process 37 elements
 
     ; Prepare the vector operation
-    cpuid   s10, z          ; s10 is the max number of vector elements
+    cpuid   s10, z, z       ; s10 is the max number of vector elements
     lsl     s12, s10, #2    ; s12 is the memory increment per vector operation
 
     ; Initialize v10 to a constant value
@@ -406,7 +406,7 @@ test_9:
     ldi     s17, #0x41c5bfff    ; s17 = 24.718748F
     fmul    s18, s16, s17       ; s18 = 42.002561F (0x4228029f)
 
-    ldw    s9, #1$
+    ldw    s9, pc, #1$@pc
     sne    s19, s9, s18         ; Expected value?
 
     or      s1, s18, z

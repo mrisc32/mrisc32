@@ -740,8 +740,8 @@ test_load_store_correct_results:
 test_branch:
     ; Speculative instructions are cancelled.
     ldi     s1, #0x1000
-    ldw     s2, #3$
-    ldw     s3, #4$
+    ldw     s2, pc, #3$@pc
+    ldw     s3, pc, #4$@pc
     b       #1$
     ldi     s3, #0x2000
     ldi     s3, #0x3000

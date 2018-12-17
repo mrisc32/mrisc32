@@ -197,8 +197,7 @@ _OPCODES = {
         # Retrieve CPU information.
         # Note: Doubles in as NOP (0x00000000 = CPUID Z, Z, Z).
         'CPUID':  {'descrs':
-                    [[0x00000000, _REG1, _REG2],
-                     [0x00000000, _REG1, _REG2, _REG3]],
+                    [[0x00000000, _REG1, _REG2, _REG3]],
                    'packed_op': False
                   },
 
@@ -208,7 +207,6 @@ _OPCODES = {
                      [0x00008001, _VREG1, _REG2, _REG3],
                      [0x0000c001, _VREG1, _REG2, _VREG3],
                      [0x04000000, _REG1, _REG2, _IMM15],
-                     [0x041f0000, _REG1, _PCREL15],        # Alias for _REG1, PC, offset
                      [0x04008000, _VREG1, _REG2, _IMM15]],
                    'packed_op': False
                   },
@@ -217,7 +215,6 @@ _OPCODES = {
                      [0x00008002, _VREG1, _REG2, _REG3],
                      [0x0000c002, _VREG1, _REG2, _VREG3],
                      [0x08000000, _REG1, _REG2, _IMM15],
-                     [0x081f0000, _REG1, _PCREL15],        # Alias for _REG1, PC, offset
                      [0x08008000, _VREG1, _REG2, _IMM15]],
                    'packed_op': False
                   },
@@ -226,7 +223,6 @@ _OPCODES = {
                      [0x00008003, _VREG1, _REG2, _REG3],
                      [0x0000c003, _VREG1, _REG2, _VREG3],
                      [0x0c000000, _REG1, _REG2, _IMM15],
-                     [0x0c1f0000, _REG1, _PCREL15],        # Alias for _REG1, PC, offset
                      [0x0c008000, _VREG1, _REG2, _IMM15]],
                    'packed_op': False
                   },
@@ -235,7 +231,6 @@ _OPCODES = {
                      [0x00008005, _VREG1, _REG2, _REG3],
                      [0x0000c005, _VREG1, _REG2, _VREG3],
                      [0x14000000, _REG1, _REG2, _IMM15],
-                     [0x141f0000, _REG1, _PCREL15],        # Alias for _REG1, PC, offset
                      [0x14008000, _VREG1, _REG2, _IMM15]],
                    'packed_op': False
                   },
@@ -244,7 +239,6 @@ _OPCODES = {
                      [0x00008006, _VREG1, _REG2, _REG3],
                      [0x0000c006, _VREG1, _REG2, _VREG3],
                      [0x18000000, _REG1, _REG2, _IMM15],
-                     [0x181f0000, _REG1, _PCREL15],        # Alias for _REG1, PC, offset
                      [0x18008000, _VREG1, _REG2, _IMM15]],
                    'packed_op': False
                   },
@@ -258,7 +252,6 @@ _OPCODES = {
                      [0x00008009, _VREG1, _REG2, _REG3],
                      [0x0000c009, _VREG1, _REG2, _VREG3],
                      [0x24000000, _REG1, _REG2, _IMM15],
-                     [0x241f0000, _REG1, _PCREL15],        # Alias for _REG1, PC, offset
                      [0x24008000, _VREG1, _REG2, _IMM15]],
                    'packed_op': False
                   },
@@ -267,7 +260,6 @@ _OPCODES = {
                      [0x0000800a, _VREG1, _REG2, _REG3],
                      [0x0000c00a, _VREG1, _REG2, _VREG3],
                      [0x28000000, _REG1, _REG2, _IMM15],
-                     [0x281f0000, _REG1, _PCREL15],        # Alias for _REG1, PC, offset
                      [0x28008000, _VREG1, _REG2, _IMM15]],
                    'packed_op': False
                   },
@@ -276,7 +268,6 @@ _OPCODES = {
                      [0x0000800b, _VREG1, _REG2, _REG3],
                      [0x0000c00b, _VREG1, _REG2, _VREG3],
                      [0x2c000000, _REG1, _REG2, _IMM15],
-                     [0x2c1f0000, _REG1, _PCREL15],        # Alias for _REG1, PC, offset
                      [0x2c008000, _VREG1, _REG2, _IMM15]],
                    'packed_op': False
                   },
