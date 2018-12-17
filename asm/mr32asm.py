@@ -88,6 +88,8 @@ _IMM21HI = 11    # 0x00000000..0xfffff800 (in steps of 0x00000800)
 _IMM21HIO = 12   # 0x000007ff..0xffffffff (in steps of 0x00000800)
 _PCREL15 = 13    # -16384..16383
 _PCREL21x4 = 14  # -4194304..4194303 (in steps of 4)
+_IMM11_LO = 15   # Same as _IMM15, but without range checks
+_IMM21HI_NOCHECK = 16   # Same as _IMM21HI, but without range checks
 
 # Supported packed operation types.
 _PACKED_NONE = 0
@@ -738,9 +740,7 @@ _OPCODES = {
 
         # Load immediate.
         'LDI':    {'descrs':
-                    [[0xe8000000, _REG1, _IMM21],
-                     [0xec000000, _REG1, _IMM21HI],     # LDHI
-                     [0xf0000000, _REG1, _IMM21HIO]],   # LDHIO
+                    [[0xe8000000, _REG1, _IMM21]],
                    'packed_op': False
                   },
         'LDHI':   {'descrs':
@@ -868,27 +868,35 @@ def translate_imm(operand, operand_type, labels, scope_label, line_no):
     value = translate_addr_or_number(operand, labels, scope_label, line_no)
 
     value_bits = {
+            _IMM11_LO: 11,
             _IMM15:    15,
             _IMM21:    21,
             _IMM21HI:  21,
+            _IMM21HI_NOCHECK: 21,
             _IMM21HIO: 21,
         }[operand_type]
     value_shift = {
+            _IMM11_LO: 0,
             _IMM15:    0,
             _IMM21:    0,
             _IMM21HI:  11,
+            _IMM21HI_NOCHECK: 11,
             _IMM21HIO: 11,
         }[operand_type]
     value_min = {
+            _IMM11_LO: -(1 << 32),
             _IMM15:    -(1 << 14),
             _IMM21:    -(1 << 20),
             _IMM21HI:  0x00000000,
+            _IMM21HI_NOCHECK: -(1 << 32),
             _IMM21HIO: 0x000007ff,
         }[operand_type]
     value_max = {
+            _IMM11_LO: 0xffffffff,
             _IMM15:    (1 << 14) - 1,
             _IMM21:    (1 << 20) - 1,
             _IMM21HI:  0xfffff800,
+            _IMM21HI_NOCHECK: 0xffffffff,
             _IMM21HIO: 0xffffffff,
         }[operand_type]
 
@@ -960,6 +968,16 @@ def modify_operand_type(operand_type, modifier, line_no):
             return _PCREL15
         else:
             raise AsmError(line_no, 'Unhandled @-modifier')
+    elif modifier == _MOD_LO:
+        if operand_type in [_IMM15, _IMM21]:
+            return _IMM11_LO
+        else:
+            raise AsmError(line_no, 'Unhandled @-modifier')
+    elif modifier == _MOD_HI:
+        if operand_type == _IMM21HI:
+            return _IMM21HI_NOCHECK
+        else:
+            raise AsmError(line_no, 'Unhandled @-modifier')
     elif modifier != _MOD_NONE:
         raise AsmError(line_no, 'Unhandled @-modifier')
     return operand_type
@@ -977,7 +995,7 @@ def translate_operation(operation, mnemonic, descr, packed_type, folding, addr, 
         operand_type = modify_operand_type(operand_type, modifier, line_no)
         if operand_type in [_REG1, _REG2, _REG3, _VREG1, _VREG2, _VREG3, _XREG1, _XREG2]:
             instr = instr | translate_reg(operand, operand_type, line_no)
-        elif operand_type in [_IMM15, _IMM21, _IMM21HI, _IMM21HIO]:
+        elif operand_type in [_IMM15, _IMM21, _IMM21HI, _IMM21HIO, _IMM11_LO, _IMM21HI_NOCHECK]:
             instr = instr | translate_imm(operand, operand_type, labels, scope_label, line_no)
             is_immediate_op = True
         elif operand_type in [_PCREL15, _PCREL21x4]:
@@ -996,27 +1014,6 @@ def translate_operation(operation, mnemonic, descr, packed_type, folding, addr, 
         raise AsmError(line_no, 'Packed operation not supported for immediate operands')
 
     return instr | (packed_type << 7)
-
-
-def imm_can_be_handled_by_single_ldi(imm):
-    upper_12 = imm & 0xfff00000
-    lower_11 = imm & 0x000007ff
-    if (upper_12 == 0x00000000) or (upper_12 == 0xfff00000):
-        # Covered by LDI.
-        return True
-    if (lower_11 == 0x0000) or (lower_11 == 0x07ff):
-        # Handled by LDHI or LDHIO.
-        return True
-    # Not handled.
-    return False
-
-
-def make_or_for_ldi(ldi_instr, imm):
-    # Create an OR instruction that complements the given LDI instruction.
-    op = 0x40000000  # OR
-    reg = ldi_instr & 0x03e00000
-    imm_low_bits = imm & 0x000007ff
-    return op | reg | (reg >> 5) | imm_low_bits
 
 
 def read_file(file_name):
@@ -1281,22 +1278,6 @@ def compile_file(file_name, out_name, verbosity_level):
                     except KeyError as e:
                         raise AsmError(line_no, 'Bad mnemonic: {}'.format(full_mnemonic))
 
-                    # Special case: Expand LDI into LDI + OR?
-                    # TODO(m): We can currently only handle numeric literals, not labels. We could
-                    # could potentially handle labels by assuming that undefined labels require
-                    # 32 bits.
-                    original_operation = list(operation)
-                    need_to_expand_ldi = False
-                    if full_mnemonic == 'LDI':
-                        try:
-                            if operation[2][0] == '#':
-                                ldi_imm = parse_integer(operation[2][1:]) & 0xffffffff
-                                if not imm_can_be_handled_by_single_ldi(ldi_imm):
-                                    operation[2] = '#0x' + format(ldi_imm & 0xfffff800, '08x')
-                                    need_to_expand_ldi = True
-                        except:
-                            pass
-
                     if compilation_pass == 2:
                         errors = []
                         translation_successful = False
@@ -1316,17 +1297,10 @@ def compile_file(file_name, out_name, verbosity_level):
                                 msg += '\n  Candidate: {}'.format(e)
                             raise AsmError(line_no, msg)
                         if verbosity_level >= 2:
-                            extra_chars = ' \\ ' if need_to_expand_ldi else ' <='
-                            print format(addr, '08x') + ': ' + format(instr, '08x') + extra_chars + ' {}'.format(original_operation)
+                            print format(addr, '08x') + ': ' + format(instr, '08x') + ' <= {}'.format(original_operation)
                         code += struct.pack('<L', instr)
 
-                        if need_to_expand_ldi:
-                            or_instr = make_or_for_ldi(instr, ldi_imm)
-                            if verbosity_level >= 2:
-                                print format(addr + 4, '08x') + ': ' + format(or_instr, '08x') + ' /  (expanded to LDHI + OR)'
-                            code += struct.pack('<L', or_instr)
-
-                    addr += 8 if need_to_expand_ldi else 4
+                    addr += 4
 
         with open(out_name, 'w') as f:
             f.write(code)

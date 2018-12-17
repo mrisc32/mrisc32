@@ -86,8 +86,10 @@ main:
     stw     z, s1, #4
 
     ; Prepare some registers with values to use in the tests.
-    ldi     s18, #0x12345678
-    ldi     s19, #0xfedcba98
+    ldhi    s18, #0x12345678@hi
+    or      s18, s18, #0x12345678@lo
+    ldhi    s19, #0xfedcba98@hi
+    or      s19, s19, #0xfedcba98@lo
     ldi     s20, #1
     ldi     s21, #5678
     ldi     s22, #1234
@@ -681,7 +683,8 @@ test_load_store:
     ldi     s10, #-56
     ldi     s11, #-78
     ldi     s12, #-1234
-    ldi     s13, #12345678
+    ldhi    s13, #12345678@hi
+    or      s13, s13, #12345678@lo
 
     ; Immediate offset.
     stb     s10, sp, #0

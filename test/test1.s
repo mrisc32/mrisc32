@@ -139,7 +139,8 @@ test_2:
     ldi     s1, #10
     bl      #_putc
 
-    ldi     s1, #0xbeef0042
+    ldhi    s1, #0xbeef0042@hi
+    or      s1, s1, #0xbeef0042@lo
     sne     s1, s16, s1     ; Expected value?
 
     ldw     lr, sp, #0
@@ -402,8 +403,8 @@ test_9:
     stw     s18, sp, #12
     stw     s19, sp, #16
 
-    ldi     s16, #0x3fd98000    ; s16 = 1.6992188F
-    ldi     s17, #0x41c5bfff    ; s17 = 24.718748F
+    ldhi    s16, #0x3fd98000    ; s16 = 1.6992188F
+    ldhio   s17, #0x41c5bfff    ; s17 = 24.718748F
     fmul    s18, s16, s17       ; s18 = 42.002561F (0x4228029f)
 
     ldw    s9, pc, #1$@pc
