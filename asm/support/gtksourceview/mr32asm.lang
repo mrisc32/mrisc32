@@ -206,7 +206,7 @@
     </context>
 
     <context id="label-2" style-ref="label">
-      <match>\.\%{label}</match>
+      <match>\%{label}$</match>
     </context>
 
     <context id="label">
@@ -217,7 +217,7 @@
     </context>
 
     <context id="data-1" style-ref="data">
-      <match>\.(i|u)(8|16|32)</match>
+      <match>\.(byte|half|word|short|int|long)</match>
     </context>
 
     <context id="data-2" style-ref="data">

@@ -1178,36 +1178,21 @@ def compile_file(file_name, out_name, verbosity_level):
                             if verbosity_level >= 2:
                                 print 'Aligned pc to: {} (padded by {} bytes)'.format(addr, num_pad_bytes)
 
-                    elif directive[0] in ['.i8', '.u8', '.i16', '.u16', '.i32', '.u32', '.byte', '.half', '.short', '.word', '.long', '.int']:
-                        check_limits = True
-
-                        # Convert GNU as style directives to MRISC32 directives.
+                    elif directive[0] in ['.byte', '.half', '.short', '.word', '.long', '.int']:
                         pseudo_op = directive[0]
                         if pseudo_op in ['.byte']:
-                            pseudo_op = '.u8'
-                            check_limits = False
+                            num_bits = 8
+                            val_type = 'B'
                         elif pseudo_op in ['.half', '.short']:
-                            pseudo_op = '.u16'
-                            check_limits = False
+                            num_bits = 16
+                            val_type = '<H'
                         elif pseudo_op in ['.word', '.long', '.int']:
-                            pseudo_op = '.u32'
-                            check_limits = False
+                            num_bits = 32
+                            val_type = '<L'
 
-                        num_bits = parse_integer(pseudo_op[2:])
-                        is_unsigned = (pseudo_op[1] == 'u')
-                        val_min = 0 if is_unsigned else -(1 << (num_bits - 1))
-                        val_max = ((1 << num_bits) - 1) if is_unsigned else ((1 << (num_bits - 1)) - 1)
                         val_size = num_bits >> 3
                         if not addr & (val_size - 1) == 0:
                             raise AsmError(line_no, 'Data not aligned to a {} byte boundary'.format(val_size))
-                        val_type = {
-                          '.i8': 'b',
-                          '.u8': 'B',
-                          '.i16': '<h',
-                          '.u16': '<H',
-                          '.i32': '<l',
-                          '.u32': '<L'
-                        }[pseudo_op];
                         for k in range(1, len(directive)):
                             addr += val_size
                             if compilation_pass == 2:
@@ -1215,12 +1200,9 @@ def compile_file(file_name, out_name, verbosity_level):
                                     value = translate_addr_or_number(directive[k], labels, scope_label, line_no)
                                 except ValueError:
                                     raise AsmError(line_no, 'Invalid integer: {}'.format(directive[k]))
-                                if check_limits and (value < val_min or value > val_max):
-                                    raise AsmError(line_no, 'Value out of range: {}'.format(value))
-                                if not check_limits:
-                                    # Convert value to unsigned.
-                                    if value < 0:
-                                        value = (1 << num_bits) + value
+                                # Convert value to unsigned.
+                                if value < 0:
+                                    value = (1 << num_bits) + value
                                 code += struct.pack(val_type, value)
 
                     elif directive[0] in ['.space', '.zero']:
