@@ -1101,6 +1101,8 @@ def compile_file(file_name, out_name, verbosity_level):
             # Clear the scope for local labels.
             scope_label = ''
 
+            inside_block_comment = False
+
             # Emit start address.
             # TODO(m): Allow for dynamic address definitions (e.g. .addr).
             if compilation_pass == 2:
@@ -1109,11 +1111,22 @@ def compile_file(file_name, out_name, verbosity_level):
             for line_no, raw_line in enumerate(lines, 1):
                 line = raw_line
 
-                # Remove comment.
+                # End of previously started block comment?
+                if inside_block_comment:
+                    comment_pos = line.find('*/')
+                    if comment_pos < 0:
+                        continue
+                    inside_block_comment = False
+                    line = line[(comment_pos + 2):]
+
+                # Remove line comment.
+                # TODO(m): Handle multiple comments per line, etc, such as:
+                # " ldi s1, /* Hello ; world */ #1234 /* More to come..."
                 comment_pos = line.find(';')
-                comment_pos2 = line.find('//')
+                comment_pos2 = line.find('/*')
                 if comment_pos2 >= 0 and (comment_pos2 < comment_pos or comment_pos < 0):
                     comment_pos = comment_pos2
+                    inside_block_comment = True
                 if comment_pos >= 0:
                     line = line[:comment_pos]
 

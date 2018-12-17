@@ -1,5 +1,5 @@
 ; -*- mode: mr32asm; tab-width: 4; indent-tabs-mode: nil; -*-
-// This is a test program.
+; This is a test program.
 
 	.text
 
