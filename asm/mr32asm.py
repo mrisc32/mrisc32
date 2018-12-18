@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- mode: python; tab-width: 4; indent-tabs-mode: nil; -*-
 # -------------------------------------------------------------------------------------------------
 # Copyright (c) 2018 Marcus Geelnard
@@ -925,7 +925,7 @@ def translate_pcrel(operand, operand_type, pc, labels, scope_label, line_no):
     if operand_type == _PCREL21x4:
         if (target_address & 3) != 0:
             raise AsmError(line_no, 'Targe address ({}) is not aligned to 4 bytes'.format(operand))
-        offset = offset / 4
+        offset = offset // 4
 
     offset_max = {
             _PCREL15:   1 << 14,
@@ -1078,10 +1078,10 @@ def parse_assigned_label(line, line_no):
 
 def compile_file(file_name, out_name, verbosity_level):
     if verbosity_level >= 1:
-        print "Compiling %s..." % (file_name)
+        print('Compiling %s...' % (file_name))
     success = True
     labels = {}
-    code = ''
+    code = b''
     try:
         # Read the file, and preprocess-it.
         file_dir = os.path.dirname(file_name)
@@ -1090,7 +1090,7 @@ def compile_file(file_name, out_name, verbosity_level):
 
         for compilation_pass in [1, 2]:
             if verbosity_level >= 1:
-                print 'Pass %d' % (compilation_pass)
+                print('Pass %d' % (compilation_pass))
 
             # Set the default start address.
             addr = 0x200  # The reset PC address = 0x200.
@@ -1156,7 +1156,7 @@ def compile_file(file_name, out_name, verbosity_level):
                             raise AsmError(line_no, 'Re-definition of label: {}'.format(label))
                         labels[label] = label_value
                         if verbosity_level >= 2:
-                            print ' Label: {} = '.format(label) + format(label_value, '08x')
+                            print(' Label: {} = '.format(label) + format(label_value, '08x'))
 
                 elif line.startswith('.'):
                     # This is a data directive.
@@ -1177,7 +1177,7 @@ def compile_file(file_name, out_name, verbosity_level):
                                     code += struct.pack('B', 0)
                             addr += num_pad_bytes
                             if verbosity_level >= 2:
-                                print 'Aligned pc to: {} (padded by {} bytes)'.format(addr, num_pad_bytes)
+                                print('Aligned pc to: {} (padded by {} bytes)'.format(addr, num_pad_bytes))
 
                     elif directive[0] in ['.byte', '.half', '.short', '.word', '.long', '.int']:
                         pseudo_op = directive[0]
@@ -1261,7 +1261,7 @@ def compile_file(file_name, out_name, verbosity_level):
 
                     elif directive[0] in ['.text', '.data', '.global']:
                         if verbosity_level >= 1 and compilation_pass == 2:
-                            print '{}:{}: WARNING: Ignoring directive: {}'.format(file_name, line_no, directive[0])
+                            print('{}:{}: WARNING: Ignoring directive: {}'.format(file_name, line_no, directive[0]))
 
                     else:
                         raise AsmError(line_no, 'Unknown directive: {}'.format(directive[0]))
@@ -1297,16 +1297,16 @@ def compile_file(file_name, out_name, verbosity_level):
                                 msg += '\n  Candidate: {}'.format(e)
                             raise AsmError(line_no, msg)
                         if verbosity_level >= 2:
-                            print format(addr, '08x') + ': ' + format(instr, '08x') + ' <= {}'.format(original_operation)
+                            print(format(addr, '08x') + ': ' + format(instr, '08x') + ' <= {}'.format(original_operation))
                         code += struct.pack('<L', instr)
 
                     addr += 4
 
-        with open(out_name, 'w') as f:
+        with open(out_name, 'wb') as f:
             f.write(code)
 
     except AsmError as e:
-        print '%s:%d: ERROR: %s' % (file_name, e.line_no, e.msg)
+        print('%s:%d: ERROR: %s' % (file_name, e.line_no, e.msg))
         success = False
 
     return success
@@ -1336,7 +1336,7 @@ def main():
     jobs = []
     if args.output is not None:
         if len(args.files) != 1:
-            print 'Error: Only a single source file must be specified together with -o.'
+            print('Error: Only a single source file must be specified together with -o.')
             sys.exit(1)
         jobs.append({'src': args.files[0], 'out': args.output})
     else:

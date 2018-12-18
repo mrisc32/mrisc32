@@ -8,7 +8,7 @@ The assembler parses assembly code text files and converts them to binaries suit
 
 ## Running
 
-To run the assmebler, you need Python (2.x).
+To run the assmebler, you need Python (3.x).
 
 ```bash
 ./mr32asm.py path/to/program.s
