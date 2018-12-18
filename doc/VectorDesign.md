@@ -48,7 +48,7 @@ Assuming that the arguments (c, a, b, n) are in registers S1, S2, S3 and S4 (acc
 abs_diff:
   bz      s4, #done    ; n == 0, nothing to do
 
-  ldi     s12, #0x7fffffff
+  ldhio   s12, #0x7fffffff
 
   ldi     s11, #0
 loop:
@@ -76,7 +76,7 @@ abs_diff:
 
   bz      s4, #done    ; n == 0, nothing to do
 
-  ldi     s10, #0x7fffffff
+  ldhio   s10, #0x7fffffff
 
   ; Prepare the vector operation
   cpuid   s11, z, z    ; s11 is the max number of vector elements
