@@ -1297,7 +1297,7 @@ def compile_file(file_name, out_name, verbosity_level):
                                 msg += '\n  Candidate: {}'.format(e)
                             raise AsmError(line_no, msg)
                         if verbosity_level >= 2:
-                            print(format(addr, '08x') + ': ' + format(instr, '08x') + ' <= {}'.format(original_operation))
+                            print(format(addr, '08x') + ': ' + format(instr, '08x') + ' <= {}'.format(operation))
                         code += struct.pack('<L', instr)
 
                     addr += 4
