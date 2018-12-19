@@ -1198,17 +1198,17 @@ uint32_t cpu_simple_t::run() {
           switch (ex_in.packed_mode) {
             case PACKED_BYTE:
               ex_result = set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t a, uint8_t b) {
-                return static_cast<int8_t>(b) < static_cast<int8_t>(a);
+                return static_cast<int8_t>(a) < static_cast<int8_t>(b);
               });
               break;
             case PACKED_HALF_WORD:
               ex_result = set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t a, uint16_t b) {
-                return static_cast<int16_t>(b) < static_cast<int16_t>(a);
+                return static_cast<int16_t>(a) < static_cast<int16_t>(b);
               });
               break;
             default:
               ex_result = set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) {
-                return static_cast<int32_t>(b) < static_cast<int32_t>(a);
+                return static_cast<int32_t>(a) < static_cast<int32_t>(b);
               });
           }
           break;
@@ -1216,32 +1216,32 @@ uint32_t cpu_simple_t::run() {
           switch (ex_in.packed_mode) {
             case PACKED_BYTE:
               ex_result =
-                  set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t a, uint8_t b) { return b < a; });
+                  set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t a, uint8_t b) { return a < b; });
               break;
             case PACKED_HALF_WORD:
               ex_result =
-                  set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t a, uint16_t b) { return b < a; });
+                  set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t a, uint16_t b) { return a < b; });
               break;
             default:
               ex_result =
-                  set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) { return b < a; });
+                  set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) { return a < b; });
           }
           break;
         case EX_OP_SLE:
           switch (ex_in.packed_mode) {
             case PACKED_BYTE:
               ex_result = set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t a, uint8_t b) {
-                return static_cast<int8_t>(b) <= static_cast<int8_t>(a);
+                return static_cast<int8_t>(a) <= static_cast<int8_t>(b);
               });
               break;
             case PACKED_HALF_WORD:
               ex_result = set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t a, uint16_t b) {
-                return static_cast<int16_t>(b) <= static_cast<int16_t>(a);
+                return static_cast<int16_t>(a) <= static_cast<int16_t>(b);
               });
               break;
             default:
               ex_result = set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) {
-                return static_cast<int32_t>(b) <= static_cast<int32_t>(a);
+                return static_cast<int32_t>(a) <= static_cast<int32_t>(b);
               });
           }
           break;
@@ -1249,15 +1249,15 @@ uint32_t cpu_simple_t::run() {
           switch (ex_in.packed_mode) {
             case PACKED_BYTE:
               ex_result =
-                  set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t a, uint8_t b) { return b <= a; });
+                  set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t a, uint8_t b) { return a <= b; });
               break;
             case PACKED_HALF_WORD:
               ex_result =
-                  set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t a, uint16_t b) { return b <= a; });
+                  set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t a, uint16_t b) { return a <= b; });
               break;
             default:
               ex_result =
-                  set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) { return b <= a; });
+                  set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) { return a <= b; });
           }
           break;
         case EX_OP_MIN:
