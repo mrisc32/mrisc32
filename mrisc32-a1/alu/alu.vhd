@@ -167,16 +167,16 @@ begin
   -- Camparison results.
   s_compare_eq <= '1' when i_src_a = i_src_b else '0';
   s_compare_ne <= not s_compare_eq;
-  s_compare_lt <= '1' when signed(i_src_b) < signed(i_src_a) else '0';
+  s_compare_lt <= '1' when signed(i_src_a) < signed(i_src_b) else '0';
   s_compare_le <= s_compare_eq or s_compare_lt;
-  s_compare_ltu <= '1' when unsigned(i_src_b) < unsigned(i_src_a) else '0';
+  s_compare_ltu <= '1' when unsigned(i_src_a) < unsigned(i_src_b) else '0';
   s_compare_leu <= s_compare_eq or s_compare_ltu;
 
   -- Min/Max operations.
-  s_min_res <= i_src_a when s_compare_lt = '0' else i_src_b;
-  s_max_res <= i_src_a when s_compare_lt = '1' else i_src_b;
-  s_minu_res <= i_src_a when s_compare_ltu = '0' else i_src_b;
-  s_maxu_res <= i_src_a when s_compare_ltu = '1' else i_src_b;
+  s_min_res <= i_src_a when s_compare_lt = '1' else i_src_b;
+  s_max_res <= i_src_a when s_compare_lt = '0' else i_src_b;
+  s_minu_res <= i_src_a when s_compare_ltu = '1' else i_src_b;
+  s_maxu_res <= i_src_a when s_compare_ltu = '0' else i_src_b;
 
   -- Compare and set operations.
   CmpMux: with i_op select
