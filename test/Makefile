@@ -39,7 +39,7 @@ clean:
 	$(RM) *.o *.elf *.bin
 
 %.bin: %.elf
-	$(ELF2BIN) $< $@ > /dev/null
+	$(ELF2BIN) $< $@
 
 %.elf: %.o
 	$(LD) $(LD_FLAGS) -o $@ $<

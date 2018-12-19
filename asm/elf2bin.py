@@ -23,14 +23,16 @@
 
 import argparse
 import struct
+import subprocess
+import tempfile
 
 
 def convert(in_path, out_path):
-    # Read the elf file.
+    # Read the ELF file header (we don't need all this information, but we keep the code here for
+    # informational purposes).
     with open(in_path, 'rb') as f:
         byte_ctype = 'B'
 
-        # Read the file header.
         hdr = {}
         hdr['EI_MAG'] = struct.unpack('>L', f.read(4))[0]
         if hdr['EI_MAG'] != 0x7f454c46:
@@ -71,39 +73,34 @@ def convert(in_path, out_path):
         if hdr['e_machine'] != 0xc001:
             raise ValueError('Not an MRISC32 ELF file')
 
-        # Read the program header.
-        phdr = {}
-        phdr['p_type'] = struct.unpack(long_ctype, f.read(4))[0]
-        phdr['p_offset'] = struct.unpack(long_ctype, f.read(4))[0]
-        phdr['p_vaddr'] = struct.unpack(long_ctype, f.read(4))[0]
-        phdr['p_paddr'] = struct.unpack(long_ctype, f.read(4))[0]
-        phdr['p_filesz'] = struct.unpack(long_ctype, f.read(4))[0]
-        phdr['p_memsz'] = struct.unpack(long_ctype, f.read(4))[0]
-        phdr['p_flags'] = struct.unpack(long_ctype, f.read(4))[0]
-        phdr['p_align'] = struct.unpack(long_ctype, f.read(4))[0]
-        if phdr['p_type'] != 0x00000001:
-            raise ValueError('Not a PT_LOAD program (p_type=0x{0:08x})'.format(phdr['p_type']))
+    # Use objcopy to convert the file into raw binary.
+    with tempfile.NamedTemporaryFile(mode='w+b') as tf:
+        tmp_file = tf.name
+        cmd = ['mrisc32-objcopy', '-O', 'binary', in_path, tmp_file]
+        subprocess.run(cmd, check=True)
 
-        # Magic formula...
-        section_size = phdr['p_filesz'] - 84
+        # Prepend the load address and copy the converted file to the
+        # destination.
+        # TODO(m): Currently we assume that the program entry is the first address of the binary
+        # file, so we use e_entry as the load address. Instead, we should use the lowest address
+        # that is represented in the file.
+        load_address = hdr['e_entry']
+        with open(out_path, 'wb') as out_f:
+            out_f.write(struct.pack('<L', load_address))
 
-        # Read the section content.
-        section = f.read(section_size)
-
-    # Print some info.
-    print('Input file: MRISC32, elf32-mrisc32')
-    print('  Entry: 0x{0:08x}'.format(hdr['e_entry']))
-    print('  Size:  {}'.format(section_size))
-
-    # Write the bin file.
-    with open(out_path, 'wb') as f:
-        f.write(struct.pack('<L', hdr['e_entry']))
-        f.write(section)
+            BUFFER_SIZE = 10000
+            with open(tmp_file, 'rb') as tmp_f:
+                while True:
+                    data = tmp_f.read(BUFFER_SIZE)
+                    if len(data) == 0:
+                        break
+                    out_f.write(data)
 
 
 def main():
     # Parse command line arguments.
-    parser = argparse.ArgumentParser(description='Convert elf32-mrisc32 to MRISC32 bin')
+    parser = argparse.ArgumentParser(
+            description='Convert elf32-mrisc32 to MRISC32 bin (requires mrisc32-objcopy)')
     parser.add_argument('file', metavar='ELF_FILE', help='the ELF file to convert')
     parser.add_argument('output', metavar='BIN_FILE', help='the output bin file')
     args = parser.parse_args()
@@ -114,4 +111,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
