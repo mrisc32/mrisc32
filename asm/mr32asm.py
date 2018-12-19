@@ -769,11 +769,13 @@ _OPCODES = {
                    'packed_op': False
                   },
 
-        # Alias for: OR _REG1, _REG2, Z
+        # Alias for: OR _REG1, Z, _REG2
         'MOV':    {'descrs':
-                    [[0x00000010, _REG1, _REG2],
-                     [0x00008010, _VREG1, _REG2],
-                     [0x0000c010, _VREG1, _VREG2]],
+                    [[0x00000010, _REG1, _REG3],
+                     [0x00008010, _VREG1, _REG3],
+                     [0x0000c010, _VREG1, _VREG3],
+                     [0x40000000, _REG1, _IMM15],
+                     [0x40008000, _VREG1, _IMM15]],
                    'packed_op': False
                   },
     }
