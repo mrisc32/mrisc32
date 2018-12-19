@@ -370,9 +370,8 @@ test_alu_compare:
 test_alu_compare_correct_results:
     .word   12
     .word   0x00000000, 0x00000000, 0xffffffff, 0xffffffff
-    .word   0xffffffff, 0xffffffff, 0x00000000, 0xffffffff
-    .word   0xffffffff, 0xffffffff, 0x00000000, 0xffffffff
-
+    .word   0x00000000, 0xffffffff, 0xffffffff, 0xffffffff
+    .word   0x00000000, 0xffffffff, 0xffffffff, 0xffffffff
 
 test_alu_min_max:
     ; Min/max operations
