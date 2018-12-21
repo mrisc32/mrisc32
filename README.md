@@ -54,9 +54,7 @@ Note: There is no support for 64-bit floating point operations (that is left for
 
 # Tools
 
-Currently there is a simple [assembler](asm/) (written in Python) and a [CPU simulator](sim/) (written in C++).
-
-Use the assembler to compile programs, and use the simulator to run them.
+There are a few tools that aid software development for MRISC32. See [Tools](doc/Tools.md).
 
 
 # Hardware/HDL
