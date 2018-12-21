@@ -21,10 +21,3 @@ Or you can specify an output file with `-o`:
 ```bash
 ./mr32asm.py path/to/program.s -o other/path/to/output.bin
 ```
-
-## Syntax Highlighting
-
-### gedit / GtkSourceView
-
-Copy `support/gtksourceview/mr32asm.lang` to `~/.local/share/gtksourceview-3.0/language-specs/`.
-

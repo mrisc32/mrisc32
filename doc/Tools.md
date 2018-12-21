@@ -36,6 +36,7 @@ $ sudo make install
 
 > Warning 2: The binutils build system is not very robust. Using `make -j N` is tempting, but may result in failing builds. You may also need to `make clean` if some of the sources have changed, since the depency graph isn't 100% accurate.
 
+
 ## Building programs
 
 To build assembly language programs that can be used by the simulator or the VHDL testbench (pipeline_tb), do the following:
@@ -48,6 +49,14 @@ $ tools/elf2bin.py my-program.elf my-program.bin
 
 The final `.bin` file can be loaded into the simulator, for instance.
 
+
 ## Simulator
 
 The MRISC32 simulator is a C++ program that can run MRISC32 binaries. See [sim/README.md](../sim/README.md).
+
+
+## Syntax Highlighting
+
+### gedit / GtkSourceView
+
+Copy `tools/support/gtksourceview/mr32asm.lang` to `~/.local/share/gtksourceview-3.0/language-specs/`.
