@@ -38,12 +38,24 @@ all: super_test.bin \
 clean:
 	$(RM) *.o *.elf *.bin
 
-%.bin: %.elf
-	$(ELF2BIN) $< $@
-
-%.elf: %.o
+super_test.elf: super_test.o
 	$(LD) $(LD_FLAGS) -o $@ $<
+
+graphics.elf: graphics.o
+	$(LD) $(LD_FLAGS) -o $@ $<
+
+mandelbrot.elf: mandelbrot.o
+	$(LD) $(LD_FLAGS) -o $@ $<
+
+test1.elf: test1.o sys.o
+	$(LD) $(LD_FLAGS) -o $@ test1.o sys.o
+
+test2.elf: test2.o sys.o
+	$(LD) $(LD_FLAGS) -o $@ test2.o sys.o
 
 %.o: %.s
 	$(AS) $(AS_FLAGS) -o $@ $<
+
+%.bin: %.elf
+	$(ELF2BIN) $< $@
 

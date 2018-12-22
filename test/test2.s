@@ -99,6 +99,3 @@ abs_diff_vectors_scalar:
 2$:
     j       lr
 
-
-    .include    "sys.s"
-
