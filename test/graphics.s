@@ -19,7 +19,9 @@ VID_DEPTH  = 32
 
     .text
 
-boot:
+    .globl  _start
+
+_start:
     ; Set up the stack.
     ldi     sp, #0x00020000  ; We grow down from 128KB.
 

@@ -3,7 +3,9 @@
 
 	.text
 
-boot:
+    .globl  _start
+
+_start:
     ; Start by setting up the stack.
     ldi     sp, #0x00020000 ; We grow down from 128KB.
 

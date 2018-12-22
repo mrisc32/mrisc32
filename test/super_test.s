@@ -10,7 +10,9 @@ TEST_OUTPUT   = 0x11000     ; Start of memory area where the test output is stor
 
     .text
 
-boot:
+    .globl  _start
+
+_start:
     ; Start by setting up the stack and clearing the registers.
     ldi     sp, #STACK_START
     cpuid   vl, z, z

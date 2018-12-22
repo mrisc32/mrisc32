@@ -23,7 +23,7 @@ ELF2BIN = ../tools/elf2bin.py
 RM = rm -f
 
 AS_FLAGS =
-LD_FLAGS = -e 0x200 -s
+LD_FLAGS = -s
 
 .PHONY: all clean
 

@@ -10,9 +10,11 @@ MMIO_GPU_WIDTH  = 0x04        ; Width of the framebuffer (in pixels).
 MMIO_GPU_HEIGHT = 0x08        ; Height of the framebuffer (in pixels).
 MMIO_GPU_DEPTH  = 0x0c        ; Number of bits per pixel.
 
-.text
+    .text
 
-boot:
+    .globl  _start
+
+_start:
     ; Set up the stack and clearing the registers.
     ldi     sp, #0x00020000 ; We grow down from 128KB.
 
