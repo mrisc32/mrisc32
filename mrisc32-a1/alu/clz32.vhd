@@ -19,11 +19,13 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use work.common.all;
 
 entity clz32 is
   port(
-      i_src : in  std_logic_vector(31 downto 0);
-      o_cnt : out std_logic_vector(5 downto 0)
+      i_src : in std_logic_vector(31 downto 0);
+      i_packed_mode : in T_PACKED_MODE;
+      o_result : out std_logic_vector(31 downto 0)
     );
 end clz32;
 
@@ -105,10 +107,12 @@ begin
   end generate;
 
   -- Level 5 (final level)
-  o_cnt(5) <= s_c4_4(1) and s_c4_4(0);
-  o_cnt(4) <= s_c4_4(1) and (not s_c4_4(0));
-  o_cnt(3) <= s_c4_3(1) or (s_c4_4(1) and s_c4_3(0));
-  o_cnt(2) <= s_c4_2(1) or (s_c4_4(1) and s_c4_2(0));
-  o_cnt(1) <= s_c4_1(1) or (s_c4_4(1) and s_c4_1(0));
-  o_cnt(0) <= s_c4_0(1) or (s_c4_4(1) and s_c4_0(0));
+  -- TODO(m): Handle packed modes.
+  o_result(31 downto 6) <= (others => '0');
+  o_result(5) <= s_c4_4(1) and s_c4_4(0);
+  o_result(4) <= s_c4_4(1) and (not s_c4_4(0));
+  o_result(3) <= s_c4_3(1) or (s_c4_4(1) and s_c4_3(0));
+  o_result(2) <= s_c4_2(1) or (s_c4_4(1) and s_c4_2(0));
+  o_result(1) <= s_c4_1(1) or (s_c4_4(1) and s_c4_1(0));
+  o_result(0) <= s_c4_0(1) or (s_c4_4(1) and s_c4_0(0));
 end rtl;

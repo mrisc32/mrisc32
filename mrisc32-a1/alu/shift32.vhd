@@ -20,14 +20,16 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use work.common.all;
 
 entity shift32 is
   port(
-      i_right      : in  std_logic;  -- '1' for right shifts, '0' for left
-      i_arithmetic : in  std_logic;  -- '1' for arihtmetic shifts, '0' for logic
-      i_src        : in  std_logic_vector(31 downto 0);
-      i_shift      : in  std_logic_vector(4 downto 0);
-      o_result     : out std_logic_vector(31 downto 0)
+      i_right       : in  std_logic;  -- '1' for right shifts, '0' for left
+      i_arithmetic  : in  std_logic;  -- '1' for arihtmetic shifts, '0' for logic
+      i_src         : in  std_logic_vector(31 downto 0);
+      i_shift       : in  std_logic_vector(4 downto 0);
+      i_packed_mode : in  T_PACKED_MODE;
+      o_result      : out std_logic_vector(31 downto 0)
     );
 end shift32;
 
@@ -38,6 +40,7 @@ architecture rtl of shift32 is
   signal s_op : std_logic_vector(1 downto 0);
 begin
   -- TODO(m): This can probably be done with less logic.
+  -- TODO(m): Handle i_packed_mode.
   s_lsr_res <= std_logic_vector(shift_right(unsigned(i_src), to_integer(unsigned(i_shift))));
   s_asr_res <= std_logic_vector(shift_right(signed(i_src), to_integer(unsigned(i_shift))));
   s_lsl_res <= std_logic_vector(shift_left(unsigned(i_src), to_integer(unsigned(i_shift))));

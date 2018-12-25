@@ -29,6 +29,7 @@ architecture behav of alu_tb is
   signal s_op : T_ALU_OP;
   signal s_src_a : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_src_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_packed_mode : T_PACKED_MODE;
   signal s_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
 begin
   --  Component instantiation.
@@ -37,6 +38,7 @@ begin
       i_op => s_op,
       i_src_a => s_src_a,
       i_src_b => s_src_b,
+      i_packed_mode => s_packed_mode,
       o_result => s_result
     );
 
@@ -279,6 +281,7 @@ begin
       s_op <= patterns(i).op;
       s_src_a <= patterns(i).src_a;
       s_src_b <= patterns(i).src_b;
+      s_packed_mode <= C_PACKED_NONE;  -- TODO(m): Add this to the test pattern.
 
       --  Wait for the results.
       wait for 1 ns;
@@ -287,6 +290,7 @@ begin
       assert s_result = patterns(i).result
         report "Bad ALU result:" & lf &
                "  op=" & to_string(s_op) & lf &
+               "  pm=" & to_string(s_packed_mode) & lf &
                "  a=" & to_string(s_src_a) & lf &
                "  b=" & to_string(s_src_b) & lf &
                "  r=" & to_string(s_result) & lf &

@@ -27,6 +27,7 @@ entity alu is
       i_op : in T_ALU_OP;                                      -- Operation
       i_src_a : in std_logic_vector(C_WORD_SIZE-1 downto 0);   -- Source operand A
       i_src_b : in std_logic_vector(C_WORD_SIZE-1 downto 0);   -- Source operand B
+      i_packed_mode : in T_PACKED_MODE;                        -- Packed mode
       o_result : out std_logic_vector(C_WORD_SIZE-1 downto 0)  -- ALU result
     );
 end;
@@ -134,6 +135,7 @@ begin
     );
 
   -- C_ALU_REV
+  -- TODO(m): Implement packed modes.
   RevGen: for k in 0 to C_WORD_SIZE-1 generate
     s_rev_res(k) <= i_src_a(C_WORD_SIZE-1-k);
   end generate;
@@ -148,12 +150,13 @@ begin
   s_ldhi_res(C_WORD_SIZE-22 downto 0) <= (others => i_op(1));  -- C_ALU_LDHI="000001", C_ALU_LDHIO="000010"
 
   -- C_ALU_CLZ
+  -- TODO(m): Implement packed modes.
   AluCLZ32: entity work.clz32
     port map (
       i_src => i_src_a,
-      o_cnt => s_clz_res(5 downto 0)
+      i_packed_mode => i_packed_mode,
+      o_result => s_clz_res
     );
-  s_clz_res(31 downto 6) <= (others => '0');
 
 
   ------------------------------------------------------------------------------------------------
@@ -161,10 +164,12 @@ begin
   ------------------------------------------------------------------------------------------------
 
   -- Add/sub.
+  -- TODO(m): Implement packed modes.
   s_add_res <= std_logic_vector(unsigned(i_src_b) + unsigned(i_src_a));
   s_sub_res <= std_logic_vector(unsigned(i_src_b) - unsigned(i_src_a));
 
   -- Camparison results.
+  -- TODO(m): Implement packed modes.
   s_compare_eq <= '1' when i_src_a = i_src_b else '0';
   s_compare_ne <= not s_compare_eq;
   s_compare_lt <= '1' when signed(i_src_a) < signed(i_src_b) else '0';
@@ -173,12 +178,14 @@ begin
   s_compare_leu <= s_compare_eq or s_compare_ltu;
 
   -- Min/Max operations.
+  -- TODO(m): Implement packed modes.
   s_min_res <= i_src_a when s_compare_lt = '1' else i_src_b;
   s_max_res <= i_src_a when s_compare_lt = '0' else i_src_b;
   s_minu_res <= i_src_a when s_compare_ltu = '1' else i_src_b;
   s_maxu_res <= i_src_a when s_compare_ltu = '0' else i_src_b;
 
   -- Compare and set operations.
+  -- TODO(m): Implement packed modes.
   CmpMux: with i_op select
     s_set_bit <=
       s_compare_eq when C_ALU_SEQ,
@@ -211,6 +218,7 @@ begin
       i_arithmetic => s_shift_is_arithmetic,
       i_src => i_src_a,
       i_shift => i_src_b(4 downto 0),
+      i_packed_mode => i_packed_mode,
       o_result => s_shifter_res
     );
 
