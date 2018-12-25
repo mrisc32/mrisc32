@@ -217,7 +217,7 @@ begin
       i_right => s_shift_is_right,
       i_arithmetic => s_shift_is_arithmetic,
       i_src => i_src_a,
-      i_shift => i_src_b(4 downto 0),
+      i_shift => i_src_b,
       i_packed_mode => i_packed_mode,
       o_result => s_shifter_res
     );

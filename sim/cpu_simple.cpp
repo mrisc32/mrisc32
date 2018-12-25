@@ -155,16 +155,22 @@ inline uint32_t asr32(const uint32_t a, const uint32_t b) {
 }
 
 inline uint32_t asr16x2(const uint32_t a, const uint32_t b) {
-  const auto h1 = static_cast<uint32_t>(static_cast<uint16_t>(static_cast<int16_t>(a >> 16) >> b));
-  const auto h0 = static_cast<uint32_t>(static_cast<uint16_t>(static_cast<int16_t>(a) >> b));
+  const auto s1 = (b >> 16) & 15;
+  const auto s0 = b & 15;
+  const auto h1 = static_cast<uint32_t>(static_cast<uint16_t>(static_cast<int16_t>(a >> 16) >> s1));
+  const auto h0 = static_cast<uint32_t>(static_cast<uint16_t>(static_cast<int16_t>(a) >> s0));
   return (h1 << 16) | h0;
 }
 
 inline uint32_t asr8x4(const uint32_t a, const uint32_t b) {
-  const auto b3 = static_cast<uint32_t>(static_cast<uint8_t>(static_cast<int8_t>(a >> 24) >> b));
-  const auto b2 = static_cast<uint32_t>(static_cast<uint8_t>(static_cast<int8_t>(a >> 16) >> b));
-  const auto b1 = static_cast<uint32_t>(static_cast<uint8_t>(static_cast<int8_t>(a >> 8) >> b));
-  const auto b0 = static_cast<uint32_t>(static_cast<uint8_t>(static_cast<int8_t>(a) >> b));
+  const auto s3 = (b >> 24) & 7;
+  const auto s2 = (b >> 16) & 7;
+  const auto s1 = (b >> 8) & 7;
+  const auto s0 = b & 7;
+  const auto b3 = static_cast<uint32_t>(static_cast<uint8_t>(static_cast<int8_t>(a >> 24) >> s3));
+  const auto b2 = static_cast<uint32_t>(static_cast<uint8_t>(static_cast<int8_t>(a >> 16) >> s2));
+  const auto b1 = static_cast<uint32_t>(static_cast<uint8_t>(static_cast<int8_t>(a >> 8) >> s1));
+  const auto b0 = static_cast<uint32_t>(static_cast<uint8_t>(static_cast<int8_t>(a) >> s0));
   return (b3 << 24) | (b2 << 16) | (b1 << 8) | b0;
 }
 
@@ -173,16 +179,22 @@ inline uint32_t lsl32(const uint32_t a, const uint32_t b) {
 }
 
 inline uint32_t lsl16x2(const uint32_t a, const uint32_t b) {
-  const auto h1 = (a & 0xffff0000u) << b;
-  const auto h0 = (a << b) & 0x0000ffffu;
+  const auto s1 = (b >> 16) & 15;
+  const auto s0 = b & 15;
+  const auto h1 = (a & 0xffff0000u) << s1;
+  const auto h0 = (a << s0) & 0x0000ffffu;
   return h1 | h0;
 }
 
 inline uint32_t lsl8x4(const uint32_t a, const uint32_t b) {
-  const auto b3 = (a & 0xff000000u) << b;
-  const auto b2 = ((a & 0x00ff0000u) << b) & 0x00ff0000u;
-  const auto b1 = ((a & 0x0000ff00u) << b) & 0x0000ff00u;
-  const auto b0 = (a << b) & 0x000000ffu;
+  const auto s3 = (b >> 24) & 7;
+  const auto s2 = (b >> 16) & 7;
+  const auto s1 = (b >> 8) & 7;
+  const auto s0 = b & 7;
+  const auto b3 = (a & 0xff000000u) << s3;
+  const auto b2 = ((a & 0x00ff0000u) << s2) & 0x00ff0000u;
+  const auto b1 = ((a & 0x0000ff00u) << s1) & 0x0000ff00u;
+  const auto b0 = (a << s0) & 0x000000ffu;
   return b3 | b2 | b1 | b0;
 }
 
@@ -191,16 +203,22 @@ inline uint32_t lsr32(const uint32_t a, const uint32_t b) {
 }
 
 inline uint32_t lsr16x2(const uint32_t a, const uint32_t b) {
-  const auto h1 = (a >> b) & 0xffff0000u;
-  const auto h0 = (a & 0x0000ffffu) >> b;
+  const auto s1 = (b >> 16) & 15;
+  const auto s0 = b & 15;
+  const auto h1 = (a >> s1) & 0xffff0000u;
+  const auto h0 = (a & 0x0000ffffu) >> s0;
   return h1 | h0;
 }
 
 inline uint32_t lsr8x4(const uint32_t a, const uint32_t b) {
-  const auto b3 = (a >> b) & 0xff000000u;
-  const auto b2 = ((a & 0x00ff0000u) >> b) & 0x00ff0000u;
-  const auto b1 = ((a & 0x0000ff00u) >> b) & 0x0000ff00u;
-  const auto b0 = (a & 0x000000ffu) >> b;
+  const auto s3 = (b >> 24) & 7;
+  const auto s2 = (b >> 16) & 7;
+  const auto s1 = (b >> 8) & 7;
+  const auto s0 = b & 7;
+  const auto b3 = (a >> s3) & 0xff000000u;
+  const auto b2 = ((a & 0x00ff0000u) >> s2) & 0x00ff0000u;
+  const auto b1 = ((a & 0x0000ff00u) >> s1) & 0x0000ff00u;
+  const auto b0 = (a & 0x000000ffu) >> s0;
   return b3 | b2 | b1 | b0;
 }
 

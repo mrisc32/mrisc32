@@ -27,30 +27,70 @@ entity shift32 is
       i_right       : in  std_logic;  -- '1' for right shifts, '0' for left
       i_arithmetic  : in  std_logic;  -- '1' for arihtmetic shifts, '0' for logic
       i_src         : in  std_logic_vector(31 downto 0);
-      i_shift       : in  std_logic_vector(4 downto 0);
+      i_shift       : in  std_logic_vector(31 downto 0);
       i_packed_mode : in  T_PACKED_MODE;
       o_result      : out std_logic_vector(31 downto 0)
     );
 end shift32;
 
 architecture rtl of shift32 is
-  signal s_lsr_res : std_logic_vector(31 downto 0);
-  signal s_asr_res : std_logic_vector(31 downto 0);
-  signal s_lsl_res : std_logic_vector(31 downto 0);
-  signal s_op : std_logic_vector(1 downto 0);
 begin
-  -- TODO(m): This can probably be done with less logic.
-  -- TODO(m): Handle i_packed_mode.
-  s_lsr_res <= std_logic_vector(shift_right(unsigned(i_src), to_integer(unsigned(i_shift))));
-  s_asr_res <= std_logic_vector(shift_right(signed(i_src), to_integer(unsigned(i_shift))));
-  s_lsl_res <= std_logic_vector(shift_left(unsigned(i_src), to_integer(unsigned(i_shift))));
-
-  s_op(1) <= i_right;
-  s_op(0) <= i_arithmetic;
-  ResultMux: with s_op select
-    o_result <=
-      s_lsr_res when "10",
-      s_asr_res when "11",
-      s_lsl_res when others;
+  process(i_right, i_arithmetic, i_src, i_shift, i_packed_mode)
+    variable v_shift : integer;
+    variable v_lo : integer;
+    variable v_hi : integer;
+  begin
+    if i_packed_mode = C_PACKED_BYTE then
+      for k in 0 to 3 loop
+        v_lo := k * 8;
+        v_hi := v_lo + 7;
+        v_shift := to_integer(unsigned(i_shift(v_lo + 2 downto v_lo)));
+        if i_right = '1' and i_arithmetic = '1' then
+          -- ASR
+          o_result(v_hi downto v_lo) <=
+              std_logic_vector(shift_right(signed(i_src(v_hi downto v_lo)), v_shift));
+        elsif i_right = '1' and i_arithmetic = '0' then
+          -- LSR
+          o_result(v_hi downto v_lo) <=
+              std_logic_vector(shift_right(unsigned(i_src(v_hi downto v_lo)), v_shift));
+        else
+          -- LSL
+          o_result(v_hi downto v_lo) <=
+              std_logic_vector(shift_left(unsigned(i_src(v_hi downto v_lo)), v_shift));
+        end if;
+      end loop;
+    elsif i_packed_mode = C_PACKED_HALF_WORD then
+      for k in 0 to 1 loop
+        v_lo := k * 16;
+        v_hi := v_lo + 15;
+        v_shift := to_integer(unsigned(i_shift(v_lo + 3 downto v_lo)));
+        if i_right = '1' and i_arithmetic = '1' then
+          -- ASR
+          o_result(v_hi downto v_lo) <=
+              std_logic_vector(shift_right(signed(i_src(v_hi downto v_lo)), v_shift));
+        elsif i_right = '1' and i_arithmetic = '0' then
+          -- LSR
+          o_result(v_hi downto v_lo) <=
+              std_logic_vector(shift_right(unsigned(i_src(v_hi downto v_lo)), v_shift));
+        else
+          -- LSL
+          o_result(v_hi downto v_lo) <=
+              std_logic_vector(shift_left(unsigned(i_src(v_hi downto v_lo)), v_shift));
+        end if;
+      end loop;
+    else
+      -- C_PACKED_NONE
+      v_shift := to_integer(unsigned(i_shift(4 downto 0)));
+      if i_right = '1' and i_arithmetic = '1' then
+        -- ASR
+        o_result <= std_logic_vector(shift_right(signed(i_src), v_shift));
+      elsif i_right = '1' and i_arithmetic = '0' then
+        -- LSR
+        o_result <= std_logic_vector(shift_right(unsigned(i_src), v_shift));
+      else
+        -- LSL
+        o_result <= std_logic_vector(shift_left(unsigned(i_src), v_shift));
+      end if;
+    end if;
+  end process;
 end rtl;
-

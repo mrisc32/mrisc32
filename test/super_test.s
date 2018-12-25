@@ -410,12 +410,22 @@ test_alu_min_max_correct_results:
 
 test_alu_shift:
     ; Shift operations
-    asr     s1, s22, #5
-    asr     s2, s22, s21
-    lsl     s3, s22, #5
-    lsl     s4, s22, s21
-    lsr     s5, s22, #5
-    lsr     s6, s22, s21
+    ldi     s15, #0x00000004            ; Shift amount for words
+    ldi     s16, #0x00020004            ; Shift amount for half words
+    ldhi    s17, #0x01020304@hi         ; Shift amount for bytes
+    or      s17, s17, #0x01020304@lo
+    asr     s1, s19, #5
+    asr     s2, s19, s15
+    asr.h   s3, s19, s16
+    asr.b   s4, s19, s17
+    lsl     s5, s19, #5
+    lsl     s6, s19, s15
+    lsl.h   s7, s19, s16
+    lsl.b   s8, s19, s17
+    lsr     s9, s19, #5
+    lsr     s10, s19, s15
+    lsr.h   s11, s19, s16
+    lsr.b   s12, s19, s17
 
     ; Store results.
     stw     s1, s25, #0
@@ -424,17 +434,24 @@ test_alu_shift:
     stw     s4, s25, #12
     stw     s5, s25, #16
     stw     s6, s25, #20
+    stw     s7, s25, #24
+    stw     s8, s25, #28
+    stw     s9, s25, #32
+    stw     s10, s25, #36
+    stw     s11, s25, #40
+    stw     s12, s25, #44
 
     ; Check results.
     add     s1, pc, #test_alu_shift_correct_results@pc
     mov     s2, s25
-    add     s25, s25, #24
+    add     s25, s25, #48
     b       #check_results
 
 test_alu_shift_correct_results:
-    .word   6
-    .word   0x00000026, 0x00000000, 0x00009a40, 0x01348000
-    .word   0x00000026, 0x00000000
+    .word   12
+    .word   0xfff6e5d4, 0xffedcba9, 0xffb7fba9, 0xfff7f7f9
+    .word   0xdb975300, 0xedcba980, 0xfb70a980, 0xfc70d080
+    .word   0x07f6e5d4, 0x0fedcba9, 0x3fb70ba9, 0x7f371709
 
 
 test_alu_shuf:
