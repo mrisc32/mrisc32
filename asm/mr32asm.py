@@ -1261,7 +1261,7 @@ def compile_file(file_name, out_name, verbosity_level):
                             if compilation_pass == 2:
                                 code += struct.pack('B', 0)
 
-                    elif directive[0] in ['.text', '.data', '.global']:
+                    elif directive[0] in ['.text', '.data', '.global', '.globl']:
                         if verbosity_level >= 1 and compilation_pass == 2:
                             print('{}:{}: WARNING: Ignoring directive: {}'.format(file_name, line_no, directive[0]))
 
