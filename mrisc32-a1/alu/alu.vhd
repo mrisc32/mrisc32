@@ -164,9 +164,21 @@ begin
   ------------------------------------------------------------------------------------------------
 
   -- Add/sub.
-  -- TODO(m): Implement packed modes.
-  s_add_res <= std_logic_vector(unsigned(i_src_b) + unsigned(i_src_a));
-  s_sub_res <= std_logic_vector(unsigned(i_src_b) - unsigned(i_src_a));
+  Adder: entity work.add32
+    port map (
+      i_src_a => i_src_a,
+      i_src_b => i_src_b,
+      i_packed_mode => i_packed_mode,
+      o_result => s_add_res
+    );
+
+  Subber: entity work.sub32
+    port map (
+      i_src_a => i_src_a,
+      i_src_b => i_src_b,
+      i_packed_mode => i_packed_mode,
+      o_result => s_sub_res
+    );
 
   -- Camparison results.
   -- TODO(m): Implement packed modes.

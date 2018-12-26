@@ -310,10 +310,14 @@ test_alu_arithmetic:
     ; Arithmetic operations
     add     s1, s22, #0x1234
     add     s2, s22, s21
-    sub     s3, #0x1234, s22
-    sub     s4, s22, s21
-    addpchi s5, #0x98765000
-    sub     s5, s5, pc
+    add.h   s3, s22, s21
+    add.b   s4, s22, s21
+    sub     s5, #0x1234, s22
+    sub     s6, s22, s21
+    sub.h   s7, s22, s21
+    sub.b   s8, s22, s21
+    addpchi s9, #0x98765000
+    sub     s9, s9, pc
 
     ; Store results.
     stw     s1, s25, #0
@@ -321,16 +325,21 @@ test_alu_arithmetic:
     stw     s3, s25, #8
     stw     s4, s25, #12
     stw     s5, s25, #16
+    stw     s6, s25, #20
+    stw     s7, s25, #24
+    stw     s8, s25, #28
+    stw     s9, s25, #32
 
     ; Check results.
     add     s1, pc, #test_alu_arithmetic_correct_results@pc
     mov     s2, s25
-    add     s25, s25, #20
+    add     s25, s25, #36
     b       #check_results
 
 test_alu_arithmetic_correct_results:
-    .word   5
-    .word   0x00001706, 0x00001b00, 0x00000d62, 0xffffeea4
+    .word   9
+    .word   0x00001706, 0x00001b00, 0x00001b00, 0x00001a00
+    .word   0x00000d62, 0xffffeea4, 0x0000eea4, 0x0000eea4
     .word   0x98764ffc
 
 
