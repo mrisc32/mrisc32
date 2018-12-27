@@ -22,6 +22,7 @@ ALU_PATH = alu
 SRCS += \
     $(ALU_PATH)/add32.vhd \
     $(ALU_PATH)/sub32.vhd \
+    $(ALU_PATH)/cmp32.vhd \
     $(ALU_PATH)/clz32.vhd \
     $(ALU_PATH)/clz32_tb.vhd \
     $(ALU_PATH)/shift32.vhd \

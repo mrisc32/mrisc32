@@ -344,7 +344,7 @@ test_alu_arithmetic_correct_results:
 
 
 test_alu_compare:
-    ; Compare/set operations
+    ; Unpacked compare/set operations
     seq     s1, s22, #-1234
     seq     s2, s22, s21
     sne     s3, s22, #-1234
@@ -372,28 +372,68 @@ test_alu_compare:
     stw     s11, s25, #40
     stw     s12, s25, #44
 
+    ; Packed compare/set operations
+    seq.h   s1, s22, s21
+    seq.b   s2, s22, s21
+    sne.h   s3, s22, s21
+    sne.b   s4, s22, s21
+    slt.h   s5, s22, s21
+    slt.b   s6, s22, s21
+    sltu.h  s7, s22, s21
+    sltu.b  s8, s22, s21
+    sle.h   s9, s22, s21
+    sle.b   s10, s22, s21
+    sleu.h  s11, s22, s21
+    sleu.b  s12, s22, s21
+
+    ; Store results.
+    stw     s1, s25, #48
+    stw     s2, s25, #52
+    stw     s3, s25, #56
+    stw     s4, s25, #60
+    stw     s5, s25, #64
+    stw     s6, s25, #68
+    stw     s7, s25, #72
+    stw     s8, s25, #76
+    stw     s9, s25, #80
+    stw     s10, s25, #84
+    stw     s11, s25, #88
+    stw     s12, s25, #92
+
     ; Check results.
     add     s1, pc, #test_alu_compare_correct_results@pc
     mov     s2, s25
-    add     s25, s25, #48
+    add     s25, s25, #96
     b       #check_results
 
 test_alu_compare_correct_results:
-    .word   12
+    .word   24
     .word   0x00000000, 0x00000000, 0xffffffff, 0xffffffff
     .word   0x00000000, 0xffffffff, 0xffffffff, 0xffffffff
     .word   0x00000000, 0xffffffff, 0xffffffff, 0xffffffff
+    .word   0xffff0000, 0xffff0000, 0x0000ffff, 0x0000ffff
+    .word   0x0000ffff, 0x0000ffff, 0x0000ffff, 0x0000ff00
+    .word   0xffffffff, 0xffffffff, 0xffffffff, 0xffffff00
+
 
 test_alu_min_max:
     ; Min/max operations
     min     s1, s22, #0x1234
     min     s2, s22, s21
-    max     s3, s22, #-1234
-    max     s4, s22, s21
-    minu    s5, s22, #0x1234
-    minu    s6, s22, s21
-    maxu    s7, s22, #-1234
-    maxu    s8, s22, s21
+    min.h   s3, s22, s21
+    min.b   s4, s22, s21
+    max     s5, s22, #-1234
+    max     s6, s22, s21
+    max.h   s7, s22, s21
+    max.b   s8, s22, s21
+    minu    s9, s22, #0x1234
+    minu    s10, s22, s21
+    minu.h  s11, s22, s21
+    minu.b  s12, s22, s21
+    maxu    s13, s22, #-1234
+    maxu    s14, s22, s21
+    maxu.h  s15, s22, s21
+    maxu.b  s16, s22, s21
 
     ; Store results.
     stw     s1, s25, #0
@@ -404,17 +444,27 @@ test_alu_min_max:
     stw     s6, s25, #20
     stw     s7, s25, #24
     stw     s8, s25, #28
+    stw     s9, s25, #32
+    stw     s10, s25, #36
+    stw     s11, s25, #40
+    stw     s12, s25, #44
+    stw     s13, s25, #48
+    stw     s14, s25, #52
+    stw     s15, s25, #56
+    stw     s16, s25, #60
 
     ; Check results.
     add     s1, pc, #test_alu_min_max_correct_results@pc
     mov     s2, s25
-    add     s25, s25, #32
+    add     s25, s25, #64
     b       #check_results
 
 test_alu_min_max_correct_results:
-    .word   8
-    .word   0x000004d2, 0x000004d2, 0x000004d2, 0x0000162e
-    .word   0x000004d2, 0x000004d2, 0xfffffb2e, 0x0000162e
+    .word   16
+    .word   0x000004d2, 0x000004d2, 0x000004d2, 0x000004d2
+    .word   0x000004d2, 0x0000162e, 0x0000162e, 0x0000162e
+    .word   0x000004d2, 0x000004d2, 0x000004d2, 0x0000042e
+    .word   0xfffffb2e, 0x0000162e, 0x0000162e, 0x000016d2
 
 
 test_alu_shift:

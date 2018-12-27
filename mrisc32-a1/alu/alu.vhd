@@ -56,15 +56,6 @@ architecture rtl of alu is
   signal s_add_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_sub_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
-  -- Signals for the comparator.
-  signal s_compare_eq : std_logic;
-  signal s_compare_ne : std_logic;
-  signal s_compare_lt : std_logic;
-  signal s_compare_le : std_logic;
-  signal s_compare_ltu : std_logic;
-  signal s_compare_leu : std_logic;
-  signal s_set_bit : std_logic;
-
   -- Signals for packb/packh.
   signal s_packb_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_packh_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -180,34 +171,19 @@ begin
       o_result => s_sub_res
     );
 
-  -- Camparison results.
-  -- TODO(m): Implement packed modes.
-  s_compare_eq <= '1' when i_src_a = i_src_b else '0';
-  s_compare_ne <= not s_compare_eq;
-  s_compare_lt <= '1' when signed(i_src_a) < signed(i_src_b) else '0';
-  s_compare_le <= s_compare_eq or s_compare_lt;
-  s_compare_ltu <= '1' when unsigned(i_src_a) < unsigned(i_src_b) else '0';
-  s_compare_leu <= s_compare_eq or s_compare_ltu;
-
-  -- Min/Max operations.
-  -- TODO(m): Implement packed modes.
-  s_min_res <= i_src_a when s_compare_lt = '1' else i_src_b;
-  s_max_res <= i_src_a when s_compare_lt = '0' else i_src_b;
-  s_minu_res <= i_src_a when s_compare_ltu = '1' else i_src_b;
-  s_maxu_res <= i_src_a when s_compare_ltu = '0' else i_src_b;
-
-  -- Compare and set operations.
-  -- TODO(m): Implement packed modes.
-  CmpMux: with i_op select
-    s_set_bit <=
-      s_compare_eq when C_ALU_SEQ,
-      s_compare_ne when C_ALU_SNE,
-      s_compare_lt when C_ALU_SLT,
-      s_compare_ltu when C_ALU_SLTU,
-      s_compare_le when C_ALU_SLE,
-      s_compare_leu when C_ALU_SLEU,
-      '-' when others;
-  s_set_res <= (others => s_set_bit);
+  -- Comparison operations.
+  Compare: entity work.cmp32
+    port map (
+      i_src_a => i_src_a,
+      i_src_b => i_src_b,
+      i_op => i_op,
+      i_packed_mode => i_packed_mode,
+      o_set_res => s_set_res,
+      o_min_res => s_min_res,
+      o_max_res => s_max_res,
+      o_minu_res => s_minu_res,
+      o_maxu_res => s_maxu_res
+    );
 
   -- Add high immediate (C_ALU_ADDHI): Add lower 21 bits of src_b to upper 21 bits of src_a.
   s_addhi_res(C_WORD_SIZE-1 downto C_WORD_SIZE-21) <=
