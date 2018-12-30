@@ -545,17 +545,12 @@ test_alu_clz_rev:
     clz     s1, s20
     clz     s2, s21
     clz     s3, s22
-
-    ; REV
-    rev     s4, s20
-    rev     s5, s21
-    rev     s6, s22
-    rev.h   s7, s20
-    rev.h   s8, s21
-    rev.h   s9, s22
-    rev.b   s10, s20
-    rev.b   s11, s21
-    rev.b   s12, s22
+    clz.h   s4, s20
+    clz.h   s5, s21
+    clz.h   s6, s22
+    clz.b   s7, s20
+    clz.b   s8, s21
+    clz.b   s9, s22
 
     ; Store results.
     stw     s1, s25, #0
@@ -567,21 +562,42 @@ test_alu_clz_rev:
     stw     s7, s25, #24
     stw     s8, s25, #28
     stw     s9, s25, #32
-    stw     s10, s25, #36
-    stw     s11, s25, #40
-    stw     s12, s25, #44
+
+    ; REV
+    rev     s1, s20
+    rev     s2, s21
+    rev     s3, s22
+    rev.h   s4, s20
+    rev.h   s5, s21
+    rev.h   s6, s22
+    rev.b   s7, s20
+    rev.b   s8, s21
+    rev.b   s9, s22
+
+    ; Store results.
+    stw     s1, s25, #36
+    stw     s2, s25, #40
+    stw     s3, s25, #44
+    stw     s4, s25, #48
+    stw     s5, s25, #52
+    stw     s6, s25, #56
+    stw     s7, s25, #60
+    stw     s8, s25, #64
+    stw     s9, s25, #68
 
     ; Check results.
     add     s1, pc, #test_alu_clz_rev_correct_results@pc
     mov     s2, s25
-    add     s25, s25, #48
+    add     s25, s25, #72
     b       #check_results
 
 test_alu_clz_rev_correct_results:
-    .word   12
-    .word   0x0000001f, 0x00000013, 0x00000015, 0x80000000
-    .word   0x74680000, 0x4b200000, 0x00008000, 0x00007468
-    .word   0x00004b20, 0x00000080, 0x00006874, 0x0000204b
+    .word   18
+    .word   0x0000001f, 0x00000013, 0x00000015, 0x0010000f
+    .word   0x00100003, 0x00100005, 0x08080807, 0x08080302
+    .word   0x08080500, 0x80000000, 0x74680000, 0x4b200000
+    .word   0x00008000, 0x00007468, 0x00004b20, 0x00000080
+    .word   0x00006874, 0x0000204b
 
 
 ;--------------------------------------------------------------------------------------------------
