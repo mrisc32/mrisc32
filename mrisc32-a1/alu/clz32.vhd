@@ -75,6 +75,18 @@ architecture rtl of clz32 is
   signal s_c4_2 : std_logic_vector(1 downto 0);
   signal s_c4_1 : std_logic_vector(1 downto 0);
   signal s_c4_0 : std_logic_vector(1 downto 0);
+
+  -- Level 5
+  signal s_c5_5 : std_logic;
+  signal s_c5_4 : std_logic;
+  signal s_c5_3 : std_logic;
+  signal s_c5_2 : std_logic;
+  signal s_c5_1 : std_logic;
+  signal s_c5_0 : std_logic;
+
+  signal s_result_32 : std_logic_vector(31 downto 0);
+  signal s_result_16 : std_logic_vector(31 downto 0);
+  signal s_result_8 : std_logic_vector(31 downto 0);
 begin
   -- Level 1
   Lvl1Gen: for k in 15 downto 0 generate
@@ -107,12 +119,60 @@ begin
   end generate;
 
   -- Level 5 (final level)
-  -- TODO(m): Handle packed modes.
-  o_result(31 downto 6) <= (others => '0');
-  o_result(5) <= s_c4_4(1) and s_c4_4(0);
-  o_result(4) <= s_c4_4(1) and (not s_c4_4(0));
-  o_result(3) <= s_c4_3(1) or (s_c4_4(1) and s_c4_3(0));
-  o_result(2) <= s_c4_2(1) or (s_c4_4(1) and s_c4_2(0));
-  o_result(1) <= s_c4_1(1) or (s_c4_4(1) and s_c4_1(0));
-  o_result(0) <= s_c4_0(1) or (s_c4_4(1) and s_c4_0(0));
+  s_c5_5 <= s_c4_4(1) and s_c4_4(0);
+  s_c5_4 <= s_c4_4(1) and (not s_c4_4(0));
+  s_c5_3 <= s_c4_3(1) or (s_c4_4(1) and s_c4_3(0));
+  s_c5_2 <= s_c4_2(1) or (s_c4_4(1) and s_c4_2(0));
+  s_c5_1 <= s_c4_1(1) or (s_c4_4(1) and s_c4_1(0));
+  s_c5_0 <= s_c4_0(1) or (s_c4_4(1) and s_c4_0(0));
+
+  -- 32-bit result.
+  s_result_32(31 downto 6) <= (others => '0');
+  s_result_32(5) <= s_c5_5;
+  s_result_32(4) <= s_c5_4;
+  s_result_32(3) <= s_c5_3;
+  s_result_32(2) <= s_c5_2;
+  s_result_32(1) <= s_c5_1;
+  s_result_32(0) <= s_c5_0;
+
+  -- 16x2-bit result.
+  s_result_16(31 downto 21) <= (others => '0');
+  s_result_16(20) <= s_c4_4(1);
+  s_result_16(19) <= s_c4_3(1);
+  s_result_16(18) <= s_c4_2(1);
+  s_result_16(17) <= s_c4_1(1);
+  s_result_16(16) <= s_c4_0(1);
+  s_result_16(15 downto 5) <= (others => '0');
+  s_result_16(4) <= s_c4_4(0);
+  s_result_16(3) <= s_c4_3(0);
+  s_result_16(2) <= s_c4_2(0);
+  s_result_16(1) <= s_c4_1(0);
+  s_result_16(0) <= s_c4_0(0);
+
+  -- 8x4-bit result.
+  s_result_8(31 downto 28) <= (others => '0');
+  s_result_8(27) <= s_c3_3(3);
+  s_result_8(26) <= s_c3_2(3);
+  s_result_8(25) <= s_c3_1(3);
+  s_result_8(24) <= s_c3_0(3);
+  s_result_8(23 downto 20) <= (others => '0');
+  s_result_8(19) <= s_c3_3(2);
+  s_result_8(18) <= s_c3_2(2);
+  s_result_8(17) <= s_c3_1(2);
+  s_result_8(16) <= s_c3_0(2);
+  s_result_8(15 downto 12) <= (others => '0');
+  s_result_8(11) <= s_c3_3(1);
+  s_result_8(10) <= s_c3_2(1);
+  s_result_8(9) <= s_c3_1(1);
+  s_result_8(8) <= s_c3_0(1);
+  s_result_8(7 downto 4) <= (others => '0');
+  s_result_8(3) <= s_c3_3(0);
+  s_result_8(2) <= s_c3_2(0);
+  s_result_8(1) <= s_c3_1(0);
+  s_result_8(0) <= s_c3_0(0);
+
+  -- Select outputs.
+  o_result <= s_result_8  when i_packed_mode = C_PACKED_BYTE else
+              s_result_16 when i_packed_mode = C_PACKED_HALF_WORD else
+              s_result_32;
 end rtl;
