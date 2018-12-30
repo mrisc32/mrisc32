@@ -745,6 +745,15 @@ inline uint32_t clz32(const uint32_t x) {
 #endif
 }
 
+inline uint32_t clz16x2(const uint32_t x) {
+  return (clz32(x | 0x00008000u) << 16u) | (clz32((x << 16u) | 0x00008000u));
+}
+
+inline uint32_t clz8x4(const uint32_t x) {
+  return (clz32(x | 0x00800000u) << 24u) | (clz32((x << 8u) | 0x00800000u) << 16u) |
+         (clz32((x << 16u) | 0x00800000u) << 8u) | (clz32((x << 24u) | 0x00800000u));
+}
+
 inline uint32_t rev32(const uint32_t x) {
   return ((x >> 31u) & 0x00000001u) | ((x >> 29u) & 0x00000002u) | ((x >> 27u) & 0x00000004u) |
          ((x >> 25u) & 0x00000008u) | ((x >> 23u) & 0x00000010u) | ((x >> 21u) & 0x00000020u) |
@@ -1423,7 +1432,16 @@ uint32_t cpu_simple_t::run() {
           ex_result = shuf32(ex_in.src_a, ex_in.src_b);
           break;
         case EX_OP_CLZ:
-          ex_result = clz32(ex_in.src_a);
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = clz8x4(ex_in.src_a);
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = clz16x2(ex_in.src_a);
+              break;
+            default:
+              ex_result = clz32(ex_in.src_a);
+          }
           break;
         case EX_OP_REV:
           switch (ex_in.packed_mode) {
