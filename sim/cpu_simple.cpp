@@ -759,6 +759,21 @@ inline uint32_t rev32(const uint32_t x) {
          ((x << 29u) & 0x40000000u) | ((x << 31u) & 0x80000000u);
 }
 
+inline uint32_t rev16x2(const uint32_t x) {
+  return ((x >> 15u) & 0x00010001u) | ((x >> 13u) & 0x00020002u) | ((x >> 11u) & 0x00040004u) |
+         ((x >> 9u) & 0x00080008u) | ((x >> 7u) & 0x00100010u) | ((x >> 5u) & 0x00200020u) |
+         ((x >> 3u) & 0x00400040u) | ((x >> 1u) & 0x00800080u) | ((x << 1u) & 0x01000100u) |
+         ((x << 3u) & 0x02000200u) | ((x << 5u) & 0x04000400u) | ((x << 7u) & 0x08000800u) |
+         ((x << 9u) & 0x10001000u) | ((x << 11u) & 0x20002000u) | ((x << 13u) & 0x40004000u) |
+         ((x << 15u) & 0x80008000u);
+}
+
+inline uint32_t rev8x4(const uint32_t x) {
+  return ((x >> 7u) & 0x01010101u) | ((x >> 5u) & 0x02020202u) | ((x >> 3u) & 0x04040404u) |
+         ((x >> 1u) & 0x08080808u) | ((x << 1u) & 0x10101010u) | ((x << 3u) & 0x20202020u) |
+         ((x << 5u) & 0x40404040u) | ((x << 7u) & 0x80808080u);
+}
+
 inline uint8_t shuf_op(const uint8_t x, const bool fill, const bool sign_fill) {
   const uint8_t fill_bits = (sign_fill && ((x & 0x80u) != 0u)) ? 0xffu : 0x00u;
   return fill ? fill_bits : x;
@@ -1411,7 +1426,16 @@ uint32_t cpu_simple_t::run() {
           ex_result = clz32(ex_in.src_a);
           break;
         case EX_OP_REV:
-          ex_result = rev32(ex_in.src_a);
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = rev8x4(ex_in.src_a);
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = rev16x2(ex_in.src_a);
+              break;
+            default:
+              ex_result = rev32(ex_in.src_a);
+          }
           break;
         case EX_OP_PACKB:
           ex_result = packb32(ex_in.src_a, ex_in.src_b);
