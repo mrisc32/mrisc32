@@ -550,6 +550,12 @@ test_alu_clz_rev:
     rev     s4, s20
     rev     s5, s21
     rev     s6, s22
+    rev.h   s7, s20
+    rev.h   s8, s21
+    rev.h   s9, s22
+    rev.b   s10, s20
+    rev.b   s11, s21
+    rev.b   s12, s22
 
     ; Store results.
     stw     s1, s25, #0
@@ -558,17 +564,24 @@ test_alu_clz_rev:
     stw     s4, s25, #12
     stw     s5, s25, #16
     stw     s6, s25, #20
+    stw     s7, s25, #24
+    stw     s8, s25, #28
+    stw     s9, s25, #32
+    stw     s10, s25, #36
+    stw     s11, s25, #40
+    stw     s12, s25, #44
 
     ; Check results.
     add     s1, pc, #test_alu_clz_rev_correct_results@pc
     mov     s2, s25
-    add     s25, s25, #24
+    add     s25, s25, #48
     b       #check_results
 
 test_alu_clz_rev_correct_results:
-    .word   6
+    .word   12
     .word   0x0000001f, 0x00000013, 0x00000015, 0x80000000
-    .word   0x74680000, 0x4b200000
+    .word   0x74680000, 0x4b200000, 0x00008000, 0x00007468
+    .word   0x00004b20, 0x00000080, 0x00006874, 0x0000204b
 
 
 ;--------------------------------------------------------------------------------------------------
