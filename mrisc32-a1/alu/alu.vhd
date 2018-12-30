@@ -143,7 +143,6 @@ begin
   s_ldhi_res(C_WORD_SIZE-22 downto 0) <= (others => i_op(1));  -- C_ALU_LDHI="000001", C_ALU_LDHIO="000010"
 
   -- C_ALU_CLZ
-  -- TODO(m): Implement packed modes.
   AluCLZ32: entity work.clz32
     port map (
       i_src => i_src_a,
