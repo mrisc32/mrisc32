@@ -126,10 +126,12 @@ begin
     );
 
   -- C_ALU_REV
-  -- TODO(m): Implement packed modes.
-  RevGen: for k in 0 to C_WORD_SIZE-1 generate
-    s_rev_res(k) <= i_src_a(C_WORD_SIZE-1-k);
-  end generate;
+  Rev: entity work.rev32
+    port map (
+      i_src => i_src_a,
+      i_packed_mode => i_packed_mode,
+      o_result => s_rev_res
+    );
 
   -- C_ALU_PACKB, C_ALU_PACKH
   s_packb_res <= i_src_a(23 downto 16) & i_src_a(7 downto 0) & i_src_b(23 downto 16) & i_src_b(7 downto 0);
