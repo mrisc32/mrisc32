@@ -462,12 +462,12 @@ _OPCODES = {
         'CLZ':    {'descrs':
                     [[0x00000031, _REG1, _REG2],          # 3rd reg is always z
                      [0x00008031, _VREG1, _VREG2]],
-                   'packed_op': False
+                   'packed_op': True
                   },
         'REV':    {'descrs':
                     [[0x00000032, _REG1, _REG2],          # 3rd reg is always z
                      [0x00008032, _VREG1, _VREG2]],
-                   'packed_op': False
+                   'packed_op': True
                   },
         'PACKB':  {'descrs':
                     [[0x00000033, _REG1, _REG2, _REG3],
@@ -1261,7 +1261,7 @@ def compile_file(file_name, out_name, verbosity_level):
                             if compilation_pass == 2:
                                 code += struct.pack('B', 0)
 
-                    elif directive[0] in ['.text', '.data', '.global']:
+                    elif directive[0] in ['.text', '.data', '.global', '.globl']:
                         if verbosity_level >= 1 and compilation_pass == 2:
                             print('{}:{}: WARNING: Ignoring directive: {}'.format(file_name, line_no, directive[0]))
 

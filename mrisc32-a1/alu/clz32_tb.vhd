@@ -27,12 +27,14 @@ end clz32_tb;
 
 architecture behavioral of clz32_tb is
   signal s_src : std_logic_vector(31 downto 0);
-  signal s_cnt : std_logic_vector(5 downto 0);
+  signal s_packed_mode : T_PACKED_MODE;
+  signal s_result : std_logic_vector(31 downto 0);
 begin
   clz32_0: entity work.clz32
     port map (
       i_src => s_src,
-      o_cnt => s_cnt
+      i_packed_mode => s_packed_mode,
+      o_result => s_result
     );
 
   process
@@ -77,26 +79,28 @@ begin
     begin
       for i in 31 downto 0 loop
         if x(i) = '1' then
-          return std_logic_vector(to_unsigned(31-i, 6));
+          return std_logic_vector(to_unsigned(31-i, 32));
         end if;
       end loop;
-      return std_logic_vector(to_unsigned(32, 6));
+      return std_logic_vector(to_unsigned(32, 32));
     end function;
+
   begin
     -- Test some values from 0 to 2^32-1.
     for i in patterns'range loop
       for k in 0 to 10000 loop
         -- Set the input.
         s_src <= to_word(k*55) or patterns(i);
+        s_packed_mode <= C_PACKED_NONE;  -- TODO(m): Add this to the test pattern.
 
         -- Wait for the results.
         wait for 1 ns;
 
         --  Check the output.
-        assert s_cnt = refClz32(s_src)
+        assert s_result = refClz32(s_src)
           report "Bad count value:" & lf &
                  "  src=" & to_string(s_src) & lf &
-                 "  cnt=" & to_string(s_cnt) & " (expected " & to_string(refClz32(s_src)) & ")"
+                 "  cnt=" & to_string(s_result) & " (expected " & to_string(refClz32(s_src)) & ")"
             severity error;
       end loop;
     end loop;

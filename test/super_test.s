@@ -310,10 +310,14 @@ test_alu_arithmetic:
     ; Arithmetic operations
     add     s1, s22, #0x1234
     add     s2, s22, s21
-    sub     s3, #0x1234, s22
-    sub     s4, s22, s21
-    addpchi s5, #0x98765000
-    sub     s5, s5, pc
+    add.h   s3, s22, s21
+    add.b   s4, s22, s21
+    sub     s5, #0x1234, s22
+    sub     s6, s22, s21
+    sub.h   s7, s22, s21
+    sub.b   s8, s22, s21
+    addpchi s9, #0x98765000
+    sub     s9, s9, pc
 
     ; Store results.
     stw     s1, s25, #0
@@ -321,21 +325,26 @@ test_alu_arithmetic:
     stw     s3, s25, #8
     stw     s4, s25, #12
     stw     s5, s25, #16
+    stw     s6, s25, #20
+    stw     s7, s25, #24
+    stw     s8, s25, #28
+    stw     s9, s25, #32
 
     ; Check results.
     add     s1, pc, #test_alu_arithmetic_correct_results@pc
     mov     s2, s25
-    add     s25, s25, #20
+    add     s25, s25, #36
     b       #check_results
 
 test_alu_arithmetic_correct_results:
-    .word   5
-    .word   0x00001706, 0x00001b00, 0x00000d62, 0xffffeea4
+    .word   9
+    .word   0x00001706, 0x00001b00, 0x00001b00, 0x00001a00
+    .word   0x00000d62, 0xffffeea4, 0x0000eea4, 0x0000eea4
     .word   0x98764ffc
 
 
 test_alu_compare:
-    ; Compare/set operations
+    ; Unpacked compare/set operations
     seq     s1, s22, #-1234
     seq     s2, s22, s21
     sne     s3, s22, #-1234
@@ -363,28 +372,68 @@ test_alu_compare:
     stw     s11, s25, #40
     stw     s12, s25, #44
 
+    ; Packed compare/set operations
+    seq.h   s1, s22, s21
+    seq.b   s2, s22, s21
+    sne.h   s3, s22, s21
+    sne.b   s4, s22, s21
+    slt.h   s5, s22, s21
+    slt.b   s6, s22, s21
+    sltu.h  s7, s22, s21
+    sltu.b  s8, s22, s21
+    sle.h   s9, s22, s21
+    sle.b   s10, s22, s21
+    sleu.h  s11, s22, s21
+    sleu.b  s12, s22, s21
+
+    ; Store results.
+    stw     s1, s25, #48
+    stw     s2, s25, #52
+    stw     s3, s25, #56
+    stw     s4, s25, #60
+    stw     s5, s25, #64
+    stw     s6, s25, #68
+    stw     s7, s25, #72
+    stw     s8, s25, #76
+    stw     s9, s25, #80
+    stw     s10, s25, #84
+    stw     s11, s25, #88
+    stw     s12, s25, #92
+
     ; Check results.
     add     s1, pc, #test_alu_compare_correct_results@pc
     mov     s2, s25
-    add     s25, s25, #48
+    add     s25, s25, #96
     b       #check_results
 
 test_alu_compare_correct_results:
-    .word   12
+    .word   24
     .word   0x00000000, 0x00000000, 0xffffffff, 0xffffffff
     .word   0x00000000, 0xffffffff, 0xffffffff, 0xffffffff
     .word   0x00000000, 0xffffffff, 0xffffffff, 0xffffffff
+    .word   0xffff0000, 0xffff0000, 0x0000ffff, 0x0000ffff
+    .word   0x0000ffff, 0x0000ffff, 0x0000ffff, 0x0000ff00
+    .word   0xffffffff, 0xffffffff, 0xffffffff, 0xffffff00
+
 
 test_alu_min_max:
     ; Min/max operations
     min     s1, s22, #0x1234
     min     s2, s22, s21
-    max     s3, s22, #-1234
-    max     s4, s22, s21
-    minu    s5, s22, #0x1234
-    minu    s6, s22, s21
-    maxu    s7, s22, #-1234
-    maxu    s8, s22, s21
+    min.h   s3, s22, s21
+    min.b   s4, s22, s21
+    max     s5, s22, #-1234
+    max     s6, s22, s21
+    max.h   s7, s22, s21
+    max.b   s8, s22, s21
+    minu    s9, s22, #0x1234
+    minu    s10, s22, s21
+    minu.h  s11, s22, s21
+    minu.b  s12, s22, s21
+    maxu    s13, s22, #-1234
+    maxu    s14, s22, s21
+    maxu.h  s15, s22, s21
+    maxu.b  s16, s22, s21
 
     ; Store results.
     stw     s1, s25, #0
@@ -395,27 +444,47 @@ test_alu_min_max:
     stw     s6, s25, #20
     stw     s7, s25, #24
     stw     s8, s25, #28
+    stw     s9, s25, #32
+    stw     s10, s25, #36
+    stw     s11, s25, #40
+    stw     s12, s25, #44
+    stw     s13, s25, #48
+    stw     s14, s25, #52
+    stw     s15, s25, #56
+    stw     s16, s25, #60
 
     ; Check results.
     add     s1, pc, #test_alu_min_max_correct_results@pc
     mov     s2, s25
-    add     s25, s25, #32
+    add     s25, s25, #64
     b       #check_results
 
 test_alu_min_max_correct_results:
-    .word   8
-    .word   0x000004d2, 0x000004d2, 0x000004d2, 0x0000162e
-    .word   0x000004d2, 0x000004d2, 0xfffffb2e, 0x0000162e
+    .word   16
+    .word   0x000004d2, 0x000004d2, 0x000004d2, 0x000004d2
+    .word   0x000004d2, 0x0000162e, 0x0000162e, 0x0000162e
+    .word   0x000004d2, 0x000004d2, 0x000004d2, 0x0000042e
+    .word   0xfffffb2e, 0x0000162e, 0x0000162e, 0x000016d2
 
 
 test_alu_shift:
     ; Shift operations
-    asr     s1, s22, #5
-    asr     s2, s22, s21
-    lsl     s3, s22, #5
-    lsl     s4, s22, s21
-    lsr     s5, s22, #5
-    lsr     s6, s22, s21
+    ldi     s15, #0x00000004            ; Shift amount for words
+    ldi     s16, #0x00020004            ; Shift amount for half words
+    ldhi    s17, #0x01020304@hi         ; Shift amount for bytes
+    or      s17, s17, #0x01020304@lo
+    asr     s1, s19, #5
+    asr     s2, s19, s15
+    asr.h   s3, s19, s16
+    asr.b   s4, s19, s17
+    lsl     s5, s19, #5
+    lsl     s6, s19, s15
+    lsl.h   s7, s19, s16
+    lsl.b   s8, s19, s17
+    lsr     s9, s19, #5
+    lsr     s10, s19, s15
+    lsr.h   s11, s19, s16
+    lsr.b   s12, s19, s17
 
     ; Store results.
     stw     s1, s25, #0
@@ -424,17 +493,24 @@ test_alu_shift:
     stw     s4, s25, #12
     stw     s5, s25, #16
     stw     s6, s25, #20
+    stw     s7, s25, #24
+    stw     s8, s25, #28
+    stw     s9, s25, #32
+    stw     s10, s25, #36
+    stw     s11, s25, #40
+    stw     s12, s25, #44
 
     ; Check results.
     add     s1, pc, #test_alu_shift_correct_results@pc
     mov     s2, s25
-    add     s25, s25, #24
+    add     s25, s25, #48
     b       #check_results
 
 test_alu_shift_correct_results:
-    .word   6
-    .word   0x00000026, 0x00000000, 0x00009a40, 0x01348000
-    .word   0x00000026, 0x00000000
+    .word   12
+    .word   0xfff6e5d4, 0xffedcba9, 0xffb7fba9, 0xfff7f7f9
+    .word   0xdb975300, 0xedcba980, 0xfb70a980, 0xfc70d080
+    .word   0x07f6e5d4, 0x0fedcba9, 0x3fb70ba9, 0x7f371709
 
 
 test_alu_shuf:
@@ -469,11 +545,12 @@ test_alu_clz_rev:
     clz     s1, s20
     clz     s2, s21
     clz     s3, s22
-
-    ; REV
-    rev     s4, s20
-    rev     s5, s21
-    rev     s6, s22
+    clz.h   s4, s20
+    clz.h   s5, s21
+    clz.h   s6, s22
+    clz.b   s7, s20
+    clz.b   s8, s21
+    clz.b   s9, s22
 
     ; Store results.
     stw     s1, s25, #0
@@ -482,17 +559,45 @@ test_alu_clz_rev:
     stw     s4, s25, #12
     stw     s5, s25, #16
     stw     s6, s25, #20
+    stw     s7, s25, #24
+    stw     s8, s25, #28
+    stw     s9, s25, #32
+
+    ; REV
+    rev     s1, s20
+    rev     s2, s21
+    rev     s3, s22
+    rev.h   s4, s20
+    rev.h   s5, s21
+    rev.h   s6, s22
+    rev.b   s7, s20
+    rev.b   s8, s21
+    rev.b   s9, s22
+
+    ; Store results.
+    stw     s1, s25, #36
+    stw     s2, s25, #40
+    stw     s3, s25, #44
+    stw     s4, s25, #48
+    stw     s5, s25, #52
+    stw     s6, s25, #56
+    stw     s7, s25, #60
+    stw     s8, s25, #64
+    stw     s9, s25, #68
 
     ; Check results.
     add     s1, pc, #test_alu_clz_rev_correct_results@pc
     mov     s2, s25
-    add     s25, s25, #24
+    add     s25, s25, #72
     b       #check_results
 
 test_alu_clz_rev_correct_results:
-    .word   6
-    .word   0x0000001f, 0x00000013, 0x00000015, 0x80000000
-    .word   0x74680000, 0x4b200000
+    .word   18
+    .word   0x0000001f, 0x00000013, 0x00000015, 0x0010000f
+    .word   0x00100003, 0x00100005, 0x08080807, 0x08080302
+    .word   0x08080500, 0x80000000, 0x74680000, 0x4b200000
+    .word   0x00008000, 0x00007468, 0x00004b20, 0x00000080
+    .word   0x00006874, 0x0000204b
 
 
 ;--------------------------------------------------------------------------------------------------

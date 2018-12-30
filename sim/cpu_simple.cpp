@@ -155,16 +155,22 @@ inline uint32_t asr32(const uint32_t a, const uint32_t b) {
 }
 
 inline uint32_t asr16x2(const uint32_t a, const uint32_t b) {
-  const auto h1 = static_cast<uint32_t>(static_cast<uint16_t>(static_cast<int16_t>(a >> 16) >> b));
-  const auto h0 = static_cast<uint32_t>(static_cast<uint16_t>(static_cast<int16_t>(a) >> b));
+  const auto s1 = (b >> 16) & 15;
+  const auto s0 = b & 15;
+  const auto h1 = static_cast<uint32_t>(static_cast<uint16_t>(static_cast<int16_t>(a >> 16) >> s1));
+  const auto h0 = static_cast<uint32_t>(static_cast<uint16_t>(static_cast<int16_t>(a) >> s0));
   return (h1 << 16) | h0;
 }
 
 inline uint32_t asr8x4(const uint32_t a, const uint32_t b) {
-  const auto b3 = static_cast<uint32_t>(static_cast<uint8_t>(static_cast<int8_t>(a >> 24) >> b));
-  const auto b2 = static_cast<uint32_t>(static_cast<uint8_t>(static_cast<int8_t>(a >> 16) >> b));
-  const auto b1 = static_cast<uint32_t>(static_cast<uint8_t>(static_cast<int8_t>(a >> 8) >> b));
-  const auto b0 = static_cast<uint32_t>(static_cast<uint8_t>(static_cast<int8_t>(a) >> b));
+  const auto s3 = (b >> 24) & 7;
+  const auto s2 = (b >> 16) & 7;
+  const auto s1 = (b >> 8) & 7;
+  const auto s0 = b & 7;
+  const auto b3 = static_cast<uint32_t>(static_cast<uint8_t>(static_cast<int8_t>(a >> 24) >> s3));
+  const auto b2 = static_cast<uint32_t>(static_cast<uint8_t>(static_cast<int8_t>(a >> 16) >> s2));
+  const auto b1 = static_cast<uint32_t>(static_cast<uint8_t>(static_cast<int8_t>(a >> 8) >> s1));
+  const auto b0 = static_cast<uint32_t>(static_cast<uint8_t>(static_cast<int8_t>(a) >> s0));
   return (b3 << 24) | (b2 << 16) | (b1 << 8) | b0;
 }
 
@@ -173,16 +179,22 @@ inline uint32_t lsl32(const uint32_t a, const uint32_t b) {
 }
 
 inline uint32_t lsl16x2(const uint32_t a, const uint32_t b) {
-  const auto h1 = (a & 0xffff0000u) << b;
-  const auto h0 = (a << b) & 0x0000ffffu;
+  const auto s1 = (b >> 16) & 15;
+  const auto s0 = b & 15;
+  const auto h1 = (a & 0xffff0000u) << s1;
+  const auto h0 = (a << s0) & 0x0000ffffu;
   return h1 | h0;
 }
 
 inline uint32_t lsl8x4(const uint32_t a, const uint32_t b) {
-  const auto b3 = (a & 0xff000000u) << b;
-  const auto b2 = ((a & 0x00ff0000u) << b) & 0x00ff0000u;
-  const auto b1 = ((a & 0x0000ff00u) << b) & 0x0000ff00u;
-  const auto b0 = (a << b) & 0x000000ffu;
+  const auto s3 = (b >> 24) & 7;
+  const auto s2 = (b >> 16) & 7;
+  const auto s1 = (b >> 8) & 7;
+  const auto s0 = b & 7;
+  const auto b3 = (a & 0xff000000u) << s3;
+  const auto b2 = ((a & 0x00ff0000u) << s2) & 0x00ff0000u;
+  const auto b1 = ((a & 0x0000ff00u) << s1) & 0x0000ff00u;
+  const auto b0 = (a << s0) & 0x000000ffu;
   return b3 | b2 | b1 | b0;
 }
 
@@ -191,16 +203,22 @@ inline uint32_t lsr32(const uint32_t a, const uint32_t b) {
 }
 
 inline uint32_t lsr16x2(const uint32_t a, const uint32_t b) {
-  const auto h1 = (a >> b) & 0xffff0000u;
-  const auto h0 = (a & 0x0000ffffu) >> b;
+  const auto s1 = (b >> 16) & 15;
+  const auto s0 = b & 15;
+  const auto h1 = (a >> s1) & 0xffff0000u;
+  const auto h0 = (a & 0x0000ffffu) >> s0;
   return h1 | h0;
 }
 
 inline uint32_t lsr8x4(const uint32_t a, const uint32_t b) {
-  const auto b3 = (a >> b) & 0xff000000u;
-  const auto b2 = ((a & 0x00ff0000u) >> b) & 0x00ff0000u;
-  const auto b1 = ((a & 0x0000ff00u) >> b) & 0x0000ff00u;
-  const auto b0 = (a & 0x000000ffu) >> b;
+  const auto s3 = (b >> 24) & 7;
+  const auto s2 = (b >> 16) & 7;
+  const auto s1 = (b >> 8) & 7;
+  const auto s0 = b & 7;
+  const auto b3 = (a >> s3) & 0xff000000u;
+  const auto b2 = ((a & 0x00ff0000u) >> s2) & 0x00ff0000u;
+  const auto b1 = ((a & 0x0000ff00u) >> s1) & 0x0000ff00u;
+  const auto b0 = (a & 0x000000ffu) >> s0;
   return b3 | b2 | b1 | b0;
 }
 
@@ -727,6 +745,15 @@ inline uint32_t clz32(const uint32_t x) {
 #endif
 }
 
+inline uint32_t clz16x2(const uint32_t x) {
+  return (clz32(x | 0x00008000u) << 16u) | (clz32((x << 16u) | 0x00008000u));
+}
+
+inline uint32_t clz8x4(const uint32_t x) {
+  return (clz32(x | 0x00800000u) << 24u) | (clz32((x << 8u) | 0x00800000u) << 16u) |
+         (clz32((x << 16u) | 0x00800000u) << 8u) | (clz32((x << 24u) | 0x00800000u));
+}
+
 inline uint32_t rev32(const uint32_t x) {
   return ((x >> 31u) & 0x00000001u) | ((x >> 29u) & 0x00000002u) | ((x >> 27u) & 0x00000004u) |
          ((x >> 25u) & 0x00000008u) | ((x >> 23u) & 0x00000010u) | ((x >> 21u) & 0x00000020u) |
@@ -739,6 +766,21 @@ inline uint32_t rev32(const uint32_t x) {
          ((x << 17u) & 0x01000000u) | ((x << 19u) & 0x02000000u) | ((x << 21u) & 0x04000000u) |
          ((x << 23u) & 0x08000000u) | ((x << 25u) & 0x10000000u) | ((x << 27u) & 0x20000000u) |
          ((x << 29u) & 0x40000000u) | ((x << 31u) & 0x80000000u);
+}
+
+inline uint32_t rev16x2(const uint32_t x) {
+  return ((x >> 15u) & 0x00010001u) | ((x >> 13u) & 0x00020002u) | ((x >> 11u) & 0x00040004u) |
+         ((x >> 9u) & 0x00080008u) | ((x >> 7u) & 0x00100010u) | ((x >> 5u) & 0x00200020u) |
+         ((x >> 3u) & 0x00400040u) | ((x >> 1u) & 0x00800080u) | ((x << 1u) & 0x01000100u) |
+         ((x << 3u) & 0x02000200u) | ((x << 5u) & 0x04000400u) | ((x << 7u) & 0x08000800u) |
+         ((x << 9u) & 0x10001000u) | ((x << 11u) & 0x20002000u) | ((x << 13u) & 0x40004000u) |
+         ((x << 15u) & 0x80008000u);
+}
+
+inline uint32_t rev8x4(const uint32_t x) {
+  return ((x >> 7u) & 0x01010101u) | ((x >> 5u) & 0x02020202u) | ((x >> 3u) & 0x04040404u) |
+         ((x >> 1u) & 0x08080808u) | ((x << 1u) & 0x10101010u) | ((x << 3u) & 0x20202020u) |
+         ((x << 5u) & 0x40404040u) | ((x << 7u) & 0x80808080u);
 }
 
 inline uint8_t shuf_op(const uint8_t x, const bool fill, const bool sign_fill) {
@@ -1390,10 +1432,28 @@ uint32_t cpu_simple_t::run() {
           ex_result = shuf32(ex_in.src_a, ex_in.src_b);
           break;
         case EX_OP_CLZ:
-          ex_result = clz32(ex_in.src_a);
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = clz8x4(ex_in.src_a);
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = clz16x2(ex_in.src_a);
+              break;
+            default:
+              ex_result = clz32(ex_in.src_a);
+          }
           break;
         case EX_OP_REV:
-          ex_result = rev32(ex_in.src_a);
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = rev8x4(ex_in.src_a);
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = rev16x2(ex_in.src_a);
+              break;
+            default:
+              ex_result = rev32(ex_in.src_a);
+          }
           break;
         case EX_OP_PACKB:
           ex_result = packb32(ex_in.src_a, ex_in.src_b);

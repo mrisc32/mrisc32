@@ -27,6 +27,7 @@ entity alu is
       i_op : in T_ALU_OP;                                      -- Operation
       i_src_a : in std_logic_vector(C_WORD_SIZE-1 downto 0);   -- Source operand A
       i_src_b : in std_logic_vector(C_WORD_SIZE-1 downto 0);   -- Source operand B
+      i_packed_mode : in T_PACKED_MODE;                        -- Packed mode
       o_result : out std_logic_vector(C_WORD_SIZE-1 downto 0)  -- ALU result
     );
 end;
@@ -54,15 +55,6 @@ architecture rtl of alu is
   -- Signals for the adder.
   signal s_add_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_sub_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
-
-  -- Signals for the comparator.
-  signal s_compare_eq : std_logic;
-  signal s_compare_ne : std_logic;
-  signal s_compare_lt : std_logic;
-  signal s_compare_le : std_logic;
-  signal s_compare_ltu : std_logic;
-  signal s_compare_leu : std_logic;
-  signal s_set_bit : std_logic;
 
   -- Signals for packb/packh.
   signal s_packb_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -134,9 +126,12 @@ begin
     );
 
   -- C_ALU_REV
-  RevGen: for k in 0 to C_WORD_SIZE-1 generate
-    s_rev_res(k) <= i_src_a(C_WORD_SIZE-1-k);
-  end generate;
+  Rev: entity work.rev32
+    port map (
+      i_src => i_src_a,
+      i_packed_mode => i_packed_mode,
+      o_result => s_rev_res
+    );
 
   -- C_ALU_PACKB, C_ALU_PACKH
   s_packb_res <= i_src_a(23 downto 16) & i_src_a(7 downto 0) & i_src_b(23 downto 16) & i_src_b(7 downto 0);
@@ -148,12 +143,13 @@ begin
   s_ldhi_res(C_WORD_SIZE-22 downto 0) <= (others => i_op(1));  -- C_ALU_LDHI="000001", C_ALU_LDHIO="000010"
 
   -- C_ALU_CLZ
+  -- TODO(m): Implement packed modes.
   AluCLZ32: entity work.clz32
     port map (
       i_src => i_src_a,
-      o_cnt => s_clz_res(5 downto 0)
+      i_packed_mode => i_packed_mode,
+      o_result => s_clz_res
     );
-  s_clz_res(31 downto 6) <= (others => '0');
 
 
   ------------------------------------------------------------------------------------------------
@@ -161,34 +157,35 @@ begin
   ------------------------------------------------------------------------------------------------
 
   -- Add/sub.
-  s_add_res <= std_logic_vector(unsigned(i_src_b) + unsigned(i_src_a));
-  s_sub_res <= std_logic_vector(unsigned(i_src_b) - unsigned(i_src_a));
+  Adder: entity work.add32
+    port map (
+      i_src_a => i_src_a,
+      i_src_b => i_src_b,
+      i_packed_mode => i_packed_mode,
+      o_result => s_add_res
+    );
 
-  -- Camparison results.
-  s_compare_eq <= '1' when i_src_a = i_src_b else '0';
-  s_compare_ne <= not s_compare_eq;
-  s_compare_lt <= '1' when signed(i_src_a) < signed(i_src_b) else '0';
-  s_compare_le <= s_compare_eq or s_compare_lt;
-  s_compare_ltu <= '1' when unsigned(i_src_a) < unsigned(i_src_b) else '0';
-  s_compare_leu <= s_compare_eq or s_compare_ltu;
+  Subber: entity work.sub32
+    port map (
+      i_src_a => i_src_a,
+      i_src_b => i_src_b,
+      i_packed_mode => i_packed_mode,
+      o_result => s_sub_res
+    );
 
-  -- Min/Max operations.
-  s_min_res <= i_src_a when s_compare_lt = '1' else i_src_b;
-  s_max_res <= i_src_a when s_compare_lt = '0' else i_src_b;
-  s_minu_res <= i_src_a when s_compare_ltu = '1' else i_src_b;
-  s_maxu_res <= i_src_a when s_compare_ltu = '0' else i_src_b;
-
-  -- Compare and set operations.
-  CmpMux: with i_op select
-    s_set_bit <=
-      s_compare_eq when C_ALU_SEQ,
-      s_compare_ne when C_ALU_SNE,
-      s_compare_lt when C_ALU_SLT,
-      s_compare_ltu when C_ALU_SLTU,
-      s_compare_le when C_ALU_SLE,
-      s_compare_leu when C_ALU_SLEU,
-      '-' when others;
-  s_set_res <= (others => s_set_bit);
+  -- Comparison operations.
+  Compare: entity work.cmp32
+    port map (
+      i_src_a => i_src_a,
+      i_src_b => i_src_b,
+      i_op => i_op,
+      i_packed_mode => i_packed_mode,
+      o_set_res => s_set_res,
+      o_min_res => s_min_res,
+      o_max_res => s_max_res,
+      o_minu_res => s_minu_res,
+      o_maxu_res => s_maxu_res
+    );
 
   -- Add high immediate (C_ALU_ADDHI): Add lower 21 bits of src_b to upper 21 bits of src_a.
   s_addhi_res(C_WORD_SIZE-1 downto C_WORD_SIZE-21) <=
@@ -210,7 +207,8 @@ begin
       i_right => s_shift_is_right,
       i_arithmetic => s_shift_is_arithmetic,
       i_src => i_src_a,
-      i_shift => i_src_b(4 downto 0),
+      i_shift => i_src_b,
+      i_packed_mode => i_packed_mode,
       o_result => s_shifter_res
     );
 
