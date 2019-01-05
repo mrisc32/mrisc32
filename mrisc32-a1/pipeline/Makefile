@@ -38,7 +38,6 @@ SRCS += \
     $(PIPELINE_PATH)/register_fetch.vhd \
     $(PIPELINE_PATH)/execute.vhd \
     $(PIPELINE_PATH)/memory.vhd \
-    $(PIPELINE_PATH)/forward_to_branch_logic.vhd \
     $(PIPELINE_PATH)/forward_to_vector_control.vhd \
     $(PIPELINE_PATH)/forward_to_ex.vhd \
     $(PIPELINE_PATH)/pipeline.vhd \
