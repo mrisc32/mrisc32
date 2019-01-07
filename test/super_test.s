@@ -849,8 +849,8 @@ test_load_store_correct_results:
 test_branch:
     ; Speculative instructions are cancelled.
     ldi     s1, #0x1000
-    ldw     s2, pc, #3$@pc
-    ldw     s3, pc, #4$@pc
+    ldw     s2, pc, #5$@pc
+    ldw     s3, pc, #6$@pc
     b       #1$
     ldi     s3, #0x2000
     ldi     s3, #0x3000
@@ -868,7 +868,20 @@ test_branch:
     add     s5, s5, #0x1004
     bnz     s5, #2$
     ldi     s5, #0x5000
+
+3$:
+    ; Unconditional pc-relative jump.
+    ldi     s6, #0x1005
+    b       #4$
+    ldi     s7, #0x7000
+
 2$:
+    ; Absolute jump to z + offset (program is at a low address so should work).
+    j       z, #3$
+    ldi     s6, #0x6000
+
+4$:
+    ldi     s7, #0x1006
 
     ; Store results.
     stw     s1, s25, #0
@@ -876,22 +889,24 @@ test_branch:
     stw     s3, s25, #8
     stw     s4, s25, #12
     stw     s5, s25, #16
+    stw     s6, s25, #20
+    stw     s7, s25, #24
 
     ; Check results.
     add     s1, pc, #test_branch_correct_results@pc
     mov     s2, s25
-    add     s25, s25, #20
+    add     s25, s25, #28
     b       #check_results
 
-3$:
+5$:
     .word   0x1001
-4$:
+6$:
     .word   0x1002
 
 test_branch_correct_results:
-    .word   5
+    .word   7
     .word   0x1000, 0x1001, 0x1002, 0x1003
-    .word   0x1004
+    .word   0x1004, 0x1005, 0x1006
 
 
 
