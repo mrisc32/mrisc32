@@ -39,10 +39,10 @@ begin
   s_sign_fill <= i_src_b(12);
 
   -- Determine fill bits for the four different source bytes.
-  s_fill_bit_0 <= i_src_a(7) when s_sign_fill = '1' else '0';
-  s_fill_bit_1 <= i_src_a(15) when s_sign_fill = '1' else '0';
-  s_fill_bit_2 <= i_src_a(23) when s_sign_fill = '1' else '0';
-  s_fill_bit_3 <= i_src_a(31) when s_sign_fill = '1' else '0';
+  s_fill_bit_0 <= i_src_a(7) and s_sign_fill;
+  s_fill_bit_1 <= i_src_a(15) and s_sign_fill;
+  s_fill_bit_2 <= i_src_a(23) and s_sign_fill;
+  s_fill_bit_3 <= i_src_a(31) and s_sign_fill;
 
   -- Select the outputs for the four result bytes.
   ShufMux1: with i_src_b(2 downto 0) select
@@ -55,7 +55,7 @@ begin
       (others => s_fill_bit_1) when "101",
       (others => s_fill_bit_2) when "110",
       (others => s_fill_bit_3) when "111",
-      (others => '0') when others;
+      (others => '-') when others;
 
   ShufMux2: with i_src_b(5 downto 3) select
     o_result(15 downto 8) <=
@@ -67,7 +67,7 @@ begin
       (others => s_fill_bit_1) when "101",
       (others => s_fill_bit_2) when "110",
       (others => s_fill_bit_3) when "111",
-      (others => '0') when others;
+      (others => '-') when others;
 
   ShufMux3: with i_src_b(8 downto 6) select
     o_result(23 downto 16) <=
@@ -79,7 +79,7 @@ begin
       (others => s_fill_bit_1) when "101",
       (others => s_fill_bit_2) when "110",
       (others => s_fill_bit_3) when "111",
-      (others => '0') when others;
+      (others => '-') when others;
 
   ShufMux4: with i_src_b(11 downto 9) select
     o_result(31 downto 24) <=
@@ -91,5 +91,5 @@ begin
       (others => s_fill_bit_1) when "101",
       (others => s_fill_bit_2) when "110",
       (others => s_fill_bit_3) when "111",
-      (others => '0') when others;
+      (others => '-') when others;
 end rtl;
