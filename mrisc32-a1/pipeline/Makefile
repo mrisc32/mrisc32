@@ -17,6 +17,8 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ####################################################################################################
 
+CP = cp
+
 PIPELINE_PATH = pipeline
 
 SRCS += \
@@ -38,7 +40,6 @@ SRCS += \
     $(PIPELINE_PATH)/register_fetch.vhd \
     $(PIPELINE_PATH)/execute.vhd \
     $(PIPELINE_PATH)/memory.vhd \
-    $(PIPELINE_PATH)/forward_to_branch_logic.vhd \
     $(PIPELINE_PATH)/forward_to_vector_control.vhd \
     $(PIPELINE_PATH)/forward_to_ex.vhd \
     $(PIPELINE_PATH)/pipeline.vhd \
@@ -52,8 +53,9 @@ TESTS += \
     program_counter_tb \
     pipeline_tb
 
-$(PIPELINE_PATH)/pipeline_tb_prg.bin: ../test/super_test.s $(ASM)
-	$(ASM) $< -o $@
+$(PIPELINE_PATH)/pipeline_tb_prg.bin: ../test/super_test.s
+	$(MAKE) -C ../test super_test.bin
+	$(CP) ../test/super_test.bin $(PIPELINE_PATH)/pipeline_tb_prg.bin
 
 pipeline_tb: $(PIPELINE_PATH)/pipeline_tb_prg.bin
 

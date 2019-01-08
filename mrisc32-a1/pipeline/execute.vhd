@@ -32,9 +32,11 @@ entity execute is
     i_rst : in std_logic;
     o_stall : out std_logic;
 
-    -- From ID stage (sync).
+    -- PC signal from ID (sync).
+    i_id_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+
+    -- From RF stage (sync).
     i_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-    i_pc_plus_4 : in std_logic_vector(C_WORD_SIZE-1 downto 0);
     i_src_a : in std_logic_vector(C_WORD_SIZE-1 downto 0);
     i_src_b : in std_logic_vector(C_WORD_SIZE-1 downto 0);
     i_src_c : in std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -55,15 +57,13 @@ entity execute is
     i_div_en : in std_logic;
     i_fpu_en : in std_logic;
 
-    -- PC signal from ID (sync).
-    i_id_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-
-    -- Branch signals from ID (sync).
-    i_branch_reg_addr : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-    i_branch_offset_addr : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+    -- Branch signals from RF (sync).
     i_branch_is_branch : in std_logic;
-    i_branch_is_reg : in std_logic;  -- 1 for register branches, 0 for all other instructions.
-    i_branch_is_taken : in std_logic;
+    i_branch_is_unconditional : in std_logic;
+    i_branch_condition : in T_BRANCH_COND;
+    i_branch_offset : in std_logic_vector(20 downto 0);
+    i_branch_base_expected : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+    i_branch_pc_plus_4 : in std_logic_vector(C_WORD_SIZE-1 downto 0);
 
     -- Branch signals to PC (async).
     o_pccorr_target : out std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -131,10 +131,23 @@ architecture rtl of execute is
   signal s_mem_byte_mask : std_logic_vector(C_WORD_SIZE/8-1 downto 0);
   signal s_mem_store_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
+  -- Branch condition signals.
+  signal s_branch_cond_z : std_logic;
+  signal s_branch_cond_nz : std_logic;
+  signal s_branch_cond_s : std_logic;
+  signal s_branch_cond_ns : std_logic;
+  signal s_branch_cond_lt : std_logic;
+  signal s_branch_cond_ge : std_logic;
+  signal s_branch_cond_le : std_logic;
+  signal s_branch_cond_gt : std_logic;
+
+  signal s_branch_cond_true : std_logic;
+
   -- Branch/PC correction signals.
+  signal s_branch_is_taken : std_logic;
+  signal s_branch_base : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_branch_target : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_pc_plus_4 : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_actual_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_next_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_mispredicted_pc : std_logic;
 
   -- Signals from the EX1 to the EX2 stage (async).
@@ -175,18 +188,69 @@ begin
   -- Branch logic.
   --------------------------------------------------------------------------------------------------
 
-  -- Check if the PC was correctly predicted by the PC stage.
-  s_branch_target <= i_branch_reg_addr when i_branch_is_reg = '1' else i_branch_offset_addr;
-  s_actual_pc <= s_branch_target when (i_branch_is_branch and i_branch_is_taken) = '1' else i_pc_plus_4;
-  s_mispredicted_pc <= '0' when s_actual_pc = i_id_pc else i_branch_is_branch;
+  -- Calculate the branch target.
+  s_branch_base <= i_src_c when i_branch_is_unconditional = '1' else i_pc;
+  pc_plus_offset_0: entity work.pc_plus_offset
+    generic map (OFFSET_SIZE => 21)
+    port map (
+      i_pc => s_branch_base,
+      i_offset => i_branch_offset,
+      o_result => s_branch_target
+    );
+
+  -- Determine if a conditional branch is taken?
+  branch_comparator_0: entity work.comparator
+    generic map (WIDTH => C_WORD_SIZE)
+    port map (
+      i_src => i_src_c,
+      o_z  => s_branch_cond_z,
+      o_nz => s_branch_cond_nz,
+      o_s  => s_branch_cond_s,
+      o_ns => s_branch_cond_ns,
+      o_lt => s_branch_cond_lt,
+      o_ge => s_branch_cond_ge,
+      o_le => s_branch_cond_le,
+      o_gt => s_branch_cond_gt
+    );
+
+  BranchCondMux: with i_branch_condition select
+    s_branch_cond_true <=
+        s_branch_cond_z  when C_BRANCH_BZ,
+        s_branch_cond_nz when C_BRANCH_NZ,
+        s_branch_cond_s  when C_BRANCH_S,
+        s_branch_cond_ns when C_BRANCH_NS,
+        s_branch_cond_lt when C_BRANCH_LT,
+        s_branch_cond_ge when C_BRANCH_GE,
+        s_branch_cond_le when C_BRANCH_LE,
+        s_branch_cond_gt when C_BRANCH_GT,
+        '0' when others;
+
+  -- A branch is taken if it's either:
+  --   a) an unconditional branch, or
+  --   b) a conditional branch and the branch condition is true
+  s_branch_is_taken <= i_branch_is_unconditional or (i_branch_is_branch and s_branch_cond_true);
+
+  -- Determine the next PC address.
+  s_next_pc <= s_branch_target when s_branch_is_taken = '1' else
+               i_branch_pc_plus_4;
+
+  -- A branch was correctly predicted if it's either:
+  --   a) a taken branch and the branch base was the expected base, or
+  --   b) an untaken branch and the next PC equals this PC + 4, or
+  --   c) not a branch at all
+  s_mispredicted_pc <= '0' when
+      (s_branch_is_taken = '1' and i_branch_base_expected = s_branch_base) or
+      (s_branch_is_taken = '0' and i_branch_pc_plus_4 = i_id_pc) or
+      (i_branch_is_branch = '0')
+      else '1';
 
   -- Branch/PC correction signals to the PC stage.
   o_pccorr_target <= s_branch_target;
   o_pccorr_source <= i_pc;
   o_pccorr_is_branch <= i_branch_is_branch;
-  o_pccorr_is_taken <= i_branch_is_taken;
+  o_pccorr_is_taken <= s_branch_is_taken;
   o_pccorr_adjust <= s_mispredicted_pc;
-  o_pccorr_adjusted_pc <= s_actual_pc;
+  o_pccorr_adjusted_pc <= s_next_pc;
 
 
   --------------------------------------------------------------------------------------------------

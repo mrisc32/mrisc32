@@ -25,6 +25,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 use work.common.all;
 
 entity register_fetch is
@@ -36,6 +37,9 @@ entity register_fetch is
       i_stall_id : in std_logic;  -- The stall signal to ID (we need it for the register files).
       o_stall : out std_logic;
       i_cancel : in std_logic;
+
+      -- PC signal from IF (sync).
+      i_if_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
 
       -- From the ID stage (async).
       i_next_sreg_a_reg : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
@@ -49,7 +53,6 @@ entity register_fetch is
       -- From the ID stage (sync).
       i_branch_is_branch : in std_logic;
       i_branch_is_unconditional : in std_logic;
-      i_branch_is_reg : in std_logic;
       i_branch_condition : in T_BRANCH_COND;
 
       i_reg_a_required : in std_logic;
@@ -87,11 +90,6 @@ entity register_fetch is
       o_src_reg_c : out T_SRC_REG;
       o_reg_c_required : out std_logic;
 
-      -- Operand forwarding to the branch logic (async).
-      i_branch_fwd_value : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_branch_fwd_use_value : in std_logic;
-      i_branch_fwd_value_ready : in std_logic;
-
       -- Operand forwarding to EX1 input (async).
       i_reg_a_fwd_value : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_reg_a_fwd_use_value : in std_logic;
@@ -112,14 +110,14 @@ entity register_fetch is
 
       -- Branch results to the EX1 stage (sync).
       o_branch_is_branch : out std_logic;
-      o_branch_is_reg : out std_logic;  -- 1 for register branches, 0 for all other instructions.
-      o_branch_offset_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_branch_reg_addr : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_branch_is_taken : out std_logic;
+      o_branch_is_unconditional : out std_logic;
+      o_branch_condition : out T_BRANCH_COND;
+      o_branch_offset : out std_logic_vector(20 downto 0);
+      o_branch_base_expected : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_branch_pc_plus_4 : out std_logic_vector(C_WORD_SIZE-1 downto 0);
 
       -- To the EX1 stage (sync).
       o_pc : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_pc_plus_4 : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_src_a : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_src_b : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_src_c : out std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -143,24 +141,10 @@ entity register_fetch is
 end register_fetch;
 
 architecture rtl of register_fetch is
-  -- Branch condition signals.
-  signal s_branch_is_conditional : std_logic;
-  signal s_branch_cond_z : std_logic;
-  signal s_branch_cond_nz : std_logic;
-  signal s_branch_cond_s : std_logic;
-  signal s_branch_cond_ns : std_logic;
-  signal s_branch_cond_lt : std_logic;
-  signal s_branch_cond_ge : std_logic;
-  signal s_branch_cond_le : std_logic;
-  signal s_branch_cond_gt : std_logic;
-
-  signal s_branch_cond_true : std_logic;
-
-  -- Branch target signals.
-  signal s_branch_offset_addr : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_branch_reg_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_branch_is_taken : std_logic;
-  signal s_pc_plus_4 : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  -- Branch logic signals.
+  signal s_branch_offset : std_logic_vector(20 downto 0);
+  signal s_branch_base_expected : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_branch_pc_plus_4 : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
   signal s_stall_register_files : std_logic;
 
@@ -204,6 +188,7 @@ architecture rtl of register_fetch is
   signal s_div_en_masked : std_logic;
   signal s_fpu_en_masked : std_logic;
   signal s_branch_is_branch_masked : std_logic;
+  signal s_branch_is_unconditional_masked : std_logic;
 begin
   --------------------------------------------------------------------------------------------------
   -- Register files.
@@ -265,57 +250,20 @@ begin
   -- Branch logic.
   --------------------------------------------------------------------------------------------------
 
-  -- Conditional branch: B[cc]
-  s_branch_is_conditional <= i_branch_is_branch and not i_branch_is_unconditional;
+  -- The branch offset is the lowest 21 bits of the immediate value.
+  s_branch_offset <= i_imm(20 downto 0);
 
-  -- Calculate the offset branch target.
-  pc_plus_offset_0: entity work.pc_plus_offset
-    generic map (OFFSET_SIZE => 21)
-    port map (
-      i_pc => i_pc,
-      i_offset => i_imm(20 downto 0),
-      o_result => s_branch_offset_addr
-    );
+  -- Calculate the expected branch base if a branch is taken (i.e. IF_PC - offset).
+  -- TODO(m): Optimize this operation.
+  s_branch_base_expected <= std_logic_vector(unsigned(i_if_pc) - unsigned(i_imm(29 downto 0) & "00"));
 
   -- Calculate the expected PC if no branch is taken (i.e. PC + 4).
   -- This is used by the branch logic in the EX1 stage if the branch is not taken.
   pc_plus_4_0: entity work.pc_plus_4
     port map (
       i_pc => i_pc,
-      o_result => s_pc_plus_4
+      o_result => s_branch_pc_plus_4
     );
-
-  -- Get the register content for branch logic (condition or target address).
-  s_branch_reg_data <= i_branch_fwd_value when i_branch_fwd_use_value = '1' else s_sreg_c_data;
-
-  -- Determine if a conditional (offset) branch is taken?
-  branch_comparator_0: entity work.comparator
-    generic map (WIDTH => C_WORD_SIZE)
-    port map (
-      i_src => s_branch_reg_data,
-      o_z  => s_branch_cond_z,
-      o_nz => s_branch_cond_nz,
-      o_s  => s_branch_cond_s,
-      o_ns => s_branch_cond_ns,
-      o_lt => s_branch_cond_lt,
-      o_ge => s_branch_cond_ge,
-      o_le => s_branch_cond_le,
-      o_gt => s_branch_cond_gt
-    );
-
-  BranchCondMux: with i_branch_condition select
-    s_branch_cond_true <=
-        s_branch_cond_z  when C_BRANCH_BZ,
-        s_branch_cond_nz when C_BRANCH_NZ,
-        s_branch_cond_s  when C_BRANCH_S,
-        s_branch_cond_ns when C_BRANCH_NS,
-        s_branch_cond_lt when C_BRANCH_LT,
-        s_branch_cond_ge when C_BRANCH_GE,
-        s_branch_cond_le when C_BRANCH_LE,
-        s_branch_cond_gt when C_BRANCH_GT,
-        '0' when others;
-
-  s_branch_is_taken <= i_branch_is_unconditional or (s_branch_is_conditional and s_branch_cond_true);
 
 
   --------------------------------------------------------------------------------------------------
@@ -356,7 +304,6 @@ begin
 
   -- Are we missing any fwd operation that has not yet been produced by the pipeline?
   s_missing_fwd_operand <=
-      (i_branch_is_branch and (i_branch_fwd_use_value and not i_branch_fwd_value_ready)) or
       (i_reg_a_required and (i_reg_a_fwd_use_value and not i_reg_a_fwd_value_ready)) or
       (i_reg_b_required and (i_reg_b_fwd_use_value and not i_reg_b_fwd_value_ready)) or
       (i_reg_c_required and (i_reg_c_fwd_use_value and not i_reg_c_fwd_value_ready));
@@ -376,13 +323,13 @@ begin
   s_div_en_masked <= i_div_en and not s_bubble;
   s_fpu_en_masked <= i_fpu_en and not s_bubble;
   s_branch_is_branch_masked <= i_branch_is_branch and not s_bubble;
+  s_branch_is_unconditional_masked <= i_branch_is_unconditional and not s_bubble;
 
   -- Outputs to the EX stage.
   process(i_clk, i_rst)
   begin
     if i_rst = '1' then
       o_pc <= (others => '0');
-      o_pc_plus_4 <= (others => '0');
       o_src_a <= (others => '0');
       o_src_b <= (others => '0');
       o_src_c <= (others => '0');
@@ -406,15 +353,15 @@ begin
       o_div_en <= '0';
       o_fpu_en <= '0';
 
-      o_branch_reg_addr <= (others => '0');
-      o_branch_offset_addr <= (others => '0');
       o_branch_is_branch <= '0';
-      o_branch_is_reg <= '0';
-      o_branch_is_taken <= '0';
+      o_branch_is_unconditional <= '0';
+      o_branch_condition <= (others => '0');
+      o_branch_offset <= (others => '0');
+      o_branch_base_expected <= (others => '0');
+      o_branch_pc_plus_4 <= (others => '0');
     elsif rising_edge(i_clk) then
       if i_stall = '0' then
         o_pc <= i_pc;
-        o_pc_plus_4 <= s_pc_plus_4;
         o_src_a <= s_src_a;
         o_src_b <= s_src_b;
         o_src_c <= s_src_c;
@@ -435,11 +382,12 @@ begin
         o_div_en <= s_div_en_masked;
         o_fpu_en <= s_fpu_en_masked;
 
-        o_branch_reg_addr <= s_branch_reg_data;
-        o_branch_offset_addr <= s_branch_offset_addr;
         o_branch_is_branch <= s_branch_is_branch_masked;
-        o_branch_is_reg <= i_branch_is_reg;
-        o_branch_is_taken <= s_branch_is_taken;
+        o_branch_is_unconditional <= s_branch_is_unconditional_masked;
+        o_branch_condition <= i_branch_condition;
+        o_branch_offset <= s_branch_offset;
+        o_branch_base_expected <= s_branch_base_expected;
+        o_branch_pc_plus_4 <= s_branch_pc_plus_4;
       end if;
     end if;
   end process;

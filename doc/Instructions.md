@@ -38,10 +38,8 @@
 
 | Mnemonic | I | V | P | Operands | Operation | Description |
 |---|---|---|---|---|---|---|
-|J|   |   |   | src1 | pc <= src1 | Jump to register address |
-|JL|   |   |   | src1 | lr <= pc+4, pc <= src1 | Jump to register address and link |
-|B| x |   |   | #i21 | pc <= pc+signextend(i21)*4 | Unconditionally branch |
-|BL| x |   |   | #i21 | lr <= pc+4, pc <= pc+signextend(i21)*4 | Unconditionally branch and link |
+|J| x |   |   | src1, #i21 | pc <= src1+signextend(i21)*4 | Jump to register address<br>Note: src1 can be PC |
+|JL| x |   |   | src1, #i21 | lr <= pc+4, pc <= src1+signextend(i21)*4 | Jump to register address and link<br>Note: src1 can be PC |
 |BZ| x |   |   | src1, #i21 | pc <= pc+signextend(i21)*4 if src1 == 0 | Conditionally branch if equal to zero |
 |BNZ| x |   |   | src1, #i21 | pc <= pc+signextend(i21)*4 if src1 != 0 | Conditionally branch if not equal to zero |
 |BS| x |   |   | src1, #i21 | pc <= pc+signextend(i21)*4 if src1 == 0xffffffff | Conditionally branch if set (all bits = 1) |

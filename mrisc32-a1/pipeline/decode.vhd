@@ -67,7 +67,6 @@ entity decode is
       -- To the RF stage (sync).
       o_branch_is_branch : out std_logic;
       o_branch_is_unconditional : out std_logic;
-      o_branch_is_reg : out std_logic;
       o_branch_condition : out T_BRANCH_COND;
 
       o_reg_a_required : out std_logic;
@@ -132,7 +131,6 @@ architecture rtl of decode is
 
   signal s_is_unconditional_branch : std_logic;
   signal s_is_conditional_branch : std_logic;
-  signal s_is_reg_branch : std_logic;
   signal s_is_branch : std_logic;
   signal s_is_link_branch : std_logic;
   signal s_branch_condition : T_BRANCH_COND;
@@ -257,7 +255,7 @@ begin
   -- What source registers are required for this operation?
   s_reg_a_required <= not s_is_type_c;
   s_reg_b_required <= s_is_type_a;
-  s_reg_c_required <= s_is_mem_store;
+  s_reg_c_required <= s_is_mem_store or s_is_branch;
 
   -- Is this a stride offset or regular offset memory addressing mode instruction?
   s_address_offset_is_stride <= s_is_vector_stride_mem_op;
@@ -308,25 +306,15 @@ begin
 
 
   --------------------------------------------------------------------------------------------------
-  -- Branch logic.
+  -- Decode branch instructions.
   --------------------------------------------------------------------------------------------------
 
-  -- Decode branch instructions...
-
-  -- Unconditional branch: J, JL, B, BL
+  -- Unconditional branch: J, JL
   s_is_unconditional_branch <= (not i_bubble) when s_op_high(5 downto 1) = "11100" else '0';
+  s_is_link_branch <= s_is_unconditional_branch and s_op_high(0);
 
   -- Conditional branch: B[cc]
   s_is_conditional_branch <= (not i_bubble) when s_op_high(5 downto 3) = "110" else '0';
-
-  -- Register branch: J, JL
-  s_is_reg_branch <=
-      s_is_unconditional_branch when s_reg_c /= to_vector(C_PC_REG, C_LOG2_NUM_REGS) else '0';
-
-  -- Link branch: JL, BL
-  s_is_link_branch <= s_is_unconditional_branch and s_op_high(0);
-
-  -- Branch condition.
   s_branch_condition <= s_op_high(2 downto 0);
 
   s_is_branch <= s_is_unconditional_branch or s_is_conditional_branch;
@@ -458,7 +446,6 @@ begin
     if i_rst = '1' then
       o_branch_is_branch <= '0';
       o_branch_is_unconditional <= '0';
-      o_branch_is_reg <= '0';
       o_branch_condition <= (others => '0');
 
       o_reg_a_required <= '0';
@@ -500,7 +487,6 @@ begin
       if i_stall = '0' then
         o_branch_is_branch <= s_is_branch_masked;
         o_branch_is_unconditional <= s_is_unconditional_branch;
-        o_branch_is_reg <= s_is_reg_branch;
         o_branch_condition <= s_branch_condition;
 
         o_reg_a_required <= s_reg_a_required_masked;
