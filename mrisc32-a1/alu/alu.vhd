@@ -40,6 +40,7 @@ architecture rtl of alu is
   signal s_and_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_bic_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_xor_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_bitwise_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_set_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_min_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_max_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -86,7 +87,7 @@ begin
   s_or_res <= i_src_a or i_src_b;
 
   -- C_ALU_NOR
-  s_nor_res <= not s_or_res;
+  s_nor_res <= not (i_src_a or i_src_b);
 
   -- C_ALU_AND
   s_and_res <= i_src_a and i_src_b;
@@ -96,6 +97,17 @@ begin
 
   -- C_ALU_XOR
   s_xor_res <= i_src_a xor i_src_b;
+
+  -- We mux the bitwise operations together first (rather than adding them all to AluMux) since
+  -- they have a very low complexity, thus giving us a better balance with the rest of the ALU.
+  BitwiseMux: with i_op select
+    s_bitwise_res <=
+        s_or_res  when C_ALU_OR,
+        s_nor_res when C_ALU_NOR,
+        s_and_res when C_ALU_AND,
+        s_bic_res when C_ALU_BIC,
+        s_xor_res when C_ALU_XOR,
+        (others => '-') when others;
 
 
   ------------------------------------------------------------------------------------------------
@@ -204,11 +216,7 @@ begin
   AluMux: with i_op select
     o_result <=
         s_cpuid_res when C_ALU_CPUID,
-        s_or_res when C_ALU_OR,
-        s_nor_res when C_ALU_NOR,
-        s_and_res when C_ALU_AND,
-        s_bic_res when C_ALU_BIC,
-        s_xor_res when C_ALU_XOR,
+        s_bitwise_res when C_ALU_OR | C_ALU_NOR | C_ALU_AND | C_ALU_BIC | C_ALU_XOR,
         s_add_res when C_ALU_ADD,
         s_sub_res when C_ALU_SUB,
         s_set_res when C_ALU_SEQ | C_ALU_SNE | C_ALU_SLT | C_ALU_SLTU | C_ALU_SLE | C_ALU_SLEU,
