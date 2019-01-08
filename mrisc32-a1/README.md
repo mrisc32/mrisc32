@@ -20,7 +20,8 @@ The CPU is still under development. So far, the following components have been i
   - Register write-back.
   - Operand forwarding.
 * The integer ALU.
-  - All single-cycle unpacked integer operations are supported.
+  - Supports all packed and unpacked integer ALU operations.
+  - All ALU operations finish in one cycle.
 * A pipelined (three-cycle) integer multiply unit.
   - Supports all packed and unpacked integer multiplication operations.
 * A semi-pipelined integer division unit.
@@ -41,7 +42,7 @@ The CPU is still under development. So far, the following components have been i
 * Branch prediction and correction.
   - The branch misprediction penalty is 3 cycles.
 
-**TODO**: Caches, more FPU instrucions, packed ALU operations, etc.
+**TODO**: Caches, more FPU instrucions, etc.
 
 ## Preformance
 
