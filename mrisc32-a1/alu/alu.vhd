@@ -70,27 +70,12 @@ begin
   -- CPUID
   ------------------------------------------------------------------------------------------------
 
-  process(i_src_a, i_src_b)
-  begin
-    if (i_src_a = to_word(0)) and (i_src_b = to_word(0)) then
-      -- 00000000:00000000 => Max vector length
-      s_cpuid_res <= to_word(C_VEC_REG_ELEMENTS);
-    elsif (i_src_a = to_word(0)) and (i_src_b = to_word(1)) then
-      -- 00000000:00000001 => log2(Max vector length)
-      s_cpuid_res <= to_word(C_LOG2_VEC_REG_ELEMENTS);
-    elsif (i_src_a = to_word(1)) and (i_src_b = to_word(0)) then
-      -- 00000001:00000000 => CPU features
-      s_cpuid_res(0) <= to_std_logic(C_CPU_HAS_VEC);
-      s_cpuid_res(1) <= to_std_logic(C_CPU_HAS_PO);
-      s_cpuid_res(2) <= to_std_logic(C_CPU_HAS_MUL);
-      s_cpuid_res(3) <= to_std_logic(C_CPU_HAS_DIV);
-      s_cpuid_res(4) <= to_std_logic(C_CPU_HAS_FP);
-      s_cpuid_res(C_WORD_SIZE-1 downto 5) <= (others => '0');
-    else
-      -- All unsupported commands return zero.
-      s_cpuid_res <= (others => '0');
-    end if;
-  end process;
+  CPUID: entity work.cpuid
+    port map (
+      i_src_a => i_src_a,
+      i_src_b => i_src_b,
+      o_result => s_cpuid_res
+    );
 
 
   ------------------------------------------------------------------------------------------------
