@@ -349,9 +349,10 @@ begin
                    (others => '0');
 
   -- Will this instruction write to a register?
-  -- TODO(m): C_PC_REG is only read-only in the scalar register file.
+  -- The following registers are the MRISC32 versions of /dev/null: z, vz and pc.
   s_dst_reg.is_target <= '1' when ((s_dst_reg.reg /= to_vector(C_Z_REG, C_LOG2_NUM_REGS)) and
-                                   (s_dst_reg.reg /= to_vector(C_PC_REG, C_LOG2_NUM_REGS))) else '0';
+                                   (s_dst_reg.reg /= to_vector(C_PC_REG, C_LOG2_NUM_REGS) or
+                                    s_dst_reg.is_vector = '1')) else '0';
 
   -- Select target vector element.
   s_dst_reg.element <= s_element_c when s_reg_c_is_vector = '1' else (others => '0');
