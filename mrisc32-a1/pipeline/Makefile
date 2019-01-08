@@ -17,6 +17,8 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ####################################################################################################
 
+CP = cp
+
 PIPELINE_PATH = pipeline
 
 SRCS += \
@@ -51,8 +53,9 @@ TESTS += \
     program_counter_tb \
     pipeline_tb
 
-$(PIPELINE_PATH)/pipeline_tb_prg.bin: ../test/super_test.s $(ASM)
-	$(ASM) $< -o $@
+$(PIPELINE_PATH)/pipeline_tb_prg.bin: ../test/super_test.s
+	$(MAKE) -C ../test super_test.bin
+	$(CP) ../test/super_test.bin $(PIPELINE_PATH)/pipeline_tb_prg.bin
 
 pipeline_tb: $(PIPELINE_PATH)/pipeline_tb_prg.bin
 
