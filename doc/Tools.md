@@ -52,7 +52,7 @@ The final `.bin` file can be loaded into the simulator, for instance.
 
 ## Simulator
 
-The MRISC32 simulator is a C++ program that can run MRISC32 binaries. See [sim/README.md](../sim/README.md).
+The MRISC32 simulator is a C++ program that can run MRISC32 binaries. See [tools/sim/README.md](../tools/sim/README.md).
 
 
 ## Syntax Highlighting
