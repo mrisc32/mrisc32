@@ -59,7 +59,7 @@ There are a few tools that aid software development for MRISC32. See [Tools](doc
 
 # Hardware/HDL
 
-A single issue, in-order CPU is currently under development. It's code name is [MRISC32-A1](mrisc32-a1/).
+A single issue, in-order CPU is currently under development. It's code name is [MRISC32-A1](hw/mrisc32-a1/).
 
 
 # Goals

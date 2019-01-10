@@ -53,9 +53,9 @@ TESTS += \
     program_counter_tb \
     pipeline_tb
 
-$(PIPELINE_PATH)/pipeline_tb_prg.bin: ../test/super_test.s
-	$(MAKE) -C ../test super_test.bin
-	$(CP) ../test/super_test.bin $(PIPELINE_PATH)/pipeline_tb_prg.bin
+$(PIPELINE_PATH)/pipeline_tb_prg.bin: $(SW_SRC_DIR)/super_test.s
+	$(MAKE) -C $(SW_SRC_DIR) super_test.bin
+	$(CP) $(SW_SRC_DIR)/super_test.bin $(PIPELINE_PATH)/pipeline_tb_prg.bin
 
 pipeline_tb: $(PIPELINE_PATH)/pipeline_tb_prg.bin
 
