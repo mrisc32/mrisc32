@@ -19,7 +19,7 @@
 
 AS = mrisc32-as
 LD = mrisc32-ld
-ELF2BIN = ../tools/elf2bin.py
+ELF2BIN = ../../tools/elf2bin.py
 RM = rm -f
 
 AS_FLAGS =
