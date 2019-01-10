@@ -1,0 +1,107 @@
+####################################################################################################
+# Copyright (c) 2019 Marcus Geelnard
+#
+# This software is provided 'as-is', without any express or implied warranty. In no event will the
+# authors be held liable for any damages arising from the use of this software.
+#
+# Permission is granted to anyone to use this software for any purpose, including commercial
+# applications, and to alter it and redistribute it freely, subject to the following restrictions:
+#
+#  1. The origin of this software must not be misrepresented; you must not claim that you wrote
+#     the original software. If you use this software in a product, an acknowledgment in the
+#     product documentation would be appreciated but is not required.
+#
+#  2. Altered source versions must be plainly marked as such, and must not be misrepresented as
+#     being the original software.
+#
+#  3. This notice may not be removed or altered from any source distribution.
+####################################################################################################
+
+####################################################################################################
+# This is a hand written ninja build file for all the source code in this folder.
+#
+# To build eveything (build results are found in ./out):
+#   ninja
+#
+# To clean eveything:
+#   ninja clean
+#
+# For more info, see https://ninja-build.org/
+####################################################################################################
+
+ninja_required_version = 1.3
+
+# Directories.
+srcdir = .
+builddir = out
+
+# Programs.
+as = mrisc32-as
+ld = mrisc32-ld
+ar = mrisc32-ar
+elf2bin = ../../tools/elf2bin.py
+
+# Program flags.
+asflags =
+ldflags = -L$builddir
+arflags = crs
+
+# Rules.
+rule as
+  command = $as $asflags -o $out $in
+  description = AS $out
+
+rule ld
+  command = $ld $ldflags -o $out $in $libs
+  description = LD $out
+
+rule ar
+  command = rm -f $out && $ar $arflags $out $in
+  description = AR $out
+
+rule elf2bin
+  command = $elf2bin $in $out
+  description = ELF2BIN $out
+
+rule clean
+  command = ninja -t clean
+  description = Clean all built files
+
+# Clean all built files.
+build clean: clean
+
+# Build object files.
+build $builddir/super_test.o: as $srcdir/super_test.s
+build $builddir/graphics.o: as $srcdir/graphics.s
+build $builddir/mandelbrot.o: as $srcdir/mandelbrot.s
+build $builddir/test1.o: as $srcdir/test1.s
+build $builddir/test2.o: as $srcdir/test2.s
+
+# Build the sys library.
+build $builddir/sys.o: as $srcdir/sys.s
+build $builddir/libsys.a: ar $builddir/sys.o
+
+# Build executable elf files.
+build $builddir/super_test.elf: ld $builddir/super_test.o
+build $builddir/graphics.elf: ld $builddir/graphics.o
+build $builddir/mandelbrot.elf: ld $builddir/mandelbrot.o
+build $builddir/test1.elf: ld $builddir/test1.o | $builddir/libsys.a
+  libs = -lsys
+build $builddir/test2.elf: ld $builddir/test2.o | $builddir/libsys.a
+  libs = -lsys
+
+# Build bin files.
+build $builddir/super_test.bin: elf2bin $builddir/super_test.elf
+build $builddir/graphics.bin: elf2bin $builddir/graphics.elf
+build $builddir/mandelbrot.bin: elf2bin $builddir/mandelbrot.elf
+build $builddir/test1.bin: elf2bin $builddir/test1.elf
+build $builddir/test2.bin: elf2bin $builddir/test2.elf
+
+build all: phony $builddir/super_test.bin $
+                 $builddir/graphics.bin $
+                 $builddir/mandelbrot.bin $
+                 $builddir/test1.bin $
+                 $builddir/test2.bin
+
+default all
+

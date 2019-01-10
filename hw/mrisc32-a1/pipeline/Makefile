@@ -54,8 +54,8 @@ TESTS += \
     pipeline_tb
 
 $(PIPELINE_PATH)/pipeline_tb_prg.bin: $(SW_SRC_DIR)/super_test.s
-	$(MAKE) -C $(SW_SRC_DIR) super_test.bin
-	$(CP) $(SW_SRC_DIR)/super_test.bin $(PIPELINE_PATH)/pipeline_tb_prg.bin
+	ninja -C $(SW_SRC_DIR) out/super_test.bin
+	$(CP) $(SW_SRC_DIR)/out/super_test.bin $(PIPELINE_PATH)/pipeline_tb_prg.bin
 
 pipeline_tb: $(PIPELINE_PATH)/pipeline_tb_prg.bin
 
