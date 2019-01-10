@@ -18,6 +18,7 @@
 ####################################################################################################
 
 WORKDIR = out
+SW_SRC_DIR = ../../sw/test
 
 GHDL = ghdl
 GHDLWARNINGS = \
@@ -30,7 +31,6 @@ GHDLWARNINGS = \
     -Wunused \
     -Werror
 GHDLFLAGS = --std=08 --work=work --workdir=$(WORKDIR) $(GHDLWARNINGS)
-ASM = ../asm/mr32asm.py
 
 .PHONY: all clean
 

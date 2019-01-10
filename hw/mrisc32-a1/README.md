@@ -38,7 +38,7 @@ The CPU is still under development. So far, the following components have been i
   - There are two read ports and one write port.
   - Each vector register has 16 elements.
 * An address generation unit (AGU).
-  - The AGU supports all [addressing modes](../doc/AddressingModes.md).
+  - The AGU supports all [addressing modes](../../doc/AddressingModes.md).
 * Branch prediction and correction.
   - The branch misprediction penalty is 3 cycles.
 
