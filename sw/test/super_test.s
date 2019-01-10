@@ -3,85 +3,37 @@
 ; This is test program that tries to test as many asptects of the CPU as possible.
 ; -------------------------------------------------------------------------------------------------
 
-STACK_START   = 0x20000     ; We grow down from 128KB.
+
 PASS_FAIL_CNT = 0x10000     ; Location of the count of passed and failed tests (two words).
 PASS_FAIL     = 0x10008     ; Start of memory area where the test pass/fail results are stored.
 TEST_OUTPUT   = 0x11000     ; Start of memory area where the test output is stored.
 
     .text
 
-    .globl  _start
-
-_start:
-    ; Start by setting up the stack and clearing the registers.
-    ldi     sp, #STACK_START
-    cpuid   vl, z, z
-    ldi     s1, #0
-    ldi     s2, #0
-    ldi     s3, #0
-    ldi     s4, #0
-    ldi     s5, #0
-    ldi     s6, #0
-    ldi     s7, #0
-    ldi     s8, #0
-    ldi     s9, #0
-    ldi     s10, #0
-    ldi     s11, #0
-    ldi     s12, #0
-    ldi     s13, #0
-    ldi     s14, #0
-    ldi     s15, #0
-    ldi     s16, #0
-    ldi     s17, #0
-    ldi     s18, #0
-    ldi     s19, #0
-    ldi     s20, #0
-    ldi     s21, #0
-    ldi     s22, #0
-    ldi     s23, #0
-    ldi     s24, #0
-    ldi     s25, #0
-    ldi     s26, #0
-    ldi     s27, #0
-    ldi     s30, #0
-    or      v1, vz, #0
-    or      v2, vz, #0
-    or      v3, vz, #0
-    or      v4, vz, #0
-    or      v5, vz, #0
-    or      v6, vz, #0
-    or      v7, vz, #0
-    or      v8, vz, #0
-    or      v9, vz, #0
-    or      v10, vz, #0
-    or      v11, vz, #0
-    or      v12, vz, #0
-    or      v13, vz, #0
-    or      v14, vz, #0
-    or      v15, vz, #0
-    or      v16, vz, #0
-    or      v17, vz, #0
-    or      v18, vz, #0
-    or      v19, vz, #0
-    or      v20, vz, #0
-    or      v21, vz, #0
-    or      v22, vz, #0
-    or      v23, vz, #0
-    or      v24, vz, #0
-    or      v25, vz, #0
-    or      v26, vz, #0
-    or      v27, vz, #0
-    or      v28, vz, #0
-    or      v29, vz, #0
-    or      v30, vz, #0
-    or      v31, vz, #0
-
-
 ;--------------------------------------------------------------------------------------------------
 ; Main program / test loop.
 ;--------------------------------------------------------------------------------------------------
 
+    .globl  main
+
 main:
+    ; Preserve callee-saves registers on the stack. We store them all so that we don't have to keep
+    ; track of used registers.
+    add     sp, sp, #-52
+    stw     s16, sp, #0
+    stw     s17, sp, #4
+    stw     s18, sp, #8
+    stw     s19, sp, #12
+    stw     s21, sp, #16
+    stw     s22, sp, #20
+    stw     s23, sp, #24
+    stw     s24, sp, #28
+    stw     s25, sp, #32
+    stw     fp, sp, #36
+    stw     tp, sp, #40
+    stw     vl, sp, #44
+    stw     lr, sp, #48
+
     ; Clear the pass/fail counters.
     ldi     s1, #PASS_FAIL_CNT
     stw     z, s1, #0
@@ -114,20 +66,25 @@ main:
     b       #1$
 
 2$:
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+    ; Restore the saved registers.
+    ldw     s16, sp, #0
+    ldw     s17, sp, #4
+    ldw     s18, sp, #8
+    ldw     s19, sp, #12
+    ldw     s21, sp, #16
+    ldw     s22, sp, #20
+    ldw     s23, sp, #24
+    ldw     s24, sp, #28
+    ldw     s25, sp, #32
+    ldw     fp, sp, #36
+    ldw     tp, sp, #40
+    ldw     vl, sp, #44
+    ldw     lr, sp, #48
+    add     sp, sp, #52
 
-    j       z       ; End the program
-
-    nop
-    nop
-    nop
-    nop
-    nop
+    ; Return from main() with exit code 0.
+    ldi     s1, #0
+    j       lr
 
 
 test_list:
