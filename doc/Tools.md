@@ -6,7 +6,7 @@ The only way to program the MRISC32 is using [assembly language](https://en.wiki
 
 The primary tool is [GNU binutils](https://www.gnu.org/software/binutils/), which includes an assembler (as) and a linker (ld). A special [MRISC32 port of binutils](https://github.com/mbitsnbites/binutils-mrisc32) is required to build software for MRISC32.
 
-*There is also a deprecated custom assembler (see [asm/README.md](../asm/README.md)), but it is no longer maintained.*
+*There is also a deprecated custom assembler (see [tools/asm/README.md](../tools/asm/README.md)), but it is no longer maintained.*
 
 ### Building/installing binutils
 
