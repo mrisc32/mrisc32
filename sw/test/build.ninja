@@ -78,11 +78,11 @@ build $builddir/sys.o: as $srcdir/sys.s
 build $builddir/libsys.a: ar $builddir/sys.o
 
 # Build program object files.
-build $builddir/super_test.o: as $srcdir/super_test.s
-build $builddir/graphics.o: as $srcdir/graphics.s
-build $builddir/mandelbrot.o: as $srcdir/mandelbrot.s
-build $builddir/test1.o: as $srcdir/test1.s
-build $builddir/test2.o: as $srcdir/test2.s
+build $builddir/super_test.o: as $srcdir/super_test.s | $srcdir/mrisc32-macros.inc
+build $builddir/graphics.o: as $srcdir/graphics.s | $srcdir/mrisc32-macros.inc
+build $builddir/mandelbrot.o: as $srcdir/mandelbrot.s | $srcdir/mrisc32-macros.inc
+build $builddir/test1.o: as $srcdir/test1.s | $srcdir/mrisc32-macros.inc
+build $builddir/test2.o: as $srcdir/test2.s | $srcdir/mrisc32-macros.inc
 
 # Build executable elf files.
 build $builddir/super_test.elf: ld $builddir/crt0.o $builddir/super_test.o
