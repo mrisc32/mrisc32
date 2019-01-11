@@ -1,7 +1,7 @@
 ; -*- mode: mr32asm; tab-width: 4; indent-tabs-mode: nil; -*-
 ; ----------------------------------------------------------------------------
-; This is file contains the common startup code. It defines _start, which
-; calls main.
+; This file contains the common startup code. It defines _start, which does
+; some initialization and then calls main.
 ; ----------------------------------------------------------------------------
 
 STACK_START   = 0x20000     ; We grow down from 128 KB.
@@ -129,10 +129,16 @@ _start:
     ; Call main().
     ; ------------------------------------------------------------------------
 
-    ; Call main().
-    ; TODO(m): We should use a 32-bit branch address here and let the linker
-    ; do the relaxation (however it's not yet implemented in gas/ld).
-    bl      main
+    ; s1 = argc
+    ldi     s1, #1
+
+    ; s2 = argv
+    ldhi    s2, #argv@hi
+    add     s2, s2, #argv@lo
+
+    ; Jump to main().
+    ldhi    s15, #main@hi
+    jl      s15, #main@lo
 
 
     ; ------------------------------------------------------------------------
@@ -154,3 +160,12 @@ _start:
     nop
     nop
 
+
+    .data
+
+argv:
+    .word   arg0
+
+arg0:
+    ; We provide a fake program name (just to have a valid call to main).
+    .asciz  "program"
