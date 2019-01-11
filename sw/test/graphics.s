@@ -17,14 +17,14 @@ VID_WIDTH  = 256
 VID_HEIGHT = 256
 VID_DEPTH  = 32
 
+; -------------------------------------------------------------------------------------------------
+; Main program.
+; -------------------------------------------------------------------------------------------------
+
     .text
+    .globl  main
 
-    .globl  _start
-
-_start:
-    ; Set up the stack.
-    ldi     sp, #0x00020000  ; We grow down from 128KB.
-
+main:
     ; Set up the graphics mode.
     ldi     s10, #MMIO_GPU_BASE
     ldi     s11, #VID_MEM
@@ -36,7 +36,6 @@ _start:
     ldi     s11, #VID_DEPTH
     stw     s11, s10, #MMIO_GPU_DEPTH
 
-main:
     cpuid   s13, z, z
     mov     vl, s13
     lsl     s14, s13, #2    ; s14 = memory stride per vector operation

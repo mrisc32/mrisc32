@@ -10,91 +10,59 @@ MMIO_GPU_WIDTH  = 0x04        ; Width of the framebuffer (in pixels).
 MMIO_GPU_HEIGHT = 0x08        ; Height of the framebuffer (in pixels).
 MMIO_GPU_DEPTH  = 0x0c        ; Number of bits per pixel.
 
-    .text
-
-    .globl  _start
-
-_start:
-    ; Set up the stack and clearing the registers.
-    ldi     sp, #0x00020000 ; We grow down from 128KB.
-
-    ; Clear all the registers.
-    cpuid   vl, z, z
-    ldi     s1, #0
-    ldi     s2, #0
-    ldi     s3, #0
-    ldi     s4, #0
-    ldi     s5, #0
-    ldi     s6, #0
-    ldi     s7, #0
-    ldi     s8, #0
-    ldi     s9, #0
-    ldi     s10, #0
-    ldi     s11, #0
-    ldi     s12, #0
-    ldi     s13, #0
-    ldi     s14, #0
-    ldi     s15, #0
-    ldi     s16, #0
-    ldi     s17, #0
-    ldi     s18, #0
-    ldi     s19, #0
-    ldi     s20, #0
-    ldi     s21, #0
-    ldi     s22, #0
-    ldi     s23, #0
-    ldi     s24, #0
-    ldi     s25, #0
-    ldi     s26, #0
-    ldi     s27, #0
-    ldi     s30, #0
-    or      v1, vz, #0
-    or      v2, vz, #0
-    or      v3, vz, #0
-    or      v4, vz, #0
-    or      v5, vz, #0
-    or      v6, vz, #0
-    or      v7, vz, #0
-    or      v8, vz, #0
-    or      v9, vz, #0
-    or      v10, vz, #0
-    or      v11, vz, #0
-    or      v12, vz, #0
-    or      v13, vz, #0
-    or      v14, vz, #0
-    or      v15, vz, #0
-    or      v16, vz, #0
-    or      v17, vz, #0
-    or      v18, vz, #0
-    or      v19, vz, #0
-    or      v20, vz, #0
-    or      v21, vz, #0
-    or      v22, vz, #0
-    or      v23, vz, #0
-    or      v24, vz, #0
-    or      v25, vz, #0
-    or      v26, vz, #0
-    or      v27, vz, #0
-    or      v28, vz, #0
-    or      v29, vz, #0
-    or      v30, vz, #0
-    or      v31, vz, #0
-
-
-; -------------------------------------------------------------------------------------------------
-; Main program.
-; -------------------------------------------------------------------------------------------------
-
 ; Video configuration.
 VIDEO_MEM    = 0x00008000
 VIDEO_WIDTH  = 256
 VIDEO_HEIGHT = 256
 
+; -------------------------------------------------------------------------------------------------
+; Main program.
+; -------------------------------------------------------------------------------------------------
+
+    .text
+    .globl  main
+
 main:
+    ; Preserve callee-saves registers on the stack. We store them all so that we don't have to keep
+    ; track of used registers.
+    add     sp, sp, #-52
+    stw     s16, sp, #0
+    stw     s17, sp, #4
+    stw     s18, sp, #8
+    stw     s19, sp, #12
+    stw     s21, sp, #16
+    stw     s22, sp, #20
+    stw     s23, sp, #24
+    stw     s24, sp, #28
+    stw     s25, sp, #32
+    stw     fp, sp, #36
+    stw     tp, sp, #40
+    stw     vl, sp, #44
+    stw     lr, sp, #48
+
     bl      #init_video
     bl      #mandelbrot
     bl      #vector_flip
-    b       #exit
+
+    ; Restore the saved registers.
+    ldw     s16, sp, #0
+    ldw     s17, sp, #4
+    ldw     s18, sp, #8
+    ldw     s19, sp, #12
+    ldw     s21, sp, #16
+    ldw     s22, sp, #20
+    ldw     s23, sp, #24
+    ldw     s24, sp, #28
+    ldw     s25, sp, #32
+    ldw     fp, sp, #36
+    ldw     tp, sp, #40
+    ldw     vl, sp, #44
+    ldw     lr, sp, #48
+    add     sp, sp, #52
+
+    ; Return from main() with exit code 0.
+    ldi     s1, #0
+    j       lr
 
 
 ; -------------------------------------------------------------------------------------------------
@@ -220,21 +188,3 @@ loop_x:
     bgt     s17, #loop_y
 
     j       lr
-
-
-; -------------------------------------------------------------------------------------------------
-
-exit:
-    ; Flush the pipeline.
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-
-    ; End the simulation.
-    j       z
-

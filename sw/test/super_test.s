@@ -1,19 +1,17 @@
 ; -*- mode: mr32asm; tab-width: 4; indent-tabs-mode: nil; -*-
 ; -------------------------------------------------------------------------------------------------
-; This is test program that tries to test as many asptects of the CPU as possible.
+; This is a test program that tries to test as many asptects of the CPU as possible.
 ; -------------------------------------------------------------------------------------------------
-
 
 PASS_FAIL_CNT = 0x10000     ; Location of the count of passed and failed tests (two words).
 PASS_FAIL     = 0x10008     ; Start of memory area where the test pass/fail results are stored.
 TEST_OUTPUT   = 0x11000     ; Start of memory area where the test output is stored.
 
-    .text
-
 ;--------------------------------------------------------------------------------------------------
 ; Main program / test loop.
 ;--------------------------------------------------------------------------------------------------
 
+    .text
     .globl  main
 
 main:

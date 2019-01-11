@@ -86,11 +86,11 @@ build $builddir/test2.o: as $srcdir/test2.s
 
 # Build executable elf files.
 build $builddir/super_test.elf: ld $builddir/crt0.o $builddir/super_test.o
-build $builddir/graphics.elf: ld $builddir/graphics.o
-build $builddir/mandelbrot.elf: ld $builddir/mandelbrot.o
-build $builddir/test1.elf: ld $builddir/test1.o | $builddir/libsys.a
+build $builddir/graphics.elf: ld $builddir/crt0.o $builddir/graphics.o
+build $builddir/mandelbrot.elf: ld $builddir/crt0.o $builddir/mandelbrot.o
+build $builddir/test1.elf: ld $builddir/crt0.o $builddir/test1.o | $builddir/libsys.a
   libs = -lsys
-build $builddir/test2.elf: ld $builddir/test2.o | $builddir/libsys.a
+build $builddir/test2.elf: ld $builddir/crt0.o $builddir/test2.o | $builddir/libsys.a
   libs = -lsys
 
 # Build bin files.

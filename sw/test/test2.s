@@ -3,15 +3,31 @@
 ; Test the performance of vector vs scalar.
 ;-------------------------------------------------------------------------------
 
+; -------------------------------------------------------------------------------------------------
+; Main program.
+; -------------------------------------------------------------------------------------------------
+
     .text
-
-    .globl  _start
-
-_start:
-    ; Start by setting up the stack.
-    ldi     sp, #0x00020000 ; We grow down from 128KB.
+    .globl  main
 
 main:
+    ; Preserve callee-saves registers on the stack. We store them all so that we don't have to keep
+    ; track of used registers.
+    add     sp, sp, #-52
+    stw     s16, sp, #0
+    stw     s17, sp, #4
+    stw     s18, sp, #8
+    stw     s19, sp, #12
+    stw     s21, sp, #16
+    stw     s22, sp, #20
+    stw     s23, sp, #24
+    stw     s24, sp, #28
+    stw     s25, sp, #32
+    stw     fp, sp, #36
+    stw     tp, sp, #40
+    stw     vl, sp, #44
+    stw     lr, sp, #48
+
     ldi     s4, #1000
     lsl     s9, s4, #2
     ldi     s1, #0x00004000
@@ -21,8 +37,25 @@ main:
     bl      #abs_diff_vectors
     ;bl      #abs_diff_vectors_scalar
 
+    ; Restore the saved registers.
+    ldw     s16, sp, #0
+    ldw     s17, sp, #4
+    ldw     s18, sp, #8
+    ldw     s19, sp, #12
+    ldw     s21, sp, #16
+    ldw     s22, sp, #20
+    ldw     s23, sp, #24
+    ldw     s24, sp, #28
+    ldw     s25, sp, #32
+    ldw     fp, sp, #36
+    ldw     tp, sp, #40
+    ldw     vl, sp, #44
+    ldw     lr, sp, #48
+    add     sp, sp, #52
+
+    ; Return from main().
     ldi     s1, #0
-    b       #_exit
+    j       lr
 
 
 ;-------------------------------------------------------------------------------

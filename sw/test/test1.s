@@ -1,15 +1,31 @@
 ; -*- mode: mr32asm; tab-width: 4; indent-tabs-mode: nil; -*-
 ; This is a test program.
 
-	.text
+; -------------------------------------------------------------------------------------------------
+; Main program.
+; -------------------------------------------------------------------------------------------------
 
-    .globl  _start
-
-_start:
-    ; Start by setting up the stack.
-    ldi     sp, #0x00020000 ; We grow down from 128KB.
+    .text
+    .globl  main
 
 main:
+    ; Preserve callee-saves registers on the stack. We store them all so that we don't have to keep
+    ; track of used registers.
+    add     sp, sp, #-52
+    stw     s16, sp, #0
+    stw     s17, sp, #4
+    stw     s18, sp, #8
+    stw     s19, sp, #12
+    stw     s21, sp, #16
+    stw     s22, sp, #20
+    stw     s23, sp, #24
+    stw     s24, sp, #28
+    stw     s25, sp, #32
+    stw     fp, sp, #36
+    stw     tp, sp, #40
+    stw     vl, sp, #44
+    stw     lr, sp, #48
+
     ldi     s16, #0         ; s16 is the return code (0 = success, 1 = fail)
 
     bl      #test_1
@@ -72,10 +88,28 @@ test9_passed:
     bl      #test_failed
 test10_passed:
 
-    ; exit(s16 != 0 ? 1 : 0)
+    ; return s16 != 0 ? 1 : 0;
     sne     s1, s16, z
     and     s1, s1, #1
-    b       #_exit
+
+    ; Restore the saved registers.
+    ldw     s16, sp, #0
+    ldw     s17, sp, #4
+    ldw     s18, sp, #8
+    ldw     s19, sp, #12
+    ldw     s21, sp, #16
+    ldw     s22, sp, #20
+    ldw     s23, sp, #24
+    ldw     s24, sp, #28
+    ldw     s25, sp, #32
+    ldw     fp, sp, #36
+    ldw     tp, sp, #40
+    ldw     vl, sp, #44
+    ldw     lr, sp, #48
+    add     sp, sp, #52
+
+    ; Return from main().
+    j       lr
 
 
 test_failed:
