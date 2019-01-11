@@ -39,6 +39,7 @@
     <style id="directive"         name="Assembler Directive"   map-to="def:preprocessor"/>
     <style id="label"             name="Label"/>
     <style id="constant"          name="Constant"              map-to="def:constant"/>
+    <style id="modifier"          name="Modifier"              map-to="def:builtin"/>
   </styles>
 
   <default-regex-options case-sensitive="false"/>
@@ -159,8 +160,6 @@
       <!-- Branch -->
       <keyword>j</keyword>
       <keyword>jl</keyword>
-      <keyword>b</keyword>
-      <keyword>bl</keyword>
       <keyword>bs</keyword>
       <keyword>bns</keyword>
       <keyword>bz</keyword>
@@ -197,25 +196,19 @@
       <keyword>fsub(\.b|\.h)?(/f)?</keyword>
 
       <!-- Aliases -->
+      <keyword>b</keyword>
+      <keyword>bl</keyword>
       <keyword>nop</keyword>
       <keyword>mov</keyword>
     </context>
 
-    <define-regex id="label">[a-zA-Z_][a-zA-Z0-9_]*</define-regex>
 
-    <context id="label-1" style-ref="label">
-      <match>\%{label}</match>
+    <context id="label-dollar" style-ref="label">
+      <match>[1-9][0-9]{0,2}\$</match>
     </context>
 
-    <context id="label-2" style-ref="label">
-      <match>\%{label}$</match>
-    </context>
-
-    <context id="label">
-      <include>
-        <context ref="label-1"/>
-        <context ref="label-2"/>
-      </include>
+    <context id="label" style-ref="label">
+      <match>[a-zA-Z_][a-zA-Z0-9_]*</match>
     </context>
 
     <context id="data-1" style-ref="data">
@@ -234,17 +227,23 @@
     </context>
 
     <context id="directive" style-ref="directive">
-      <match>\.(align|include)</match>
+      <match>\.(align|include|text|data|globl|global)</match>
+    </context>
+
+    <context id="modifier" style-ref="modifier">
+      <match>@(hi|lo|pc|pchi|pclo)</match>
     </context>
 
     <context id="mr32asm" class="no-spell-check">
       <include>
         <context ref="comment"/>
         <context ref="string"/>
+        <context ref="label-dollar"/>
         <context ref="hexadecimal"/>
         <context ref="binary"/>
         <context ref="decimal"/>
         <context ref="instruction"/>
+        <context ref="modifier"/>
         <context ref="scalarreg"/>
         <context ref="vectorreg"/>
         <context ref="data"/>
