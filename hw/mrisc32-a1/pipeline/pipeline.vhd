@@ -69,6 +69,7 @@ architecture rtl of pipeline is
   signal s_id_branch_is_branch : std_logic;
   signal s_id_branch_is_unconditional : std_logic;
   signal s_id_branch_condition : T_BRANCH_COND;
+  signal s_id_branch_offset : std_logic_vector(20 downto 0);
 
   signal s_id_reg_a_required : std_logic;
   signal s_id_reg_b_required : std_logic;
@@ -324,6 +325,7 @@ begin
       o_branch_is_branch => s_id_branch_is_branch,
       o_branch_is_unconditional => s_id_branch_is_unconditional,
       o_branch_condition => s_id_branch_condition,
+      o_branch_offset => s_id_branch_offset,
 
       o_reg_a_required => s_id_reg_a_required,
       o_reg_b_required => s_id_reg_b_required,
@@ -382,6 +384,7 @@ begin
       i_branch_is_branch => s_id_branch_is_branch,
       i_branch_is_unconditional => s_id_branch_is_unconditional,
       i_branch_condition => s_id_branch_condition,
+      i_branch_offset => s_id_branch_offset,
 
       i_reg_a_required => s_id_reg_a_required,
       i_reg_b_required => s_id_reg_b_required,

@@ -68,6 +68,7 @@ entity decode is
       o_branch_is_branch : out std_logic;
       o_branch_is_unconditional : out std_logic;
       o_branch_condition : out T_BRANCH_COND;
+      o_branch_offset : out std_logic_vector(20 downto 0);
 
       o_reg_a_required : out std_logic;
       o_reg_b_required : out std_logic;
@@ -105,6 +106,7 @@ architecture rtl of decode is
   signal s_reg_a : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_reg_b : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_reg_c : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
+  signal s_imm_from_instr : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_imm : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
   signal s_is_type_a : std_logic;
@@ -134,6 +136,7 @@ architecture rtl of decode is
   signal s_is_branch : std_logic;
   signal s_is_link_branch : std_logic;
   signal s_branch_condition : T_BRANCH_COND;
+  signal s_branch_offset : std_logic_vector(20 downto 0);
 
   signal s_mem_op_type : std_logic_vector(1 downto 0);
   signal s_is_mem_op : std_logic;
@@ -205,9 +208,9 @@ begin
   s_is_type_b <= not (s_is_type_a or s_is_type_c);
 
   -- Extract immediate.
-  s_imm(14 downto 0) <= i_instr(14 downto 0);
-  s_imm(20 downto 15) <= i_instr(20 downto 15) when s_is_type_c = '1' else (others => i_instr(14));
-  s_imm(31 downto 21) <= (others => s_imm(20));
+  s_imm_from_instr(14 downto 0) <= i_instr(14 downto 0);
+  s_imm_from_instr(20 downto 15) <= i_instr(20 downto 15) when s_is_type_c = '1' else (others => i_instr(14));
+  s_imm_from_instr(31 downto 21) <= (others => s_imm_from_instr(20));
 
   -- Extract register numbers.
   s_reg_a <= i_instr(20 downto 16);
@@ -319,6 +322,9 @@ begin
 
   s_is_branch <= s_is_unconditional_branch or s_is_conditional_branch;
 
+  -- The branch offset is the lowest 21 bits of the instruction (i.e. the 21-bit immediate).
+  s_branch_offset <= i_instr(20 downto 0);
+
 
   --------------------------------------------------------------------------------------------------
   -- Information for the operand forwarding logic.
@@ -332,14 +338,18 @@ begin
   -- Prepare data for the RF stage.
   --------------------------------------------------------------------------------------------------
 
+  -- Select the immediate value.
+  -- Note: For linking branches we use the ALU to calculate PC + 4.
+  s_imm <= to_word(4) when s_is_link_branch = '1' else
+           s_imm_from_instr;
+
+
   -- Select source data that the RF stage should pass to the EX stage.
   -- Note 1: For linking branches we use the ALU to calculate PC + 4.
   -- Note 2: For ADDPCHI we use the ALU to calculate PC + (imm21 << 11).
   s_src_a_mode <= C_SRC_A_PC when (s_is_link_branch or s_is_addpchi) = '1' else
-                  C_SRC_A_REG when s_is_type_c = '0' else
-                  C_SRC_A_IMM;
-  s_src_b_mode <= C_SRC_B_FOUR when s_is_link_branch = '1' else
-                  C_SRC_B_REG when s_is_type_a = '1' else
+                  C_SRC_A_REG;
+  s_src_b_mode <= C_SRC_B_REG when s_is_type_a = '1' and s_is_link_branch = '0' else
                   C_SRC_B_IMM;
 
   -- Select destination register.
@@ -371,6 +381,9 @@ begin
       -- Use the ALU to calculate the return address of linking branches.
       C_ALU_ADD when s_is_link_branch = '1' else
 
+      -- LDI has a special ALU op.
+      C_ALU_LDI when s_is_ldi = '1' else
+
       -- LDHI has a special ALU op.
       C_ALU_LDHI when s_is_ldhi = '1' else
 
@@ -379,9 +392,6 @@ begin
 
       -- ADDPCHI has a special ALU op.
       C_ALU_ADDHI when s_is_addpchi = '1' else
-
-      -- LDI can use the OR operator (i.e. just move the immediate value to the target reg).
-      C_ALU_OR when s_is_ldi = '1' else
 
       -- Use NOP for non-ALU ops and non-linking branches (they do not produce any result).
       C_ALU_CPUID when s_alu_en = '0' or (s_is_branch and not s_is_link_branch) = '1' else
@@ -448,6 +458,7 @@ begin
       o_branch_is_branch <= '0';
       o_branch_is_unconditional <= '0';
       o_branch_condition <= (others => '0');
+      o_branch_offset <= (others => '0');
 
       o_reg_a_required <= '0';
       o_reg_b_required <= '0';
@@ -489,6 +500,7 @@ begin
         o_branch_is_branch <= s_is_branch_masked;
         o_branch_is_unconditional <= s_is_unconditional_branch;
         o_branch_condition <= s_branch_condition;
+        o_branch_offset <= s_branch_offset;
 
         o_reg_a_required <= s_reg_a_required_masked;
         o_reg_b_required <= s_reg_b_required_masked;

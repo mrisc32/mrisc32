@@ -49,6 +49,7 @@ architecture rtl of alu is
   signal s_shuf_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_rev_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_pack_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_ldi_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ldhi_fill_bit : std_logic;
   signal s_ldhi_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_addhi_res : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -136,7 +137,7 @@ begin
   s_packh_res <= i_src_a(15 downto 0) & i_src_b(15 downto 0);
   s_pack_res <= s_packb_res when i_op(0) = '1' else s_packh_res;
 
-  -- C_ALU_LDHI, C_ALU_LDHIO
+  -- C_ALU_LDI, C_ALU_LDHI, C_ALU_LDHIO
   -- Note: This MUX should be optimized by the synthesis tool to only depend on a single
   -- bit of i_op.
   LdhiFillBitMux: with i_op select
@@ -145,8 +146,10 @@ begin
         '1' when C_ALU_LDHIO,
         '-' when others;
 
-  s_ldhi_res(C_WORD_SIZE-1 downto C_WORD_SIZE-21) <= i_src_a(20 downto 0);
+  s_ldhi_res(C_WORD_SIZE-1 downto C_WORD_SIZE-21) <= i_src_b(20 downto 0);
   s_ldhi_res(C_WORD_SIZE-22 downto 0) <= (others => s_ldhi_fill_bit);
+
+  s_ldi_res <= i_src_b when i_op = C_ALU_LDI else s_ldhi_res;
 
   -- C_ALU_CLZ
   AluCLZ32: entity work.clz32
@@ -249,7 +252,7 @@ begin
         s_clz_res when C_ALU_CLZ,
         s_rev_res when C_ALU_REV,
         s_pack_res when C_ALU_PACKB | C_ALU_PACKH,
-        s_ldhi_res when C_ALU_LDHI | C_ALU_LDHIO,
+        s_ldi_res when C_ALU_LDI | C_ALU_LDHI | C_ALU_LDHIO,
         s_addhi_res when C_ALU_ADDHI,
         (others => '-') when others;
 

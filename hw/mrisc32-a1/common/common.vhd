@@ -69,15 +69,13 @@ package common is
   -- Source operand modes.
   ------------------------------------------------------------------------------------------------
 
-  subtype T_SRC_A_MODE is std_logic_vector(1 downto 0);
-  constant C_SRC_A_REG : T_SRC_A_MODE := "00";
-  constant C_SRC_A_IMM : T_SRC_A_MODE := "01";
-  constant C_SRC_A_PC : T_SRC_A_MODE := "10";
+  subtype T_SRC_A_MODE is std_logic_vector(0 downto 0);
+  constant C_SRC_A_REG : T_SRC_A_MODE := "0";
+  constant C_SRC_A_PC : T_SRC_A_MODE := "1";
 
-  subtype T_SRC_B_MODE is std_logic_vector(1 downto 0);
-  constant C_SRC_B_REG : T_SRC_B_MODE := "00";
-  constant C_SRC_B_IMM : T_SRC_B_MODE := "01";
-  constant C_SRC_B_FOUR : T_SRC_B_MODE := "10";
+  subtype T_SRC_B_MODE is std_logic_vector(0 downto 0);
+  constant C_SRC_B_REG : T_SRC_B_MODE := "0";
+  constant C_SRC_B_IMM : T_SRC_B_MODE := "1";
 
 
   ------------------------------------------------------------------------------------------------
@@ -112,9 +110,10 @@ package common is
 
   constant C_ALU_CPUID : T_ALU_OP := "000000";
 
-  constant C_ALU_LDHI  : T_ALU_OP := "000001";
-  constant C_ALU_LDHIO : T_ALU_OP := "000010";
-  constant C_ALU_ADDHI : T_ALU_OP := "000011";
+  constant C_ALU_LDI   : T_ALU_OP := "000001";
+  constant C_ALU_LDHI  : T_ALU_OP := "000010";
+  constant C_ALU_LDHIO : T_ALU_OP := "000011";
+  constant C_ALU_ADDHI : T_ALU_OP := "000100";
 
   constant C_ALU_OR    : T_ALU_OP := "010000";
   constant C_ALU_NOR   : T_ALU_OP := "010001";

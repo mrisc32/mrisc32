@@ -54,6 +54,7 @@ entity register_fetch is
       i_branch_is_branch : in std_logic;
       i_branch_is_unconditional : in std_logic;
       i_branch_condition : in T_BRANCH_COND;
+      i_branch_offset : in std_logic_vector(20 downto 0);
 
       i_reg_a_required : in std_logic;
       i_reg_b_required : in std_logic;
@@ -142,7 +143,6 @@ end register_fetch;
 
 architecture rtl of register_fetch is
   -- Branch logic signals.
-  signal s_branch_offset : std_logic_vector(20 downto 0);
   signal s_branch_base_expected : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_branch_pc_plus_4 : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
@@ -250,9 +250,6 @@ begin
   -- Branch logic.
   --------------------------------------------------------------------------------------------------
 
-  -- The branch offset is the lowest 21 bits of the immediate value.
-  s_branch_offset <= i_imm(20 downto 0);
-
   -- Calculate the expected branch base if a branch is taken (i.e. IF_PC - offset).
   -- TODO(m): Optimize this operation.
   s_branch_base_expected <= std_logic_vector(unsigned(i_if_pc) - unsigned(i_imm(29 downto 0) & "00"));
@@ -284,16 +281,14 @@ begin
 
   -- Select source data for the EX stage.
   SrcAMux: with i_src_a_mode select
-      s_src_a_data <= s_reg_a_data when C_SRC_A_REG,
-                      i_imm        when C_SRC_A_IMM,
-                      i_pc         when C_SRC_A_PC,
-                      i_imm        when others;
+      s_src_a_data <= s_reg_a_data    when C_SRC_A_REG,
+                      i_pc            when C_SRC_A_PC,
+                      (others => '-') when others;
 
   SrcBMux: with i_src_b_mode select
-      s_src_b_data <= s_reg_b_data           when C_SRC_B_REG,
-                      i_imm                  when C_SRC_B_IMM,
-                      X"00000004"            when C_SRC_B_FOUR,
-                      i_imm                  when others;
+      s_src_b_data <= s_reg_b_data    when C_SRC_B_REG,
+                      i_imm           when C_SRC_B_IMM,
+                      (others => '-') when others;
 
   s_src_c_data <= s_reg_c_data;
 
@@ -385,7 +380,7 @@ begin
         o_branch_is_branch <= s_branch_is_branch_masked;
         o_branch_is_unconditional <= s_branch_is_unconditional_masked;
         o_branch_condition <= i_branch_condition;
-        o_branch_offset <= s_branch_offset;
+        o_branch_offset <= i_branch_offset;
         o_branch_base_expected <= s_branch_base_expected;
         o_branch_pc_plus_4 <= s_branch_pc_plus_4;
       end if;
