@@ -77,6 +77,10 @@ build $builddir/crt0.o: as $srcdir/lib/crt0.s
 build $builddir/sys.o: as $srcdir/lib/sys.s
 build $builddir/libsys.a: ar $builddir/sys.o
 
+# Build the libc library.
+build $builddir/memcpy.o: as $srcdir/lib/libc/memcpy.s
+build $builddir/libc.a: ar $builddir/memcpy.o
+
 # Build program object files.
 build $builddir/super_test.o: as $srcdir/test/super_test.s | $srcdir/lib/mrisc32-macros.inc
 build $builddir/test1.o: as $srcdir/test/test1.s | $srcdir/lib/mrisc32-macros.inc
