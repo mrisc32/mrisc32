@@ -39,10 +39,10 @@ builddir = out
 as = mrisc32-as
 ld = mrisc32-ld
 ar = mrisc32-ar
-elf2bin = ../../tools/elf2bin.py
+elf2bin = ../tools/elf2bin.py
 
 # Program flags.
-asflags =
+asflags = -I$srcdir/lib
 ldflags = -L$builddir
 arflags = crs
 
@@ -71,34 +71,34 @@ rule clean
 build clean: clean
 
 # Build the crt0 startup code.
-build $builddir/crt0.o: as $srcdir/crt0.s
+build $builddir/crt0.o: as $srcdir/lib/crt0.s
 
 # Build the sys library.
-build $builddir/sys.o: as $srcdir/sys.s
+build $builddir/sys.o: as $srcdir/lib/sys.s
 build $builddir/libsys.a: ar $builddir/sys.o
 
 # Build program object files.
-build $builddir/super_test.o: as $srcdir/super_test.s | $srcdir/mrisc32-macros.inc
-build $builddir/graphics.o: as $srcdir/graphics.s | $srcdir/mrisc32-macros.inc
-build $builddir/mandelbrot.o: as $srcdir/mandelbrot.s | $srcdir/mrisc32-macros.inc
-build $builddir/test1.o: as $srcdir/test1.s | $srcdir/mrisc32-macros.inc
-build $builddir/test2.o: as $srcdir/test2.s | $srcdir/mrisc32-macros.inc
+build $builddir/super_test.o: as $srcdir/test/super_test.s | $srcdir/lib/mrisc32-macros.inc
+build $builddir/test1.o: as $srcdir/test/test1.s | $srcdir/lib/mrisc32-macros.inc
+build $builddir/test2.o: as $srcdir/test/test2.s | $srcdir/lib/mrisc32-macros.inc
+build $builddir/graphics.o: as $srcdir/demo/graphics.s | $srcdir/lib/mrisc32-macros.inc
+build $builddir/mandelbrot.o: as $srcdir/demo/mandelbrot.s | $srcdir/lib/mrisc32-macros.inc
 
 # Build executable elf files.
 build $builddir/super_test.elf: ld $builddir/crt0.o $builddir/super_test.o
-build $builddir/graphics.elf: ld $builddir/crt0.o $builddir/graphics.o
-build $builddir/mandelbrot.elf: ld $builddir/crt0.o $builddir/mandelbrot.o
 build $builddir/test1.elf: ld $builddir/crt0.o $builddir/test1.o | $builddir/libsys.a
   libs = -lsys
 build $builddir/test2.elf: ld $builddir/crt0.o $builddir/test2.o | $builddir/libsys.a
   libs = -lsys
+build $builddir/graphics.elf: ld $builddir/crt0.o $builddir/graphics.o
+build $builddir/mandelbrot.elf: ld $builddir/crt0.o $builddir/mandelbrot.o
 
 # Build bin files.
 build $builddir/super_test.bin: elf2bin $builddir/super_test.elf
-build $builddir/graphics.bin: elf2bin $builddir/graphics.elf
-build $builddir/mandelbrot.bin: elf2bin $builddir/mandelbrot.elf
 build $builddir/test1.bin: elf2bin $builddir/test1.elf
 build $builddir/test2.bin: elf2bin $builddir/test2.elf
+build $builddir/graphics.bin: elf2bin $builddir/graphics.elf
+build $builddir/mandelbrot.bin: elf2bin $builddir/mandelbrot.elf
 
 build all: phony $builddir/super_test.bin $
                  $builddir/graphics.bin $
@@ -107,4 +107,3 @@ build all: phony $builddir/super_test.bin $
                  $builddir/test2.bin
 
 default all
-

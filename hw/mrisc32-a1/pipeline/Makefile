@@ -53,7 +53,7 @@ TESTS += \
     program_counter_tb \
     pipeline_tb
 
-$(PIPELINE_PATH)/pipeline_tb_prg.bin: $(SW_SRC_DIR)/super_test.s
+$(PIPELINE_PATH)/pipeline_tb_prg.bin: $(SW_SRC_DIR)/test/super_test.s
 	ninja -C $(SW_SRC_DIR) out/super_test.bin
 	$(CP) $(SW_SRC_DIR)/out/super_test.bin $(PIPELINE_PATH)/pipeline_tb_prg.bin
 
