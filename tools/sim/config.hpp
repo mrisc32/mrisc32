@@ -30,24 +30,48 @@ public:
     return m_ram_size;
   }
 
+  void set_ram_size(const uint32_t x) {
+    m_ram_size = x;
+  }
+
   bool gfx_enabled() const {
     return m_gfx_enabled;
+  }
+
+  void set_gfx_enabled(const bool x) {
+    m_gfx_enabled = x;
   }
 
   uint32_t gfx_addr() const {
     return m_gfx_addr;
   }
 
+  void set_gfx_addr(const uint32_t x) {
+    m_gfx_addr = x;
+  }
+
   uint32_t gfx_width() const {
     return m_gfx_width;
+  }
+
+  void set_gfx_width(const uint32_t x) {
+    m_gfx_width = x;
   }
 
   uint32_t gfx_height() const {
     return m_gfx_height;
   }
 
+  void set_gfx_height(const uint32_t x) {
+    m_gfx_height = x;
+  }
+
   uint32_t gfx_depth() const {
     return m_gfx_depth;
+  }
+
+  void set_gfx_depth(const uint32_t x) {
+    m_gfx_depth = x;
   }
 
 private:
@@ -55,7 +79,7 @@ private:
 
   // Default values.
   static const uint32_t DEFAULT_RAM_SIZE = 0x1000000u;  // 16 MiB
-  static const bool DEFAULT_GFX_ENABLED = true;
+  static const bool DEFAULT_GFX_ENABLED = false;
   static const uint32_t DEFAULT_GFX_ADDR = 0x0008000u;
   static const uint32_t DEFAULT_GFX_WIDTH = 256u;
   static const uint32_t DEFAULT_GFX_HEIGHT = 256u;

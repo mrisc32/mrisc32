@@ -73,7 +73,9 @@ void print_help(const char* prg_name) {
   std::cout << "mr32sim - An MRISC32 CPU simulator\n";
   std::cout << "Usage: " << prg_name << " [options] bin-file\n";
   std::cout << "Options:\n";
-  std::cout << "  --help  Display this information.\n";
+  std::cout << "  -h, --help          Display this information.\n";
+  std::cout << "  -g, --gfx           Enable graphics.\n";
+  std::cout << "  -R N, --ram-size N  Set the RAM size (in bytes).\n";
   return;
 }
 }  // namespace
@@ -81,25 +83,42 @@ void print_help(const char* prg_name) {
 int main(const int argc, const char** argv) {
   // Parse command line options.
   // TODO(m): Add options for graphics (e.g. framebuffer size).
-  const char* bin_file = static_cast<const char*>(0);
-  for (int k = 1; k < argc; ++k) {
-    if (argv[k][0] == '-') {
-      if ((std::strcmp(argv[k], "--help") == 0) || (std::strcmp(argv[k], "-h") == 0) ||
-          (std::strcmp(argv[k], "-?") == 0)) {
-        print_help(argv[0]);
-        exit(0);
+  const auto* bin_file = static_cast<const char*>(0);
+  try {
+    for (int k = 1; k < argc; ++k) {
+      if (argv[k][0] == '-') {
+        if ((std::strcmp(argv[k], "--help") == 0) || (std::strcmp(argv[k], "-h") == 0) ||
+            (std::strcmp(argv[k], "-?") == 0)) {
+          print_help(argv[0]);
+          exit(0);
+        } else if ((std::strcmp(argv[k], "-g") == 0) || (std::strcmp(argv[k], "--gfx") == 0)) {
+          config_t::instance().set_gfx_enabled(true);
+        } else if ((std::strcmp(argv[k], "-R") == 0) || (std::strcmp(argv[k], "--ram-size") == 0)) {
+          if (k >= (argc - 1)) {
+            std::cerr << "Missing option for " << argv[k] << "\n";
+            print_help(argv[0]);
+            exit(1);
+          }
+          const auto ram_size_str = std::string(argv[++k]);
+          const auto ram_size = static_cast<uint32_t>(std::stol(ram_size_str));
+          config_t::instance().set_ram_size(ram_size);
+        } else {
+          std::cerr << "Error: Unknown option: " << argv[k] << "\n";
+          print_help(argv[0]);
+          exit(1);
+        }
+      } else if (bin_file == static_cast<const char*>(0)) {
+        bin_file = argv[k];
       } else {
-        std::cerr << "Error: Unknown option: " << argv[k] << "\n";
+        std::cerr << "Error: Only a single program file can be loaded.\n";
         print_help(argv[0]);
         exit(1);
       }
-    } else if (bin_file == static_cast<const char*>(0)) {
-      bin_file = argv[k];
-    } else {
-      std::cerr << "Error: Only a single program file can be loaded.\n";
-      print_help(argv[0]);
-      exit(1);
     }
+  } catch (...) {
+    std::cerr << "Error: Couldn't parse command line arguments.\n";
+    print_help(argv[0]);
+    exit(1);
   }
   if (bin_file == static_cast<const char*>(0)) {
     std::cerr << "Error: No program file specified.\n";
