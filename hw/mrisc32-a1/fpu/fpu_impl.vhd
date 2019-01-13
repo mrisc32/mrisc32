@@ -70,7 +70,7 @@ architecture rtl of fpu_impl is
   -- Constants.
   constant SIGNIFICAND_BITS : positive := FRACT_BITS + 1;
 
-  -- F1 signals.
+  -- Operation decode signals.
   signal s_is_compare_op : std_logic;
   signal s_is_minmax_op : std_logic;
   signal s_is_add_op : std_logic;
@@ -78,6 +78,15 @@ architecture rtl of fpu_impl is
   signal s_is_div_op : std_logic;
   signal s_is_sqrt_op : std_logic;
   signal s_is_single_cycle_op : std_logic;
+
+  -- Decomposed inputs.
+  signal s_props_a : T_FLOAT_PROPS;
+  signal s_exponent_a : std_logic_vector(EXP_BITS-1 downto 0);
+  signal s_significand_a : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
+
+  signal s_props_b : T_FLOAT_PROPS;
+  signal s_exponent_b : std_logic_vector(EXP_BITS-1 downto 0);
+  signal s_significand_b : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
 
   -- Set operations.
   signal s_compare_eq : std_logic;
@@ -93,78 +102,21 @@ architecture rtl of fpu_impl is
   signal s_minmax_sel_a : std_logic;
   signal s_minmax_res : std_logic_vector(WIDTH-1 downto 0);
 
-  signal s_f1_next_add_en : std_logic;
-  signal s_f1_next_mul_en : std_logic;
-  signal s_f1_next_div_en : std_logic;
-  signal s_f1_next_sqrt_en : std_logic;
+  -- FMUL signals.
+  signal s_fmul_enable : std_logic;
+  signal s_fmul_props : T_FLOAT_PROPS;
+  signal s_fmul_exponent : std_logic_vector(EXP_BITS-1 downto 0);
+  signal s_fmul_significand : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
+  signal s_fmul_result_ready : std_logic;
 
-  signal s_f1_next_src_a_sign : std_logic;
-  signal s_f1_next_src_a_exponent : std_logic_vector(EXP_BITS-1 downto 0);
-  signal s_f1_next_src_a_significand : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
-  signal s_f1_next_src_a_is_nan : std_logic;
-  signal s_f1_next_src_a_is_inf : std_logic;
-  signal s_f1_next_src_a_is_zero : std_logic;
-
-  signal s_f1_next_src_b_sign : std_logic;
-  signal s_f1_next_src_b_exponent : std_logic_vector(EXP_BITS-1 downto 0);
-  signal s_f1_next_src_b_significand : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
-  signal s_f1_next_src_b_is_nan : std_logic;
-  signal s_f1_next_src_b_is_inf : std_logic;
-  signal s_f1_next_src_b_is_zero : std_logic;
-
-  -- Signals from F1 to F2 (sync).
-  signal s_f1_add_en : std_logic;
-  signal s_f1_mul_en : std_logic;
-  signal s_f1_div_en : std_logic;
-  signal s_f1_sqrt_en : std_logic;
-
-  signal s_f1_src_a_sign : std_logic;
-  signal s_f1_src_a_exponent : std_logic_vector(EXP_BITS-1 downto 0);
-  signal s_f1_src_a_significand : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
-  signal s_f1_src_a_is_nan : std_logic;
-  signal s_f1_src_a_is_inf : std_logic;
-  signal s_f1_src_a_is_zero : std_logic;
-
-  signal s_f1_src_b_sign : std_logic;
-  signal s_f1_src_b_exponent : std_logic_vector(EXP_BITS-1 downto 0);
-  signal s_f1_src_b_significand : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
-  signal s_f1_src_b_is_nan : std_logic;
-  signal s_f1_src_b_is_inf : std_logic;
-  signal s_f1_src_b_is_zero : std_logic;
-
-  -- F2 signals.
-  signal s_fmul_significand : unsigned((2*SIGNIFICAND_BITS)-1 downto 0);
-
-  signal s_f2_next_result_sign : std_logic;
-  signal s_f2_next_result_exponent : std_logic_vector(EXP_BITS-1 downto 0);
-  signal s_f2_next_result_significand : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
-  signal s_f2_next_result_is_nan : std_logic;
-  signal s_f2_next_result_is_inf : std_logic;
-  signal s_f2_next_result_is_zero : std_logic;
-
-  -- Signals from F2 to F3 (sync).
-  signal s_f2_add_en : std_logic;
-  signal s_f2_mul_en : std_logic;
-  signal s_f2_div_en : std_logic;
-  signal s_f2_sqrt_en : std_logic;
-
-  signal s_f2_result_sign : std_logic;
-  signal s_f2_result_exponent : std_logic_vector(EXP_BITS-1 downto 0);
-  signal s_f2_result_significand : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
-  signal s_f2_result_is_nan : std_logic;
-  signal s_f2_result_is_inf : std_logic;
-  signal s_f2_result_is_zero : std_logic;
-
-  -- F3 signals.
-  signal s_f3_next_result : std_logic_vector(WIDTH-1 downto 0);
+  -- Multicycle results.
+  signal s_f3_props : T_FLOAT_PROPS;
+  signal s_f3_exponent : std_logic_vector(EXP_BITS-1 downto 0);
+  signal s_f3_significand : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
 begin
-  --==================================================================================================
-  -- F1: Stage 1 of the FPU pipeline.
-  --==================================================================================================
-
-  ----------------------------------------------------------------------------------------------------
+  --------------------------------------------------------------------------------------------------
   -- Decode the FPU operation.
-  ----------------------------------------------------------------------------------------------------
+  --------------------------------------------------------------------------------------------------
 
   DecodeOpMux1: with i_op select
     s_is_compare_op <=
@@ -185,18 +137,13 @@ begin
   s_is_div_op <= '1' when i_op = C_FPU_FDIV else '0';
   s_is_sqrt_op <= '1' when i_op = C_FPU_FSQRT else '0';
 
-  s_f1_next_add_en <= s_is_add_op and i_enable;
-  s_f1_next_mul_en <= s_is_mul_op and i_enable;
-  s_f1_next_div_en <= s_is_div_op and i_enable;
-  s_f1_next_sqrt_en <= s_is_sqrt_op and i_enable;
-
   -- Is this a single cycle operation?
   s_is_single_cycle_op <= s_is_compare_op or s_is_minmax_op;
 
 
-  ----------------------------------------------------------------------------------------------------
+  --------------------------------------------------------------------------------------------------
   -- Decompose source operands (mostly for multi-cycle ops).
-  ----------------------------------------------------------------------------------------------------
+  --------------------------------------------------------------------------------------------------
 
   DecomposeA: entity work.float_decompose
     generic map (
@@ -206,12 +153,9 @@ begin
     )
     port map (
       i_src => i_src_a,
-      o_sign => s_f1_next_src_a_sign,
-      o_exponent => s_f1_next_src_a_exponent,
-      o_significand => s_f1_next_src_a_significand,
-      o_is_nan => s_f1_next_src_a_is_nan,
-      o_is_inf => s_f1_next_src_a_is_inf,
-      o_is_zero => s_f1_next_src_a_is_zero
+      o_exponent => s_exponent_a,
+      o_significand => s_significand_a,
+      o_props => s_props_a
     );
 
   DecomposeB: entity work.float_decompose
@@ -222,18 +166,15 @@ begin
     )
     port map (
       i_src => i_src_b,
-      o_sign => s_f1_next_src_b_sign,
-      o_exponent => s_f1_next_src_b_exponent,
-      o_significand => s_f1_next_src_b_significand,
-      o_is_nan => s_f1_next_src_b_is_nan,
-      o_is_inf => s_f1_next_src_b_is_inf,
-      o_is_zero => s_f1_next_src_b_is_zero
+      o_exponent => s_exponent_b,
+      o_significand => s_significand_b,
+      o_props => s_props_b
     );
 
 
-  ----------------------------------------------------------------------------------------------------
+  --------------------------------------------------------------------------------------------------
   -- Single cycle compare/min/max operations.
-  ----------------------------------------------------------------------------------------------------
+  --------------------------------------------------------------------------------------------------
 
   -- Camparison results.
   Cmp: entity work.float_compare
@@ -255,7 +196,7 @@ begin
   s_minmax_res <= i_src_a when s_minmax_sel_a = '1' else i_src_b;
 
   -- Compare and set operations.
-  s_is_any_src_nan <= s_f1_next_src_a_is_nan or s_f1_next_src_b_is_nan;
+  s_is_any_src_nan <= s_props_a.is_nan or s_props_b.is_nan;
   CmpMux: with i_op select
     s_set_bit <=
       s_compare_eq when C_FPU_FSEQ,
@@ -270,99 +211,37 @@ begin
   o_f1_next_result <= s_set_res when s_is_compare_op = '1' else s_minmax_res;
   o_f1_next_result_ready <= s_is_single_cycle_op and i_enable;
 
-  -- Signals from stage 1 to stage 2 of the FPU.
-  process(i_clk, i_rst)
-  begin
-    if i_rst = '1' then
-      s_f1_add_en <= '0';
-      s_f1_mul_en <= '0';
-      s_f1_div_en <= '0';
-      s_f1_sqrt_en <= '0';
-      s_f1_src_a_sign <= '0';
-      s_f1_src_a_exponent <= (others => '0');
-      s_f1_src_a_significand <= (others => '0');
-      s_f1_src_a_is_nan <= '0';
-      s_f1_src_a_is_inf <= '0';
-      s_f1_src_a_is_zero <= '0';
-      s_f1_src_b_sign <= '0';
-      s_f1_src_b_exponent <= (others => '0');
-      s_f1_src_b_significand <= (others => '0');
-      s_f1_src_b_is_nan <= '0';
-      s_f1_src_b_is_inf <= '0';
-      s_f1_src_b_is_zero <= '0';
-    elsif rising_edge(i_clk) then
-      if i_stall = '0' then
-        s_f1_add_en <= s_f1_next_add_en;
-        s_f1_mul_en <= s_f1_next_mul_en;
-        s_f1_div_en <= s_f1_next_div_en;
-        s_f1_sqrt_en <= s_f1_next_sqrt_en;
-        s_f1_src_a_sign <= s_f1_next_src_a_sign;
-        s_f1_src_a_exponent <= s_f1_next_src_a_exponent;
-        s_f1_src_a_significand <= s_f1_next_src_a_significand;
-        s_f1_src_a_is_nan <= s_f1_next_src_a_is_nan;
-        s_f1_src_a_is_inf <= s_f1_next_src_a_is_inf;
-        s_f1_src_a_is_zero <= s_f1_next_src_a_is_zero;
-        s_f1_src_b_sign <= s_f1_next_src_b_sign;
-        s_f1_src_b_exponent <= s_f1_next_src_b_exponent;
-        s_f1_src_b_significand <= s_f1_next_src_b_significand;
-        s_f1_src_b_is_nan <= s_f1_next_src_b_is_nan;
-        s_f1_src_b_is_inf <= s_f1_next_src_b_is_inf;
-        s_f1_src_b_is_zero <= s_f1_next_src_b_is_zero;
-      end if;
-    end if;
-  end process;
 
+  --================================================================================================
+  -- Multi-cycle FPU operations.
+  --================================================================================================
 
-  --==================================================================================================
-  -- F2: Stage 2 of the FPU pipeline.
-  --==================================================================================================
+  --------------------------------------------------------------------------------------------------
+  -- FMUL
+  --------------------------------------------------------------------------------------------------
+
+  s_fmul_enable <= i_enable and s_is_mul_op;
 
   -- TODO(m): Implement me!
-  -- Currently we implement a fake form of FMUL just to get some data through.
-  s_f2_next_result_sign <= s_f1_src_a_sign xor s_f1_src_b_sign;
-  s_f2_next_result_exponent <= std_logic_vector(unsigned(s_f1_src_a_exponent) + unsigned(s_f1_src_b_exponent) - to_unsigned(EXP_BIAS, EXP_BITS));
-  s_fmul_significand <= unsigned(s_f1_src_a_significand) * unsigned(s_f1_src_b_significand);
-  s_f2_next_result_significand <= std_logic_vector(s_fmul_significand((SIGNIFICAND_BITS*2)-1 downto SIGNIFICAND_BITS));
-  s_f2_next_result_is_nan <= s_f1_src_a_is_nan or s_f1_src_b_is_nan;
-  s_f2_next_result_is_inf <= s_f1_src_a_is_inf or s_f1_src_b_is_inf;
-  s_f2_next_result_is_zero <= s_f1_src_a_is_zero or s_f1_src_b_is_zero;
-
-  -- Signals from stage 1 to stage 2 of the FPU.
-  process(i_clk, i_rst)
-  begin
-    if i_rst = '1' then
-      s_f2_add_en <= '0';
-      s_f2_mul_en <= '0';
-      s_f2_div_en <= '0';
-      s_f2_sqrt_en <= '0';
-      s_f2_result_sign <= '0';
-      s_f2_result_exponent <= (others => '0');
-      s_f2_result_significand <= (others => '0');
-      s_f2_result_is_nan <= '0';
-      s_f2_result_is_inf <= '0';
-      s_f2_result_is_zero <= '0';
-    elsif rising_edge(i_clk) then
-      if i_stall = '0' then
-        s_f2_add_en <= s_f1_add_en;
-        s_f2_mul_en <= s_f1_mul_en;
-        s_f2_div_en <= s_f1_div_en;
-        s_f2_sqrt_en <= s_f1_sqrt_en;
-        s_f2_result_sign <= s_f2_next_result_sign;
-        s_f2_result_exponent <= s_f2_next_result_exponent;
-        s_f2_result_significand <= s_f2_next_result_significand;
-        s_f2_result_is_nan <= s_f2_next_result_is_nan;
-        s_f2_result_is_inf <= s_f2_next_result_is_inf;
-        s_f2_result_is_zero <= s_f2_next_result_is_zero;
-      end if;
-    end if;
-  end process;
+  s_fmul_props.is_neg <= '0';
+  s_fmul_props.is_nan <= '0';
+  s_fmul_props.is_inf <= '0';
+  s_fmul_props.is_zero <= '0';
+  s_fmul_exponent <= (others => '0');
+  s_fmul_significand <= (others => '0');
+  s_fmul_result_ready <= '0';
 
 
-  --==================================================================================================
-  -- F3: Stage 3 of the FPU pipeline.
-  --==================================================================================================
+  --------------------------------------------------------------------------------------------------
+  -- Compose the final result for multi-cycle operations.
+  --------------------------------------------------------------------------------------------------
 
-  -- Compose the result.
+  -- Select the decomposed results from the active unit.
+  -- TODO(m): Implement me when we have more operations implemented.
+  s_f3_props <= s_fmul_props;
+  s_f3_exponent <= s_fmul_exponent;
+  s_f3_significand <= s_fmul_significand;
+
   ComposeResult: entity work.float_compose
     generic map (
       WIDTH => WIDTH,
@@ -370,17 +249,13 @@ begin
       FRACT_BITS => FRACT_BITS
     )
     port map (
-      i_sign => s_f2_result_sign,
-      i_exponent => s_f2_result_exponent,
-      i_significand => s_f2_result_significand,
-      i_is_nan => s_f2_result_is_nan,
-      i_is_inf => s_f2_result_is_inf,
-      i_is_zero => s_f2_result_is_zero,
-      o_result => s_f3_next_result
+      i_props => s_f3_props,
+      i_exponent => s_f3_exponent,
+      i_significand => s_f3_significand,
+      o_result => o_f3_next_result
     );
 
-  o_f3_next_result <= s_f3_next_result;
-  o_f3_next_result_ready <= s_f2_add_en or s_f2_mul_en or s_f2_div_en or s_f2_sqrt_en;
+  o_f3_next_result_ready <= s_fmul_result_ready;
 
   -- Stall logic.
   -- TODO(m): Longer operations (DIV, SQRT) may stall.

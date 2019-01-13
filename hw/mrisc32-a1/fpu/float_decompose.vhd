@@ -19,6 +19,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use work.common.all;
 
 ----------------------------------------------------------------------------------------------------
 -- This entity decomposes an IEEE 754 binary floating point number into its components, and reports
@@ -43,13 +44,9 @@ entity float_decompose is
   port(
       i_src : in std_logic_vector(WIDTH-1 downto 0);
 
-      o_sign : out std_logic;
+      o_props : out T_FLOAT_PROPS;
       o_exponent : out std_logic_vector(EXP_BITS-1 downto 0);
-      o_significand : out std_logic_vector(FRACT_BITS downto 0);
-
-      o_is_nan : out std_logic;
-      o_is_inf : out std_logic;
-      o_is_zero : out std_logic
+      o_significand : out std_logic_vector(FRACT_BITS downto 0)
     );
 end float_decompose;
 
@@ -63,7 +60,6 @@ architecture rtl of float_decompose is
   signal s_is_zero : std_logic;
 begin
   -- Decompose the floating point number.
-  o_sign <= i_src(WIDTH-1);
   s_exponent <= i_src(WIDTH-2 downto FRACT_BITS);
   s_fraction <= i_src(FRACT_BITS-1 downto 0);
 
@@ -72,25 +68,28 @@ begin
   s_exponent_is_all_zero <= '1' when (s_exponent = (s_exponent'range => '0')) else '0';
   s_fraction_is_all_zero <= '1' when (s_fraction = (s_fraction'range => '0')) else '0';
 
+  -- The number is negative when the MSB is set.
+  o_props.is_neg <= i_src(WIDTH-1);
+
   -- The definition of an IEEE 754 NaN is:
   --  sign = either 0 or 1.
   --  biased exponent = all 1 bits.
   --  fraction = anything except all 0 bits.
-  o_is_nan <= s_exponent_is_all_ones and not s_fraction_is_all_zero;
+  o_props.is_nan <= s_exponent_is_all_ones and not s_fraction_is_all_zero;
 
   -- The definition of an IEEE 754 Infinity is:
   --  sign = 0 for positive infinity, 1 for negative infinity.
   --  biased exponent = all 1 bits.
   --  fraction = all 0 bits.
-  o_is_inf <= s_exponent_is_all_ones and s_fraction_is_all_zero;
+  o_props.is_inf <= s_exponent_is_all_ones and s_fraction_is_all_zero;
 
   -- According to IEEE 754 a number is zero when:
   --  biased exponent = all 0 bits.
   --  fraction = all 0 bits.
   -- Note: We ignore the fraction part, so we effectively treat denormals as zeros too.
   s_is_zero <= s_exponent_is_all_zero;
+  o_props.is_zero <= s_is_zero;
 
   o_exponent <= s_exponent;
   o_significand <= '1' & s_fraction when s_is_zero = '0' else (others => '0');
-  o_is_zero <= s_is_zero;
 end rtl;
