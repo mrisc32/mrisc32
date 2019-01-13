@@ -31,6 +31,9 @@
 ;
 ; Return value:
 ;   s1: Copy of the input argument dest (s1)
+;
+; Clobbered registers:
+;   s11, s12, s13, s14, s15, v15
 ; ----------------------------------------------------------------------------
 
     .text
@@ -39,14 +42,14 @@ memcpy:
     ; Nothing to do?
     bz      s3, done
 
-    mov     s9, s1          ; s9 = dest (we need to preserve s1)
+    mov     s11, s1         ; s11 = dest (we need to preserve s1)
 
     ; Is the length long enough to bother with optizations?
     sltu    s15, s3, #24
     bs      s15, slow
 
     ; Are src and dest equally aligned (w.r.t 4-byte boundaries).
-    and     s14, s9, #3
+    and     s14, s11, #3
     and     s15, s2, #3
     seq     s15, s14, s15
     bns     s15, slow       ; Use the slow case unless equally aligned.
@@ -58,14 +61,14 @@ memcpy:
     mov     s15, s14
 align_loop:
     add     s15, s15, #-1
-    ldb     s10, s2, s15
-    stb     s10, s9, s15
+    ldb     s13, s2, s15
+    stb     s13, s11, s15
     bnz     s15, align_loop
 
     ; Adjust the memory pointers and the count.
     sub     s3, s3, s14
     add     s2, s2, s14
-    add     s9, s9, s14
+    add     s11, s11, s14
 
 aligned:
     ; Vectorized loop.
@@ -77,9 +80,9 @@ aligned_loop:
     sub     s15, s15, vl
     ldw     v15, s2, #4
     lsl     s13, vl, #2     ; Possibly do this before the loop.
-    stw     v15, s9, #4
+    stw     v15, s11, #4
     add     s2, s2, s13
-    add     s9, s9, s13
+    add     s11, s11, s13
     bnz     s15, aligned_loop
 
     ; Post vector-operation: Clear v15 (reg. length optimization), and check
@@ -95,8 +98,8 @@ slow:
     ; TODO(m): Vectorize the slow case.
 slow_loop:
     add     s3, s3, #-1
-    ldb     s10, s2, s3
-    stb     s10, s9, s3
+    ldb     s13, s2, s3
+    stb     s13, s11, s3
     bnz     s3, slow_loop
 
 done:
