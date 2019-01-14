@@ -26,10 +26,7 @@ end float_decompose_tb;
 
 architecture behavioral of float_decompose_tb is
   signal s_src : std_logic_vector(31 downto 0);
-  signal s_sign : std_logic;
-  signal s_is_nan : std_logic;
-  signal s_is_inf : std_logic;
-  signal s_is_zero : std_logic;
+  signal s_props : T_FLOAT_PROPS;
 begin
   float_decompose_0: entity work.float_decompose
     generic map (
@@ -39,10 +36,7 @@ begin
     )
     port map (
       i_src => s_src,
-      o_sign => s_sign,
-      o_is_nan => s_is_nan,
-      o_is_inf => s_is_inf,
-      o_is_zero => s_is_zero
+      o_props => s_props
     );
 
   process
@@ -52,23 +46,20 @@ begin
       src : std_logic_vector(31 downto 0);
 
       -- Expected outputs
-      sign : std_logic;
-      is_nan : std_logic;
-      is_inf : std_logic;
-      is_zero : std_logic;
+      props : T_FLOAT_PROPS;
     end record;
     type pattern_array is array (natural range <>) of pattern_type;
     constant patterns : pattern_array := (
-        (X"00000000", '0', '0', '0', '1'),
-        (X"80000000", '1', '0', '0', '1'),
-        (X"7F800000", '0', '0', '1', '0'),
-        (X"FF800000", '1', '0', '1', '0'),
-        (X"7FFFFFFF", '0', '1', '0', '0'),
-        (X"FFFFFFFF", '1', '1', '0', '0'),
-        (X"7F800010", '0', '1', '0', '0'),
-        (X"7FC00000", '0', '1', '0', '0'),
-        (X"FFC00000", '1', '1', '0', '0'),
-        (X"80000001", '1', '0', '0', '1')
+        (X"00000000", ('0', '0', '0', '1')),
+        (X"80000000", ('1', '0', '0', '1')),
+        (X"7F800000", ('0', '0', '1', '0')),
+        (X"FF800000", ('1', '0', '1', '0')),
+        (X"7FFFFFFF", ('0', '1', '0', '0')),
+        (X"FFFFFFFF", ('1', '1', '0', '0')),
+        (X"7F800010", ('0', '1', '0', '0')),
+        (X"7FC00000", ('0', '1', '0', '0')),
+        (X"FFC00000", ('1', '1', '0', '0')),
+        (X"80000001", ('1', '0', '0', '1'))
       );
   begin
     -- Test all the patterns in the pattern array.
@@ -80,32 +71,32 @@ begin
       wait for 1 ns;
 
       --  Check the outputs.
-      assert s_sign = patterns(i).sign
+      assert s_props.is_neg = patterns(i).props.is_neg
         report "Incorrect sign value:" & lf &
                "  src=" & to_string(s_src) & lf &
-               "  sign=" & to_string(s_sign) & lf &
-               "  expected: " & to_string(patterns(i).sign)
+               "  sign=" & to_string(s_props.is_neg) & lf &
+               "  expected: " & to_string(patterns(i).props.is_neg)
             severity error;
 
-      assert s_is_nan = patterns(i).is_nan
+      assert s_props.is_nan = patterns(i).props.is_nan
         report "Incorrect is_nan value:" & lf &
                "  src=" & to_string(s_src) & lf &
-               "  is_nan=" & to_string(s_is_nan) & lf &
-               "  expected: " & to_string(patterns(i).is_nan)
+               "  is_nan=" & to_string(s_props.is_nan) & lf &
+               "  expected: " & to_string(patterns(i).props.is_nan)
             severity error;
 
-      assert s_is_inf = patterns(i).is_inf
+      assert s_props.is_inf = patterns(i).props.is_inf
         report "Incorrect is_inf value:" & lf &
                "  src=" & to_string(s_src) & lf &
-               "  is_inf=" & to_string(s_is_inf) & lf &
-               "  expected: " & to_string(patterns(i).is_inf)
+               "  is_inf=" & to_string(s_props.is_inf) & lf &
+               "  expected: " & to_string(patterns(i).props.is_inf)
             severity error;
 
-      assert s_is_zero = patterns(i).is_zero
+      assert s_props.is_zero = patterns(i).props.is_zero
         report "Incorrect is_zero value:" & lf &
                "  src=" & to_string(s_src) & lf &
-               "  is_zero=" & to_string(s_is_zero) & lf &
-               "  expected: " & to_string(patterns(i).is_zero)
+               "  is_zero=" & to_string(s_props.is_zero) & lf &
+               "  expected: " & to_string(patterns(i).props.is_zero)
             severity error;
 
     end loop;

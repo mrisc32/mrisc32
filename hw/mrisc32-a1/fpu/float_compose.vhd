@@ -19,6 +19,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use work.common.all;
 
 ----------------------------------------------------------------------------------------------------
 -- This entity composes floating point number components into an IEEE 754 binary floating point
@@ -35,13 +36,9 @@ entity float_compose is
       FRACT_BITS : positive := 23
     );
   port(
-      i_sign : in std_logic;
+      i_props : in T_FLOAT_PROPS;
       i_exponent : in std_logic_vector(EXP_BITS-1 downto 0);
       i_significand : in std_logic_vector(FRACT_BITS downto 0);
-
-      i_is_nan : in std_logic;
-      i_is_inf : in std_logic;
-      i_is_zero : in std_logic;
 
       o_result : out std_logic_vector(WIDTH-1 downto 0)
     );
@@ -50,13 +47,13 @@ end float_compose;
 architecture rtl of float_compose is
 begin
   -- We currently always flush denormals to zero.
-  o_result(WIDTH-1) <= i_sign;
+  o_result(WIDTH-1) <= i_props.is_neg;
   o_result(WIDTH-2 downto FRACT_BITS) <=
-      (WIDTH-2 downto FRACT_BITS => '1') when (i_is_nan or i_is_inf) = '1' else
-      (WIDTH-2 downto FRACT_BITS => '0') when i_is_zero = '1' else
+      (WIDTH-2 downto FRACT_BITS => '1') when (i_props.is_nan or i_props.is_inf) = '1' else
+      (WIDTH-2 downto FRACT_BITS => '0') when i_props.is_zero = '1' else
       i_exponent;
   o_result(FRACT_BITS-1 downto 0) <=
-      (FRACT_BITS-1 downto 0 => '1') when i_is_nan = '1' else
-      (FRACT_BITS-1 downto 0 => '0') when (i_is_inf or i_is_zero) = '1' else
+      (FRACT_BITS-1 downto 0 => '1') when i_props.is_nan = '1' else
+      (FRACT_BITS-1 downto 0 => '0') when (i_props.is_inf or i_props.is_zero) = '1' else
       i_significand(FRACT_BITS-1 downto 0);
 end rtl;

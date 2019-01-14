@@ -194,22 +194,6 @@ package common is
   constant C_FPU_FMIN : T_FPU_OP := "1101";
   constant C_FPU_FMAX : T_FPU_OP := "1110";
 
-  -- Floating point configurations.
-  constant F32_WIDTH : positive := 32;
-  constant F32_EXP_BITS : positive := 8;
-  constant F32_EXP_BIAS : positive := 127;
-  constant F32_FRACT_BITS : positive := F32_WIDTH - 1 - F32_EXP_BITS;
-
-  constant F16_WIDTH : positive := 16;
-  constant F16_EXP_BITS : positive := 5;
-  constant F16_EXP_BIAS : positive := 15;
-  constant F16_FRACT_BITS : positive := F16_WIDTH - 1 - F16_EXP_BITS;
-
-  constant F8_WIDTH : positive := 8;
-  constant F8_EXP_BITS : positive := 4;
-  constant F8_EXP_BIAS : positive := 7;
-  constant F8_FRACT_BITS : positive := F8_WIDTH - 1 - F8_EXP_BITS;
-
   -- MEM operations.
   constant C_MEM_OP_SIZE : integer := 4;
   subtype T_MEM_OP is std_logic_vector(C_MEM_OP_SIZE-1 downto 0);
@@ -229,6 +213,33 @@ package common is
   constant C_MEM_OP_STORE16 : T_MEM_OP := "1010";
   constant C_MEM_OP_STORE32 : T_MEM_OP := "1011";
 
+  ------------------------------------------------------------------------------------------------
+  -- Floating point configurations.
+  ------------------------------------------------------------------------------------------------
+
+  -- Floating point configurations.
+  constant F32_WIDTH : positive := 32;
+  constant F32_EXP_BITS : positive := 8;
+  constant F32_EXP_BIAS : positive := 127;
+  constant F32_FRACT_BITS : positive := F32_WIDTH - 1 - F32_EXP_BITS;
+
+  constant F16_WIDTH : positive := 16;
+  constant F16_EXP_BITS : positive := 5;
+  constant F16_EXP_BIAS : positive := 15;
+  constant F16_FRACT_BITS : positive := F16_WIDTH - 1 - F16_EXP_BITS;
+
+  constant F8_WIDTH : positive := 8;
+  constant F8_EXP_BITS : positive := 4;
+  constant F8_EXP_BIAS : positive := 7;
+  constant F8_FRACT_BITS : positive := F8_WIDTH - 1 - F8_EXP_BITS;
+
+  -- Floating point value properties.
+  type T_FLOAT_PROPS is record
+    is_neg : std_logic;
+    is_nan : std_logic;
+    is_inf : std_logic;
+    is_zero : std_logic;
+  end record T_FLOAT_PROPS;
 
   ------------------------------------------------------------------------------------------------
   -- Helper functions

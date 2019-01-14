@@ -25,6 +25,8 @@ SRCS += \
     $(FPU_PATH)/float_compose.vhd \
     $(FPU_PATH)/float_compare.vhd \
     $(FPU_PATH)/float_compare_tb.vhd \
+    $(FPU_PATH)/fmul.vhd \
+    $(FPU_PATH)/fmul_tb.vhd \
     $(FPU_PATH)/fpu_impl.vhd \
     $(FPU_PATH)/fpu.vhd \
     $(FPU_PATH)/fpu_tb.vhd
@@ -32,5 +34,12 @@ SRCS += \
 TESTS += \
     float_decompose_tb \
     float_compare_tb \
+    fmul_tb \
     fpu_tb
 
+EXTRA += \
+    $(WORKDIR)/fpu_test_gen
+
+# Data generator for FPU test data.
+$(WORKDIR)/fpu_test_gen: $(FPU_PATH)/fpu_test_gen.cpp
+	g++ $(FPU_PATH)/fpu_test_gen.cpp -o $(WORKDIR)/fpu_test_gen
