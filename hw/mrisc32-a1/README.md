@@ -31,7 +31,12 @@ The CPU is still under development. So far, the following components have been i
 * A pipelined (two-cycle) Saturating Arithmetic Unit (SAU).
   - Supports all packed and unpacked saturating and halving arithmetic instructions.
 * An FPU.
-  - Currently only a subset of all the FPU instructions is implemented.
+  - The following single-cycle FPU instructions are implemented:
+    - FSEQ/FSNE/FSLT/FSLE/FSNAN
+    - FMIN/FMAX
+  - The following 3-cycle FPU instructions are implemented:
+    - FMUL
+  - Both packed and unpacked FPU operations are implemented.
 * The scalar register file.
   - There are three read ports and one write port.
 * The vector register file.
