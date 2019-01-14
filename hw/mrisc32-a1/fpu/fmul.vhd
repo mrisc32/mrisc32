@@ -203,8 +203,12 @@ begin
   s_f3_exponent_adjusted <= unsigned(s_f2_exponent) + s_f3_adjust;
 
   -- 4) Check for overflow/underflow.
-  s_f3_overflow <= '1' when s_f3_exponent_adjusted(EXP_BITS+1 downto EXP_BITS) = "01" else '0';
-  s_f3_underflow <= s_f3_exponent_adjusted(EXP_BITS+1);
+  s_f3_overflow <= '1' when s_f3_exponent_adjusted(EXP_BITS+1 downto EXP_BITS) = "01" or
+                            s_f3_exponent_adjusted(EXP_BITS+1 downto 0) = "00" & (EXP_BITS-1 downto 0 => '1')
+                   else '0';
+  s_f3_underflow <= '1' when s_f3_exponent_adjusted(EXP_BITS+1) = '1' or
+                             s_f3_exponent_adjusted(EXP_BITS+1 downto 0) = (EXP_BITS+1 downto 0 => '0')
+                    else '0';
 
   -- Output the result.
   o_props.is_neg <= s_f2_props.is_neg;

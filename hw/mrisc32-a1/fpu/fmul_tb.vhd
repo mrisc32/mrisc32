@@ -92,21 +92,56 @@ begin
     type pattern_array is array (natural range <>) of pattern_type;
     constant patterns : pattern_array := (
         (
-         ('0', '0', '0', '0'), 8X"7f", 24X"800000",  -- 1.0
-         ('0', '0', '0', '0'), 8X"7f", 24X"800000",  -- 1.0
-         ('0', '0', '0', '0'), 8X"7f", 24X"800000"   -- 1.0
+         -- 1.0 * 1.0 = 1.0
+         ('0', '0', '0', '0'), 8X"7f", 24X"800000",
+         ('0', '0', '0', '0'), 8X"7f", 24X"800000",
+         ('0', '0', '0', '0'), 8X"7f", 24X"800000"
         ),
         (
-         ('1', '0', '0', '0'), 8X"80", 24X"800000",  -- -2.0
-         ('0', '0', '0', '0'), 8X"80", 24X"800000",  --  2.0
-         ('1', '0', '0', '0'), 8X"81", 24X"800000"   -- -4.0
+         -- -2.0 * 2.0 = -4.0
+         ('1', '0', '0', '0'), 8X"80", 24X"800000",
+         ('0', '0', '0', '0'), 8X"80", 24X"800000",
+         ('1', '0', '0', '0'), 8X"81", 24X"800000"
         ),
         (
-         ('1', '0', '0', '0'), 8X"7f", 24X"ffffff",  -- -1.9999...
-         ('1', '0', '0', '0'), 8X"7f", 24X"ffffff",  -- -1.9999...
-         ('0', '0', '0', '0'), 8X"80", 24X"fffffe"   --  3.9999...
+         -- -1.999.. * -1.999.. = 3.999..
+         ('1', '0', '0', '0'), 8X"7f", 24X"ffffff",
+         ('1', '0', '0', '0'), 8X"7f", 24X"ffffff",
+         ('0', '0', '0', '0'), 8X"80", 24X"fffffe"
+        ),
+        (
+         -- 2.7182817 * 1.4142135 = 3.8442309
+         ('0', '0', '0', '0'), 8X"80", 24X"adf854",
+         ('0', '0', '0', '0'), 8X"7f", 24X"b504f3",
+         ('0', '0', '0', '0'), 8X"80", 24X"f607e1"
+        ),
+        (
+         -- 2.8356863e+38 * 1.1 = 3.119255e+38
+         ('0', '0', '0', '0'), 8X"fe", 24X"d55555",
+         ('0', '0', '0', '0'), 8X"7f", 24X"8ccccd",
+         ('0', '0', '0', '0'), 8X"fe", 24X"eaaaab"
+        ),
+        (
+         -- 2.8356863e+38 * 1.3 = Inf
+         ('0', '0', '0', '0'), 8X"fe", 24X"d55555",
+         ('0', '0', '0', '0'), 8X"7f", 24X"a66666",
+         ('0', '0', '1', '0'), 8X"--", 24X"------"
+        ),
+        (
+         -- 2.8356863e+38 * 1.3 = Inf
+         ('0', '0', '0', '0'), 8X"fe", 24X"ffffff",
+         ('0', '0', '0', '0'), 8X"fe", 24X"ffffff",
+         ('0', '0', '1', '0'), 8X"--", 24X"------"
+        ),
+        (
+         -- 1.9591572e-38 * 0.5 = 0.0
+         ('0', '0', '0', '0'), 8X"01", 24X"d55555",
+         ('0', '0', '0', '0'), 8X"7e", 24X"800000",
+         ('0', '0', '0', '1'), 8X"--", 24X"------"
         )
       );
+
+    variable v_ignore_number : std_logic;
   begin
     -- Reset all inputs.
     s_stall <= '0';
@@ -160,6 +195,7 @@ begin
       wait until s_clk = '1';
 
       --  Check the outputs.
+      v_ignore_number := s_props.is_nan or s_props.is_inf or s_props.is_zero;
       assert s_props.is_neg = patterns(i).props.is_neg
         report "Bad is_neg result (" & integer'image(i) & "):" & lf &
                "  r=" & to_string(s_props.is_neg) &
@@ -184,13 +220,13 @@ begin
                " (e=" & to_string(patterns(i).props.is_zero) & ")"
             severity error;
 
-      assert s_exponent = patterns(i).exponent
+      assert s_exponent = patterns(i).exponent or v_ignore_number = '1'
         report "Bad exponent result (" & integer'image(i) & "):" & lf &
                "  r=" & to_string(s_exponent) & lf &
                " (e=" & to_string(patterns(i).exponent) & ")"
             severity error;
 
-      assert s_significand = patterns(i).significand
+      assert s_significand = patterns(i).significand or v_ignore_number = '1'
         report "Bad significand result (" & integer'image(i) & "):" & lf &
                "  r=" & to_string(s_significand) & lf &
                " (e=" & to_string(patterns(i).significand) & ")"
