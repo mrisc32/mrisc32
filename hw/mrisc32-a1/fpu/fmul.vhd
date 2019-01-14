@@ -89,12 +89,12 @@ architecture rtl of fmul is
 
   -- Rounding.
   signal s_f3_round_offset : unsigned(1 downto 0);
-  signal s_f3_product_rounded : unsigned(SIGNIFICAND_BITS+2 downto 0);
+  signal s_f3_product_rounded : unsigned(SIGNIFICAND_BITS+1 downto 0);
 
   -- Adjustment.
-  signal s_f3_top_bits : unsigned(1 downto 0);
-  signal s_f3_adjust : unsigned(1 downto 0);
-  signal s_f3_product_adjusted : std_logic_vector(SIGNIFICAND_BITS+2 downto 0);
+  signal s_f3_do_adjust : std_logic;
+  signal s_f3_product_adjusted : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
+  signal s_f3_exponent_plus_1 : unsigned(EXP_BITS+1 downto 0);
   signal s_f3_exponent_adjusted : unsigned(EXP_BITS+1 downto 0);
 
   -- Overflow/underflow.
@@ -185,22 +185,23 @@ begin
   -- importantly it's the default rounding mode in IEEE 754. See:
   -- https://en.wikipedia.org/wiki/Rounding#Round_half_to_even
   s_f3_round_offset <= s_f2_product(PRODUCT_BITS-1) & not s_f2_product(PRODUCT_BITS-1);
-  s_f3_product_rounded <= ("0" & s_f2_product(PRODUCT_BITS-1 downto SIGNIFICAND_BITS-2)) +
-                          resize(s_f3_round_offset, SIGNIFICAND_BITS+3);
+  s_f3_product_rounded <= s_f2_product(PRODUCT_BITS-1 downto SIGNIFICAND_BITS-2) +
+                          resize(s_f3_round_offset, SIGNIFICAND_BITS+2);
 
-  -- 2) Determine the required exponent adjustment (and hence, the significand shift).
-  s_f3_top_bits <= s_f3_product_rounded(SIGNIFICAND_BITS+2 downto SIGNIFICAND_BITS+1);
-  F3AdjustMux: with s_f3_top_bits select
-    s_f3_adjust <=
-        2X"2" when "10" | "11",  -- TODO(m): Can this ever occurr?!?
-        2X"1" when "01",
-        2X"0" when others;
+  -- 2) Is exponent adjustment needed?
+  -- TODO(m): Possible optimization: We should be able to determine this based on F2 outputs rather
+  -- than relying on the rounded product.
+  s_f3_do_adjust <= s_f3_product_rounded(SIGNIFICAND_BITS+1);
 
   -- 3a) Normalize (shift) the significand.
-  s_f3_product_adjusted <= std_logic_vector(shift_right(s_f3_product_rounded, to_integer(s_f3_adjust)));
+  s_f3_product_adjusted <=
+      std_logic_vector(s_f3_product_rounded(SIGNIFICAND_BITS+1 downto 2)) when s_f3_do_adjust = '1' else
+      std_logic_vector(s_f3_product_rounded(SIGNIFICAND_BITS downto 1));
 
   -- 3b) Adjust the exponent.
-  s_f3_exponent_adjusted <= unsigned(s_f2_exponent) + s_f3_adjust;
+  s_f3_exponent_plus_1 <= unsigned(s_f2_exponent) + to_unsigned(1, 1);
+  s_f3_exponent_adjusted <= s_f3_exponent_plus_1 when s_f3_do_adjust = '1' else
+                            unsigned(s_f2_exponent);
 
   -- 4) Check for overflow/underflow.
   s_f3_overflow <= '1' when s_f3_exponent_adjusted(EXP_BITS+1 downto EXP_BITS) = "01" or
@@ -215,7 +216,7 @@ begin
   o_props.is_nan <= s_f2_props.is_nan;
   o_props.is_inf <= s_f2_props.is_inf or s_f3_overflow;
   o_props.is_zero <= s_f2_props.is_zero or s_f3_underflow;
-  o_significand <= s_f3_product_adjusted(SIGNIFICAND_BITS downto 1);
+  o_significand <= s_f3_product_adjusted;
   o_exponent <= std_logic_vector(s_f3_exponent_adjusted(EXP_BITS-1 downto 0));
 
   -- Result ready?
