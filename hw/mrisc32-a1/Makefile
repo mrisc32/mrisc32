@@ -38,6 +38,7 @@ default: all
 
 SRCS =
 TESTS =
+EXTRA =
 
 include common/Makefile
 include agu/Makefile
@@ -49,7 +50,7 @@ include cache/Makefile
 include pipeline/Makefile
 include benchmark/Makefile
 
-all: $(TESTS)
+all: $(TESTS) $(EXTRA)
 
 $(TESTS): $(WORKDIR)/work-obj93.cf $(SRCS)
 	$(GHDL) -m $(GHDLFLAGS) $@

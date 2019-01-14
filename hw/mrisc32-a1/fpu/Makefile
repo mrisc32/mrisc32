@@ -35,3 +35,9 @@ TESTS += \
     float_compare_tb \
     fpu_tb
 
+EXTRA += \
+    $(WORKDIR)/fpu_test_gen
+
+# Data generator for FPU test data.
+$(WORKDIR)/fpu_test_gen: $(FPU_PATH)/fpu_test_gen.cpp
+	g++ $(FPU_PATH)/fpu_test_gen.cpp -o $(WORKDIR)/fpu_test_gen
