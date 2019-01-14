@@ -222,14 +222,35 @@ begin
 
   s_fmul_enable <= i_enable and s_is_mul_op;
 
-  -- TODO(m): Implement me!
-  s_fmul_props.is_neg <= '0';
-  s_fmul_props.is_nan <= '0';
-  s_fmul_props.is_inf <= '0';
-  s_fmul_props.is_zero <= '0';
-  s_fmul_exponent <= (others => '0');
-  s_fmul_significand <= (others => '0');
-  s_fmul_result_ready <= '0';
+  FMUL: entity work.fmul
+    generic map (
+      WIDTH => WIDTH,
+      EXP_BITS => EXP_BITS,
+      EXP_BIAS => EXP_BIAS,
+      FRACT_BITS => FRACT_BITS
+    )
+    port map (
+      -- Control.
+      i_clk => i_clk,
+      i_rst => i_rst,
+      i_stall => i_stall,
+      i_enable => s_fmul_enable,
+
+      -- Inputs (async).
+      i_props_a => s_props_a,
+      i_exponent_a => s_exponent_a,
+      i_significand_a => s_significand_a,
+
+      i_props_b => s_props_b,
+      i_exponent_b => s_exponent_b,
+      i_significand_b => s_significand_b,
+
+      -- Outputs (async).
+      o_props => s_fmul_props,
+      o_exponent => s_fmul_exponent,
+      o_significand => s_fmul_significand,
+      o_result_ready => s_fmul_result_ready
+    );
 
 
   --------------------------------------------------------------------------------------------------
