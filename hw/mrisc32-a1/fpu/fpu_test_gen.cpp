@@ -38,4 +38,6 @@ int main() {
   fmul(0x7f555555u, 0x3f8ccccdu);
   fmul(0x7f555555u, 0x3fa66666u);
   fmul(0x00d55555u, 0x3f000000u);
+  fmul(0x3fb504f3u, 0x3fb504f3u);
+  fmul(0x3fb504f3u, 0x3fb504f4u);
 }
