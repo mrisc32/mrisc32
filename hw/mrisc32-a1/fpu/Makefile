@@ -25,6 +25,7 @@ SRCS += \
     $(FPU_PATH)/float_compose.vhd \
     $(FPU_PATH)/float_compare.vhd \
     $(FPU_PATH)/float_compare_tb.vhd \
+    $(FPU_PATH)/fadd.vhd \
     $(FPU_PATH)/fmul.vhd \
     $(FPU_PATH)/fmul_tb.vhd \
     $(FPU_PATH)/fpu_impl.vhd \

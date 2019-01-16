@@ -102,6 +102,13 @@ architecture rtl of fpu_impl is
   signal s_minmax_sel_a : std_logic;
   signal s_minmax_res : std_logic_vector(WIDTH-1 downto 0);
 
+  -- FADD signals.
+  signal s_fadd_enable : std_logic;
+  signal s_fadd_props : T_FLOAT_PROPS;
+  signal s_fadd_exponent : std_logic_vector(EXP_BITS-1 downto 0);
+  signal s_fadd_significand : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
+  signal s_fadd_result_ready : std_logic;
+
   -- FMUL signals.
   signal s_fmul_enable : std_logic;
   signal s_fmul_props : T_FLOAT_PROPS;
@@ -217,6 +224,42 @@ begin
   --================================================================================================
 
   --------------------------------------------------------------------------------------------------
+  -- FADD
+  --------------------------------------------------------------------------------------------------
+
+  s_fadd_enable <= i_enable and s_is_add_op;
+
+  FADD: entity work.fadd
+    generic map (
+      WIDTH => WIDTH,
+      EXP_BITS => EXP_BITS,
+      EXP_BIAS => EXP_BIAS,
+      FRACT_BITS => FRACT_BITS
+    )
+    port map (
+      -- Control.
+      i_clk => i_clk,
+      i_rst => i_rst,
+      i_stall => i_stall,
+      i_enable => s_fadd_enable,
+
+      -- Inputs (async).
+      i_props_a => s_props_a,
+      i_exponent_a => s_exponent_a,
+      i_significand_a => s_significand_a,
+
+      i_props_b => s_props_b,
+      i_exponent_b => s_exponent_b,
+      i_significand_b => s_significand_b,
+
+      -- Outputs (async).
+      o_props => s_fadd_props,
+      o_exponent => s_fadd_exponent,
+      o_significand => s_fadd_significand,
+      o_result_ready => s_fadd_result_ready
+    );
+
+  --------------------------------------------------------------------------------------------------
   -- FMUL
   --------------------------------------------------------------------------------------------------
 
@@ -258,10 +301,12 @@ begin
   --------------------------------------------------------------------------------------------------
 
   -- Select the decomposed results from the active unit.
-  -- TODO(m): Implement me when we have more operations implemented.
-  s_f3_props <= s_fmul_props;
-  s_f3_exponent <= s_fmul_exponent;
-  s_f3_significand <= s_fmul_significand;
+  s_f3_props <= s_fadd_props when s_fadd_result_ready = '1' else
+                s_fmul_props;
+  s_f3_exponent <= s_fadd_exponent when s_fadd_result_ready = '1' else
+                   s_fmul_exponent;
+  s_f3_significand <= s_fadd_significand when s_fadd_result_ready = '1' else
+                      s_fmul_significand;
 
   ComposeResult: entity work.float_compose
     generic map (
@@ -276,7 +321,7 @@ begin
       o_result => o_f3_next_result
     );
 
-  o_f3_next_result_ready <= s_fmul_result_ready;
+  o_f3_next_result_ready <= s_fadd_result_ready or s_fmul_result_ready;
 
   -- Stall logic.
   -- TODO(m): Longer operations (DIV, SQRT) may stall.
