@@ -214,8 +214,8 @@ begin
   -- Output the result.
   o_props.is_neg <= s_f2_props.is_neg;
   o_props.is_nan <= s_f2_props.is_nan;
-  o_props.is_inf <= s_f2_props.is_inf or s_f3_overflow;
-  o_props.is_zero <= s_f2_props.is_zero or s_f3_underflow;
+  o_props.is_inf <= (s_f2_props.is_inf or s_f3_overflow) and not s_f2_props.is_nan;
+  o_props.is_zero <= (s_f2_props.is_zero or s_f3_underflow) and not s_f2_props.is_nan;
   o_significand <= s_f3_product_adjusted;
   o_exponent <= std_logic_vector(s_f3_exponent_adjusted(EXP_BITS-1 downto 0));
 
