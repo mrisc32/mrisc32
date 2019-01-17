@@ -18,7 +18,7 @@
 ----------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------
--- Pipeline Stages 5, 6 & 7: Execute (EX1/EX2/EX3)
+-- Pipeline Stages 5, 6, 7 & 8: Execute (EX1/EX2/EX3/EX3)
 ----------------------------------------------------------------------------------------------------
 
 library ieee;
@@ -91,6 +91,9 @@ entity execute is
     o_ex2_next_result_ready : out std_logic;
     o_ex3_next_dst_reg : out T_DST_REG;
     o_ex3_next_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+    o_ex3_next_result_ready : out std_logic;
+    o_ex4_next_dst_reg : out T_DST_REG;
+    o_ex4_next_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
 
     -- Outputs from the different pipeline stages (sync).
     o_ex1_dst_reg : out T_DST_REG;
@@ -100,7 +103,10 @@ entity execute is
     o_ex2_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
     o_ex2_result_ready : out std_logic;
     o_ex3_dst_reg : out T_DST_REG;
-    o_ex3_result : out std_logic_vector(C_WORD_SIZE-1 downto 0)
+    o_ex3_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+    o_ex3_result_ready : out std_logic;
+    o_ex4_dst_reg : out T_DST_REG;
+    o_ex4_result : out std_logic_vector(C_WORD_SIZE-1 downto 0)
   );
 end execute;
 
@@ -118,8 +124,8 @@ architecture rtl of execute is
   signal s_fpu_stall : std_logic;
   signal s_fpu_f1_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_fpu_f1_result_ready : std_logic;
-  signal s_fpu_f3_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_fpu_f3_result_ready : std_logic;
+  signal s_fpu_f4_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_fpu_f4_result_ready : std_logic;
 
   -- Should the EX pipeline be stalled?
   signal s_stall_ex : std_logic;
@@ -181,8 +187,18 @@ architecture rtl of execute is
   signal s_ex2_result_ready : std_logic;
   signal s_ex2_dst_reg : T_DST_REG;
 
-  -- Signals from the EX3 stage (async).
+  -- Signals from the EX3 to the EX4 stage (async).
   signal s_ex3_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_ex3_next_result_ready : std_logic;
+  signal s_ex3_next_dst_reg : T_DST_REG;
+
+  -- Signals from the EX3 to the EX4 stage (sync).
+  signal s_ex3_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_ex3_result_ready : std_logic;
+  signal s_ex3_dst_reg : T_DST_REG;
+
+  -- Signals from the EX4 stage (async).
+  signal s_ex4_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
 begin
   --------------------------------------------------------------------------------------------------
   -- Branch logic.
@@ -254,7 +270,7 @@ begin
 
 
   --------------------------------------------------------------------------------------------------
-  -- Multi cycle units: SAU (2 cycles), MUL (3 cycles), DIV (3+ cycles), FPU (1/3 cycles).
+  -- Multi cycle units: SAU (2 cycles), MUL (3 cycles), DIV (3+ cycles), FPU (1/4 cycles).
   --------------------------------------------------------------------------------------------------
 
   -- Instantiate the saturating arithmetic unit.
@@ -317,8 +333,8 @@ begin
       i_src_b => i_src_b,
       o_f1_next_result => s_fpu_f1_result,
       o_f1_next_result_ready => s_fpu_f1_result_ready,
-      o_f3_next_result => s_fpu_f3_result,
-      o_f3_next_result_ready => s_fpu_f3_result_ready
+      o_f4_next_result => s_fpu_f4_result,
+      o_f4_next_result_ready => s_fpu_f4_result_ready
     );
 
 
@@ -459,7 +475,9 @@ begin
   s_ex2_next_result <= s_mem_data when s_mem_data_ready = '1' else
                        s_sau_result when s_sau_result_ready = '1' else
                        s_ex1_result;
-  s_ex2_next_result_ready <= s_mem_data_ready or s_ex1_result_ready;
+  s_ex2_next_result_ready <= s_mem_data_ready or
+                             s_sau_result_ready or
+                             s_ex1_result_ready;
 
   -- Outputs to the EX3 stage (sync).
   process(i_clk, i_rst)
@@ -493,35 +511,76 @@ begin
 
 
   --------------------------------------------------------------------------------------------------
-  -- EX3: MUL & FPU (multi cycle operations).
+  -- EX3: MUL & DIV (multi cycle operations).
   --------------------------------------------------------------------------------------------------
 
-  -- Select the EX2, MUL or FPU result.
-  s_ex3_next_result <= s_fpu_f3_result when s_fpu_f3_result_ready = '1' else
-                       s_div_result when s_div_result_ready = '1' else
+  -- Select the EX2, MUL or DIV result.
+  s_ex3_next_result <= s_div_result when s_div_result_ready = '1' else
                        s_mul_result when s_mul_result_ready = '1' else
                        s_ex2_result;
+  s_ex3_next_result_ready <= s_div_result_ready or
+                             s_mul_result_ready or
+                             s_ex1_result_ready;
 
   -- Outputs from the EX3 stage (sync).
   process(i_clk, i_rst)
   begin
     if i_rst = '1' then
-      o_ex3_result <= (others => '0');
-      o_ex3_dst_reg.is_target <= '0';
-      o_ex3_dst_reg.reg <= (others => '0');
-      o_ex3_dst_reg.element <= (others => '0');
-      o_ex3_dst_reg.is_vector <= '0';
+      s_ex3_result <= (others => '0');
+      s_ex3_result_ready <= '0';
+      s_ex3_dst_reg.is_target <= '0';
+      s_ex3_dst_reg.reg <= (others => '0');
+      s_ex3_dst_reg.element <= (others => '0');
+      s_ex3_dst_reg.is_vector <= '0';
     elsif rising_edge(i_clk) then
       if s_stall_ex = '0' then
-        o_ex3_result <= s_ex3_next_result;
-        o_ex3_dst_reg <= s_ex2_dst_reg;
+        s_ex3_result <= s_ex3_next_result;
+        s_ex3_result_ready <= s_ex3_next_result_ready;
+        s_ex3_dst_reg <= s_ex2_dst_reg;
       end if;
     end if;
   end process;
 
-  -- Output the EX3 result to operand forwarding logic (async).
+  -- Output the EX3 result to operand forwarding logic.
+  -- Async:
   o_ex3_next_dst_reg <= s_ex2_dst_reg;
   o_ex3_next_result <= s_ex3_next_result;
+  o_ex3_next_result_ready <= s_ex3_next_result_ready;
+
+  -- Sync:
+  o_ex3_dst_reg <= s_ex3_dst_reg;
+  o_ex3_result <= s_ex3_result;
+  o_ex3_result_ready <= s_ex3_result_ready;
+
+
+  --------------------------------------------------------------------------------------------------
+  -- EX4: FPU (multi cycle operations).
+  --------------------------------------------------------------------------------------------------
+
+  -- Select the EX3 or FPU result.
+  s_ex4_next_result <= s_fpu_f4_result when s_fpu_f4_result_ready = '1' else
+                       s_ex3_result;
+
+  -- Outputs from the EX4 stage (sync).
+  process(i_clk, i_rst)
+  begin
+    if i_rst = '1' then
+      o_ex4_result <= (others => '0');
+      o_ex4_dst_reg.is_target <= '0';
+      o_ex4_dst_reg.reg <= (others => '0');
+      o_ex4_dst_reg.element <= (others => '0');
+      o_ex4_dst_reg.is_vector <= '0';
+    elsif rising_edge(i_clk) then
+      if s_stall_ex = '0' then
+        o_ex4_result <= s_ex4_next_result;
+        o_ex4_dst_reg <= s_ex3_dst_reg;
+      end if;
+    end if;
+  end process;
+
+  -- Output the EX4 result to operand forwarding logic (async).
+  o_ex4_next_dst_reg <= s_ex3_dst_reg;
+  o_ex4_next_result <= s_ex4_next_result;
 
   -- Stall logic (async).
   s_stall_ex <= s_mem_stall or s_div_stall or s_fpu_stall;
@@ -529,4 +588,3 @@ begin
   s_stall_fpu <= s_mem_stall or s_div_stall;
   o_stall <= s_stall_ex;
 end rtl;
-
