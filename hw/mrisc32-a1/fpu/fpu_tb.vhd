@@ -36,8 +36,8 @@ architecture behav of fpu_tb is
   signal s_src_b : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_f1_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_f1_next_result_ready : std_logic;
-  signal s_f3_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_f3_next_result_ready : std_logic;
+  signal s_f4_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_f4_next_result_ready : std_logic;
 begin
   --  Component instantiation.
   fpu_0: entity work.fpu
@@ -52,8 +52,8 @@ begin
       i_src_b => s_src_b,
       o_f1_next_result => s_f1_next_result,
       o_f1_next_result_ready => s_f1_next_result_ready,
-      o_f3_next_result => s_f3_next_result,
-      o_f3_next_result_ready => s_f3_next_result_ready
+      o_f4_next_result => s_f4_next_result,
+      o_f4_next_result_ready => s_f4_next_result_ready
     );
 
   process
@@ -69,8 +69,8 @@ begin
       -- Expected outputs.
       f1_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
       f1_next_result_ready : std_logic;
-      f3_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
-      f3_next_result_ready : std_logic;
+      f4_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+      f4_next_result_ready : std_logic;
     end record;
     type pattern_array is array (natural range <>) of pattern_type;
     constant patterns : pattern_array := (
@@ -380,22 +380,22 @@ begin
                " (e=" & to_string(patterns(i).f1_next_result_ready) & ")"
             severity error;
 
-      assert s_f3_next_result = patterns(i).f3_next_result or s_f3_next_result_ready = '0'
+      assert s_f4_next_result = patterns(i).f4_next_result or s_f4_next_result_ready = '0'
         report "Bad FPU F3 result (" & integer'image(i) & "):" & lf &
                "  op=" & to_string(s_op) & lf &
                "  a=" & to_string(s_src_a) & lf &
                "  b=" & to_string(s_src_b) & lf &
-               "  r=" & to_string(s_f3_next_result) & lf &
-               " (e=" & to_string(patterns(i).f3_next_result) & ")"
+               "  r=" & to_string(s_f4_next_result) & lf &
+               " (e=" & to_string(patterns(i).f4_next_result) & ")"
             severity error;
 
-      assert s_f3_next_result_ready = patterns(i).f3_next_result_ready
+      assert s_f4_next_result_ready = patterns(i).f4_next_result_ready
         report "Bad FPU F3 result ready (" & integer'image(i) & "):" & lf &
                "  op=" & to_string(s_op) & lf &
                "  a=" & to_string(s_src_a) & lf &
                "  b=" & to_string(s_src_b) & lf &
-               "  r=" & to_string(s_f3_next_result_ready) & lf &
-               " (e=" & to_string(patterns(i).f3_next_result_ready) & ")"
+               "  r=" & to_string(s_f4_next_result_ready) & lf &
+               " (e=" & to_string(patterns(i).f4_next_result_ready) & ")"
             severity error;
 
       -- Tick the clock.

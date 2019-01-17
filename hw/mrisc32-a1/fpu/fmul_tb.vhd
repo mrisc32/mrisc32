@@ -240,6 +240,10 @@ begin
       s_clk <= '0';
       wait for 1 ns;
       s_clk <= '1';
+      wait for 1 ns;
+      s_clk <= '0';
+      wait for 1 ns;
+      s_clk <= '1';
       wait until s_clk = '1';
 
       --  Check the outputs.

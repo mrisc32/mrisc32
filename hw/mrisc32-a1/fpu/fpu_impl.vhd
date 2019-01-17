@@ -26,7 +26,7 @@
 -- Single-cycle operations:
 --   FSEQ, FSNE, FSLT, FSLE, FSNAN, FMIN, FMAX
 --
--- Three-cycle operations:
+-- Four-cycle operations:
 --   FADD, FSUB, FMUL
 --
 -- Multi-cycle operations (stalls the pipeline):
@@ -61,8 +61,8 @@ entity fpu_impl is
     -- Outputs (async).
     o_f1_next_result : out std_logic_vector(WIDTH-1 downto 0);
     o_f1_next_result_ready : out std_logic;
-    o_f3_next_result : out std_logic_vector(WIDTH-1 downto 0);
-    o_f3_next_result_ready : out std_logic
+    o_f4_next_result : out std_logic_vector(WIDTH-1 downto 0);
+    o_f4_next_result_ready : out std_logic
   );
 end fpu_impl;
 
@@ -117,9 +117,9 @@ architecture rtl of fpu_impl is
   signal s_fmul_result_ready : std_logic;
 
   -- Multicycle results.
-  signal s_f3_props : T_FLOAT_PROPS;
-  signal s_f3_exponent : std_logic_vector(EXP_BITS-1 downto 0);
-  signal s_f3_significand : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
+  signal s_f4_props : T_FLOAT_PROPS;
+  signal s_f4_exponent : std_logic_vector(EXP_BITS-1 downto 0);
+  signal s_f4_significand : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
 begin
   --------------------------------------------------------------------------------------------------
   -- Decode the FPU operation.
@@ -301,11 +301,11 @@ begin
   --------------------------------------------------------------------------------------------------
 
   -- Select the decomposed results from the active unit.
-  s_f3_props <= s_fadd_props when s_fadd_result_ready = '1' else
+  s_f4_props <= s_fadd_props when s_fadd_result_ready = '1' else
                 s_fmul_props;
-  s_f3_exponent <= s_fadd_exponent when s_fadd_result_ready = '1' else
+  s_f4_exponent <= s_fadd_exponent when s_fadd_result_ready = '1' else
                    s_fmul_exponent;
-  s_f3_significand <= s_fadd_significand when s_fadd_result_ready = '1' else
+  s_f4_significand <= s_fadd_significand when s_fadd_result_ready = '1' else
                       s_fmul_significand;
 
   ComposeResult: entity work.float_compose
@@ -315,13 +315,13 @@ begin
       FRACT_BITS => FRACT_BITS
     )
     port map (
-      i_props => s_f3_props,
-      i_exponent => s_f3_exponent,
-      i_significand => s_f3_significand,
-      o_result => o_f3_next_result
+      i_props => s_f4_props,
+      i_exponent => s_f4_exponent,
+      i_significand => s_f4_significand,
+      o_result => o_f4_next_result
     );
 
-  o_f3_next_result_ready <= s_fadd_result_ready or s_fmul_result_ready;
+  o_f4_next_result_ready <= s_fadd_result_ready or s_fmul_result_ready;
 
   -- Stall logic.
   -- TODO(m): Longer operations (DIV, SQRT) may stall.

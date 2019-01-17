@@ -18,8 +18,8 @@
 ----------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------
--- This is a configurable FMUL pipeline. The pipeline can be instantiated for different sizes (e.g.
--- 32-bit, 16-bit and 8-bit floating point).
+-- This is a configurable four-stage FMUL pipeline. The pipeline can be instantiated for different
+-- sizes (e.g. 32-bit, 16-bit and 8-bit floating point).
 ----------------------------------------------------------------------------------------------------
 
 library ieee;
@@ -86,26 +86,27 @@ architecture rtl of fmul is
   signal s_f2_product : unsigned(PRODUCT_BITS-1 downto 0);
 
   -- F3 signals.
-
-  -- Rounding.
+  signal s_f3_enable : std_logic;
+  signal s_f3_next_product_rounded : unsigned(SIGNIFICAND_BITS+1 downto 0);
+  signal s_f3_next_do_adjust : std_logic;
   signal s_f3_round_offset : unsigned(1 downto 0);
   signal s_f3_product_rounded : unsigned(SIGNIFICAND_BITS+1 downto 0);
-
-  -- Adjustment.
   signal s_f3_do_adjust : std_logic;
-  signal s_f3_product_adjusted : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
-  signal s_f3_exponent_plus_1 : unsigned(EXP_BITS+1 downto 0);
-  signal s_f3_exponent_adjusted : unsigned(EXP_BITS+1 downto 0);
 
-  -- Overflow/underflow.
-  signal s_f3_overflow : std_logic;
-  signal s_f3_underflow : std_logic;
+  -- F4 signals.
+  signal s_f4_product_adjusted : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
+  signal s_f4_exponent_plus_1 : unsigned(EXP_BITS+1 downto 0);
+  signal s_f4_exponent_adjusted : unsigned(EXP_BITS+1 downto 0);
+  signal s_f4_overflow : std_logic;
+  signal s_f4_underflow : std_logic;
 begin
   --================================================================================================
   -- F1: Stage 1 of the pipeline.
+  -- * Preparation of inputs for the integer multiplier.
+  -- * Preliminary properties (NaN, Inf etc) for the final result.
   --================================================================================================
 
-  -- Determin the preliminary properties of the result (may be overridden by final rounding).
+  -- Determin the preliminary properties of the result (may be adjusted by final rounding).
   s_f1_next_props.is_neg <= i_props_a.is_neg xor i_props_b.is_neg;
   s_f1_next_props.is_nan <= i_props_a.is_nan or
                             i_props_b.is_nan or
@@ -114,7 +115,7 @@ begin
   s_f1_next_props.is_inf <= i_props_a.is_inf or i_props_b.is_inf;
   s_f1_next_props.is_zero <= i_props_a.is_zero or i_props_b.is_zero;
 
-  -- Calculate the preliminary exponent of the result (may be overridden by final rounding).
+  -- Calculate the preliminary exponent of the result (may be adjusted by final rounding).
   -- Note: We add two bits to accomodate for both overflow and underflow.
   s_f1_next_exponent <= std_logic_vector(unsigned("00" & i_exponent_a) +
                                          unsigned("00" & i_exponent_b) -
@@ -146,6 +147,7 @@ begin
 
   --==================================================================================================
   -- F2: Stage 2 of the pipeline.
+  -- * Integer multiplication.
   --==================================================================================================
 
   -- Perform the integer multiplication.
@@ -175,7 +177,7 @@ begin
 
   --==================================================================================================
   -- F3: Stage 3 of the pipeline.
-  -- Final rounding and normalization.
+  -- * Rounding.
   --==================================================================================================
 
   -- 1) Perform rounding.
@@ -185,41 +187,62 @@ begin
   -- importantly it's the default rounding mode in IEEE 754. See:
   -- https://en.wikipedia.org/wiki/Rounding#Round_half_to_even
   s_f3_round_offset <= s_f2_product(PRODUCT_BITS-1) & not s_f2_product(PRODUCT_BITS-1);
-  s_f3_product_rounded <= s_f2_product(PRODUCT_BITS-1 downto SIGNIFICAND_BITS-2) +
-                          resize(s_f3_round_offset, SIGNIFICAND_BITS+2);
+  s_f3_next_product_rounded <= s_f2_product(PRODUCT_BITS-1 downto SIGNIFICAND_BITS-2) +
+                               resize(s_f3_round_offset, SIGNIFICAND_BITS+2);
 
   -- 2) Is exponent adjustment needed?
-  -- TODO(m): Possible optimization: We should be able to determine this based on F2 outputs rather
-  -- than relying on the rounded product.
-  s_f3_do_adjust <= s_f3_product_rounded(SIGNIFICAND_BITS+1);
+  s_f3_next_do_adjust <= s_f3_next_product_rounded(SIGNIFICAND_BITS+1);
+
+  -- Signals from stage 2 to stage 3 of the pipeline.
+  process(i_clk, i_rst)
+  begin
+    if i_rst = '1' then
+      s_f3_enable <= '0';
+      s_f3_product_rounded <= (others => '0');
+      s_f3_do_adjust <= '0';
+    elsif rising_edge(i_clk) then
+      if i_stall = '0' then
+        s_f3_enable <= s_f2_enable;
+        s_f3_product_rounded <= s_f3_next_product_rounded;
+        s_f3_do_adjust <= s_f3_next_do_adjust;
+      end if;
+    end if;
+  end process;
+
+
+  --==================================================================================================
+  -- F4: Stage 4 of the pipeline.
+  -- * Final normalization.
+  -- * Final floating point properties.
+  --==================================================================================================
 
   -- 3a) Normalize (shift) the significand.
-  s_f3_product_adjusted <=
+  s_f4_product_adjusted <=
       std_logic_vector(s_f3_product_rounded(SIGNIFICAND_BITS+1 downto 2)) when s_f3_do_adjust = '1' else
       std_logic_vector(s_f3_product_rounded(SIGNIFICAND_BITS downto 1));
 
   -- 3b) Adjust the exponent.
-  s_f3_exponent_plus_1 <= unsigned(s_f2_exponent) + to_unsigned(1, 1);
-  s_f3_exponent_adjusted <= s_f3_exponent_plus_1 when s_f3_do_adjust = '1' else
+  s_f4_exponent_plus_1 <= unsigned(s_f2_exponent) + to_unsigned(1, 1);
+  s_f4_exponent_adjusted <= s_f4_exponent_plus_1 when s_f3_do_adjust = '1' else
                             unsigned(s_f2_exponent);
 
   -- 4) Check for overflow/underflow.
-  s_f3_overflow <= '1' when s_f3_exponent_adjusted(EXP_BITS+1 downto EXP_BITS) = "01" or
-                            s_f3_exponent_adjusted(EXP_BITS+1 downto 0) = "00" & (EXP_BITS-1 downto 0 => '1')
+  s_f4_overflow <= '1' when s_f4_exponent_adjusted(EXP_BITS+1 downto EXP_BITS) = "01" or
+                            s_f4_exponent_adjusted(EXP_BITS+1 downto 0) = "00" & (EXP_BITS-1 downto 0 => '1')
                    else '0';
-  s_f3_underflow <= '1' when s_f3_exponent_adjusted(EXP_BITS+1) = '1' or
-                             s_f3_exponent_adjusted(EXP_BITS+1 downto 0) = (EXP_BITS+1 downto 0 => '0')
+  s_f4_underflow <= '1' when s_f4_exponent_adjusted(EXP_BITS+1) = '1' or
+                             s_f4_exponent_adjusted(EXP_BITS+1 downto 0) = (EXP_BITS+1 downto 0 => '0')
                     else '0';
 
   -- Output the result.
   o_props.is_neg <= s_f2_props.is_neg;
   o_props.is_nan <= s_f2_props.is_nan;
-  o_props.is_inf <= (s_f2_props.is_inf or s_f3_overflow) and not s_f2_props.is_nan;
-  o_props.is_zero <= (s_f2_props.is_zero or s_f3_underflow) and not s_f2_props.is_nan;
-  o_significand <= s_f3_product_adjusted;
-  o_exponent <= std_logic_vector(s_f3_exponent_adjusted(EXP_BITS-1 downto 0));
+  o_props.is_inf <= (s_f2_props.is_inf or s_f4_overflow) and not s_f2_props.is_nan;
+  o_props.is_zero <= (s_f2_props.is_zero or s_f4_underflow) and not s_f2_props.is_nan;
+  o_significand <= s_f4_product_adjusted;
+  o_exponent <= std_logic_vector(s_f4_exponent_adjusted(EXP_BITS-1 downto 0));
 
   -- Result ready?
-  o_result_ready <= s_f2_enable;
+  o_result_ready <= s_f3_enable;
 end rtl;
 
