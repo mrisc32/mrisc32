@@ -53,6 +53,10 @@ entity forward_to_vector_control is
 
       i_dst_reg_from_ex3 : in T_DST_REG;
       i_value_from_ex3 : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_ready_from_ex3 : in std_logic;
+
+      i_dst_reg_from_ex4 : in T_DST_REG;
+      i_value_from_ex4 : in std_logic_vector(C_WORD_SIZE-1 downto 0);
 
       -- Operand selection for the ID stage.
       o_value : out std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -67,6 +71,7 @@ architecture rtl of forward_to_vector_control is
   signal s_reg_from_ex1 : std_logic;
   signal s_reg_from_ex2 : std_logic;
   signal s_reg_from_ex3 : std_logic;
+  signal s_reg_from_ex4 : std_logic;
 
   signal s_use_value : std_logic;
   signal s_value_ready : std_logic;
@@ -90,19 +95,24 @@ begin
   s_reg_from_ex3 <= i_dst_reg_from_ex3.is_target when
       (i_dst_reg_from_ex3.reg = to_vector(C_VL_REG, C_LOG2_NUM_REGS)) and
       (i_dst_reg_from_ex3.is_vector = '0') else '0';
+  s_reg_from_ex4 <= i_dst_reg_from_ex4.is_target when
+      (i_dst_reg_from_ex4.reg = to_vector(C_VL_REG, C_LOG2_NUM_REGS)) and
+      (i_dst_reg_from_ex4.is_vector = '0') else '0';
 
   -- Which value to forward?
   o_value <= i_value_from_ex1 when (s_reg_from_ex1 and i_ready_from_ex1) = '1' else
              i_value_from_ex2 when (s_reg_from_ex2 and i_ready_from_ex2) = '1' else
-             i_value_from_ex3;
+             i_value_from_ex3 when (s_reg_from_ex3 and i_ready_from_ex3) = '1' else
+             i_value_from_ex4;
 
   -- Should the forwarded pipeline value be used instead of register file value?
-  s_use_value <= s_reg_from_id or s_reg_from_rf or s_reg_from_ex1 or s_reg_from_ex2 or s_reg_from_ex3;
+  s_use_value <= s_reg_from_id or s_reg_from_rf or s_reg_from_ex1 or s_reg_from_ex2 or s_reg_from_ex3 or s_reg_from_ex4;
 
   -- Is the value ready for use?
   s_value_ready <= '0' when (s_reg_from_id or s_reg_from_rf) = '1' else
                    i_ready_from_ex1 when s_reg_from_ex1 = '1' else
                    i_ready_from_ex2 when s_reg_from_ex2 = '1' else
+                   i_ready_from_ex3 when s_reg_from_ex3 = '1' else
                    '1';
 
   -- Mask the outputs: We should only forward the value if VL is requested.

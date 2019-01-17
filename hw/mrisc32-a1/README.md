@@ -10,7 +10,7 @@ This is a [VHDL](https://en.wikipedia.org/wiki/VHDL) implementation of a single 
 
 The CPU is still under development. So far, the following components have been implemented:
 
-* An 8-stage pipeline.
+* A 9-stage pipeline.
   - PC and branching logic.
   - Instruction fetch.
   - Decode.
@@ -34,7 +34,7 @@ The CPU is still under development. So far, the following components have been i
   - The following single-cycle FPU instructions are implemented:
     - FSEQ/FSNE/FSLT/FSLE/FSNAN
     - FMIN/FMAX
-  - The following 3-cycle FPU instructions are implemented:
+  - The following 4-cycle FPU instructions are implemented:
     - FMUL
   - Both packed and unpacked FPU operations are implemented.
 * The scalar register file.
