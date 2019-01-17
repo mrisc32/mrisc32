@@ -20,5 +20,5 @@
 BENCHMARK_PATH = benchmark
 
 SRCS += \
-    $(BENCHMARK_PATH)/mul32_bench.vhd
-
+    $(BENCHMARK_PATH)/mul32_bench.vhd \
+    $(BENCHMARK_PATH)/fpu_bench.vhd
