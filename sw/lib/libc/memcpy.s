@@ -32,13 +32,15 @@
 ; Return value:
 ;   s1: Copy of the input argument dest (s1)
 ;
-; Clobbered registers:
+; Clobbered scratch registers:
 ;   s11, s12, s13, s14, s15, v15
 ; ----------------------------------------------------------------------------
 
     .text
     .globl  memcpy
 memcpy:
+    mov     s12, vl         ; Preserve vl (it's a callee-saved register).
+
     ; Nothing to do?
     bz      s3, done
 
@@ -54,25 +56,20 @@ memcpy:
     seq     s15, s14, s15
     bns     s15, slow       ; Use the slow case unless equally aligned.
 
-    ; Do we need to do an initial alginment loop?
+    ; Do we need to do an initial alignment loop?
     bz      s14, aligned
 
-    sub     s14, #4, s14    ; s14 = bytes left until aligned.
-    mov     s15, s14
-align_loop:
-    add     s15, s15, #-1
-    ldb     s13, s2, s15
-    stb     s13, s11, s15
-    bnz     s15, align_loop
-
-    ; Adjust the memory pointers and the count.
-    sub     s3, s3, s14
-    add     s2, s2, s14
-    add     s11, s11, s14
+    ; Align: Do a 1-3 bytes copy via a vector register, and adjust the memory
+    ; pointers and the count.
+    sub     vl, #4, s14    ; vl = bytes left until aligned.
+    ldb     v15, s2, #1
+    sub     s3, s3, vl
+    add     s2, s2, vl
+    stb     v15, s11, #1
+    add     s11, s11, vl
 
 aligned:
-    ; Vectorized loop.
-    mov     s12, vl         ; Preserve vl (it's a callee-saved register).
+    ; Vectorized word-copying loop.
     lsr     s15, s3, #2     ; s15 > 0 due to earlier length requirement.
     cpuid   s14, z, z       ; s14 = max vector length.
 aligned_loop:
@@ -85,24 +82,41 @@ aligned_loop:
     add     s11, s11, s13
     bnz     s15, aligned_loop
 
-    ; Post vector-operation: Clear v15 (reg. length optimization), and check
-    ; how many bytes are remaining.
-    ldi     vl, #0
-    and     s3, s3, #3      ; s3 = bytes left after the algined loop.
-    or      v15, vz, #0
-    mov     vl, s12         ; Restore vl.
-    bz      s3, done
+    ; Check how many bytes are remaining.
+    and     vl, s3, #3      ; vl = bytes left after the aligned loop.
+    bz      vl, done
 
-slow:
-    ; Naive byte-copy loop.
-    ; TODO(m): Vectorize the slow case.
-slow_loop:
-    add     s3, s3, #-1
-    ldb     s13, s2, s3
-    stb     s13, s11, s3
-    bnz     s3, slow_loop
+    ; Tail: Do a 1-3 bytes copy via a vector register.
+    ldb     v15, s2, #1
+    stb     v15, s11, #1
 
 done:
+    ; Post vector-operation: Clear v15 (reg. length optimization).
+    ldi     vl, #0
+    or      v15, vz, #0
+
+    mov     vl, s12         ; Restore vl.
+
     ; At this point s1 should contain it's original value (dest).
     j       lr
+
+
+; ----------------------------------------------------------------------------
+; Slow case
+; ----------------------------------------------------------------------------
+
+slow:
+    ; Simple vectorized byte-copy loop (this is typically 4x slower than a
+    ; word-copy loop).
+    cpuid   s14, z, z       ; s14 = max vector length.
+slow_loop:
+    min     vl, s14, s3
+    sub     s3, s3, vl
+    ldb     v15, s2, #1
+    add     s2, s2, vl
+    stb     v15, s11, #1
+    add     s11, s11, vl
+    bnz     s3, slow_loop
+
+    b       done
 
