@@ -30,12 +30,12 @@ The CPU is still under development. So far, the following components have been i
   - 3 cycles stall for 4 x 8-bit division.
 * A pipelined (two-cycle) Saturating Arithmetic Unit (SAU).
   - Supports all packed and unpacked saturating and halving arithmetic instructions.
-* An FPU.
+* An IEEE 754 compliant(ish) FPU.
   - The following single-cycle FPU instructions are implemented:
     - FSEQ/FSNE/FSLT/FSLE/FSNAN
     - FMIN/FMAX
   - The following 4-cycle FPU instructions are implemented:
-    - FMUL
+    - FADD, FSUB, FMUL
   - Both packed and unpacked FPU operations are implemented.
 * The scalar register file.
   - There are three read ports and one write port.

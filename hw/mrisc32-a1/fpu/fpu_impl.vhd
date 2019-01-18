@@ -88,7 +88,8 @@ architecture rtl of fpu_impl is
   signal s_exponent_b : std_logic_vector(EXP_BITS-1 downto 0);
   signal s_significand_b : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
 
-  -- Set operations.
+  -- Compare/set operations.
+  signal s_compare_magn_lt : std_logic;
   signal s_compare_eq : std_logic;
   signal s_compare_ne : std_logic;
   signal s_compare_lt : std_logic;
@@ -104,6 +105,7 @@ architecture rtl of fpu_impl is
 
   -- FADD signals.
   signal s_fadd_enable : std_logic;
+  signal s_fadd_subtract : std_logic;
   signal s_fadd_props : T_FLOAT_PROPS;
   signal s_fadd_exponent : std_logic_vector(EXP_BITS-1 downto 0);
   signal s_fadd_significand : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
@@ -191,6 +193,7 @@ begin
     port map (
       i_src_a => i_src_a,
       i_src_b => i_src_b,
+      o_magn_lt => s_compare_magn_lt,
       o_eq => s_compare_eq,
       o_ne => s_compare_ne,
       o_lt => s_compare_lt,
@@ -228,6 +231,7 @@ begin
   --------------------------------------------------------------------------------------------------
 
   s_fadd_enable <= i_enable and s_is_add_op;
+  s_fadd_subtract <= '1' when i_op = C_FPU_FSUB else '0';
 
   FADD: entity work.fadd
     generic map (
@@ -242,6 +246,7 @@ begin
       i_rst => i_rst,
       i_stall => i_stall,
       i_enable => s_fadd_enable,
+      i_subtract => s_fadd_subtract,
 
       -- Inputs (async).
       i_props_a => s_props_a,
@@ -251,6 +256,8 @@ begin
       i_props_b => s_props_b,
       i_exponent_b => s_exponent_b,
       i_significand_b => s_significand_b,
+
+      i_magn_a_lt_magn_b => s_compare_magn_lt,
 
       -- Outputs (async).
       o_props => s_fadd_props,
