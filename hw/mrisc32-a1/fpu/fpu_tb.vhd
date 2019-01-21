@@ -297,7 +297,13 @@ begin
          X"23456789", '1',
          X"00000000", '0'),
 
-        ----------------------------------------------------------------------
+        --( 36 )--------------------------------------------------------------
+        ('1', C_FPU_FMUL, "00",       -- TODO(m): For some reason this is not computed!
+         X"40490fdb",  -- 3.1415927
+         X"40f8a3d7",  -- 7.77
+         X"00000000", '0',
+         X"00000000", '0'),
+
         ('1', C_FPU_FMUL, "00",
          X"40490fdb",  -- 3.1415927
          X"40f8a3d7",  -- 7.77
@@ -326,8 +332,68 @@ begin
          X"00000000",  -- 0.0
          X"00000000",  -- 0.0
          X"00000000", '0',
-         X"7fffffff", '1')  -- 0.0 * Inf = NaN
+         X"7fffffff", '1'),  -- 0.0 * Inf = NaN
 
+        ('0', C_FPU_FMUL, "00",
+         X"00000000",  -- 0.0
+         X"00000000",  -- 0.0
+         X"00000000", '0',
+         X"00000000", '1'),  -- 0.0 * 0.0 = 0.0
+
+        --( 43 )--------------------------------------------------------------
+        ('1', C_FPU_FADD, "00",
+         X"40490fdb",  -- 3.1415927
+         X"40f8a3d7",  -- 7.77
+         X"00000000", '0',
+         X"00000000", '0'),
+
+        ('1', C_FPU_FADD, "00",
+         X"3f800000",  -- 1.0
+         X"3f800000",  -- 1.0
+         X"00000000", '0',
+         X"00000000", '0'),
+
+        ('1', C_FPU_FADD, "00",
+         X"40490fdb",  -- 3.1415927
+         X"c0f8a3d7",  -- -7.77
+         X"00000000", '0',
+         X"00000000", '0'),
+
+        ('1', C_FPU_FADD, "00",
+         X"40f8a3d7",  -- 7.77
+         X"c0f8a3d7",  -- -7.77
+         X"00000000", '0',
+         X"412e95e2", '1'), -- 3.1415927 + 7.77 = 10.911592
+
+        ('1', C_FPU_FADD, "00",
+         X"7f000000",  -- 1.7014118e+38
+         X"7f000000",  -- 1.7014118e+38
+         X"00000000", '0',
+         X"40000000", '1'), -- 1.0 + 1.0 = 2.0
+
+        ('1', C_FPU_FADD, "00",
+         X"00880000",  -- 1.2489627e-38
+         X"80800000",  -- -1.1754944e-38
+         X"00000000", '0',
+         X"c0941bea", '1'), -- 3.1415927 + -7.77 = -4.6284075
+
+        ('0', C_FPU_FADD, "00",
+         X"00000000",  -- 0.0
+         X"00000000",  -- 0.0
+         X"00000000", '0',
+         X"00000000", '1'), -- 7.77 + -7.77 = 0.0
+
+        ('0', C_FPU_FADD, "00",
+         X"00000000",  -- 0.0
+         X"00000000",  -- 0.0
+         X"00000000", '0',
+         X"7f800000", '1'), -- 1.7014118e+38 + 1.7014118e+38 = inf
+
+        ('0', C_FPU_FADD, "00",
+         X"00000000",  -- 0.0
+         X"00000000",  -- 0.0
+         X"00000000", '0',
+         X"00000000", '1')  -- 1.2489627e-38 + -1.1754944e-38 = 0.0
       );
   begin
     -- Reset all inputs.
@@ -350,6 +416,10 @@ begin
 
     -- Test all the patterns in the pattern array.
     for i in patterns'range loop
+      -- Wait for a positive edge on the clock.
+      s_clk <= '1';
+      wait until s_clk = '1';
+
       --  Set the inputs.
       s_enable <= patterns(i).enable;
       s_op <= patterns(i).op;
@@ -358,7 +428,6 @@ begin
       s_src_b <= patterns(i).src_b;
 
       --  Wait for the results.
-      s_clk <= '1';
       wait for 1 ns;
 
       --  Check the outputs.
@@ -381,7 +450,7 @@ begin
             severity error;
 
       assert s_f4_next_result = patterns(i).f4_next_result or s_f4_next_result_ready = '0'
-        report "Bad FPU F3 result (" & integer'image(i) & "):" & lf &
+        report "Bad FPU F4 result (" & integer'image(i) & "):" & lf &
                "  op=" & to_string(s_op) & lf &
                "  a=" & to_string(s_src_a) & lf &
                "  b=" & to_string(s_src_b) & lf &
@@ -390,7 +459,7 @@ begin
             severity error;
 
       assert s_f4_next_result_ready = patterns(i).f4_next_result_ready
-        report "Bad FPU F3 result ready (" & integer'image(i) & "):" & lf &
+        report "Bad FPU F4 result ready (" & integer'image(i) & "):" & lf &
                "  op=" & to_string(s_op) & lf &
                "  a=" & to_string(s_src_a) & lf &
                "  b=" & to_string(s_src_b) & lf &
