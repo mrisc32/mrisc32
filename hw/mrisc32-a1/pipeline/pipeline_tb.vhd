@@ -120,20 +120,25 @@ begin
     -- Start by resetting the pipeline (to have defined signals).
     s_rst <= '1';
     s_clk <= '1';
-    wait for 1 ns;
+    wait for 5 ns;
     s_clk <= '0';
-    wait for 1 ns;
+    wait for 5 ns;
     s_clk <= '1';
-    wait for 1 ns;
+    wait for 5 ns;
     s_rst <= '0';
     s_clk <= '0';
-    wait for 1 ns;
+    wait for 5 ns;
 
     -- Run the program.
-    for i in 0 to C_TEST_CYCLES-1 loop
+    for i in 2 to C_TEST_CYCLES-1 loop
+      -- Print progress.
+      if (i mod 10000) = 0 then
+        report "Cycles: " & integer'image(i);
+      end if;
+
       -- Positive clock flank -> we should get a PC address on the ICache interface.
       s_clk <= '1';
-      wait for 0.5 ns;
+      wait for 1 ns;
 
       -- Read/write data to/from the memory.
       v_write_mask(31 downto 24) := (others => s_mem_byte_mask(3));
@@ -162,9 +167,9 @@ begin
       end if;
 
       -- Tick the clock.
-      wait for 0.5 ns;
+      wait for 4 ns;
       s_clk <= '0';
-      wait for 1 ns;
+      wait for 5 ns;
     end loop;
 
     -- Dump the memory to the binary file /tmp/mrisc32_pipeline_tb_ram.bin.
