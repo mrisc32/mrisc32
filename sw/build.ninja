@@ -87,6 +87,7 @@ build $builddir/test1.o: as $srcdir/test/test1.s | $srcdir/lib/mrisc32-macros.in
 build $builddir/test2.o: as $srcdir/test/test2.s | $srcdir/lib/mrisc32-macros.inc
 build $builddir/graphics.o: as $srcdir/demo/graphics.s | $srcdir/lib/mrisc32-macros.inc
 build $builddir/mandelbrot.o: as $srcdir/demo/mandelbrot.s | $srcdir/lib/mrisc32-macros.inc
+build $builddir/mandelbrot-float.o: as $srcdir/demo/mandelbrot-float.s | $srcdir/lib/mrisc32-macros.inc
 
 # Build executable elf files.
 build $builddir/super_test.elf: ld $builddir/crt0.o $builddir/super_test.o
@@ -96,6 +97,7 @@ build $builddir/test2.elf: ld $builddir/crt0.o $builddir/test2.o | $builddir/lib
   libs = -lsys
 build $builddir/graphics.elf: ld $builddir/crt0.o $builddir/graphics.o
 build $builddir/mandelbrot.elf: ld $builddir/crt0.o $builddir/mandelbrot.o
+build $builddir/mandelbrot-float.elf: ld $builddir/crt0.o $builddir/mandelbrot-float.o
 
 # Build bin files.
 build $builddir/super_test.bin: elf2bin $builddir/super_test.elf
@@ -103,10 +105,12 @@ build $builddir/test1.bin: elf2bin $builddir/test1.elf
 build $builddir/test2.bin: elf2bin $builddir/test2.elf
 build $builddir/graphics.bin: elf2bin $builddir/graphics.elf
 build $builddir/mandelbrot.bin: elf2bin $builddir/mandelbrot.elf
+build $builddir/mandelbrot-float.bin: elf2bin $builddir/mandelbrot-float.elf
 
 build all: phony $builddir/super_test.bin $
                  $builddir/graphics.bin $
                  $builddir/mandelbrot.bin $
+                 $builddir/mandelbrot-float.bin $
                  $builddir/test1.bin $
                  $builddir/test2.bin
 
