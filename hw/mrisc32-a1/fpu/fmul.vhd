@@ -87,9 +87,11 @@ architecture rtl of fmul is
 
   -- F3 signals.
   signal s_f3_enable : std_logic;
+  signal s_f3_props : T_FLOAT_PROPS;
   signal s_f3_next_product_rounded : unsigned(SIGNIFICAND_BITS+1 downto 0);
   signal s_f3_next_do_adjust : std_logic;
   signal s_f3_round_offset : unsigned(1 downto 0);
+  signal s_f3_exponent : std_logic_vector(EXP_BITS+1 downto 0);
   signal s_f3_product_rounded : unsigned(SIGNIFICAND_BITS+1 downto 0);
   signal s_f3_do_adjust : std_logic;
 
@@ -126,10 +128,7 @@ begin
   begin
     if i_rst = '1' then
       s_f1_enable <= '0';
-      s_f1_props.is_neg <= '0';
-      s_f1_props.is_nan <= '0';
-      s_f1_props.is_inf <= '0';
-      s_f1_props.is_zero <= '0';
+      s_f1_props <= ('0', '0', '0', '0');
       s_f1_exponent <= (others => '0');
       s_f1_significand_a <= (others => '0');
       s_f1_significand_b <= (others => '0');
@@ -158,10 +157,7 @@ begin
   begin
     if i_rst = '1' then
       s_f2_enable <= '0';
-      s_f2_props.is_neg <= '0';
-      s_f2_props.is_nan <= '0';
-      s_f2_props.is_inf <= '0';
-      s_f2_props.is_zero <= '0';
+      s_f2_props <= ('0', '0', '0', '0');
       s_f2_exponent <= (others => '0');
       s_f2_product <= (others => '0');
     elsif rising_edge(i_clk) then
@@ -198,11 +194,15 @@ begin
   begin
     if i_rst = '1' then
       s_f3_enable <= '0';
+      s_f3_props <= ('0', '0', '0', '0');
+      s_f3_exponent <= (others => '0');
       s_f3_product_rounded <= (others => '0');
       s_f3_do_adjust <= '0';
     elsif rising_edge(i_clk) then
       if i_stall = '0' then
         s_f3_enable <= s_f2_enable;
+        s_f3_props <= s_f2_props;
+        s_f3_exponent <= s_f2_exponent;
         s_f3_product_rounded <= s_f3_next_product_rounded;
         s_f3_do_adjust <= s_f3_next_do_adjust;
       end if;
@@ -216,17 +216,17 @@ begin
   -- * Final floating point properties.
   --==================================================================================================
 
-  -- 3a) Normalize (shift) the significand.
+  -- 1a) Normalize (shift) the significand.
   s_f4_product_adjusted <=
       std_logic_vector(s_f3_product_rounded(SIGNIFICAND_BITS+1 downto 2)) when s_f3_do_adjust = '1' else
       std_logic_vector(s_f3_product_rounded(SIGNIFICAND_BITS downto 1));
 
-  -- 3b) Adjust the exponent.
-  s_f4_exponent_plus_1 <= unsigned(s_f2_exponent) + to_unsigned(1, 1);
+  -- 1b) Adjust the exponent.
+  s_f4_exponent_plus_1 <= unsigned(s_f3_exponent) + to_unsigned(1, 1);
   s_f4_exponent_adjusted <= s_f4_exponent_plus_1 when s_f3_do_adjust = '1' else
-                            unsigned(s_f2_exponent);
+                            unsigned(s_f3_exponent);
 
-  -- 4) Check for overflow/underflow.
+  -- 2) Check for overflow/underflow.
   s_f4_overflow <= '1' when s_f4_exponent_adjusted(EXP_BITS+1 downto EXP_BITS) = "01" or
                             s_f4_exponent_adjusted(EXP_BITS+1 downto 0) = "00" & (EXP_BITS-1 downto 0 => '1')
                    else '0';
@@ -235,10 +235,10 @@ begin
                     else '0';
 
   -- Output the result.
-  o_props.is_neg <= s_f2_props.is_neg;
-  o_props.is_nan <= s_f2_props.is_nan;
-  o_props.is_inf <= (s_f2_props.is_inf or s_f4_overflow) and not s_f2_props.is_nan;
-  o_props.is_zero <= (s_f2_props.is_zero or s_f4_underflow) and not s_f2_props.is_nan;
+  o_props.is_neg <= s_f3_props.is_neg;
+  o_props.is_nan <= s_f3_props.is_nan;
+  o_props.is_inf <= (s_f3_props.is_inf or s_f4_overflow) and not s_f3_props.is_nan;
+  o_props.is_zero <= (s_f3_props.is_zero or s_f4_underflow) and not s_f3_props.is_nan;
   o_significand <= s_f4_product_adjusted;
   o_exponent <= std_logic_vector(s_f4_exponent_adjusted(EXP_BITS-1 downto 0));
 

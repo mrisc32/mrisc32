@@ -69,6 +69,7 @@ test_list:
     .word   test_sau
     .word   test_mul
     .word   test_div
+    .word   test_fpu
     .word   test_load_store
     .word   test_branch
     .word   0
@@ -701,7 +702,40 @@ test_div_correct_results:
 ;--------------------------------------------------------------------------------------------------
 
 test_fpu:
-    ; TODO(m): Implement me!
+    ; Floating point multiplication
+    ldhi    s12,      #0x40490fdb@hi    ; 3.1415927
+    or      s12, s12, #0x40490fdb@lo
+    ldhi    s13,      #0x40f8a3d7@hi    ; 7.77
+    or      s13, s13, #0x40f8a3d7@lo
+    ldhi    s14,      #0xc0f8a3d7@hi    ; -7.77
+    or      s14, s14, #0xc0f8a3d7@lo
+
+    ; TODO(m): Add packed operations once we support that in the simulator too.
+    fadd    s1, s12, s13
+    fadd    s2, s12, s14
+    fsub    s3, s12, s13
+    fsub    s4, s12, s14
+    fmul    s5, s12, s13
+    fmul    s6, s12, s14
+
+    ; Store results.
+    stw     s1, s25, #0
+    stw     s2, s25, #4
+    stw     s3, s25, #8
+    stw     s4, s25, #12
+    stw     s5, s25, #16
+    stw     s6, s25, #20
+
+    ; Check results.
+    add     s1, pc, #test_fpu_correct_results@pc
+    mov     s2, s25
+    add     s25, s25, #24
+    b       #check_results
+
+test_fpu_correct_results:
+    .word   6
+    .word   0x412e95e2, 0xc0941bea, 0xc0941bea
+    .word   0x412e95e2, 0x41c3480a, 0xc1c3480a
 
 
 ;--------------------------------------------------------------------------------------------------
