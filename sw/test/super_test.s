@@ -709,7 +709,9 @@ test_fpu:
     or      s13, s13, #0x40f8a3d7@lo
     ldhi    s14,      #0xc0f8a3d7@hi    ; -7.77
     or      s14, s14, #0xc0f8a3d7@lo
+    ldhio   s15,      #0x7fffffff       ; NaN
 
+    ; Arithmetic operations.
     ; TODO(m): Add packed operations once we support that in the simulator too.
     fadd    s1, s12, s13
     fadd    s2, s12, s14
@@ -726,16 +728,56 @@ test_fpu:
     stw     s5, s25, #16
     stw     s6, s25, #20
 
+    ; Comparison operations.
+    ; TODO(m): Add packed operations once we support that in the simulator too.
+    fseq    s1, s12, s13
+    fseq    s2, s12, s12
+    fslt    s3, s12, s13
+    fslt    s4, s13, s12
+    fsle    s5, s13, s14
+    fsle    s6, s14, s13
+    fsle    s7, s13, s13
+    fsnan   s8, s12, s13
+    fsnan   s9, s12, s15
+
+    ; Store results.
+    stw     s1, s25, #24
+    stw     s2, s25, #28
+    stw     s3, s25, #32
+    stw     s4, s25, #36
+    stw     s5, s25, #40
+    stw     s6, s25, #44
+    stw     s7, s25, #48
+    stw     s8, s25, #52
+    stw     s9, s25, #56
+
+    ; Min/max operations
+    ; TODO(m): Add packed operations once we support that in the simulator too.
+    fmin    s1, s12, s13
+    fmin    s2, s12, s14
+    fmax    s3, s12, s13
+    fmax    s4, s12, s14
+
+    ; Store results.
+    stw     s1, s25, #60
+    stw     s2, s25, #64
+    stw     s3, s25, #68
+    stw     s4, s25, #72
+
     ; Check results.
     add     s1, pc, #test_fpu_correct_results@pc
     mov     s2, s25
-    add     s25, s25, #24
+    add     s25, s25, #76
     b       #check_results
 
 test_fpu_correct_results:
-    .word   6
-    .word   0x412e95e2, 0xc0941bea, 0xc0941bea
-    .word   0x412e95e2, 0x41c3480a, 0xc1c3480a
+    .word   19
+    .word   0x412e95e2, 0xc0941bea, 0xc0941bea, 0x412e95e2
+    .word   0x41c3480a, 0xc1c3480a
+    .word   0x00000000, 0xffffffff, 0xffffffff, 0x00000000
+    .word   0x00000000, 0xffffffff, 0xffffffff, 0x00000000
+    .word   0xffffffff
+    .word   0x40490fdb, 0xc0f8a3d7, 0x40f8a3d7, 0x40490fdb
 
 
 ;--------------------------------------------------------------------------------------------------
