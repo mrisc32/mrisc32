@@ -134,13 +134,13 @@ begin
         -- Is this an invalid operation?
         --  - Adding infinities with different signs is an invalid operation.
         v_invalid_sum := i_props_a.is_inf and i_props_b.is_inf and
-                         not (v_a_is_neg xor v_b_is_neg);
+                         (v_a_is_neg xor v_b_is_neg);
 
         -- Negative or positive infinity?
         -- Note: This assumes one of the following cases:
         --   1) Only one of the terms is infinity, in which case the sign is determined by that term
         --   2) Both terms are infinity, and they have the same sign
-        --   3) Both terms are infinity, but with opposite signs => NaN (v_invalid_sum = '0')
+        --   3) Both terms are infinity, but with opposite signs => NaN (v_invalid_sum = '1')
         --   4) None of the terms is infinity => the sign is determined later by the adder
         v_is_negative_infinity := (v_a_is_neg and i_props_a.is_inf) or
                                   (v_b_is_neg and i_props_b.is_inf);
@@ -321,8 +321,10 @@ begin
   -- Output the result.
   o_props.is_neg <= s_f3_props.is_neg;
   o_props.is_nan <= s_f3_props.is_nan;
-  o_props.is_inf <= s_f3_props.is_inf or s_f4_overflow;
-  o_props.is_zero <= s_f3_props.is_zero or s_f3_significand_is_zero or s_f4_underflow;
+  o_props.is_inf <= (s_f3_props.is_inf or s_f4_overflow)
+                    and not s_f3_props.is_nan;
+  o_props.is_zero <= (s_f3_props.is_zero or s_f3_significand_is_zero or s_f4_underflow)
+                     and not s_f3_props.is_nan;
   o_significand <= std_logic_vector(s_f4_significand_shifted(SIGNIFICAND_BITS downto 1));
   o_exponent <= std_logic_vector(s_f4_exponent(EXP_BITS-1 downto 0));
 
