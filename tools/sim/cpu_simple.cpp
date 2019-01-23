@@ -840,12 +840,41 @@ inline bool float32_isnan(const uint32_t x) {
 
 inline uint32_t itof32(const uint32_t a, const uint32_t b) {
   const float f = static_cast<float>(static_cast<int32_t>(a));
-  return as_u32(std::ldexp(f, static_cast<int32_t>(b)));
+  return as_u32(std::ldexp(f, -static_cast<int32_t>(b)));
+}
+
+inline uint32_t itof16x2(const uint32_t a, const uint32_t b) {
+  throw std::runtime_error("Not yet implemented: Packed 16-bit ITOF.");
+}
+
+inline uint32_t itof8x4(const uint32_t a, const uint32_t b) {
+  throw std::runtime_error("Not yet implemented: Packed 8-bit ITOF.");
 }
 
 inline uint32_t ftoi32(const uint32_t a, const uint32_t b) {
   const float f = std::ldexp(as_f32(a), static_cast<int32_t>(b));
   return static_cast<uint32_t>((static_cast<int32_t>(f)));
+}
+
+inline uint32_t ftoi16x2(const uint32_t a, const uint32_t b) {
+  throw std::runtime_error("Not yet implemented: Packed 16-bit FTOI.");
+}
+
+inline uint32_t ftoi8x4(const uint32_t a, const uint32_t b) {
+  throw std::runtime_error("Not yet implemented: Packed 8-bit FTOI.");
+}
+
+inline uint32_t ftoir32(const uint32_t a, const uint32_t b) {
+  const float f = std::ldexp(as_f32(a), static_cast<int32_t>(b));
+  return static_cast<uint32_t>((static_cast<int32_t>(std::round(f))));
+}
+
+inline uint32_t ftoir16x2(const uint32_t a, const uint32_t b) {
+  throw std::runtime_error("Not yet implemented: Packed 16-bit FTOIR.");
+}
+
+inline uint32_t ftoir8x4(const uint32_t a, const uint32_t b) {
+  throw std::runtime_error("Not yet implemented: Packed 8-bit FTOIR.");
 }
 }  // namespace
 
@@ -1702,10 +1731,40 @@ uint32_t cpu_simple_t::run() {
           break;
 
         case EX_OP_ITOF:
-          ex_result = itof32(ex_in.src_a, ex_in.src_b);
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = itof8x4(ex_in.src_a, ex_in.src_b);
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = itof16x2(ex_in.src_a, ex_in.src_b);
+              break;
+            default:
+              ex_result = itof32(ex_in.src_a, ex_in.src_b);
+          }
           break;
         case EX_OP_FTOI:
-          ex_result = ftoi32(ex_in.src_a, ex_in.src_b);
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = ftoi8x4(ex_in.src_a, ex_in.src_b);
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = ftoi16x2(ex_in.src_a, ex_in.src_b);
+              break;
+            default:
+              ex_result = ftoi32(ex_in.src_a, ex_in.src_b);
+          }
+          break;
+        case EX_OP_FTOIR:
+          switch (ex_in.packed_mode) {
+            case PACKED_BYTE:
+              ex_result = ftoir8x4(ex_in.src_a, ex_in.src_b);
+              break;
+            case PACKED_HALF_WORD:
+              ex_result = ftoir16x2(ex_in.src_a, ex_in.src_b);
+              break;
+            default:
+              ex_result = ftoir32(ex_in.src_a, ex_in.src_b);
+          }
           break;
         case EX_OP_FADD:
           switch (ex_in.packed_mode) {
