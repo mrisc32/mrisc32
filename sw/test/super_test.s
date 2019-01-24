@@ -765,20 +765,39 @@ test_fpu:
     stw     s3, s25, #68
     stw     s4, s25, #72
 
+    ; Integer conversion operations.
+    ; TODO(m): Add packed operations once we support that in the simulator too.
+    ldi     s5, #0
+    itof    s1, s19, s5
+    itof    s2, s21, s5
+    ldi     s5, #12
+    itof    s3, s19, s5
+    itof    s4, s21, s5
+    itof    s5, z, s5
+
+    ; Store results.
+    stw     s1, s25, #76
+    stw     s2, s25, #80
+    stw     s3, s25, #84
+    stw     s4, s25, #88
+    stw     s5, s25, #92
+
     ; Check results.
     add     s1, pc, #test_fpu_correct_results@pc
     mov     s2, s25
-    add     s25, s25, #76
+    add     s25, s25, #96
     b       #check_results
 
 test_fpu_correct_results:
-    .word   19
+    .word   24
     .word   0x412e95e2, 0xc0941bea, 0xc0941bea, 0x412e95e2
     .word   0x41c3480a, 0xc1c3480a
     .word   0x00000000, 0xffffffff, 0xffffffff, 0x00000000
     .word   0x00000000, 0xffffffff, 0xffffffff, 0x00000000
     .word   0xffffffff
     .word   0x40490fdb, 0xc0f8a3d7, 0x40f8a3d7, 0x40490fdb
+    .word   0xcb91a2b4, 0x45b17000, 0xc591a2b4, 0x3fb17000  ; NOTE: 45b17000 is right, A1 is wrong!
+    .word   0x00000000
 
 
 ;--------------------------------------------------------------------------------------------------
@@ -1032,7 +1051,36 @@ test_operand_forwarding:
     stw     s5, s25, #64
     stw     s6, s25, #68
 
-    ; TODO(m): Two-cycle FPU (ITOF) operand forwarding.
+    ; Two-cycle FPU (ITOF) operand forwarding.
+    ldi     s1, #0x9999     ; Fill registers with incorrect values.
+    ldi     s2, #0x9999
+    ldi     s3, #0x9999
+    ldi     s4, #0x9999
+    ldi     s5, #0x9999
+    ldi     s6, #0x9999
+
+    nop
+    nop
+    nop
+
+    itof    s1, s18, z      ; Operation.
+    or      s2, s1, s1      ; Blocking + operand forwarding...
+    or      s3, s1, s1
+    or      s4, s1, s1
+    or      s5, s1, s1
+    or      s6, s1, s1
+
+    nop
+    nop
+    nop
+
+    ; Store results.
+    stw     s1, s25, #72
+    stw     s2, s25, #76
+    stw     s3, s25, #80
+    stw     s4, s25, #84
+    stw     s5, s25, #88
+    stw     s6, s25, #92
 
     ; Three-cycle MUL operand forwarding.
     ldi     s1, #0x9999     ; Fill registers with incorrect values.
@@ -1058,12 +1106,12 @@ test_operand_forwarding:
     nop
 
     ; Store results.
-    stw     s1, s25, #72
-    stw     s2, s25, #76
-    stw     s3, s25, #80
-    stw     s4, s25, #84
-    stw     s5, s25, #88
-    stw     s6, s25, #92
+    stw     s1, s25, #96
+    stw     s2, s25, #100
+    stw     s3, s25, #104
+    stw     s4, s25, #108
+    stw     s5, s25, #112
+    stw     s6, s25, #116
 
     ; Three-cycle+ DIV operand forwarding.
     ldi     s1, #0x9999     ; Fill registers with incorrect values.
@@ -1089,12 +1137,12 @@ test_operand_forwarding:
     nop
 
     ; Store results.
-    stw     s1, s25, #96
-    stw     s2, s25, #100
-    stw     s3, s25, #104
-    stw     s4, s25, #108
-    stw     s5, s25, #112
-    stw     s6, s25, #116
+    stw     s1, s25, #120
+    stw     s2, s25, #124
+    stw     s3, s25, #128
+    stw     s4, s25, #132
+    stw     s5, s25, #136
+    stw     s6, s25, #140
 
     ; Four-cycle FPU operand forwarding.
     ldi     s1, #0x9999     ; Fill registers with incorrect values.
@@ -1120,17 +1168,17 @@ test_operand_forwarding:
     nop
 
     ; Store results.
-    stw     s1, s25, #120
-    stw     s2, s25, #124
-    stw     s3, s25, #128
-    stw     s4, s25, #132
-    stw     s5, s25, #136
-    stw     s6, s25, #140
+    stw     s1, s25, #144
+    stw     s2, s25, #148
+    stw     s3, s25, #152
+    stw     s4, s25, #156
+    stw     s5, s25, #160
+    stw     s6, s25, #164
 
     ; Check results.
     add     s1, pc, #test_operand_forwarding_correct_results@pc
     mov     s2, s25
-    add     s25, s25, #144
+    add     s25, s25, #168
     b       #check_results
 
     ; TODO(m): Without these nop:s, somthing goes wrong in the branching logic and the A1 simulation
@@ -1142,7 +1190,7 @@ test_operand_forwarding:
     nop
 
 test_operand_forwarding_correct_results:
-    .word   36
+    .word   42
     ; ALU 1-cycle
     .word   0x2468acf0, 0x2468acf0, 0x2468acf0, 0x2468acf0, 0x2468acf0, 0x2468acf0
 
@@ -1151,6 +1199,9 @@ test_operand_forwarding_correct_results:
 
     ; SAU 2-cycle
     .word   0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678
+
+    ; FPU 2-cycle
+    .word   0x4d91a2b4, 0x4d91a2b4, 0x4d91a2b4, 0x4d91a2b4, 0x4d91a2b4, 0x4d91a2b4
 
     ; MUL 3-cycle
     .word   0x1df4d840, 0x1df4d840, 0x1df4d840, 0x1df4d840, 0x1df4d840, 0x1df4d840

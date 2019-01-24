@@ -267,7 +267,7 @@ begin
     elsif rising_edge(i_clk) then
       if i_stall = '0' then
         -- Determine the number of leading zeros.
-        -- Note: The synthesis tool seems to be doing a good job here.
+        -- TODO(m): Use something like the clz32 implementation.
         v_leading_zeros := SIGNIFICAND_BITS + 1;
         for i in SIGNIFICAND_BITS downto 0 loop
           if s_f2_significand(i) = '1' then

@@ -34,7 +34,9 @@ The CPU is still under development. So far, the following components have been i
   - The following single-cycle FPU instructions are implemented:
     - FSEQ/FSNE/FSLT/FSLE/FSNAN
     - FMIN/FMAX
-  - The following 4-cycle FPU instructions are implemented:
+  - The following three-cycle FPU instructions are implemented:
+    - ITOF
+  - The following four-cycle FPU instructions are implemented:
     - FADD, FSUB, FMUL
   - Both packed and unpacked FPU operations are implemented.
 * The scalar register file.

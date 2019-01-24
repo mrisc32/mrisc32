@@ -26,7 +26,8 @@ package common is
   -- Machine configuration
   ------------------------------------------------------------------------------------------------
 
-  constant C_WORD_SIZE : integer := 32;
+  constant C_LOG2_WORD_SIZE : integer := 5;
+  constant C_WORD_SIZE : integer := 2**C_LOG2_WORD_SIZE;
   constant C_LOG2_NUM_REGS : integer := 5;
   constant C_NUM_REGS : integer := 2**C_LOG2_NUM_REGS;
   constant C_LOG2_VEC_REG_ELEMENTS : integer := 4;  -- Minimum: 4

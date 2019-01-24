@@ -61,6 +61,8 @@ entity fpu_impl is
     -- Outputs (async).
     o_f1_next_result : out std_logic_vector(WIDTH-1 downto 0);
     o_f1_next_result_ready : out std_logic;
+    o_f3_next_result : out std_logic_vector(WIDTH-1 downto 0);
+    o_f3_next_result_ready : out std_logic;
     o_f4_next_result : out std_logic_vector(WIDTH-1 downto 0);
     o_f4_next_result_ready : out std_logic
   );
@@ -71,6 +73,8 @@ architecture rtl of fpu_impl is
   constant SIGNIFICAND_BITS : positive := FRACT_BITS + 1;
 
   -- Operation decode signals.
+  signal s_is_itof_op : std_logic;
+  signal s_is_ftoi_op : std_logic;
   signal s_is_compare_op : std_logic;
   signal s_is_minmax_op : std_logic;
   signal s_is_add_op : std_logic;
@@ -87,6 +91,13 @@ architecture rtl of fpu_impl is
   signal s_props_b : T_FLOAT_PROPS;
   signal s_exponent_b : std_logic_vector(EXP_BITS-1 downto 0);
   signal s_significand_b : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
+
+  -- ITOF/FTOI operations.
+  signal s_itof_enable : std_logic;
+  signal s_itof_props : T_FLOAT_PROPS;
+  signal s_itof_exponent : std_logic_vector(EXP_BITS-1 downto 0);
+  signal s_itof_significand : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
+  signal s_itof_result_ready : std_logic;
 
   -- Compare/set operations.
   signal s_compare_magn_lt : std_logic;
@@ -118,7 +129,12 @@ architecture rtl of fpu_impl is
   signal s_fmul_significand : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
   signal s_fmul_result_ready : std_logic;
 
-  -- Multicycle results.
+  -- Three-cycle results.
+  signal s_f3_props : T_FLOAT_PROPS;
+  signal s_f3_exponent : std_logic_vector(EXP_BITS-1 downto 0);
+  signal s_f3_significand : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
+
+  -- Four-cycle results.
   signal s_f4_props : T_FLOAT_PROPS;
   signal s_f4_exponent : std_logic_vector(EXP_BITS-1 downto 0);
   signal s_f4_significand : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
@@ -127,17 +143,24 @@ begin
   -- Decode the FPU operation.
   --------------------------------------------------------------------------------------------------
 
+  s_is_itof_op <= '1' when i_op = C_FPU_ITOF else '0';
+
   DecodeOpMux1: with i_op select
+    s_is_ftoi_op <=
+      '1' when C_FPU_FTOI | C_FPU_FTOIR,
+      '0' when others;
+
+  DecodeOpMux2: with i_op select
     s_is_compare_op <=
       '1' when C_FPU_FSEQ | C_FPU_FSNE | C_FPU_FSLT | C_FPU_FSLE | C_FPU_FSNAN,
       '0' when others;
 
-  DecodeOpMux2: with i_op select
+  DecodeOpMux3: with i_op select
     s_is_minmax_op <=
       '1' when C_FPU_FMIN | C_FPU_FMAX,
       '0' when others;
 
-  DecodeOpMux3: with i_op select
+  DecodeOpMux4: with i_op select
     s_is_add_op <=
       '1' when C_FPU_FADD | C_FPU_FSUB,
       '0' when others;
@@ -223,7 +246,68 @@ begin
 
 
   --================================================================================================
-  -- Multi-cycle FPU operations.
+  -- Three-cycle FPU operations.
+  --================================================================================================
+
+  --------------------------------------------------------------------------------------------------
+  -- ITOF
+  --------------------------------------------------------------------------------------------------
+
+  s_itof_enable <= i_enable and s_is_itof_op;
+
+  ITOF: entity work.itof
+    generic map (
+      WIDTH => WIDTH,
+      EXP_BITS => EXP_BITS,
+      EXP_BIAS => EXP_BIAS,
+      FRACT_BITS => FRACT_BITS
+    )
+    port map (
+      -- Control.
+      i_clk => i_clk,
+      i_rst => i_rst,
+      i_stall => i_stall,
+      i_enable => s_itof_enable,
+
+      -- Inputs (async).
+      i_integer => i_src_a,
+      i_exponent_bias => i_src_b,
+
+      -- Outputs (async).
+      o_props => s_itof_props,
+      o_exponent => s_itof_exponent,
+      o_significand => s_itof_significand,
+      o_result_ready => s_itof_result_ready
+    );
+
+
+  --------------------------------------------------------------------------------------------------
+  -- Compose the final result for three-cycle operations.
+  --------------------------------------------------------------------------------------------------
+
+  -- Select the decomposed results from the active unit.
+  s_f3_props <= s_itof_props;
+  s_f3_exponent <= s_itof_exponent;
+  s_f3_significand <= s_itof_significand;
+
+  ComposeResultF2: entity work.float_compose
+    generic map (
+      WIDTH => WIDTH,
+      EXP_BITS => EXP_BITS,
+      FRACT_BITS => FRACT_BITS
+    )
+    port map (
+      i_props => s_f3_props,
+      i_exponent => s_f3_exponent,
+      i_significand => s_f3_significand,
+      o_result => o_f3_next_result
+    );
+
+  o_f3_next_result_ready <= s_itof_result_ready;
+
+
+  --================================================================================================
+  -- Four-cycle FPU operations.
   --================================================================================================
 
   --------------------------------------------------------------------------------------------------
@@ -304,7 +388,7 @@ begin
 
 
   --------------------------------------------------------------------------------------------------
-  -- Compose the final result for multi-cycle operations.
+  -- Compose the final result for four-cycle operations.
   --------------------------------------------------------------------------------------------------
 
   -- Select the decomposed results from the active unit.
@@ -315,7 +399,7 @@ begin
   s_f4_significand <= s_fadd_significand when s_fadd_result_ready = '1' else
                       s_fmul_significand;
 
-  ComposeResult: entity work.float_compose
+  ComposeResultF4: entity work.float_compose
     generic map (
       WIDTH => WIDTH,
       EXP_BITS => EXP_BITS,
