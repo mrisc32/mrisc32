@@ -252,6 +252,7 @@ package common is
   function to_string(x: std_logic_vector) return string;
   function to_string(x: std_logic) return string;
   function is_zero(x: std_logic_vector) return std_logic;
+  function log2(x: integer) return integer;
 
 end package;
 
@@ -301,5 +302,31 @@ package body common is
     end if;
   end function;
 
+  -- The log2() function computes y = floor(log2(x)). For example:
+  --   log2(0) -> -1
+  --   log2(1) -> 0
+  --   log2(2) -> 1
+  --   log2(3) -> 1
+  --   log2(4) -> 2
+  --   log2(255) -> 7
+  --   log2(256) -> 8
+  --
+  -- To calculate the number of required bits to represent a number in the range [0, N]:
+  --   bits_required = log2(N)+1;
+  --
+  -- For example, to index any bit in a 24-bit word, [0, 23], bits_required = log2(24-1)+1 = 5
+  --
+  -- Note: Do not use this for synthesis, only for constants!
+  function log2(x: integer) return integer is
+    variable v_temp : integer;
+    variable v_log : integer;
+  begin
+    v_temp := x;
+    v_log := -1;
+    while v_temp /= 0 loop
+      v_temp := v_temp / 2;
+      v_log := v_log + 1;
+    end loop;
+    return v_log;
+  end function;
 end package body;
-
