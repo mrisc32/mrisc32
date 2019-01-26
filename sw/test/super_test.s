@@ -72,6 +72,7 @@ test_list:
     .word   test_fpu
     .word   test_load_store
     .word   test_branch
+    .word   test_operand_forwarding
     .word   0
 
 
@@ -937,5 +938,143 @@ test_vector_addressing:
 ; Test operand forwarding during different conditions.
 ;--------------------------------------------------------------------------------------------------
 
-    ; TODO(m): Implement me!
+test_operand_forwarding:
+    ; Single cycle latency operand forwarding.
+    ldi     s1, #0x9999     ; Fill registers with incorrect values.
+    ldi     s2, #0x9999
+    ldi     s3, #0x9999
+    ldi     s4, #0x9999
+    ldi     s5, #0x9999
+    ldi     s6, #0x9999
+
+    nop
+    nop
+    nop
+
+    add     s1, s18, s18    ; Perform an operation with one cycle latency.
+    or      s2, s1, s1      ; Operand forwarding...
+    or      s3, s1, s1
+    or      s4, s1, s1
+    or      s5, s1, s1
+    or      s6, s1, s1
+
+    nop
+    nop
+    nop
+
+    ; Store results.
+    stw     s1, s25, #0
+    stw     s2, s25, #4
+    stw     s3, s25, #8
+    stw     s4, s25, #12
+    stw     s5, s25, #16
+    stw     s6, s25, #20
+
+    ; Two-cycle latency operand forwarding.
+    ldi     s1, #0x9999     ; Fill registers with incorrect values.
+    ldi     s2, #0x9999
+    ldi     s3, #0x9999
+    ldi     s4, #0x9999
+    ldi     s5, #0x9999
+    ldi     s6, #0x9999
+
+    nop
+    nop
+    nop
+
+    addh    s1, s18, s18    ; Perform an operation with two cycles latency.
+    or      s2, s1, s1      ; Blocking + operand forwarding...
+    or      s3, s1, s1
+    or      s4, s1, s1
+    or      s5, s1, s1
+    or      s6, s1, s1
+
+    nop
+    nop
+    nop
+
+    ; Store results.
+    stw     s1, s25, #24
+    stw     s2, s25, #28
+    stw     s3, s25, #32
+    stw     s4, s25, #36
+    stw     s5, s25, #40
+    stw     s6, s25, #44
+
+    ; Three-cycle latency operand forwarding.
+    ldi     s1, #0x9999     ; Fill registers with incorrect values.
+    ldi     s2, #0x9999
+    ldi     s3, #0x9999
+    ldi     s4, #0x9999
+    ldi     s5, #0x9999
+    ldi     s6, #0x9999
+
+    nop
+    nop
+    nop
+
+    mul     s1, s18, s18    ; Perform an operation with three cycles latency.
+    or      s2, s1, s1      ; Blocking + operand forwarding...
+    or      s3, s1, s1
+    or      s4, s1, s1
+    or      s5, s1, s1
+    or      s6, s1, s1
+
+    nop
+    nop
+    nop
+
+    ; Store results.
+    stw     s1, s25, #48
+    stw     s2, s25, #52
+    stw     s3, s25, #56
+    stw     s4, s25, #60
+    stw     s5, s25, #64
+    stw     s6, s25, #68
+
+    ; Four-cycle latency operand forwarding.
+    ldi     s1, #0x9999     ; Fill registers with incorrect values.
+    ldi     s2, #0x9999
+    ldi     s3, #0x9999
+    ldi     s4, #0x9999
+    ldi     s5, #0x9999
+    ldi     s6, #0x9999
+
+    nop
+    nop
+    nop
+
+    fadd    s1, s18, s18    ; Perform an operation with four cycles latency.
+    or      s2, s1, s1      ; Blocking + operand forwarding...
+    or      s3, s1, s1
+    or      s4, s1, s1
+    or      s5, s1, s1
+    or      s6, s1, s1
+
+    nop
+    nop
+    nop
+
+    ; Store results.
+    stw     s1, s25, #72
+    stw     s2, s25, #76
+    stw     s3, s25, #80
+    stw     s4, s25, #84
+    stw     s5, s25, #88
+    stw     s6, s25, #92
+
+    ; Check results.
+    add     s1, pc, #test_operand_forwarding_correct_results@pc
+    mov     s2, s25
+    add     s25, s25, #96
+    b       #check_results
+
+test_operand_forwarding_correct_results:
+    .word   24
+    .word   0x2468acf0, 0x2468acf0, 0x2468acf0, 0x2468acf0
+    .word   0x2468acf0, 0x2468acf0, 0x12345678, 0x12345678
+    .word   0x12345678, 0x12345678, 0x12345678, 0x12345678
+    .word   0x1df4d840, 0x1df4d840, 0x1df4d840, 0x1df4d840
+    .word   0x1df4d840, 0x1df4d840, 0x12b45678, 0x12b45678
+    .word   0x12b45678, 0x12b45678, 0x12b45678, 0x12b45678
 
