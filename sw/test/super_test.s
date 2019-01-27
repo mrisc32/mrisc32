@@ -939,7 +939,7 @@ test_vector_addressing:
 ;--------------------------------------------------------------------------------------------------
 
 test_operand_forwarding:
-    ; Single cycle latency operand forwarding.
+    ; Single cycle ALU operand forwarding.
     ldi     s1, #0x9999     ; Fill registers with incorrect values.
     ldi     s2, #0x9999
     ldi     s3, #0x9999
@@ -951,7 +951,7 @@ test_operand_forwarding:
     nop
     nop
 
-    add     s1, s18, s18    ; Perform an operation with one cycle latency.
+    add     s1, s18, s18    ; Operation.
     or      s2, s1, s1      ; Operand forwarding...
     or      s3, s1, s1
     or      s4, s1, s1
@@ -970,7 +970,7 @@ test_operand_forwarding:
     stw     s5, s25, #16
     stw     s6, s25, #20
 
-    ; Two-cycle latency operand forwarding.
+    ; Single cycle FPU operand forwarding.
     ldi     s1, #0x9999     ; Fill registers with incorrect values.
     ldi     s2, #0x9999
     ldi     s3, #0x9999
@@ -982,8 +982,8 @@ test_operand_forwarding:
     nop
     nop
 
-    addh    s1, s18, s18    ; Perform an operation with two cycles latency.
-    or      s2, s1, s1      ; Blocking + operand forwarding...
+    fseq    s1, s18, s18    ; Operation.
+    or      s2, s1, s1      ; Operand forwarding...
     or      s3, s1, s1
     or      s4, s1, s1
     or      s5, s1, s1
@@ -1001,7 +1001,7 @@ test_operand_forwarding:
     stw     s5, s25, #40
     stw     s6, s25, #44
 
-    ; Three-cycle latency operand forwarding.
+    ; Two-cycle SAU operand forwarding.
     ldi     s1, #0x9999     ; Fill registers with incorrect values.
     ldi     s2, #0x9999
     ldi     s3, #0x9999
@@ -1013,7 +1013,7 @@ test_operand_forwarding:
     nop
     nop
 
-    mul     s1, s18, s18    ; Perform an operation with three cycles latency.
+    addh    s1, s18, s18    ; Operation.
     or      s2, s1, s1      ; Blocking + operand forwarding...
     or      s3, s1, s1
     or      s4, s1, s1
@@ -1032,7 +1032,9 @@ test_operand_forwarding:
     stw     s5, s25, #64
     stw     s6, s25, #68
 
-    ; Four-cycle latency operand forwarding.
+    ; TODO(m): Two-cycle FPU (ITOF) operand forwarding.
+
+    ; Three-cycle MUL operand forwarding.
     ldi     s1, #0x9999     ; Fill registers with incorrect values.
     ldi     s2, #0x9999
     ldi     s3, #0x9999
@@ -1044,7 +1046,7 @@ test_operand_forwarding:
     nop
     nop
 
-    fadd    s1, s18, s18    ; Perform an operation with four cycles latency.
+    mul     s1, s18, s18    ; Operation.
     or      s2, s1, s1      ; Blocking + operand forwarding...
     or      s3, s1, s1
     or      s4, s1, s1
@@ -1063,10 +1065,72 @@ test_operand_forwarding:
     stw     s5, s25, #88
     stw     s6, s25, #92
 
+    ; Three-cycle+ DIV operand forwarding.
+    ldi     s1, #0x9999     ; Fill registers with incorrect values.
+    ldi     s2, #0x9999
+    ldi     s3, #0x9999
+    ldi     s4, #0x9999
+    ldi     s5, #0x9999
+    ldi     s6, #0x9999
+
+    nop
+    nop
+    nop
+
+    div     s1, s18, s18    ; Operation.
+    or      s2, s1, s1      ; Blocking + operand forwarding...
+    or      s3, s1, s1
+    or      s4, s1, s1
+    or      s5, s1, s1
+    or      s6, s1, s1
+
+    nop
+    nop
+    nop
+
+    ; Store results.
+    stw     s1, s25, #96
+    stw     s2, s25, #100
+    stw     s3, s25, #104
+    stw     s4, s25, #108
+    stw     s5, s25, #112
+    stw     s6, s25, #116
+
+    ; Four-cycle FPU operand forwarding.
+    ldi     s1, #0x9999     ; Fill registers with incorrect values.
+    ldi     s2, #0x9999
+    ldi     s3, #0x9999
+    ldi     s4, #0x9999
+    ldi     s5, #0x9999
+    ldi     s6, #0x9999
+
+    nop
+    nop
+    nop
+
+    fadd    s1, s18, s18    ; Operation.
+    or      s2, s1, s1      ; Blocking + operand forwarding...
+    or      s3, s1, s1
+    or      s4, s1, s1
+    or      s5, s1, s1
+    or      s6, s1, s1
+
+    nop
+    nop
+    nop
+
+    ; Store results.
+    stw     s1, s25, #120
+    stw     s2, s25, #124
+    stw     s3, s25, #128
+    stw     s4, s25, #132
+    stw     s5, s25, #136
+    stw     s6, s25, #140
+
     ; Check results.
     add     s1, pc, #test_operand_forwarding_correct_results@pc
     mov     s2, s25
-    add     s25, s25, #96
+    add     s25, s25, #144
     b       #check_results
 
     ; TODO(m): Without these nop:s, somthing goes wrong in the branching logic and the A1 simulation
@@ -1078,11 +1142,22 @@ test_operand_forwarding:
     nop
 
 test_operand_forwarding_correct_results:
-    .word   24
-    .word   0x2468acf0, 0x2468acf0, 0x2468acf0, 0x2468acf0
-    .word   0x2468acf0, 0x2468acf0, 0x12345678, 0x12345678
-    .word   0x12345678, 0x12345678, 0x12345678, 0x12345678
-    .word   0x1df4d840, 0x1df4d840, 0x1df4d840, 0x1df4d840
-    .word   0x1df4d840, 0x1df4d840, 0x12b45678, 0x12b45678
-    .word   0x12b45678, 0x12b45678, 0x12b45678, 0x12b45678
+    .word   36
+    ; ALU 1-cycle
+    .word   0x2468acf0, 0x2468acf0, 0x2468acf0, 0x2468acf0, 0x2468acf0, 0x2468acf0
+
+    ; FPU 1-cycle
+    .word   0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff
+
+    ; SAU 2-cycle
+    .word   0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678, 0x12345678
+
+    ; MUL 3-cycle
+    .word   0x1df4d840, 0x1df4d840, 0x1df4d840, 0x1df4d840, 0x1df4d840, 0x1df4d840
+
+    ; DIV 3+-cycle
+    .word   0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001, 0x00000001
+
+    ; FPU 4-cycle
+    .word   0x12b45678, 0x12b45678, 0x12b45678, 0x12b45678, 0x12b45678, 0x12b45678
 
