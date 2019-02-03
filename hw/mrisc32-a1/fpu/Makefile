@@ -29,6 +29,8 @@ SRCS += \
     $(FPU_PATH)/fadd_tb.vhd \
     $(FPU_PATH)/fmul.vhd \
     $(FPU_PATH)/fmul_tb.vhd \
+    $(FPU_PATH)/ftoi.vhd \
+    $(FPU_PATH)/ftoi_tb.vhd \
     $(FPU_PATH)/itof_clz_and_left_shift.vhd \
     $(FPU_PATH)/itof_clz_and_left_shift_tb.vhd \
     $(FPU_PATH)/itof.vhd \
@@ -42,6 +44,7 @@ TESTS += \
     float_compare_tb \
     fadd_tb \
     fmul_tb \
+    ftoi_tb \
     itof_clz_and_left_shift_tb \
     itof_tb \
     fpu_tb

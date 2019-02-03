@@ -92,12 +92,18 @@ architecture rtl of fpu_impl is
   signal s_exponent_b : std_logic_vector(EXP_BITS-1 downto 0);
   signal s_significand_b : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
 
-  -- ITOF/FTOI operations.
+  -- ITOF operations.
   signal s_itof_enable : std_logic;
   signal s_itof_props : T_FLOAT_PROPS;
   signal s_itof_exponent : std_logic_vector(EXP_BITS-1 downto 0);
   signal s_itof_significand : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
   signal s_itof_result_ready : std_logic;
+
+  -- FTOI operations.
+  signal s_ftoi_enable : std_logic;
+  signal s_ftoi_round : std_logic;
+  signal s_ftoi_result : std_logic_vector(WIDTH-1 downto 0);
+  signal s_ftoi_result_ready : std_logic;
 
   -- Compare/set operations.
   signal s_compare_magn_lt : std_logic;
@@ -133,6 +139,7 @@ architecture rtl of fpu_impl is
   signal s_f3_props : T_FLOAT_PROPS;
   signal s_f3_exponent : std_logic_vector(EXP_BITS-1 downto 0);
   signal s_f3_significand : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
+  signal s_f3_next_result : std_logic_vector(WIDTH-1 downto 0);
 
   -- Four-cycle results.
   signal s_f4_props : T_FLOAT_PROPS;
@@ -282,6 +289,42 @@ begin
 
 
   --------------------------------------------------------------------------------------------------
+  -- FTOI
+  --------------------------------------------------------------------------------------------------
+
+  s_ftoi_enable <= i_enable and s_is_ftoi_op;
+  s_ftoi_round <= '1' when i_op = C_FPU_FTOIR else
+                  '0' when i_op = C_FPU_FTOI else
+                  '-';
+
+  FTOI: entity work.ftoi
+    generic map (
+      WIDTH => WIDTH,
+      EXP_BITS => EXP_BITS,
+      EXP_BIAS => EXP_BIAS,
+      FRACT_BITS => FRACT_BITS
+    )
+    port map (
+      -- Control.
+      i_clk => i_clk,
+      i_rst => i_rst,
+      i_stall => i_stall,
+      i_enable => s_ftoi_enable,
+
+      -- Inputs (async).
+      i_props => s_props_a,
+      i_exponent => s_exponent_a,
+      i_significand => s_significand_a,
+      i_exponent_bias => i_src_b,
+      i_round => s_ftoi_round,
+
+      -- Outputs (async).
+      o_result => s_ftoi_result,
+      o_result_ready => s_ftoi_result_ready
+    );
+
+
+  --------------------------------------------------------------------------------------------------
   -- Compose the final result for three-cycle operations.
   --------------------------------------------------------------------------------------------------
 
@@ -300,10 +343,12 @@ begin
       i_props => s_f3_props,
       i_exponent => s_f3_exponent,
       i_significand => s_f3_significand,
-      o_result => o_f3_next_result
+      o_result => s_f3_next_result
     );
 
-  o_f3_next_result_ready <= s_itof_result_ready;
+  o_f3_next_result <= s_f3_next_result when s_itof_result_ready else
+                      s_ftoi_result;
+  o_f3_next_result_ready <= s_itof_result_ready or s_ftoi_result_ready;
 
 
   --================================================================================================
