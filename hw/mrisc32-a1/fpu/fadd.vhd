@@ -32,8 +32,7 @@ entity fadd is
     WIDTH : positive := 32;
     EXP_BITS : positive := 8;
     EXP_BIAS : positive := 127;
-    FRACT_BITS : positive := 23;
-    LOG2_MAX_LEADING_ZEROS : positive := 5
+    FRACT_BITS : positive := 23
   );
   port(
     -- Control signals.
@@ -66,6 +65,7 @@ end fadd;
 architecture rtl of fadd is
   -- Constants.
   constant SIGNIFICAND_BITS : positive := FRACT_BITS + 1;
+  constant LEADING_ZEROS_WIDTH : positive := log2(SIGNIFICAND_BITS+1)+1;
 
   -- F1 signals.
   signal s_f1_enable : std_logic;
@@ -87,7 +87,7 @@ architecture rtl of fadd is
   signal s_f3_enable : std_logic;
   signal s_f3_props : T_FLOAT_PROPS;
   signal s_f3_exponent : unsigned(EXP_BITS downto 0);
-  signal s_f3_exponent_adjust : unsigned(LOG2_MAX_LEADING_ZEROS downto 0);
+  signal s_f3_exponent_adjust : unsigned(LEADING_ZEROS_WIDTH-1 downto 0);
   signal s_f3_significand : unsigned(SIGNIFICAND_BITS downto 0);
   signal s_f3_significand_is_zero : std_logic;
 
@@ -267,7 +267,7 @@ begin
     elsif rising_edge(i_clk) then
       if i_stall = '0' then
         -- Determine the number of leading zeros.
-        -- Note: The synthesis tool seems to be doing a good job here.
+        -- TODO(m): Use something like the clz32 implementation.
         v_leading_zeros := SIGNIFICAND_BITS + 1;
         for i in SIGNIFICAND_BITS downto 0 loop
           if s_f2_significand(i) = '1' then
@@ -291,7 +291,7 @@ begin
         s_f3_enable <= s_f2_enable;
         s_f3_props <= s_f2_props;
         s_f3_exponent <= v_exponent_without_leading_zeros;
-        s_f3_exponent_adjust <= to_unsigned(v_leading_zeros, LOG2_MAX_LEADING_ZEROS + 1);
+        s_f3_exponent_adjust <= to_unsigned(v_leading_zeros, LEADING_ZEROS_WIDTH);
         s_f3_significand <= s_f2_significand;
         s_f3_significand_is_zero <= v_significan_is_zero;
       end if;

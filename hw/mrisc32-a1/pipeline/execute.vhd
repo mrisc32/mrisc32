@@ -124,6 +124,8 @@ architecture rtl of execute is
   signal s_fpu_stall : std_logic;
   signal s_fpu_f1_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_fpu_f1_result_ready : std_logic;
+  signal s_fpu_f3_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_fpu_f3_result_ready : std_logic;
   signal s_fpu_f4_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_fpu_f4_result_ready : std_logic;
 
@@ -333,6 +335,8 @@ begin
       i_src_b => i_src_b,
       o_f1_next_result => s_fpu_f1_result,
       o_f1_next_result_ready => s_fpu_f1_result_ready,
+      o_f3_next_result => s_fpu_f3_result,
+      o_f3_next_result_ready => s_fpu_f3_result_ready,
       o_f4_next_result => s_fpu_f4_result,
       o_f4_next_result_ready => s_fpu_f4_result_ready
     );
@@ -517,9 +521,11 @@ begin
   -- Select the EX2, MUL or DIV result.
   s_ex3_next_result <= s_div_result when s_div_result_ready = '1' else
                        s_mul_result when s_mul_result_ready = '1' else
+                       s_fpu_f3_result when s_fpu_f3_result_ready = '1' else
                        s_ex2_result;
   s_ex3_next_result_ready <= s_div_result_ready or
                              s_mul_result_ready or
+                             s_fpu_f3_result_ready or
                              s_ex1_result_ready;
 
   -- Outputs from the EX3 stage (sync).

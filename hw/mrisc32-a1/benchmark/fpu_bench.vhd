@@ -39,6 +39,8 @@ entity fpu_bench is
     -- Outputs (sync).
     o_f1_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
     o_f1_result_ready : out std_logic;
+    o_f3_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+    o_f3_result_ready : out std_logic;
     o_f4_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
     o_f4_result_ready : out std_logic
   );
@@ -53,6 +55,8 @@ architecture rtl of fpu_bench is
 
   signal s_f1_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_f1_next_result_ready : std_logic;
+  signal s_f3_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_f3_next_result_ready : std_logic;
   signal s_f4_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_f4_next_result_ready : std_logic;
 begin
@@ -70,6 +74,8 @@ begin
       i_src_b => s_src_b,
       o_f1_next_result => s_f1_next_result,
       o_f1_next_result_ready => s_f1_next_result_ready,
+      o_f3_next_result => s_f3_next_result,
+      o_f3_next_result_ready => s_f3_next_result_ready,
       o_f4_next_result => s_f4_next_result,
       o_f4_next_result_ready => s_f4_next_result_ready
     );
@@ -84,6 +90,8 @@ begin
       s_src_b <= (others => '0');
       o_f1_result <= (others => '0');
       o_f1_result_ready <= '0';
+      o_f3_result <= (others => '0');
+      o_f3_result_ready <= '0';
       o_f4_result <= (others => '0');
       o_f4_result_ready <= '0';
     elsif rising_edge(i_clk) then
@@ -94,6 +102,8 @@ begin
       s_src_b <= i_src_b;
       o_f1_result <= s_f1_next_result;
       o_f1_result_ready <= s_f1_next_result_ready;
+      o_f3_result <= s_f3_next_result;
+      o_f3_result_ready <= s_f3_next_result_ready;
       o_f4_result <= s_f4_next_result;
       o_f4_result_ready <= s_f4_next_result_ready;
     end if;
