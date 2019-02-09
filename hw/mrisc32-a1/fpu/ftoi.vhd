@@ -123,7 +123,7 @@ begin
     elsif rising_edge(i_clk) then
       if i_stall = '0' then
         s_f1_enable <= i_enable;
-        s_f1_round <= i_round;
+        s_f1_round <= i_round when i_enable = '1' else '0';  -- Avoid undefined results (i_round may be undefined)
         s_f1_overflow <= s_f1_next_overflow;
         s_f1_is_zero <= s_f1_next_is_zero;
         s_f1_is_neg <= i_props.is_neg;
