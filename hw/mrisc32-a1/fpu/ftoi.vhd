@@ -59,6 +59,7 @@ architecture rtl of ftoi is
   signal s_f1_next_right_shift : unsigned(EXP_BITS+1 downto 0);
   signal s_f1_next_overflow : std_logic;
   signal s_f1_next_is_zero : std_logic;
+  signal s_f1_next_round : std_logic;
 
   signal s_f1_enable : std_logic;
   signal s_f1_round : std_logic;
@@ -109,6 +110,10 @@ begin
                            unsigned("00" & i_exponent) -
                            unsigned(i_exponent_bias(EXP_BITS+1 downto 0));
 
+  -- Rounding.
+  -- Note: Avoid undefined results (i_round may be undefined).
+  s_f1_next_round <= i_round when i_enable = '1' else '0';
+
   -- Signals to the next stage.
   process(i_clk, i_rst)
   begin
@@ -123,7 +128,7 @@ begin
     elsif rising_edge(i_clk) then
       if i_stall = '0' then
         s_f1_enable <= i_enable;
-        s_f1_round <= i_round when i_enable = '1' else '0';  -- Avoid undefined results (i_round may be undefined)
+        s_f1_round <= s_f1_next_round;
         s_f1_overflow <= s_f1_next_overflow;
         s_f1_is_zero <= s_f1_next_is_zero;
         s_f1_is_neg <= i_props.is_neg;
@@ -181,6 +186,8 @@ begin
 
   -- 2) Overflow?
   -- TODO(m): Values up to and including 0x80000000 are valid if s_f2_is_neg = '1'.
+  -- TODO(m): I don't think that overflow can ever happen due to rounding, since the significand is
+  -- always a few bits smaller than WIDTH.
   s_f3_overflow <= '1' when s_f3_value_rounded(WIDTH+1 downto WIDTH) /= "00" else '0';
 
   -- 3) Select result.
