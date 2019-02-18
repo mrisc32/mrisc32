@@ -54,7 +54,7 @@ Note: There is no support for 64-bit floating point operations (that is left for
 
 # Tools
 
-There are a few tools that aid software development for MRISC32. See [Tools](doc/Tools.md).
+There are a few tools that aid software development for MRISC32. See [Tools](tools/README.md).
 
 
 # Hardware/HDL
