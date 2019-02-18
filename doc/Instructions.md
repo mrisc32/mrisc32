@@ -1,6 +1,39 @@
-# Instructions
+# Instruction encoding
 
-**Note:** See [mr32asm.py](../tools/asm/mr32asm.py) for a detailed list of instructions, their supported operands and instruction encodings.
+An instruction is encoded as a 32-bit word. There are three different formats: A, B and C. The format of the instruction is determined by the 6 most significant bits of the instruction word:
+
+| Most significant bits | Format | # Instr. | Comment |
+|---|---|---|---|
+| 000000 | A | 128 | Reg, Reg, Reg |
+| 000001..101111 | B | 47 | Reg, Reg, 14-bit immediate |
+| 110000..111110 | C | 15 | Reg, 21-bit immediate |
+| 111111 | ? | (many) | Reserved for future multi-word encodings |
+
+
+```
+      3             2               1
+     |1| | | | | | |4| | | | | | | |6| | | | | | | |8| | | | | | | |0|
+     +-----------+---------+---------+---+---------+---+-------------+
+ A:  |0 0 0 0 0 0|REG1     |REG2     |VM |REG3     |PM | OP (7b)     |
+     +-----------+---------+---------+-+-+---------+---+-------------+
+ B:  |OP (6b)    |REG1     |REG2     |V|IMM (15b)                    |
+     +---+-------+---------+---------+-+-----------------------------+
+ C:  |1 1|OP (4b)|REG1     |IMM (21b)                                |
+     +---+-------+---------+-----------------------------------------+
+```
+
+The fields of the instruction word are interpreted as follows:
+
+| Field | Description |
+|---|---|
+| OP | Operation |
+| REG*n* | Register (5 bit identifier) |
+| IMM | Immediate value |
+| VM | Vector mode (2-bit):<br>00: scalar <= op(scalar,scalar)<br>10: vector <= op(vector,scalar)<br>11: vector <= op(vector,vector)<br>01: vector <= op(vector,fold(vector)) |
+| V | Vector mode (1-bit):<br>0: scalar <= op(scalar,scalar)<br>1: vector <= op(vector,scalar) |
+| PM | Packed mode:<br>00: None (1 x 32 bits)<br>01: Byte (4 x 8 bits)<br>10: Half-word (2 x 16 bits)<br>11: (reserved) |
+
+# Instruction list
 
 ## Legend
 
