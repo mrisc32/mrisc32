@@ -796,7 +796,7 @@ test_fpu_correct_results:
     .word   0x00000000, 0xffffffff, 0xffffffff, 0x00000000
     .word   0xffffffff
     .word   0x40490fdb, 0xc0f8a3d7, 0x40f8a3d7, 0x40490fdb
-    .word   0xcb91a2b4, 0x45b17000, 0xc591a2b4, 0x3fb17000  ; NOTE: 45b17000 is right, A1 is wrong!
+    .word   0xcb91a2b4, 0x45b17000, 0xc591a2b4, 0x3fb17000
     .word   0x00000000
 
 

@@ -37,7 +37,7 @@ entity regs_scalar is
   port (
     i_clk : in std_logic;
     i_rst : in std_logic;
-    i_stall : in std_logic;
+    i_stall_read_ports : in std_logic;
 
     -- Asynchronous read requestes (three read ports).
     i_sel_a : in std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
@@ -60,8 +60,6 @@ entity regs_scalar is
 end regs_scalar;
 
 architecture rtl of regs_scalar is
-  signal s_we : std_logic;
-
   signal s_next_sel_a : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_next_sel_b : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_next_sel_c : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
@@ -82,7 +80,7 @@ begin
       s_sel_b <= (others => '0');
       s_sel_c <= (others => '0');
     elsif rising_edge(i_clk) then
-      if i_stall = '0' then
+      if i_stall_read_ports = '0' then
         s_sel_a <= s_next_sel_a;
         s_sel_b <= s_next_sel_b;
         s_sel_c <= s_next_sel_c;
@@ -90,14 +88,11 @@ begin
     end if;
   end process;
 
-  -- Handle stall.
-  -- 1) Use inputs or latched inputs from the previous cycle.
-  s_next_sel_a <= i_sel_a when i_stall = '0' else s_sel_a;
-  s_next_sel_b <= i_sel_b when i_stall = '0' else s_sel_b;
-  s_next_sel_c <= i_sel_c when i_stall = '0' else s_sel_c;
-
-  -- 2) Disable the write ports during stall.
-  s_we <= i_we and not i_stall;
+  -- Handle stall:
+  -- Use inputs or latched inputs from the previous cycle.
+  s_next_sel_a <= i_sel_a when i_stall_read_ports = '0' else s_sel_a;
+  s_next_sel_b <= i_sel_b when i_stall_read_ports = '0' else s_sel_b;
+  s_next_sel_c <= i_sel_c when i_stall_read_ports = '0' else s_sel_c;
 
   -- One RAM for the A read port.
   ram_a: entity work.ram_dual_port
@@ -109,7 +104,7 @@ begin
       i_clk => i_clk,
       i_write_data => i_data_w,
       i_write_addr => i_sel_w,
-      i_we => s_we,
+      i_we => i_we,
       i_read_addr => s_next_sel_a,
       o_read_data => s_data_a
     );
@@ -124,7 +119,7 @@ begin
       i_clk => i_clk,
       i_write_data => i_data_w,
       i_write_addr => i_sel_w,
-      i_we => s_we,
+      i_we => i_we,
       i_read_addr => s_next_sel_b,
       o_read_data => s_data_b
     );
@@ -139,7 +134,7 @@ begin
       i_clk => i_clk,
       i_write_data => i_data_w,
       i_write_addr => i_sel_w,
-      i_we => s_we,
+      i_we => i_we,
       i_read_addr => s_next_sel_c,
       o_read_data => s_data_c
     );
