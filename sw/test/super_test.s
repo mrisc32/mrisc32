@@ -1181,14 +1181,6 @@ test_operand_forwarding:
     add     s25, s25, #168
     b       #check_results
 
-    ; TODO(m): Without these nop:s, somthing goes wrong in the branching logic and the A1 simulation
-    ; ends before the program is finished.
-    ; See: https://github.com/mbitsnbites/mrisc32/issues/71
-    nop
-    nop
-    nop
-    nop
-
 test_operand_forwarding_correct_results:
     .word   42
     ; ALU 1-cycle
