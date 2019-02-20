@@ -32,10 +32,10 @@ The CPU is still under development. So far, the following components have been i
   - Supports all packed and unpacked saturating and halving arithmetic instructions.
 * An IEEE 754 compliant(ish) FPU.
   - The following single-cycle FPU instructions are implemented:
-    - FSEQ, FSNE, FSLT, FSLE, FSNAN
     - FMIN, FMAX
+    - FSEQ, FSNE, FSLT, FSLE, FSNAN
   - The following three-cycle FPU instructions are implemented:
-    - ITOF, FTOI, FTOIR
+    - ITOF, UTOF, FTOI, FTOU, FTOIR, FTOUR
   - The following four-cycle FPU instructions are implemented:
     - FADD, FSUB, FMUL
   - Both packed and unpacked FPU operations are implemented.
