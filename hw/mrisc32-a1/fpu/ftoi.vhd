@@ -43,6 +43,7 @@ entity ftoi is
     -- Inputs (async).
     i_enable : in std_logic;
     i_round : in std_logic;
+    i_unsigned : in std_logic;
     i_props : in T_FLOAT_PROPS;
     i_exponent : in std_logic_vector(EXP_BITS-1 downto 0);
     i_significand : in std_logic_vector(FRACT_BITS downto 0);
@@ -60,9 +61,11 @@ architecture rtl of ftoi is
   signal s_f1_next_overflow : std_logic;
   signal s_f1_next_is_zero : std_logic;
   signal s_f1_next_round : std_logic;
+  signal s_f1_next_unsigned : std_logic;
 
   signal s_f1_enable : std_logic;
   signal s_f1_round : std_logic;
+  signal s_f1_unsigned : std_logic;
   signal s_f1_overflow : std_logic;
   signal s_f1_is_zero : std_logic;
   signal s_f1_is_neg : std_logic;
@@ -75,6 +78,7 @@ architecture rtl of ftoi is
 
   signal s_f2_enable : std_logic;
   signal s_f2_round : std_logic;
+  signal s_f2_unsigned : std_logic;
   signal s_f2_overflow : std_logic;
   signal s_f2_is_zero : std_logic;
   signal s_f2_is_neg : std_logic;
@@ -84,6 +88,8 @@ architecture rtl of ftoi is
   signal s_f3_round : unsigned(0 downto 0);
   signal s_f3_value_rounded : unsigned(WIDTH+1 downto 0);
   signal s_f3_final_value : unsigned(WIDTH-1 downto 0);
+  signal s_f3_signed_overflow : std_logic;
+  signal s_f3_unsigned_overflow : std_logic;
   signal s_f3_overflow : std_logic;
   signal s_f3_next_result : std_logic_vector(WIDTH-1 downto 0);
 begin
@@ -114,12 +120,17 @@ begin
   -- Note: Avoid undefined results (i_round may be undefined).
   s_f1_next_round <= i_round when i_enable = '1' else '0';
 
+  -- Sign.
+  -- Note: Avoid undefined results (i_unsigned may be undefined).
+  s_f1_next_unsigned <= i_unsigned when i_enable = '1' else '0';
+
   -- Signals to the next stage.
   process(i_clk, i_rst)
   begin
     if i_rst = '1' then
       s_f1_enable <= '0';
       s_f1_round <= '0';
+      s_f1_unsigned <= '0';
       s_f1_overflow <= '0';
       s_f1_is_zero <= '0';
       s_f1_is_neg <= '0';
@@ -129,6 +140,7 @@ begin
       if i_stall = '0' then
         s_f1_enable <= i_enable;
         s_f1_round <= s_f1_next_round;
+        s_f1_unsigned <= s_f1_next_unsigned;
         s_f1_overflow <= s_f1_next_overflow;
         s_f1_is_zero <= s_f1_next_is_zero;
         s_f1_is_neg <= i_props.is_neg;
@@ -158,6 +170,7 @@ begin
     if i_rst = '1' then
       s_f2_enable <= '0';
       s_f2_round <= '0';
+      s_f2_unsigned <= '0';
       s_f2_overflow <= '0';
       s_f2_is_zero <= '0';
       s_f2_is_neg <= '0';
@@ -166,6 +179,7 @@ begin
       if i_stall = '0' then
         s_f2_enable <= s_f1_enable;
         s_f2_round <= s_f1_round;
+        s_f2_unsigned <= s_f1_unsigned;
         s_f2_overflow <= s_f2_next_overflow;
         s_f2_is_zero <= s_f1_is_zero;
         s_f2_is_neg <= s_f1_is_neg;
@@ -185,12 +199,16 @@ begin
   s_f3_final_value <= s_f3_value_rounded(WIDTH downto 1);
 
   -- 1b) Overflow?
-  -- The valid range for the significand is: -0x80000000..0x7fffffff.
+  -- * For signed numbers the valid range for the significand is: -0x80000000..0x7fffffff.
+  -- * For unsigned numbers the valid range for the significand is: 0x00000000..0xffffffff.
   -- Note: Overflow can never happen due to rounding (since the significand is always a few bits
   -- smaller than WIDTH), so we can check the significand before rounding (this shortens the logic
   -- path).
-  s_f3_overflow <= s_f2_significand(WIDTH) when s_f2_is_neg = '0' or s_f2_significand(WIDTH-1 downto 1) /= to_unsigned(0, 31) else
-                   '0';
+  s_f3_signed_overflow <= s_f2_significand(WIDTH) when s_f2_is_neg = '0' or s_f2_significand(WIDTH-1 downto 1) /= to_unsigned(0, 31) else
+                          '0';
+  s_f3_unsigned_overflow <= s_f2_is_neg when s_f2_significand(WIDTH downto 1) /= to_unsigned(0, 32) else
+                            '0';
+  s_f3_overflow <= s_f3_unsigned_overflow when s_f2_unsigned = '1' else s_f3_signed_overflow;
 
   -- 2) Select result.
   s_f3_next_result <= (others => '0') when s_f2_is_zero = '1' else

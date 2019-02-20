@@ -42,6 +42,7 @@ entity itof is
 
     -- Inputs (async).
     i_enable : in std_logic;
+    i_unsigned : in std_logic;
     i_integer : in std_logic_vector(WIDTH-1 downto 0);
     i_exponent_bias : in std_logic_vector(WIDTH-1 downto 0);
 
@@ -59,6 +60,7 @@ architecture rtl of itof is
   constant SIGNIFICAND_BITS : positive := FRACT_BITS + 1;
 
   -- F1 signals.
+  signal s_f1_unsigned : std_logic;
   signal s_f1_next_is_neg : std_logic;
   signal s_f1_abs_int : unsigned(WIDTH-1 downto 0);
   signal s_f1_next_is_zero : std_logic;
@@ -98,8 +100,11 @@ begin
   -- F1: Stage 1 of the pipeline.
   --================================================================================================
 
+  -- Note: Avoid undefined results (i_unsigned may be undefined).
+  s_f1_unsigned <= i_unsigned when i_enable = '1' else '0';
+
   -- 1a) Should we negate the two's complement input value?
-  s_f1_next_is_neg <= i_integer(WIDTH-1);
+  s_f1_next_is_neg <= i_integer(WIDTH-1) and not s_f1_unsigned;
   s_f1_abs_int <= unsigned(-signed(i_integer)) when s_f1_next_is_neg = '1' else unsigned(i_integer);
 
   -- 1b) Is the input zero?
