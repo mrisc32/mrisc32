@@ -243,7 +243,7 @@ begin
   -- Determine vector mode.
   s_vector_mode(1) <= i_instr(15) and not s_is_type_c;
   s_vector_mode(0) <= i_instr(14) and s_is_type_a;
-  s_is_vector_op <= '1' when s_vector_mode /= "00" else '0';
+  s_is_vector_op <= '1' when s_vector_mode /= "00" and (i_bubble or i_cancel) = '0' else '0';
   s_reg_a_is_vector <= s_is_vector_op and not s_is_mem_op;
   s_reg_b_is_vector <= s_vector_mode(0);
   s_reg_c_is_vector <= s_is_vector_op;
@@ -539,5 +539,5 @@ begin
   end process;
 
   -- Do we need to stall the pipeline (async)?
-  o_stall <= s_missing_fwd_operand or s_is_vector_op_busy;
+  o_stall <= (not (i_bubble or i_cancel)) and (s_missing_fwd_operand or s_is_vector_op_busy);
 end rtl;

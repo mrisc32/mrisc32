@@ -526,7 +526,7 @@ begin
   s_ex3_next_result_ready <= s_div_result_ready or
                              s_mul_result_ready or
                              s_fpu_f3_result_ready or
-                             s_ex1_result_ready;
+                             s_ex2_result_ready;
 
   -- Outputs from the EX3 stage (sync).
   process(i_clk, i_rst)

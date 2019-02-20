@@ -146,7 +146,7 @@ architecture rtl of register_fetch is
   signal s_branch_base_expected : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_branch_pc_plus_4 : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
-  signal s_stall_register_files : std_logic;
+  signal s_stall_register_read_ports : std_logic;
 
   -- Scalar register signals.
   signal s_scalar_we : std_logic;
@@ -197,7 +197,7 @@ begin
   -- We need to stall the register files (latch the inputs) if the ID stage is being stalled. This
   -- is because the inputs to the register files coming from the ID stage come from *before* the ID
   -- pipeline stage output registers.
-  s_stall_register_files <= i_stall_id;
+  s_stall_register_read_ports <= i_stall_id;
 
   -- Instantiate the scalar register file.
   s_scalar_we <= i_wb_we and not i_wb_is_vector;
@@ -205,7 +205,7 @@ begin
     port map (
       i_clk => i_clk,
       i_rst => i_rst,
-      i_stall => s_stall_register_files,
+      i_stall_read_ports => s_stall_register_read_ports,
       i_sel_a => i_next_sreg_a_reg,
       i_sel_b => i_next_sreg_b_reg,
       i_sel_c => i_next_sreg_c_reg,
@@ -224,7 +224,7 @@ begin
     port map (
       i_clk => i_clk,
       i_rst => i_rst,
-      i_stall => s_stall_register_files,
+      i_stall_read_ports => s_stall_register_read_ports,
       i_sel_a => i_next_vreg_a_reg,
       i_element_a => i_next_vreg_a_element,
       i_sel_b => i_next_vreg_b_reg,

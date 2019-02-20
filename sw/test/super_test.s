@@ -796,7 +796,7 @@ test_fpu_correct_results:
     .word   0x00000000, 0xffffffff, 0xffffffff, 0x00000000
     .word   0xffffffff
     .word   0x40490fdb, 0xc0f8a3d7, 0x40f8a3d7, 0x40490fdb
-    .word   0xcb91a2b4, 0x45b17000, 0xc591a2b4, 0x3fb17000  ; NOTE: 45b17000 is right, A1 is wrong!
+    .word   0xcb91a2b4, 0x45b17000, 0xc591a2b4, 0x3fb17000
     .word   0x00000000
 
 
@@ -1180,14 +1180,6 @@ test_operand_forwarding:
     mov     s2, s25
     add     s25, s25, #168
     b       #check_results
-
-    ; TODO(m): Without these nop:s, somthing goes wrong in the branching logic and the A1 simulation
-    ; ends before the program is finished.
-    ; See: https://github.com/mbitsnbites/mrisc32/issues/71
-    nop
-    nop
-    nop
-    nop
 
 test_operand_forwarding_correct_results:
     .word   42
