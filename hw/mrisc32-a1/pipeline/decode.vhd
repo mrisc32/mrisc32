@@ -238,7 +238,7 @@ begin
   s_is_sau_op <= '1' when (s_is_type_a = '1' and s_op_low(6 downto 3) = "0111") else '0';
   s_is_mul_op <= '1' when (s_is_type_a = '1' and s_op_low(6 downto 2) = "10000") else '0';
   s_is_div_op <= '1' when (s_is_type_a = '1' and s_op_low(6 downto 2) = "10001") else '0';
-  s_is_fpu_op <= '1' when (s_is_type_a = '1' and s_op_low(6 downto 4) = "101") else '0';
+  s_is_fpu_op <= '1' when (s_is_type_a = '1' and s_op_low(6 downto 5) = "11") else '0';
 
   -- Determine vector mode.
   s_vector_mode(1) <= i_instr(15) and not s_is_type_c;

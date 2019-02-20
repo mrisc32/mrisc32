@@ -231,7 +231,7 @@ begin
     );
 
   -- Min/Max operations.
-  s_is_max_op <= not i_op(0);
+  s_is_max_op <= i_op(0);
   s_minmax_sel_a <= s_compare_lt xor s_is_max_op;
   s_minmax_res <= i_src_a when s_minmax_sel_a = '1' else i_src_b;
 
