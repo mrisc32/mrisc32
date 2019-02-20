@@ -179,18 +179,20 @@ begin
   -- F3: Stage 3 of the pipeline.
   --==================================================================================================
 
-  -- 1) Round the shifted significand.
+  -- 1a) Round the shifted significand.
   s_f3_round(0) <= s_f2_round;
   s_f3_value_rounded <= ('0' & s_f2_significand) + s_f3_round;
   s_f3_final_value <= s_f3_value_rounded(WIDTH downto 1);
 
-  -- 2) Overflow?
-  -- TODO(m): Values up to and including 0x80000000 are valid if s_f2_is_neg = '1'.
-  -- TODO(m): I don't think that overflow can ever happen due to rounding, since the significand is
-  -- always a few bits smaller than WIDTH.
-  s_f3_overflow <= '1' when s_f3_value_rounded(WIDTH+1 downto WIDTH) /= "00" else '0';
+  -- 1b) Overflow?
+  -- The valid range for the significand is: -0x80000000..0x7fffffff.
+  -- Note: Overflow can never happen due to rounding (since the significand is always a few bits
+  -- smaller than WIDTH), so we can check the significand before rounding (this shortens the logic
+  -- path).
+  s_f3_overflow <= s_f2_significand(WIDTH) when s_f2_is_neg = '0' or s_f2_significand(WIDTH-1 downto 1) /= to_unsigned(0, 31) else
+                   '0';
 
-  -- 3) Select result.
+  -- 2) Select result.
   s_f3_next_result <= (others => '0') when s_f2_is_zero = '1' else
                       (others => '1') when (s_f2_overflow or s_f3_overflow) = '1' else
                       std_logic_vector(-signed(s_f3_final_value)) when s_f2_is_neg = '1' else
