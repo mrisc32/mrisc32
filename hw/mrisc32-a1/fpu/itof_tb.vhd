@@ -30,6 +30,7 @@ architecture behav of itof_tb is
   signal s_rst : std_logic;
   signal s_stall : std_logic;
   signal s_enable : std_logic;
+  signal s_unsigned : std_logic;
   signal s_integer : std_logic_vector(F32_WIDTH-1 downto 0);
   signal s_exponent_bias : std_logic_vector(F32_WIDTH-1 downto 0);
 
@@ -45,6 +46,7 @@ begin
       i_rst => s_rst,
       i_stall => s_stall,
       i_enable => s_enable,
+      i_unsigned => s_unsigned,
       i_integer => s_integer,
       i_exponent_bias => s_exponent_bias,
       o_props => s_props,
@@ -57,6 +59,7 @@ begin
     --  The patterns to apply.
     type pattern_type is record
       -- Inputs
+      unsigned : std_logic;
       int : std_logic_vector(F32_WIDTH-1 downto 0);
       exponent_bias : std_logic_vector(F32_WIDTH-1 downto 0);
 
@@ -68,35 +71,41 @@ begin
     type pattern_array is array (natural range <>) of pattern_type;
     constant patterns : pattern_array := (
         -- Zero
-        (X"00000000", X"00000000",
+        ('0', X"00000000", X"00000000",
          ('0', '0', '0', '1'), 8X"00", 24X"000000"),
 
         -- Positive numbers.
-        (X"00001234", X"00000000",
+        ('0', X"00001234", X"00000000",
          ('0', '0', '0', '0'), 8X"8b", 24X"91a000"),
-        (X"00012340", X"00000004",
+        ('0', X"00012340", X"00000004",
          ('0', '0', '0', '0'), 8X"8b", 24X"91a000"),
 
+        -- Large unsigned numbers.
+        ('1', X"ffffedcc", X"00000000",
+         ('0', '0', '0', '0'), 8X"9e", 24X"ffffee"),
+        ('1', X"ffffedcc", X"00000004",
+         ('0', '0', '0', '0'), 8X"9a", 24X"ffffee"),
+
         -- Negative numbers.
-        (X"ffffedcc", X"00000000",
+        ('0', X"ffffedcc", X"00000000",
          ('1', '0', '0', '0'), 8X"8b", 24X"91a000"),
-        (X"ffffedcc", X"00000003",
+        ('0', X"ffffedcc", X"00000003",
          ('1', '0', '0', '0'), 8X"88", 24X"91a000"),
 
         -- Largest positive/negative numbers.
-        (X"7fffffff", X"00000000",
+        ('0', X"7fffffff", X"00000000",
          ('0', '0', '0', '0'), 8X"9e", 24X"800000"),  -- Rounded.
-        (X"80000000", X"00000000",
+        ('0', X"80000000", X"00000000",
          ('1', '0', '0', '0'), 8X"9e", 24X"800000"),
 
         -- Overflow/underflow.
-        (X"10000000", X"ff000000",
+        ('0', X"10000000", X"ff000000",
          ('0', '0', '1', '0'), 8X"00", 24X"000000"),
-        (X"10000000", X"ffffff80",
+        ('0', X"10000000", X"ffffff80",
          ('0', '0', '1', '0'), 8X"00", 24X"000000"),
-        (X"00000001", X"00000080",
+        ('0', X"00000001", X"00000080",
          ('0', '0', '0', '1'), 8X"00", 24X"000000"),
-        (X"00000001", X"7fffffff",
+        ('0', X"00000001", X"7fffffff",
          ('0', '0', '0', '1'), 8X"00", 24X"000000")
       );
   begin
@@ -104,6 +113,7 @@ begin
     s_rst <= '1';
     s_stall <= '0';
     s_enable <= '0';
+    s_unsigned <= '0';
     s_integer <= (others => '0');
     s_exponent_bias <= (others => '0');
     s_clk <= '0';
@@ -121,6 +131,7 @@ begin
     for i in patterns'range loop
       --  Set the inputs.
       s_enable <= '1';
+      s_unsigned <= patterns(i).unsigned; 
       s_integer <= patterns(i).int;
       s_exponent_bias <= patterns(i).exponent_bias;
 

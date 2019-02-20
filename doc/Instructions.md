@@ -151,21 +151,24 @@ Note: `ADDPCHI` can be used together with load/store instructions to perform 32-
 
 | Mnemonic | I | V | P | Operands | Operation | Description |
 |---|---|---|---|---|---|---|
-|ITOF|   | x | x | dst, src1, src2 | dst <= ((float)src1) * 2^-src2 | Cast integer to float with exponent offset |
-|FTOI|   | x | x | dst, src1, src2 | dst <= (int)(src1 * 2^src2) | Cast float to integer with exponent offset |
-|FTOIR|  | x | x | dst, src1, src2 | dst <= (int)round(src1 * 2^src2) | Round float to integer with exponent offset |
-|FADD|   | x | x | dst, src1, src2 | dst <= src1 + src2 | Floating point addition |
-|FSUB|   | x | x | dst, src1, src2 | dst <= src1 - src2 | Floating point subtraction |
-|FMUL|   | x | x | dst, src1, src2 | dst <= src1 * src2 | Floating point multiplication |
-|FDIV|   | x | x | dst, src1, src2 | dst <= src1 / src2 | Floating point division |
-|FSQRT|   | x | x | dst, src1 | dst <= sqrt(src1) | Floating point square root |
+|FMIN|   | x | x | dst, src1, src2 | dst <= min(src1, src2) | Floating point minimum value |
+|FMAX|   | x | x | dst, src1, src2 | dst <= max(src1, src2) | Floating point maximum value |
 |FSEQ|   | x | x | dst, src1, src2 | dst <= (src1 == src2) ? 0xffffffff : 0 | Set if equal (floating point) |
 |FSNE|   | x | x | dst, src1, src2 | dst <= (src1 != src2) ? 0xffffffff : 0 | Set if not equal (floating point) |
 |FSLT|   | x | x | dst, src1, src2 | dst <= (src1 < src2) ? 0xffffffff : 0 | Set if less than (floating point) |
 |FSLE|   | x | x | dst, src1, src2 | dst <= (src1 <= src2) ? 0xffffffff : 0 | Set if less than or equal (floating point) |
 |FSNAN|   | x | x | dst, src1, src2 | dst <= (isNaN(src1) \|\| isNaN(src2)) ? 0xffffffff : 0 | Set if Not-a-Number |
-|FMIN|   | x | x | dst, src1, src2 | dst <= min(src1, src2) | Floating point minimum value |
-|FMAX|   | x | x | dst, src1, src2 | dst <= max(src1, src2) | Floating point maximum value |
+|ITOF|   | x | x | dst, src1, src2 | dst <= ((float)src1) * 2^-src2 | Cast signed integer to float with exponent offset |
+|UTOF|   | x | x | dst, src1, src2 | dst <= ((float)src1) * 2^-src2 | Cast unsigned integer to float with exponent offset |
+|FTOI|   | x | x | dst, src1, src2 | dst <= (int)(src1 * 2^src2) | Cast float to signed integer with exponent offset |
+|FTOU|   | x | x | dst, src1, src2 | dst <= (unsigned)(src1 * 2^src2) | Cast float to unsigned integer with exponent offset |
+|FTOIR|  | x | x | dst, src1, src2 | dst <= (int)round(src1 * 2^src2) | Round float to signed integer with exponent offset |
+|FTOUR|  | x | x | dst, src1, src2 | dst <= (unsigned)round(src1 * 2^src2) | Round float to unsigned integer with exponent offset |
+|FADD|   | x | x | dst, src1, src2 | dst <= src1 + src2 | Floating point addition |
+|FSUB|   | x | x | dst, src1, src2 | dst <= src1 - src2 | Floating point subtraction |
+|FMUL|   | x | x | dst, src1, src2 | dst <= src1 * src2 | Floating point multiplication |
+|FDIV|   | x | x | dst, src1, src2 | dst <= src1 / src2 | Floating point division |
+|FSQRT|   | x | x | dst, src1 | dst <= sqrt(src1) | Floating point square root |
 
 ## Vector instructions
 

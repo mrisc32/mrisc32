@@ -94,6 +94,7 @@ architecture rtl of fpu_impl is
 
   -- ITOF operations.
   signal s_itof_enable : std_logic;
+  signal s_itof_unsigned : std_logic;
   signal s_itof_props : T_FLOAT_PROPS;
   signal s_itof_exponent : std_logic_vector(EXP_BITS-1 downto 0);
   signal s_itof_significand : std_logic_vector(SIGNIFICAND_BITS-1 downto 0);
@@ -102,6 +103,7 @@ architecture rtl of fpu_impl is
   -- FTOI operations.
   signal s_ftoi_enable : std_logic;
   signal s_ftoi_round : std_logic;
+  signal s_ftoi_unsigned : std_logic;
   signal s_ftoi_result : std_logic_vector(WIDTH-1 downto 0);
   signal s_ftoi_result_ready : std_logic;
 
@@ -150,24 +152,27 @@ begin
   -- Decode the FPU operation.
   --------------------------------------------------------------------------------------------------
 
-  s_is_itof_op <= '1' when i_op = C_FPU_ITOF else '0';
-
   DecodeOpMux1: with i_op select
-    s_is_ftoi_op <=
-      '1' when C_FPU_FTOI | C_FPU_FTOIR,
+    s_is_itof_op <=
+      '1' when C_FPU_ITOF | C_FPU_UTOF,
       '0' when others;
 
   DecodeOpMux2: with i_op select
+    s_is_ftoi_op <=
+      '1' when C_FPU_FTOI | C_FPU_FTOU | C_FPU_FTOIR | C_FPU_FTOUR,
+      '0' when others;
+
+  DecodeOpMux3: with i_op select
     s_is_compare_op <=
       '1' when C_FPU_FSEQ | C_FPU_FSNE | C_FPU_FSLT | C_FPU_FSLE | C_FPU_FSNAN,
       '0' when others;
 
-  DecodeOpMux3: with i_op select
+  DecodeOpMux4: with i_op select
     s_is_minmax_op <=
       '1' when C_FPU_FMIN | C_FPU_FMAX,
       '0' when others;
 
-  DecodeOpMux4: with i_op select
+  DecodeOpMux5: with i_op select
     s_is_add_op <=
       '1' when C_FPU_FADD | C_FPU_FSUB,
       '0' when others;
@@ -231,7 +236,7 @@ begin
     );
 
   -- Min/Max operations.
-  s_is_max_op <= not i_op(0);
+  s_is_max_op <= i_op(0);
   s_minmax_sel_a <= s_compare_lt xor s_is_max_op;
   s_minmax_res <= i_src_a when s_minmax_sel_a = '1' else i_src_b;
 
@@ -257,10 +262,13 @@ begin
   --================================================================================================
 
   --------------------------------------------------------------------------------------------------
-  -- ITOF
+  -- ITOF/UTOF
   --------------------------------------------------------------------------------------------------
 
   s_itof_enable <= i_enable and s_is_itof_op;
+  s_itof_unsigned <= '1' when i_op = C_FPU_UTOF else
+                     '0' when i_op = C_FPU_ITOF else
+                     '-';
 
   ITOF: entity work.itof
     generic map (
@@ -277,6 +285,7 @@ begin
       i_enable => s_itof_enable,
 
       -- Inputs (async).
+      i_unsigned => s_itof_unsigned,
       i_integer => i_src_a,
       i_exponent_bias => i_src_b,
 
@@ -289,13 +298,16 @@ begin
 
 
   --------------------------------------------------------------------------------------------------
-  -- FTOI
+  -- FTOI/FTOU/FTOIR/FTOUR
   --------------------------------------------------------------------------------------------------
 
   s_ftoi_enable <= i_enable and s_is_ftoi_op;
-  s_ftoi_round <= '1' when i_op = C_FPU_FTOIR else
-                  '0' when i_op = C_FPU_FTOI else
+  s_ftoi_round <= '1' when i_op = C_FPU_FTOIR or i_op = C_FPU_FTOUR else
+                  '0' when i_op = C_FPU_FTOI or i_op = C_FPU_FTOU else
                   '-';
+  s_ftoi_unsigned <= '1' when i_op = C_FPU_FTOU or i_op = C_FPU_FTOUR else
+                     '0' when i_op = C_FPU_FTOI or i_op = C_FPU_FTOIR else
+                     '-';
 
   FTOI: entity work.ftoi
     generic map (
@@ -312,11 +324,12 @@ begin
       i_enable => s_ftoi_enable,
 
       -- Inputs (async).
+      i_round => s_ftoi_round,
+      i_unsigned => s_ftoi_unsigned,
       i_props => s_props_a,
       i_exponent => s_exponent_a,
       i_significand => s_significand_a,
       i_exponent_bias => i_src_b,
-      i_round => s_ftoi_round,
 
       -- Outputs (async).
       o_result => s_ftoi_result,

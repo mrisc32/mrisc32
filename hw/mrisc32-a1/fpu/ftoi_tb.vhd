@@ -31,6 +31,7 @@ architecture behav of ftoi_tb is
   signal s_stall : std_logic;
   signal s_enable : std_logic;
   signal s_round : std_logic;
+  signal s_unsigned : std_logic;
   signal s_props : T_FLOAT_PROPS;
   signal s_exponent : std_logic_vector(F32_EXP_BITS-1 downto 0);
   signal s_significand : std_logic_vector(F32_FRACT_BITS downto 0);
@@ -53,6 +54,7 @@ begin
       i_stall => s_stall,
       i_enable => s_enable,
       i_round => s_round,
+      i_unsigned => s_unsigned,
       i_props => s_props,
       i_exponent => s_exponent,
       i_significand => s_significand,
@@ -66,6 +68,7 @@ begin
     type pattern_type is record
       -- Inputs
       round : std_logic;
+      unsigned : std_logic;
       props : T_FLOAT_PROPS;
       exponent : std_logic_vector(F32_EXP_BITS-1 downto 0);
       significand : std_logic_vector(F32_FRACT_BITS downto 0);
@@ -77,60 +80,69 @@ begin
     type pattern_array is array (natural range <>) of pattern_type;
     constant patterns : pattern_array := (
         -- Zero
-        ('0', ('0', '0', '0', '1'), 8X"00", 24X"000000",
+        ('0', '0', ('0', '0', '0', '1'), 8X"00", 24X"000000",
          X"00000000",
          X"00000000"),
 
         -- Positive numbers.
-        ('0', ('0', '0', '0', '0'), 8X"8b", 24X"91a000",
+        ('0', '0', ('0', '0', '0', '0'), 8X"8b", 24X"91a000",
          X"00000000",
          X"00001234"),
-        ('0', ('0', '0', '0', '0'), 8X"8b", 24X"91a000",
+        ('0', '0', ('0', '0', '0', '0'), 8X"8b", 24X"91a000",
          X"00000004",
          X"00012340"),
 
         -- Negative numbers.
-        ('0', ('1', '0', '0', '0'), 8X"8b", 24X"91a000",
+        ('0', '0', ('1', '0', '0', '0'), 8X"8b", 24X"91a000",
          X"00000000",
          X"ffffedcc"),
-        ('0', ('1', '0', '0', '0'), 8X"8b", 24X"91a000",
+        ('0', '0', ('1', '0', '0', '0'), 8X"8b", 24X"91a000",
          X"00000004",
          X"fffedcc0"),
 
         -- Rounding.
-        ('0', ('0', '0', '0', '0'), 8X"88", 24X"91a000",
+        ('0', '0', ('0', '0', '0', '0'), 8X"88", 24X"91a000",
          X"00000000",
          X"00000246"),
-        ('1', ('0', '0', '0', '0'), 8X"88", 24X"91a000",
+        ('1', '0', ('0', '0', '0', '0'), 8X"88", 24X"91a000",
          X"00000000",
          X"00000247"),
 
         -- Overflow.
-        ('0', ('0', '0', '0', '0'), 8X"9d", 24X"ffffff",  -- 2147483520 = ok
+        ('0', '0', ('0', '0', '0', '0'), 8X"9d", 24X"ffffff",  -- 2147483520 = ok
          X"00000000",
          X"7fffff80"),
-        ('0', ('1', '0', '0', '0'), 8X"9e", 24X"800000",  -- -2147483648 = ok
+        ('0', '0', ('1', '0', '0', '0'), 8X"9e", 24X"800000",  -- -2147483648 = ok
          X"00000000",
          X"80000000"),
-        ('0', ('0', '0', '0', '0'), 8X"9e", 24X"800000",  -- 2147483648 > 2147483647 = overflow
+        ('0', '1', ('0', '0', '0', '0'), 8X"9e", 24X"800000",  -- Unsigned 2147483648 = ok
+         X"00000000",
+         X"80000000"),
+        ('0', '0', ('1', '0', '0', '0'), 8X"80", 24X"800000",  -- Signed -2 = ok
+         X"00000000",
+         X"fffffffe"),
+        ('0', '1', ('1', '0', '0', '0'), 8X"80", 24X"800000",  -- Unsigned -2 = overflow
          X"00000000",
          X"ffffffff"),
-        ('0', ('1', '0', '0', '0'), 8X"9e", 24X"800001",  -- -2147483904 < -2147483648 = overflow
+        ('0', '0', ('0', '0', '0', '0'), 8X"9e", 24X"800000",  -- 2147483648 > 2147483647 = overflow
          X"00000000",
          X"ffffffff"),
-        ('0', ('0', '1', '0', '0'), 8X"00", 24X"000000",  -- NaN
+        ('0', '0', ('1', '0', '0', '0'), 8X"9e", 24X"800001",  -- -2147483904 < -2147483648 = overflow
          X"00000000",
          X"ffffffff"),
-        ('0', ('0', '0', '1', '0'), 8X"00", 24X"000000",  -- +Inf
+        ('0', '0', ('0', '1', '0', '0'), 8X"00", 24X"000000",  -- NaN
          X"00000000",
          X"ffffffff"),
-        ('0', ('1', '0', '1', '0'), 8X"00", 24X"000000",  -- -Inf
+        ('0', '0', ('0', '0', '1', '0'), 8X"00", 24X"000000",  -- +Inf
          X"00000000",
          X"ffffffff"),
-        ('0', ('0', '0', '0', '0'), 8X"8b", 24X"91a000",  -- exponent + offset = ok
+        ('0', '0', ('1', '0', '1', '0'), 8X"00", 24X"000000",  -- -Inf
+         X"00000000",
+         X"ffffffff"),
+        ('0', '0', ('0', '0', '0', '0'), 8X"8b", 24X"91a000",  -- exponent + offset = ok
          X"00000012",
          X"48d00000"),
-        ('0', ('0', '0', '0', '0'), 8X"8b", 24X"91a000",  -- exponent + offset = overflow
+        ('0', '0', ('0', '0', '0', '0'), 8X"8b", 24X"91a000",  -- exponent + offset = overflow
          X"00000013",
          X"ffffffff")
       );
@@ -140,6 +152,7 @@ begin
     s_stall <= '0';
     s_enable <= '0';
     s_round <= '0';
+    s_unsigned <= '0';
     s_props <= ('0', '0', '0', '0');
     s_exponent <= (others => '0');
     s_significand <= (others => '0');
@@ -160,6 +173,7 @@ begin
       --  Set the inputs.
       s_enable <= '1';
       s_round <= patterns(i).round;
+      s_unsigned <= patterns(i).unsigned;
       s_props <= patterns(i).props;
       s_exponent <= patterns(i).exponent;
       s_significand <= patterns(i).significand;
