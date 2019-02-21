@@ -932,12 +932,14 @@ uint32_t cpu_simple_t::cpuid32(const uint32_t a, const uint32_t b) {
     case 0x00000001u:
       if (b == 0x00000000u) {
         // CPU features:
-        //   VEC (vector processor) = 1 << 0
-        //   PO (packed operations) = 1 << 1
-        //   MUL (integer mul)      = 1 << 2
-        //   DIV (integer mul)      = 1 << 3
-        //   FP (floating point)    = 1 << 4
-        return 0x0000001fu;
+        //   VEC (vector processor)     = 1 << 0
+        //   PO (packed operations)     = 1 << 1
+        //   MUL (integer mul)          = 1 << 2
+        //   DIV (integer mul)          = 1 << 3
+        //   SA (saturating arithmetic) = 1 << 4
+        //   FP (floating point)        = 1 << 5
+        //   SQRT (float sqrt)          = 1 << 6
+        return 0x0000007fu;
       } else {
         return 0u;
       }

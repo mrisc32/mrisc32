@@ -81,64 +81,70 @@ begin
       o_result_ready => s_mul32_result_ready
     );
 
-  -- 16-bit multiply pipelines.
-  MUL16Gen: for k in 1 to 2 generate
-    signal s_result_ready : std_logic_vector(1 to 2);
-  begin
-    MUL16_0: entity work.mul_impl
-      generic map (
-        WIDTH => 16
-      )
-      port map (
-        i_clk => i_clk,
-        i_rst => i_rst,
-        i_stall => i_stall,
-        i_enable => s_mul16_enable,
-        i_op => i_op,
-        i_src_a => i_src_a((16*k)-1 downto 16*(k-1)),
-        i_src_b => i_src_b((16*k)-1 downto 16*(k-1)),
-        o_result => s_mul16_result((16*k)-1 downto 16*(k-1)),
-        o_result_ready => s_result_ready(k)
-      );
+  PACKED_GEN: if C_CPU_HAS_PO generate
+    -- 16-bit multiply pipelines.
+    MUL16Gen: for k in 1 to 2 generate
+      signal s_result_ready : std_logic_vector(1 to 2);
+    begin
+      MUL16_0: entity work.mul_impl
+        generic map (
+          WIDTH => 16
+        )
+        port map (
+          i_clk => i_clk,
+          i_rst => i_rst,
+          i_stall => i_stall,
+          i_enable => s_mul16_enable,
+          i_op => i_op,
+          i_src_a => i_src_a((16*k)-1 downto 16*(k-1)),
+          i_src_b => i_src_b((16*k)-1 downto 16*(k-1)),
+          o_result => s_mul16_result((16*k)-1 downto 16*(k-1)),
+          o_result_ready => s_result_ready(k)
+        );
 
-    -- Note: For the ready signal we only have to consider one of the parallel pipelines.
-    MPU16ExtractSignal: if k=1 generate
-      s_mul16_result_ready <= s_result_ready(1);
+      -- Note: For the ready signal we only have to consider one of the parallel pipelines.
+      MPU16ExtractSignal: if k=1 generate
+        s_mul16_result_ready <= s_result_ready(1);
+      end generate;
     end generate;
-  end generate;
 
-  -- 8-bit multiply pipelines.
-  MUL8Gen: for k in 1 to 4 generate
-    signal s_result_ready : std_logic_vector(1 to 4);
-  begin
-    MUL8_0: entity work.mul_impl
-      generic map (
-        WIDTH => 8
-      )
-      port map (
-        i_clk => i_clk,
-        i_rst => i_rst,
-        i_stall => i_stall,
-        i_enable => s_mul8_enable,
-        i_op => i_op,
-        i_src_a => i_src_a((8*k)-1 downto 8*(k-1)),
-        i_src_b => i_src_b((8*k)-1 downto 8*(k-1)),
-        o_result => s_mul8_result((8*k)-1 downto 8*(k-1)),
-        o_result_ready => s_result_ready(k)
-      );
+    -- 8-bit multiply pipelines.
+    MUL8Gen: for k in 1 to 4 generate
+      signal s_result_ready : std_logic_vector(1 to 4);
+    begin
+      MUL8_0: entity work.mul_impl
+        generic map (
+          WIDTH => 8
+        )
+        port map (
+          i_clk => i_clk,
+          i_rst => i_rst,
+          i_stall => i_stall,
+          i_enable => s_mul8_enable,
+          i_op => i_op,
+          i_src_a => i_src_a((8*k)-1 downto 8*(k-1)),
+          i_src_b => i_src_b((8*k)-1 downto 8*(k-1)),
+          o_result => s_mul8_result((8*k)-1 downto 8*(k-1)),
+          o_result_ready => s_result_ready(k)
+        );
 
-    -- Note: For the ready signal we only have to consider one of the parallel pipelines.
-    MPU8ExtractSignal: if k=1 generate
-      s_mul8_result_ready <= s_result_ready(1);
+      -- Note: For the ready signal we only have to consider one of the parallel pipelines.
+      MPU8ExtractSignal: if k=1 generate
+        s_mul8_result_ready <= s_result_ready(1);
+      end generate;
     end generate;
-  end generate;
 
-  -- Select the output signals.
-  o_result <= s_mul32_result when s_mul32_result_ready = '1' else
-              s_mul16_result when s_mul16_result_ready = '1' else
-              s_mul8_result when s_mul8_result_ready = '1' else
-              (others => '-');
-  o_result_ready <= s_mul32_result_ready or
-                    s_mul16_result_ready or
-                    s_mul8_result_ready;
+    -- Select the output signals.
+    o_result <= s_mul32_result when s_mul32_result_ready = '1' else
+                s_mul16_result when s_mul16_result_ready = '1' else
+                s_mul8_result when s_mul8_result_ready = '1' else
+                (others => '-');
+    o_result_ready <= s_mul32_result_ready or
+                      s_mul16_result_ready or
+                      s_mul8_result_ready;
+  else generate
+    -- In unpacked mode we only have to consider the 32-bit result.
+    o_result <= s_mul32_result;
+    o_result_ready <= s_mul32_result_ready;
+  end generate;
 end rtl;

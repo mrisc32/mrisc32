@@ -35,6 +35,8 @@ end shift32;
 
 architecture rtl of shift32 is
 begin
+  -- TODO(m): Optimize this when C_CPU_HAS_PO = false.
+
   process(i_right, i_arithmetic, i_src, i_shift, i_packed_mode)
     variable v_shift : integer;
     variable v_lo : integer;

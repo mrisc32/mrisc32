@@ -32,31 +32,38 @@ end rev32;
 
 architecture rtl of rev32 is
 begin
-  process(i_src, i_packed_mode)
-    variable v_lo : integer;
-    variable v_hi : integer;
-  begin
-    if i_packed_mode = C_PACKED_BYTE then
-      for k in 0 to 3 loop
-        v_lo := k * 8;
-        v_hi := v_lo + 7;
-        for j in 0 to 7 loop
-          o_result(v_lo + j) <= i_src(v_hi - j);
+  PACKED_GEN: if C_CPU_HAS_PO generate
+    process(i_src, i_packed_mode)
+      variable v_lo : integer;
+      variable v_hi : integer;
+    begin
+      if i_packed_mode = C_PACKED_BYTE then
+        for k in 0 to 3 loop
+          v_lo := k * 8;
+          v_hi := v_lo + 7;
+          for j in 0 to 7 loop
+            o_result(v_lo + j) <= i_src(v_hi - j);
+          end loop;
         end loop;
-      end loop;
-    elsif i_packed_mode = C_PACKED_HALF_WORD then
-      for k in 0 to 1 loop
-        v_lo := k * 16;
-        v_hi := v_lo + 15;
-        for j in 0 to 15 loop
-          o_result(v_lo + j) <= i_src(v_hi - j);
+      elsif i_packed_mode = C_PACKED_HALF_WORD then
+        for k in 0 to 1 loop
+          v_lo := k * 16;
+          v_hi := v_lo + 15;
+          for j in 0 to 15 loop
+            o_result(v_lo + j) <= i_src(v_hi - j);
+          end loop;
         end loop;
-      end loop;
-    else
-      -- C_PACKED_NONE
-      for j in 0 to 31 loop
-        o_result(j) <= i_src(31 - j);
-      end loop;
-    end if;
-  end process;
+      else
+        -- C_PACKED_NONE
+        for j in 0 to 31 loop
+          o_result(j) <= i_src(31 - j);
+        end loop;
+      end if;
+    end process;
+  else generate
+    -- In unpacked mode we only have to consider the 32-bit result.
+    Rev32Gen: for j in 0 to 31 generate
+      o_result(j) <= i_src(31 - j);
+    end generate;
+  end generate;
 end rtl;

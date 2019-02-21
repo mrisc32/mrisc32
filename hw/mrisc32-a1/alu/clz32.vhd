@@ -135,44 +135,49 @@ begin
   s_result_32(1) <= s_c5_1;
   s_result_32(0) <= s_c5_0;
 
-  -- 16x2-bit result.
-  s_result_16(31 downto 21) <= (others => '0');
-  s_result_16(20) <= s_c4_4(1);
-  s_result_16(19) <= s_c4_3(1);
-  s_result_16(18) <= s_c4_2(1);
-  s_result_16(17) <= s_c4_1(1);
-  s_result_16(16) <= s_c4_0(1);
-  s_result_16(15 downto 5) <= (others => '0');
-  s_result_16(4) <= s_c4_4(0);
-  s_result_16(3) <= s_c4_3(0);
-  s_result_16(2) <= s_c4_2(0);
-  s_result_16(1) <= s_c4_1(0);
-  s_result_16(0) <= s_c4_0(0);
+  PACKED_GEN: if C_CPU_HAS_PO generate
+    -- 16x2-bit result.
+    s_result_16(31 downto 21) <= (others => '0');
+    s_result_16(20) <= s_c4_4(1);
+    s_result_16(19) <= s_c4_3(1);
+    s_result_16(18) <= s_c4_2(1);
+    s_result_16(17) <= s_c4_1(1);
+    s_result_16(16) <= s_c4_0(1);
+    s_result_16(15 downto 5) <= (others => '0');
+    s_result_16(4) <= s_c4_4(0);
+    s_result_16(3) <= s_c4_3(0);
+    s_result_16(2) <= s_c4_2(0);
+    s_result_16(1) <= s_c4_1(0);
+    s_result_16(0) <= s_c4_0(0);
 
-  -- 8x4-bit result.
-  s_result_8(31 downto 28) <= (others => '0');
-  s_result_8(27) <= s_c3_3(3);
-  s_result_8(26) <= s_c3_2(3);
-  s_result_8(25) <= s_c3_1(3);
-  s_result_8(24) <= s_c3_0(3);
-  s_result_8(23 downto 20) <= (others => '0');
-  s_result_8(19) <= s_c3_3(2);
-  s_result_8(18) <= s_c3_2(2);
-  s_result_8(17) <= s_c3_1(2);
-  s_result_8(16) <= s_c3_0(2);
-  s_result_8(15 downto 12) <= (others => '0');
-  s_result_8(11) <= s_c3_3(1);
-  s_result_8(10) <= s_c3_2(1);
-  s_result_8(9) <= s_c3_1(1);
-  s_result_8(8) <= s_c3_0(1);
-  s_result_8(7 downto 4) <= (others => '0');
-  s_result_8(3) <= s_c3_3(0);
-  s_result_8(2) <= s_c3_2(0);
-  s_result_8(1) <= s_c3_1(0);
-  s_result_8(0) <= s_c3_0(0);
+    -- 8x4-bit result.
+    s_result_8(31 downto 28) <= (others => '0');
+    s_result_8(27) <= s_c3_3(3);
+    s_result_8(26) <= s_c3_2(3);
+    s_result_8(25) <= s_c3_1(3);
+    s_result_8(24) <= s_c3_0(3);
+    s_result_8(23 downto 20) <= (others => '0');
+    s_result_8(19) <= s_c3_3(2);
+    s_result_8(18) <= s_c3_2(2);
+    s_result_8(17) <= s_c3_1(2);
+    s_result_8(16) <= s_c3_0(2);
+    s_result_8(15 downto 12) <= (others => '0');
+    s_result_8(11) <= s_c3_3(1);
+    s_result_8(10) <= s_c3_2(1);
+    s_result_8(9) <= s_c3_1(1);
+    s_result_8(8) <= s_c3_0(1);
+    s_result_8(7 downto 4) <= (others => '0');
+    s_result_8(3) <= s_c3_3(0);
+    s_result_8(2) <= s_c3_2(0);
+    s_result_8(1) <= s_c3_1(0);
+    s_result_8(0) <= s_c3_0(0);
 
-  -- Select outputs.
-  o_result <= s_result_8  when i_packed_mode = C_PACKED_BYTE else
-              s_result_16 when i_packed_mode = C_PACKED_HALF_WORD else
-              s_result_32;
+    -- Select outputs.
+    o_result <= s_result_8  when i_packed_mode = C_PACKED_BYTE else
+                s_result_16 when i_packed_mode = C_PACKED_HALF_WORD else
+                s_result_32;
+  else generate
+    -- In unpacked mode we only have to consider the 32-bit result.
+    o_result <= s_result_32;
+  end generate;
 end rtl;

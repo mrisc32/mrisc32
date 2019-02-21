@@ -81,65 +81,71 @@ begin
       o_next_result_ready => s_next_sau32_result_ready
     );
 
-  -- 16-bit pipelines.
-  SAU16Gen: for k in 1 to 2 generate
-    signal s_next_result_ready : std_logic_vector(1 to 2);
-  begin
-    SAU16_1: entity work.sau_impl
-      generic map (
-        WIDTH => 16
-      )
-      port map (
-        i_clk => i_clk,
-        i_rst => i_rst,
-        i_stall => i_stall,
-        i_enable => s_sau16_enable,
-        i_op => i_op,
-        i_src_a => i_src_a((16*k)-1 downto 16*(k-1)),
-        i_src_b => i_src_b((16*k)-1 downto 16*(k-1)),
-        o_next_result => s_next_sau16_result((16*k)-1 downto 16*(k-1)),
-        o_next_result_ready => s_next_result_ready(k)
-      );
+  PACKED_GEN: if C_CPU_HAS_PO generate
+    -- 16-bit pipelines.
+    SAU16Gen: for k in 1 to 2 generate
+      signal s_next_result_ready : std_logic_vector(1 to 2);
+    begin
+      SAU16_1: entity work.sau_impl
+        generic map (
+          WIDTH => 16
+        )
+        port map (
+          i_clk => i_clk,
+          i_rst => i_rst,
+          i_stall => i_stall,
+          i_enable => s_sau16_enable,
+          i_op => i_op,
+          i_src_a => i_src_a((16*k)-1 downto 16*(k-1)),
+          i_src_b => i_src_b((16*k)-1 downto 16*(k-1)),
+          o_next_result => s_next_sau16_result((16*k)-1 downto 16*(k-1)),
+          o_next_result_ready => s_next_result_ready(k)
+        );
 
-      -- Note: For some signals we only have to consider one of the parallel pipelines.
-      SAU16ExtractSignals: if k=1 generate
-        s_next_sau16_result_ready <= s_next_result_ready(1);
-      end generate;
+        -- Note: For some signals we only have to consider one of the parallel pipelines.
+        SAU16ExtractSignals: if k=1 generate
+          s_next_sau16_result_ready <= s_next_result_ready(1);
+        end generate;
+    end generate;
+
+    -- 8-bit pipelines.
+    SAU8Gen: for k in 1 to 4 generate
+      signal s_next_result_ready : std_logic_vector(1 to 4);
+    begin
+      SAU8_x: entity work.sau_impl
+        generic map (
+          WIDTH => 8
+        )
+        port map (
+          i_clk => i_clk,
+          i_rst => i_rst,
+          i_stall => i_stall,
+          i_enable => s_sau8_enable,
+          i_op => i_op,
+          i_src_a => i_src_a((8*k)-1 downto 8*(k-1)),
+          i_src_b => i_src_b((8*k)-1 downto 8*(k-1)),
+          o_next_result => s_next_sau8_result((8*k)-1 downto 8*(k-1)),
+          o_next_result_ready => s_next_result_ready(k)
+        );
+
+        -- Note: For some signals we only have to consider one of the parallel pipelines.
+        SAU8ExtractSignals: if k=1 generate
+          s_next_sau8_result_ready <= s_next_result_ready(1);
+        end generate;
+    end generate;
+
+    -- Select the output signals from the first pipeline stage.
+    o_next_result <=
+        s_next_sau32_result when s_next_sau32_result_ready = '1' else
+        s_next_sau16_result when s_next_sau16_result_ready = '1' else
+        s_next_sau8_result when s_next_sau8_result_ready = '1' else
+        (others => '-');
+    o_next_result_ready <= s_next_sau32_result_ready or
+                          s_next_sau16_result_ready or
+                          s_next_sau8_result_ready;
+  else generate
+    -- In unpacked mode we only have to consider the 32-bit result.
+    o_next_result <= s_next_sau32_result;
+    o_next_result_ready <= s_next_sau32_result_ready;
   end generate;
-
-  -- 8-bit pipelines.
-  SAU8Gen: for k in 1 to 4 generate
-    signal s_next_result_ready : std_logic_vector(1 to 4);
-  begin
-    SAU8_x: entity work.sau_impl
-      generic map (
-        WIDTH => 8
-      )
-      port map (
-        i_clk => i_clk,
-        i_rst => i_rst,
-        i_stall => i_stall,
-        i_enable => s_sau8_enable,
-        i_op => i_op,
-        i_src_a => i_src_a((8*k)-1 downto 8*(k-1)),
-        i_src_b => i_src_b((8*k)-1 downto 8*(k-1)),
-        o_next_result => s_next_sau8_result((8*k)-1 downto 8*(k-1)),
-        o_next_result_ready => s_next_result_ready(k)
-      );
-
-      -- Note: For some signals we only have to consider one of the parallel pipelines.
-      SAU8ExtractSignals: if k=1 generate
-        s_next_sau8_result_ready <= s_next_result_ready(1);
-      end generate;
-  end generate;
-
-  -- Select the output signals from the first pipeline stage.
-  o_next_result <=
-      s_next_sau32_result when s_next_sau32_result_ready = '1' else
-      s_next_sau16_result when s_next_sau16_result_ready = '1' else
-      s_next_sau8_result when s_next_sau8_result_ready = '1' else
-      (others => '-');
-  o_next_result_ready <= s_next_sau32_result_ready or
-                         s_next_sau16_result_ready or
-                         s_next_sau8_result_ready;
 end rtl;

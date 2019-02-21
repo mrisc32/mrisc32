@@ -276,70 +276,96 @@ begin
   --------------------------------------------------------------------------------------------------
 
   -- Instantiate the saturating arithmetic unit.
-  sau_1: entity work.sau
-    port map (
-      i_clk => i_clk,
-      i_rst => i_rst,
-      i_stall => s_stall_ex,
-      i_enable => i_sau_en,
-      i_op => i_sau_op,
-      i_packed_mode => i_packed_mode,
-      i_src_a => i_src_a,
-      i_src_b => i_src_b,
-      o_next_result => s_sau_result,
-      o_next_result_ready => s_sau_result_ready
-    );
+  SAU_GEN: if C_CPU_HAS_SA generate
+    sau_1: entity work.sau
+      port map (
+        i_clk => i_clk,
+        i_rst => i_rst,
+        i_stall => s_stall_ex,
+        i_enable => i_sau_en,
+        i_op => i_sau_op,
+        i_packed_mode => i_packed_mode,
+        i_src_a => i_src_a,
+        i_src_b => i_src_b,
+        o_next_result => s_sau_result,
+        o_next_result_ready => s_sau_result_ready
+      );
+  else generate
+    s_sau_result <= (others => '0');
+    s_sau_result_ready <= '0';
+  end generate;
 
   -- Instantiate the multiply unit.
-  mul_1: entity work.mul
-    port map (
-      i_clk => i_clk,
-      i_rst => i_rst,
-      i_stall => s_stall_ex,
-      i_enable => i_mul_en,
-      i_op => i_mul_op,
-      i_packed_mode => i_packed_mode,
-      i_src_a => i_src_a,
-      i_src_b => i_src_b,
-      o_result => s_mul_result,
-      o_result_ready => s_mul_result_ready
-    );
+  MUL_GEN: if C_CPU_HAS_MUL generate
+    mul_1: entity work.mul
+      port map (
+        i_clk => i_clk,
+        i_rst => i_rst,
+        i_stall => s_stall_ex,
+        i_enable => i_mul_en,
+        i_op => i_mul_op,
+        i_packed_mode => i_packed_mode,
+        i_src_a => i_src_a,
+        i_src_b => i_src_b,
+        o_result => s_mul_result,
+        o_result_ready => s_mul_result_ready
+      );
+  else generate
+    s_mul_result <= (others => '0');
+    s_mul_result_ready <= '0';
+  end generate;
 
-  -- Instantiate the multiply unit.
-  div_1: entity work.div
-    port map (
-      i_clk => i_clk,
-      i_rst => i_rst,
-      i_stall => s_stall_div,
-      o_stall => s_div_stall,
-      i_enable => i_div_en,
-      i_op => i_div_op,
-      i_packed_mode => i_packed_mode,
-      i_src_a => i_src_a,
-      i_src_b => i_src_b,
-      o_next_result => s_div_result,
-      o_next_result_ready => s_div_result_ready
-    );
+  -- Instantiate the division unit.
+  DIV_GEN: if C_CPU_HAS_DIV generate
+    div_1: entity work.div
+      port map (
+        i_clk => i_clk,
+        i_rst => i_rst,
+        i_stall => s_stall_div,
+        o_stall => s_div_stall,
+        i_enable => i_div_en,
+        i_op => i_div_op,
+        i_packed_mode => i_packed_mode,
+        i_src_a => i_src_a,
+        i_src_b => i_src_b,
+        o_next_result => s_div_result,
+        o_next_result_ready => s_div_result_ready
+      );
+  else generate
+    s_div_stall <= '0';
+    s_div_result <= (others => '0');
+    s_div_result_ready <= '0';
+  end generate;
 
   -- Instantiate the floating point unit.
-  fpu_1: entity work.fpu
-    port map (
-      i_clk => i_clk,
-      i_rst => i_rst,
-      i_stall => s_stall_fpu,
-      o_stall => s_fpu_stall,
-      i_enable => i_fpu_en,
-      i_op => i_fpu_op,
-      i_packed_mode => i_packed_mode,
-      i_src_a => i_src_a,
-      i_src_b => i_src_b,
-      o_f1_next_result => s_fpu_f1_result,
-      o_f1_next_result_ready => s_fpu_f1_result_ready,
-      o_f3_next_result => s_fpu_f3_result,
-      o_f3_next_result_ready => s_fpu_f3_result_ready,
-      o_f4_next_result => s_fpu_f4_result,
-      o_f4_next_result_ready => s_fpu_f4_result_ready
-    );
+  FPU_GEN: if C_CPU_HAS_FP generate
+    fpu_1: entity work.fpu
+      port map (
+        i_clk => i_clk,
+        i_rst => i_rst,
+        i_stall => s_stall_fpu,
+        o_stall => s_fpu_stall,
+        i_enable => i_fpu_en,
+        i_op => i_fpu_op,
+        i_packed_mode => i_packed_mode,
+        i_src_a => i_src_a,
+        i_src_b => i_src_b,
+        o_f1_next_result => s_fpu_f1_result,
+        o_f1_next_result_ready => s_fpu_f1_result_ready,
+        o_f3_next_result => s_fpu_f3_result,
+        o_f3_next_result_ready => s_fpu_f3_result_ready,
+        o_f4_next_result => s_fpu_f4_result,
+        o_f4_next_result_ready => s_fpu_f4_result_ready
+      );
+  else generate
+    s_fpu_stall <= '0';
+    s_fpu_f1_result <= (others => '0');
+    s_fpu_f1_result_ready <= '0';
+    s_fpu_f3_result <= (others => '0');
+    s_fpu_f3_result_ready <= '0';
+    s_fpu_f4_result <= (others => '0');
+    s_fpu_f4_result_ready <= '0';
+  end generate;
 
 
   --------------------------------------------------------------------------------------------------

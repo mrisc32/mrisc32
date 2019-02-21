@@ -285,24 +285,33 @@ begin
   -- Operand forwarding of VL.
   s_vl_data_or_fwd <= i_vl_fwd_value when i_vl_fwd_use_value = '1' else s_vl_data;
 
-  -- Stall the vector control unit?
-  s_stall_vector_control <= i_stall or (i_vl_fwd_use_value and not i_vl_fwd_value_ready);
+  -- Instantiate the vector control unit.
+  VCTRL_GEN: if C_CPU_HAS_VEC generate
+    -- Stall the vector control unit?
+    s_stall_vector_control <= i_stall or (i_vl_fwd_use_value and not i_vl_fwd_value_ready);
 
-  vector_control_1: entity work.vector_control
-    port map (
-      i_clk => i_clk,
-      i_rst => i_rst,
-      i_stall => s_stall_vector_control,
-      i_cancel => i_cancel,
-      i_is_vector_op => s_is_vector_op,
-      i_vl => s_vl_data_or_fwd,
-      i_fold => s_is_folding_vector_op,
-      o_element_a => s_element_a,
-      o_element_b => s_element_b,
-      o_is_vector_op_busy => s_is_vector_op_busy,
-      o_is_first_vector_op_cycle => s_is_first_vector_op_cycle,
-      o_bubble => s_bubble_from_vector_op
-    );
+    vector_control_1: entity work.vector_control
+      port map (
+        i_clk => i_clk,
+        i_rst => i_rst,
+        i_stall => s_stall_vector_control,
+        i_cancel => i_cancel,
+        i_is_vector_op => s_is_vector_op,
+        i_vl => s_vl_data_or_fwd,
+        i_fold => s_is_folding_vector_op,
+        o_element_a => s_element_a,
+        o_element_b => s_element_b,
+        o_is_vector_op_busy => s_is_vector_op_busy,
+        o_is_first_vector_op_cycle => s_is_first_vector_op_cycle,
+        o_bubble => s_bubble_from_vector_op
+      );
+  else generate
+    s_element_a <= (others => '0');
+    s_element_b <= (others => '0');
+    s_is_vector_op_busy <= '0';
+    s_is_first_vector_op_cycle <= '0';
+    s_bubble_from_vector_op <= '0';
+  end generate;
 
   -- The target (write) element index is always the same as the src A element index.
   s_element_c <= s_element_a;

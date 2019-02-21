@@ -97,83 +97,90 @@ begin
       o_next_result_ready => s_next_div32_result_ready
     );
 
-  -- 16-bit pipelines.
-  div16Gen: for k in 1 to 2 generate
-    signal s_next_result_ready : std_logic_vector(1 to 2);
-    signal s_stall : std_logic_vector(1 to 2);
-  begin
-    div16_1: entity work.div_impl
-      generic map (
-        WIDTH => 16,
-        CNT_BITS => 3,
-        STEPS_PER_CYCLE => 2
-      )
-      port map (
-        i_clk => i_clk,
-        i_rst => i_rst,
-        i_stall => s_stall_div16,
-        o_stall => s_stall(k),
-        i_enable => s_div16_enable,
-        i_op => i_op,
-        i_src_a => i_src_a((16*k)-1 downto 16*(k-1)),
-        i_src_b => i_src_b((16*k)-1 downto 16*(k-1)),
-        o_next_result => s_next_div16_result((16*k)-1 downto 16*(k-1)),
-        o_next_result_ready => s_next_result_ready(k)
-      );
+  PACKED_GEN: if C_CPU_HAS_PO generate
+    -- 16-bit pipelines.
+    div16Gen: for k in 1 to 2 generate
+      signal s_next_result_ready : std_logic_vector(1 to 2);
+      signal s_stall : std_logic_vector(1 to 2);
+    begin
+      div16_1: entity work.div_impl
+        generic map (
+          WIDTH => 16,
+          CNT_BITS => 3,
+          STEPS_PER_CYCLE => 2
+        )
+        port map (
+          i_clk => i_clk,
+          i_rst => i_rst,
+          i_stall => s_stall_div16,
+          o_stall => s_stall(k),
+          i_enable => s_div16_enable,
+          i_op => i_op,
+          i_src_a => i_src_a((16*k)-1 downto 16*(k-1)),
+          i_src_b => i_src_b((16*k)-1 downto 16*(k-1)),
+          o_next_result => s_next_div16_result((16*k)-1 downto 16*(k-1)),
+          o_next_result_ready => s_next_result_ready(k)
+        );
 
-      -- Note: For some signals we only have to consider one of the parallel pipelines.
-      div16ExtractSignals: if k=1 generate
-        s_next_div16_result_ready <= s_next_result_ready(1);
-        s_div16_stall <= s_stall(1);
-      end generate;
+        -- Note: For some signals we only have to consider one of the parallel pipelines.
+        div16ExtractSignals: if k=1 generate
+          s_next_div16_result_ready <= s_next_result_ready(1);
+          s_div16_stall <= s_stall(1);
+        end generate;
+    end generate;
+
+    -- 8-bit pipelines.
+    div8Gen: for k in 1 to 4 generate
+      signal s_next_result_ready : std_logic_vector(1 to 4);
+      signal s_stall : std_logic_vector(1 to 4);
+    begin
+      div8_x: entity work.div_impl
+        generic map (
+          WIDTH => 8,
+          CNT_BITS => 2,
+          STEPS_PER_CYCLE => 2
+        )
+        port map (
+          i_clk => i_clk,
+          i_rst => i_rst,
+          i_stall => s_stall_div8,
+          o_stall => s_stall(k),
+          i_enable => s_div8_enable,
+          i_op => i_op,
+          i_src_a => i_src_a((8*k)-1 downto 8*(k-1)),
+          i_src_b => i_src_b((8*k)-1 downto 8*(k-1)),
+          o_next_result => s_next_div8_result((8*k)-1 downto 8*(k-1)),
+          o_next_result_ready => s_next_result_ready(k)
+        );
+
+        -- Note: For some signals we only have to consider one of the parallel pipelines.
+        div8ExtractSignals: if k=1 generate
+          s_next_div8_result_ready <= s_next_result_ready(1);
+          s_div8_stall <= s_stall(1);
+        end generate;
+    end generate;
+
+    -- Internal stall logic. Only ONE division loop can be running at a time!
+    s_stall_div32 <= i_stall or s_div16_stall or s_div8_stall;
+    s_stall_div16 <= i_stall or s_div32_stall or s_div8_stall;
+    s_stall_div8 <= i_stall or s_div32_stall or s_div16_stall;
+
+    -- Select the output signals.
+    o_next_result <=
+        s_next_div32_result when s_next_div32_result_ready = '1' else
+        s_next_div16_result when s_next_div16_result_ready = '1' else
+        s_next_div8_result when s_next_div8_result_ready = '1' else
+        (others => '-');
+    o_next_result_ready <= s_next_div32_result_ready or
+                          s_next_div16_result_ready or
+                          s_next_div8_result_ready;
+    o_stall <= s_div32_stall or
+              s_div16_stall or
+              s_div8_stall;
+  else generate
+    -- In unpacked mode we only have to consider the 32-bit result.
+    o_next_result <= s_next_div32_result;
+    o_next_result_ready <= s_next_div32_result_ready;
+    o_stall <= s_div32_stall;
   end generate;
-
-  -- 8-bit pipelines.
-  div8Gen: for k in 1 to 4 generate
-    signal s_next_result_ready : std_logic_vector(1 to 4);
-    signal s_stall : std_logic_vector(1 to 4);
-  begin
-    div8_x: entity work.div_impl
-      generic map (
-        WIDTH => 8,
-        CNT_BITS => 2,
-        STEPS_PER_CYCLE => 2
-      )
-      port map (
-        i_clk => i_clk,
-        i_rst => i_rst,
-        i_stall => s_stall_div8,
-        o_stall => s_stall(k),
-        i_enable => s_div8_enable,
-        i_op => i_op,
-        i_src_a => i_src_a((8*k)-1 downto 8*(k-1)),
-        i_src_b => i_src_b((8*k)-1 downto 8*(k-1)),
-        o_next_result => s_next_div8_result((8*k)-1 downto 8*(k-1)),
-        o_next_result_ready => s_next_result_ready(k)
-      );
-
-      -- Note: For some signals we only have to consider one of the parallel pipelines.
-      div8ExtractSignals: if k=1 generate
-        s_next_div8_result_ready <= s_next_result_ready(1);
-        s_div8_stall <= s_stall(1);
-      end generate;
-  end generate;
-
-  -- Internal stall logic. Only ONE division loop can be running at a time!
-  s_stall_div32 <= i_stall or s_div16_stall or s_div8_stall;
-  s_stall_div16 <= i_stall or s_div32_stall or s_div8_stall;
-  s_stall_div8 <= i_stall or s_div32_stall or s_div16_stall;
-
-  -- Select the output signals.
-  o_next_result <=
-      s_next_div32_result when s_next_div32_result_ready = '1' else
-      s_next_div16_result when s_next_div16_result_ready = '1' else
-      s_next_div8_result when s_next_div8_result_ready = '1' else
-      (others => '-');
-  o_next_result_ready <= s_next_div32_result_ready or
-                         s_next_div16_result_ready or
-                         s_next_div8_result_ready;
-  o_stall <= s_div32_stall or
-             s_div16_stall or
-             s_div8_stall;
 end rtl;

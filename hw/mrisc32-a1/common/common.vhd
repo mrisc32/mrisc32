@@ -34,10 +34,12 @@ package common is
   constant C_VEC_REG_ELEMENTS : integer := 2**C_LOG2_VEC_REG_ELEMENTS;
 
   constant C_CPU_HAS_VEC : boolean := true;
-  constant C_CPU_HAS_PO : boolean := false;
+  constant C_CPU_HAS_PO : boolean := true;
   constant C_CPU_HAS_MUL : boolean := true;
   constant C_CPU_HAS_DIV : boolean := true;
-  constant C_CPU_HAS_FP : boolean := false;
+  constant C_CPU_HAS_SA : boolean := true;
+  constant C_CPU_HAS_FP : boolean := true;
+  constant C_CPU_HAS_SQRT : boolean := false;
 
   -- The start PC after reset.
   constant C_RESET_PC : std_logic_vector(C_WORD_SIZE-1 downto 0) := X"00000200";
