@@ -44,8 +44,8 @@ Note: There is no support for 64-bit floating point operations (that is left for
 
 # Documentation
 
-* [Registers](doc/Registers.md)
 * [Instructions](doc/Instructions.md)
+* [Registers](doc/Registers.md)
 * [Addressing modes](doc/AddressingModes.md)
 * [Vector design](doc/VectorDesign.md)
 * [Packed operations](doc/PackedOperations.md)
@@ -74,5 +74,3 @@ A single issue, in-order CPU is currently under development. It's code name is [
 
 * Don't support multiple word sizes or running modes. If a 64-bit CPU is required, create a new ISA and recompile your software.
 * Don't be extensible at the cost of more complicated IF/ID stages.
-* Don't be fast and optimal for everything.
-
