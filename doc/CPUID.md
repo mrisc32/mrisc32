@@ -31,5 +31,7 @@ Return a bit-field that specifies what features are supported by the CPU.
 | 1 | PO | Packed operations |
 | 2 | MUL | Integer multiplication |
 | 3 | DIV | Integer division |
-| 4 | FP | Floating point |
+| 4 | SA | Saturating arithmetic |
+| 5 | FP | Floating point |
+| 6 | SQRT | Floating point square root |
 

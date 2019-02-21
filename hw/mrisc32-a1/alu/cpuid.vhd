@@ -45,8 +45,10 @@ begin
       o_result(1) <= to_std_logic(C_CPU_HAS_PO);
       o_result(2) <= to_std_logic(C_CPU_HAS_MUL);
       o_result(3) <= to_std_logic(C_CPU_HAS_DIV);
-      o_result(4) <= to_std_logic(C_CPU_HAS_FP);
-      o_result(C_WORD_SIZE-1 downto 5) <= (others => '0');
+      o_result(4) <= to_std_logic(C_CPU_HAS_SA);
+      o_result(5) <= to_std_logic(C_CPU_HAS_FP);
+      o_result(6) <= to_std_logic(C_CPU_HAS_SQRT);
+      o_result(C_WORD_SIZE-1 downto 7) <= (others => '0');
     else
       -- All unsupported commands return zero.
       o_result <= (others => '0');
