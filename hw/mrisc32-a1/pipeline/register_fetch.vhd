@@ -219,23 +219,28 @@ begin
     );
 
   -- Instantiate the vector register file.
-  s_vector_we <= i_wb_we and i_wb_is_vector;
-  regs_vector_1: entity work.regs_vector
-    port map (
-      i_clk => i_clk,
-      i_rst => i_rst,
-      i_stall_read_ports => s_stall_register_read_ports,
-      i_sel_a => i_next_vreg_a_reg,
-      i_element_a => i_next_vreg_a_element,
-      i_sel_b => i_next_vreg_b_reg,
-      i_element_b => i_next_vreg_b_element,
-      o_data_a => s_vreg_a_data,
-      o_data_b => s_vreg_b_data,
-      i_we => s_vector_we,
-      i_data_w => i_wb_data_w,
-      i_sel_w => i_wb_sel_w,
-      i_element_w => i_wb_element_w
-    );
+  VREG_GEN: if C_CPU_HAS_VEC generate
+    s_vector_we <= i_wb_we and i_wb_is_vector;
+    regs_vector_1: entity work.regs_vector
+      port map (
+        i_clk => i_clk,
+        i_rst => i_rst,
+        i_stall_read_ports => s_stall_register_read_ports,
+        i_sel_a => i_next_vreg_a_reg,
+        i_element_a => i_next_vreg_a_element,
+        i_sel_b => i_next_vreg_b_reg,
+        i_element_b => i_next_vreg_b_element,
+        o_data_a => s_vreg_a_data,
+        o_data_b => s_vreg_b_data,
+        i_we => s_vector_we,
+        i_data_w => i_wb_data_w,
+        i_sel_w => i_wb_sel_w,
+        i_element_w => i_wb_element_w
+      );
+  else generate
+    s_vreg_a_data <= (others => '0');
+    s_vreg_b_data <= (others => '0');
+  end generate;
 
   -- Note: We reuse the A read port of the vector register file for the C register.
   s_vreg_c_data <= s_vreg_a_data;
