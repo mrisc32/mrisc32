@@ -76,44 +76,53 @@ architecture rtl of cmp32 is
     return v_result;
   end function;
 begin
-  -- 8-bit comparisons.
-  s_eq_8(0) <= '1' when i_src_a(7 downto 0) = i_src_b(7 downto 0) else '0';
-  s_eq_8(1) <= '1' when i_src_a(15 downto 8) = i_src_b(15 downto 8) else '0';
-  s_eq_8(2) <= '1' when i_src_a(23 downto 16) = i_src_b(23 downto 16) else '0';
-  s_eq_8(3) <= '1' when i_src_a(31 downto 24) = i_src_b(31 downto 24) else '0';
-  s_lt_8(0) <= '1' when signed(i_src_a(7 downto 0)) < signed(i_src_b(7 downto 0)) else '0';
-  s_lt_8(1) <= '1' when signed(i_src_a(15 downto 8)) < signed(i_src_b(15 downto 8)) else '0';
-  s_lt_8(2) <= '1' when signed(i_src_a(23 downto 16)) < signed(i_src_b(23 downto 16)) else '0';
-  s_lt_8(3) <= '1' when signed(i_src_a(31 downto 24)) < signed(i_src_b(31 downto 24)) else '0';
-  s_ltu_8(0) <= '1' when unsigned(i_src_a(7 downto 0)) < unsigned(i_src_b(7 downto 0)) else '0';
-  s_ltu_8(1) <= '1' when unsigned(i_src_a(15 downto 8)) < unsigned(i_src_b(15 downto 8)) else '0';
-  s_ltu_8(2) <= '1' when unsigned(i_src_a(23 downto 16)) < unsigned(i_src_b(23 downto 16)) else '0';
-  s_ltu_8(3) <= '1' when unsigned(i_src_a(31 downto 24)) < unsigned(i_src_b(31 downto 24)) else '0';
-
-  -- 16-bit comparisons.
-  s_eq_16(0) <= '1' when i_src_a(15 downto 0) = i_src_b(15 downto 0) else '0';
-  s_eq_16(1) <= '1' when i_src_a(31 downto 16) = i_src_b(31 downto 16) else '0';
-  s_lt_16(0) <= '1' when signed(i_src_a(15 downto 0)) < signed(i_src_b(15 downto 0)) else '0';
-  s_lt_16(1) <= '1' when signed(i_src_a(31 downto 16)) < signed(i_src_b(31 downto 16)) else '0';
-  s_ltu_16(0) <= '1' when unsigned(i_src_a(15 downto 0)) < unsigned(i_src_b(15 downto 0)) else '0';
-  s_ltu_16(1) <= '1' when unsigned(i_src_a(31 downto 16)) < unsigned(i_src_b(31 downto 16)) else '0';
-
   -- 32-bit comparisons.
   s_eq_32(0) <= '1' when i_src_a = i_src_b else '0';
   s_lt_32(0) <= '1' when signed(i_src_a) < signed(i_src_b) else '0';
   s_ltu_32(0) <= '1' when unsigned(i_src_a) < unsigned(i_src_b) else '0';
 
-  -- Select the relevant camparison results depending on the packed mode.
-  CmpGen1: for k in 0 to 3 generate
-    s_compare_eq(k) <= s_eq_8(k) when i_packed_mode = C_PACKED_BYTE else
-                       s_eq_16(k/2) when i_packed_mode = C_PACKED_HALF_WORD else
-                       s_eq_32(0);
-    s_compare_lt(k) <= s_lt_8(k) when i_packed_mode = C_PACKED_BYTE else
-                       s_lt_16(k/2) when i_packed_mode = C_PACKED_HALF_WORD else
-                       s_lt_32(0);
-    s_compare_ltu(k) <= s_ltu_8(k) when i_packed_mode = C_PACKED_BYTE else
-                        s_ltu_16(k/2) when i_packed_mode = C_PACKED_HALF_WORD else
-                        s_ltu_32(0);
+  PACKED_GEN: if C_CPU_HAS_PO generate
+    -- 16-bit comparisons.
+    s_eq_16(0) <= '1' when i_src_a(15 downto 0) = i_src_b(15 downto 0) else '0';
+    s_eq_16(1) <= '1' when i_src_a(31 downto 16) = i_src_b(31 downto 16) else '0';
+    s_lt_16(0) <= '1' when signed(i_src_a(15 downto 0)) < signed(i_src_b(15 downto 0)) else '0';
+    s_lt_16(1) <= '1' when signed(i_src_a(31 downto 16)) < signed(i_src_b(31 downto 16)) else '0';
+    s_ltu_16(0) <= '1' when unsigned(i_src_a(15 downto 0)) < unsigned(i_src_b(15 downto 0)) else '0';
+    s_ltu_16(1) <= '1' when unsigned(i_src_a(31 downto 16)) < unsigned(i_src_b(31 downto 16)) else '0';
+
+    -- 8-bit comparisons.
+    s_eq_8(0) <= '1' when i_src_a(7 downto 0) = i_src_b(7 downto 0) else '0';
+    s_eq_8(1) <= '1' when i_src_a(15 downto 8) = i_src_b(15 downto 8) else '0';
+    s_eq_8(2) <= '1' when i_src_a(23 downto 16) = i_src_b(23 downto 16) else '0';
+    s_eq_8(3) <= '1' when i_src_a(31 downto 24) = i_src_b(31 downto 24) else '0';
+    s_lt_8(0) <= '1' when signed(i_src_a(7 downto 0)) < signed(i_src_b(7 downto 0)) else '0';
+    s_lt_8(1) <= '1' when signed(i_src_a(15 downto 8)) < signed(i_src_b(15 downto 8)) else '0';
+    s_lt_8(2) <= '1' when signed(i_src_a(23 downto 16)) < signed(i_src_b(23 downto 16)) else '0';
+    s_lt_8(3) <= '1' when signed(i_src_a(31 downto 24)) < signed(i_src_b(31 downto 24)) else '0';
+    s_ltu_8(0) <= '1' when unsigned(i_src_a(7 downto 0)) < unsigned(i_src_b(7 downto 0)) else '0';
+    s_ltu_8(1) <= '1' when unsigned(i_src_a(15 downto 8)) < unsigned(i_src_b(15 downto 8)) else '0';
+    s_ltu_8(2) <= '1' when unsigned(i_src_a(23 downto 16)) < unsigned(i_src_b(23 downto 16)) else '0';
+    s_ltu_8(3) <= '1' when unsigned(i_src_a(31 downto 24)) < unsigned(i_src_b(31 downto 24)) else '0';
+
+    -- Select the relevant camparison results depending on the packed mode.
+    CmpGen1: for k in 0 to 3 generate
+      s_compare_eq(k) <= s_eq_8(k) when i_packed_mode = C_PACKED_BYTE else
+                         s_eq_16(k/2) when i_packed_mode = C_PACKED_HALF_WORD else
+                         s_eq_32(0);
+      s_compare_lt(k) <= s_lt_8(k) when i_packed_mode = C_PACKED_BYTE else
+                         s_lt_16(k/2) when i_packed_mode = C_PACKED_HALF_WORD else
+                         s_lt_32(0);
+      s_compare_ltu(k) <= s_ltu_8(k) when i_packed_mode = C_PACKED_BYTE else
+                          s_ltu_16(k/2) when i_packed_mode = C_PACKED_HALF_WORD else
+                          s_ltu_32(0);
+    end generate;
+  else generate
+    -- In unpacked mode we only have to consider the 32-bit result.
+    CmpGenUnpacked: for k in 0 to 3 generate
+      s_compare_eq(k) <= s_eq_32(0);
+      s_compare_lt(k) <= s_lt_32(0);
+      s_compare_ltu(k) <= s_ltu_32(0);
+    end generate;
   end generate;
 
   -- Derive further comparison results.

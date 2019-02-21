@@ -45,31 +45,36 @@ begin
   -- 32-bit subtracion.
   s_res_32 <= unsigned(i_src_b) - unsigned(i_src_a);
 
-  -- 2x 16-bit subtracion.
-  s_res_16_0 <= unsigned(i_src_b(15 downto 0)) - unsigned(i_src_a(15 downto 0));
-  s_res_16_1 <= unsigned(i_src_b(31 downto 16)) - unsigned(i_src_a(31 downto 16));
+  PACKED_GEN: if C_CPU_HAS_PO generate
+    -- 2x 16-bit subtracion.
+    s_res_16_0 <= unsigned(i_src_b(15 downto 0)) - unsigned(i_src_a(15 downto 0));
+    s_res_16_1 <= unsigned(i_src_b(31 downto 16)) - unsigned(i_src_a(31 downto 16));
 
-  -- 4x 8-bit subtracion.
-  s_res_8_0 <= unsigned(i_src_b(7 downto 0)) - unsigned(i_src_a(7 downto 0));
-  s_res_8_1 <= unsigned(i_src_b(15 downto 8)) - unsigned(i_src_a(15 downto 8));
-  s_res_8_2 <= unsigned(i_src_b(23 downto 16)) - unsigned(i_src_a(23 downto 16));
-  s_res_8_3 <= unsigned(i_src_b(31 downto 24)) - unsigned(i_src_a(31 downto 24));
+    -- 4x 8-bit subtracion.
+    s_res_8_0 <= unsigned(i_src_b(7 downto 0)) - unsigned(i_src_a(7 downto 0));
+    s_res_8_1 <= unsigned(i_src_b(15 downto 8)) - unsigned(i_src_a(15 downto 8));
+    s_res_8_2 <= unsigned(i_src_b(23 downto 16)) - unsigned(i_src_a(23 downto 16));
+    s_res_8_3 <= unsigned(i_src_b(31 downto 24)) - unsigned(i_src_a(31 downto 24));
 
-  -- Output the result.
-  o_result(7 downto 0) <=
-      std_logic_vector(s_res_8_0)              when i_packed_mode = C_PACKED_BYTE else
-      std_logic_vector(s_res_16_0(7 downto 0)) when i_packed_mode = C_PACKED_HALF_WORD else
-      std_logic_vector(s_res_32(7 downto 0));
-  o_result(15 downto 8) <=
-      std_logic_vector(s_res_8_1)               when i_packed_mode = C_PACKED_BYTE else
-      std_logic_vector(s_res_16_0(15 downto 8)) when i_packed_mode = C_PACKED_HALF_WORD else
-      std_logic_vector(s_res_32(15 downto 8));
-  o_result(23 downto 16) <=
-      std_logic_vector(s_res_8_2)              when i_packed_mode = C_PACKED_BYTE else
-      std_logic_vector(s_res_16_1(7 downto 0)) when i_packed_mode = C_PACKED_HALF_WORD else
-      std_logic_vector(s_res_32(23 downto 16));
-  o_result(31 downto 24) <=
-      std_logic_vector(s_res_8_3)               when i_packed_mode = C_PACKED_BYTE else
-      std_logic_vector(s_res_16_1(15 downto 8)) when i_packed_mode = C_PACKED_HALF_WORD else
-      std_logic_vector(s_res_32(31 downto 24));
+    -- Output the result.
+    o_result(7 downto 0) <=
+        std_logic_vector(s_res_8_0)              when i_packed_mode = C_PACKED_BYTE else
+        std_logic_vector(s_res_16_0(7 downto 0)) when i_packed_mode = C_PACKED_HALF_WORD else
+        std_logic_vector(s_res_32(7 downto 0));
+    o_result(15 downto 8) <=
+        std_logic_vector(s_res_8_1)               when i_packed_mode = C_PACKED_BYTE else
+        std_logic_vector(s_res_16_0(15 downto 8)) when i_packed_mode = C_PACKED_HALF_WORD else
+        std_logic_vector(s_res_32(15 downto 8));
+    o_result(23 downto 16) <=
+        std_logic_vector(s_res_8_2)              when i_packed_mode = C_PACKED_BYTE else
+        std_logic_vector(s_res_16_1(7 downto 0)) when i_packed_mode = C_PACKED_HALF_WORD else
+        std_logic_vector(s_res_32(23 downto 16));
+    o_result(31 downto 24) <=
+        std_logic_vector(s_res_8_3)               when i_packed_mode = C_PACKED_BYTE else
+        std_logic_vector(s_res_16_1(15 downto 8)) when i_packed_mode = C_PACKED_HALF_WORD else
+        std_logic_vector(s_res_32(31 downto 24));
+  else generate
+    -- In unpacked mode we only have to consider the 32-bit result.
+    o_result <= std_logic_vector(s_res_32);
+  end generate;
 end rtl;
