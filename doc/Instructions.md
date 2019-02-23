@@ -88,7 +88,7 @@ The fields of the instruction word are interpreted as follows:
 |---|---|---|---|---|---|---|
 |ADDPCHI| x |   |   | dst, #i21 | dst <= pc + (i21 << 11) | Add high immediate to PC |
 
-Note: `ADDPCHI` can be used together with load/store instructions to perform 32-bit PC-relative addressing in just two instructions.
+Note: `ADDPCHI` can be used together with load/store instructions to perform 32-bit PC-relative addressing in just two instructions, or together with jump instructions to perform 32-bit PC-relative jumps in just two instructions.
 
 ## Integer ALU instructions
 
