@@ -18,7 +18,7 @@
 ----------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------
--- This is the integer division unit.
+-- This is the combined integer and floating point division unit.
 --
 -- The division units for different data sizes are configured as follows:
 --   32 bits: 2 division stages per cycle -> 15 cycles stall.
@@ -47,25 +47,33 @@ entity div is
     i_src_b : in std_logic_vector(C_WORD_SIZE-1 downto 0);
 
     -- Outputs (async).
-    o_next_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-    o_next_result_ready : out std_logic
+    o_d3_next_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+    o_d3_next_result_ready : out std_logic;
+    o_d4_next_result : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+    o_d4_next_result_ready : out std_logic
   );
 end div;
 
 architecture rtl of div is
   signal s_div32_enable : std_logic;
-  signal s_next_div32_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_next_div32_result_ready : std_logic;
+  signal s_d3_next_div32_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_d3_next_div32_result_ready : std_logic;
+  signal s_d4_next_div32_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_d4_next_div32_result_ready : std_logic;
   signal s_div32_stall : std_logic;
 
   signal s_div16_enable : std_logic;
-  signal s_next_div16_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_next_div16_result_ready : std_logic;
+  signal s_d3_next_div16_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_d3_next_div16_result_ready : std_logic;
+  signal s_d4_next_div16_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_d4_next_div16_result_ready : std_logic;
   signal s_div16_stall : std_logic;
 
   signal s_div8_enable : std_logic;
-  signal s_next_div8_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_next_div8_result_ready : std_logic;
+  signal s_d3_next_div8_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_d3_next_div8_result_ready : std_logic;
+  signal s_d4_next_div8_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_d4_next_div8_result_ready : std_logic;
   signal s_div8_stall : std_logic;
 
   signal s_stall_div32 : std_logic;
@@ -81,6 +89,9 @@ begin
   div32_0: entity work.div_impl
     generic map (
       WIDTH => 32,
+      EXP_BITS => F32_EXP_BITS,
+      EXP_BIAS => F32_EXP_BIAS,
+      FRACT_BITS => F32_FRACT_BITS,
       CNT_BITS => 4,
       STEPS_PER_CYCLE => 2
     )
@@ -93,19 +104,25 @@ begin
       i_op => i_op,
       i_src_a => i_src_a,
       i_src_b => i_src_b,
-      o_next_result => s_next_div32_result,
-      o_next_result_ready => s_next_div32_result_ready
+      o_d3_next_result => s_d3_next_div32_result,
+      o_d3_next_result_ready => s_d3_next_div32_result_ready,
+      o_d4_next_result => s_d4_next_div32_result,
+      o_d4_next_result_ready => s_d4_next_div32_result_ready
     );
 
   PACKED_GEN: if C_CPU_HAS_PO generate
     -- 16-bit pipelines.
     div16Gen: for k in 1 to 2 generate
-      signal s_next_result_ready : std_logic_vector(1 to 2);
+      signal s_d3_next_result_ready : std_logic_vector(1 to 2);
+      signal s_d4_next_result_ready : std_logic_vector(1 to 2);
       signal s_stall : std_logic_vector(1 to 2);
     begin
       div16_1: entity work.div_impl
         generic map (
           WIDTH => 16,
+          EXP_BITS => F16_EXP_BITS,
+          EXP_BIAS => F16_EXP_BIAS,
+          FRACT_BITS => F16_FRACT_BITS,
           CNT_BITS => 3,
           STEPS_PER_CYCLE => 2
         )
@@ -118,25 +135,32 @@ begin
           i_op => i_op,
           i_src_a => i_src_a((16*k)-1 downto 16*(k-1)),
           i_src_b => i_src_b((16*k)-1 downto 16*(k-1)),
-          o_next_result => s_next_div16_result((16*k)-1 downto 16*(k-1)),
-          o_next_result_ready => s_next_result_ready(k)
+          o_d3_next_result => s_d3_next_div16_result((16*k)-1 downto 16*(k-1)),
+          o_d3_next_result_ready => s_d3_next_result_ready(k),
+          o_d4_next_result => s_d4_next_div16_result((16*k)-1 downto 16*(k-1)),
+          o_d4_next_result_ready => s_d4_next_result_ready(k)
         );
 
         -- Note: For some signals we only have to consider one of the parallel pipelines.
         div16ExtractSignals: if k=1 generate
-          s_next_div16_result_ready <= s_next_result_ready(1);
+          s_d3_next_div16_result_ready <= s_d3_next_result_ready(1);
+          s_d4_next_div16_result_ready <= s_d4_next_result_ready(1);
           s_div16_stall <= s_stall(1);
         end generate;
     end generate;
 
     -- 8-bit pipelines.
     div8Gen: for k in 1 to 4 generate
-      signal s_next_result_ready : std_logic_vector(1 to 4);
+      signal s_d3_next_result_ready : std_logic_vector(1 to 4);
+      signal s_d4_next_result_ready : std_logic_vector(1 to 4);
       signal s_stall : std_logic_vector(1 to 4);
     begin
       div8_x: entity work.div_impl
         generic map (
           WIDTH => 8,
+          EXP_BITS => F8_EXP_BITS,
+          EXP_BIAS => F8_EXP_BIAS,
+          FRACT_BITS => F8_FRACT_BITS,
           CNT_BITS => 2,
           STEPS_PER_CYCLE => 2
         )
@@ -149,13 +173,16 @@ begin
           i_op => i_op,
           i_src_a => i_src_a((8*k)-1 downto 8*(k-1)),
           i_src_b => i_src_b((8*k)-1 downto 8*(k-1)),
-          o_next_result => s_next_div8_result((8*k)-1 downto 8*(k-1)),
-          o_next_result_ready => s_next_result_ready(k)
+          o_d3_next_result => s_d3_next_div8_result((8*k)-1 downto 8*(k-1)),
+          o_d3_next_result_ready => s_d3_next_result_ready(k),
+          o_d4_next_result => s_d4_next_div8_result((8*k)-1 downto 8*(k-1)),
+          o_d4_next_result_ready => s_d4_next_result_ready(k)
         );
 
         -- Note: For some signals we only have to consider one of the parallel pipelines.
         div8ExtractSignals: if k=1 generate
-          s_next_div8_result_ready <= s_next_result_ready(1);
+          s_d3_next_div8_result_ready <= s_d3_next_result_ready(1);
+          s_d4_next_div8_result_ready <= s_d4_next_result_ready(1);
           s_div8_stall <= s_stall(1);
         end generate;
     end generate;
@@ -165,22 +192,35 @@ begin
     s_stall_div16 <= i_stall or s_div32_stall or s_div8_stall;
     s_stall_div8 <= i_stall or s_div32_stall or s_div16_stall;
 
-    -- Select the output signals.
-    o_next_result <=
-        s_next_div32_result when s_next_div32_result_ready = '1' else
-        s_next_div16_result when s_next_div16_result_ready = '1' else
-        s_next_div8_result when s_next_div8_result_ready = '1' else
+    -- Select the D3 output signals.
+    o_d3_next_result <=
+        s_d3_next_div32_result when s_d3_next_div32_result_ready = '1' else
+        s_d3_next_div16_result when s_d3_next_div16_result_ready = '1' else
+        s_d3_next_div8_result when s_d3_next_div8_result_ready = '1' else
         (others => '-');
-    o_next_result_ready <= s_next_div32_result_ready or
-                          s_next_div16_result_ready or
-                          s_next_div8_result_ready;
+    o_d3_next_result_ready <= s_d3_next_div32_result_ready or
+                              s_d3_next_div16_result_ready or
+                              s_d3_next_div8_result_ready;
+
+    -- Select the D4 output signals.
+    o_d4_next_result <=
+        s_d4_next_div32_result when s_d4_next_div32_result_ready = '1' else
+        s_d4_next_div16_result when s_d4_next_div16_result_ready = '1' else
+        s_d4_next_div8_result when s_d4_next_div8_result_ready = '1' else
+        (others => '-');
+    o_d4_next_result_ready <= s_d4_next_div32_result_ready or
+                              s_d4_next_div16_result_ready or
+                              s_d4_next_div8_result_ready;
+
     o_stall <= s_div32_stall or
-              s_div16_stall or
-              s_div8_stall;
+               s_div16_stall or
+               s_div8_stall;
   else generate
     -- In unpacked mode we only have to consider the 32-bit result.
-    o_next_result <= s_next_div32_result;
-    o_next_result_ready <= s_next_div32_result_ready;
+    o_d3_next_result <= s_d3_next_div32_result;
+    o_d3_next_result_ready <= s_d3_next_div32_result_ready;
+    o_d4_next_result <= s_d4_next_div32_result;
+    o_d4_next_result_ready <= s_d4_next_div32_result_ready;
     o_stall <= s_div32_stall;
   end generate;
 end rtl;

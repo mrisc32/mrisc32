@@ -21,6 +21,8 @@
 -- This is a configurable FPU pipeline. The pipeline can be instantiated for different sizes (e.g.
 -- 32-bit, 16-bit and 8-bit floating point).
 --
+-- Note: FDIV is not implemented here, but in the division unit.
+--
 -- Different operations may take different number of cycles to complete.
 --
 -- Single-cycle operations:
@@ -30,7 +32,7 @@
 --   FADD, FSUB, FMUL
 --
 -- Multi-cycle operations (stalls the pipeline):
---   FDIV, FSQRT
+--   FSQRT
 ----------------------------------------------------------------------------------------------------
 
 library ieee;
@@ -79,7 +81,6 @@ architecture rtl of fpu_impl is
   signal s_is_minmax_op : std_logic;
   signal s_is_add_op : std_logic;
   signal s_is_mul_op : std_logic;
-  signal s_is_div_op : std_logic;
   signal s_is_sqrt_op : std_logic;
   signal s_is_single_cycle_op : std_logic;
 
@@ -178,7 +179,6 @@ begin
       '0' when others;
 
   s_is_mul_op <= '1' when i_op = C_FPU_FMUL else '0';
-  s_is_div_op <= '1' when i_op = C_FPU_FDIV else '0';
   s_is_sqrt_op <= '1' when i_op = C_FPU_FSQRT else '0';
 
   -- Is this a single cycle operation?

@@ -32,12 +32,17 @@ architecture behavioral of div_impl_tb is
   signal s_op : T_DIV_OP;
   signal s_src_a : std_logic_vector(7 downto 0);
   signal s_src_b : std_logic_vector(7 downto 0);
-  signal s_next_result : std_logic_vector(7 downto 0);
-  signal s_next_result_ready : std_logic;
+  signal s_d3_next_result : std_logic_vector(7 downto 0);
+  signal s_d3_next_result_ready : std_logic;
+  signal s_d4_next_result : std_logic_vector(7 downto 0);
+  signal s_d4_next_result_ready : std_logic;
 begin
   div_impl_0: entity work.div_impl
     generic map (
       WIDTH => 8,
+      EXP_BITS => F8_EXP_BITS,
+      EXP_BIAS => F8_EXP_BIAS,
+      FRACT_BITS => F8_FRACT_BITS,
       CNT_BITS => 2,
       STEPS_PER_CYCLE => 2
     )
@@ -50,8 +55,10 @@ begin
       i_op => s_op,
       i_src_a => s_src_a,
       i_src_b => s_src_b,
-      o_next_result => s_next_result,
-      o_next_result_ready => s_next_result_ready
+      o_d3_next_result => s_d3_next_result,
+      o_d3_next_result_ready => s_d3_next_result_ready,
+      o_d4_next_result => s_d4_next_result,
+      o_d4_next_result_ready => s_d4_next_result_ready
     );
    
   process
@@ -65,44 +72,94 @@ begin
 
       -- Expected outputs
       stall : std_logic;
-      next_result : std_logic_vector(7 downto 0);
-      next_result_ready : std_logic;
+      d3_next_result : std_logic_vector(7 downto 0);
+      d3_next_result_ready : std_logic;
+      d4_next_result : std_logic_vector(7 downto 0);
+      d4_next_result_ready : std_logic;
     end record;
     type pattern_array is array (natural range <>) of pattern_type;
     constant patterns : pattern_array := (
         -- TODO(m): Add more test vectors.
 
         -- 7 / 3 = 2 + 1/3
-        ('1', C_DIV_DIV,  X"07", X"03", '0', X"00", '0'),
-        ('1', C_DIV_REM,  X"07", X"03", '1', X"00", '0'),
-        ('1', C_DIV_REM,  X"07", X"03", '1', X"00", '0'),
-        ('1', C_DIV_REM,  X"07", X"03", '1', X"00", '0'),
-        ('1', C_DIV_REM,  X"07", X"03", '0', X"00", '0'),
-        ('0', C_DIV_REM,  X"00", X"00", '1', X"02", '1'),
-        ('0', C_DIV_REM,  X"00", X"00", '1', X"02", '1'),
-        ('0', C_DIV_REM,  X"00", X"00", '1', X"02", '1'),
-        ('0', C_DIV_REM,  X"00", X"00", '0', X"02", '1'),
-        ('0', C_DIV_REM,  X"00", X"00", '0', X"01", '1'),
+        ('1', C_DIV_DIV,  X"07", X"03", '0', X"00", '0', X"00", '0'),
+        ('1', C_DIV_REM,  X"07", X"03", '1', X"00", '0', X"00", '0'),
+        ('1', C_DIV_REM,  X"07", X"03", '1', X"00", '0', X"00", '0'),
+        ('1', C_DIV_REM,  X"07", X"03", '1', X"00", '0', X"00", '0'),
+        ('1', C_DIV_REM,  X"07", X"03", '0', X"00", '0', X"00", '0'),
+        ('0', C_DIV_REM,  X"00", X"00", '1', X"02", '1', X"00", '0'),
+        ('0', C_DIV_REM,  X"00", X"00", '1', X"02", '1', X"00", '0'),
+        ('0', C_DIV_REM,  X"00", X"00", '1', X"02", '1', X"00", '0'),
+        ('0', C_DIV_REM,  X"00", X"00", '0', X"02", '1', X"00", '0'),
+        ('0', C_DIV_REM,  X"00", X"00", '0', X"01", '1', X"00", '0'),
 
         -- -7 / 3 = -2,   13 % -5 = 3
-        ('1', C_DIV_DIV,  X"F9", X"03", '0', X"00", '0'),
-        ('1', C_DIV_REM,  X"0D", X"FB", '1', X"00", '0'),
-        ('1', C_DIV_REM,  X"0D", X"FB", '1', X"00", '0'),
-        ('1', C_DIV_REM,  X"0D", X"FB", '1', X"00", '0'),
-        ('1', C_DIV_REM,  X"0D", X"FB", '0', X"00", '0'),
-        ('0', C_DIV_REM,  X"00", X"00", '1', X"FE", '1'),
-        ('0', C_DIV_REM,  X"00", X"00", '1', X"FE", '1'),
-        ('0', C_DIV_REM,  X"00", X"00", '1', X"FE", '1'),
-        ('0', C_DIV_REM,  X"00", X"00", '0', X"FE", '1'),
-        ('0', C_DIV_REM,  X"00", X"00", '0', X"03", '1'),
+        ('1', C_DIV_DIV,  X"F9", X"03", '0', X"00", '0', X"00", '0'),
+        ('1', C_DIV_REM,  X"0D", X"FB", '1', X"00", '0', X"00", '0'),
+        ('1', C_DIV_REM,  X"0D", X"FB", '1', X"00", '0', X"00", '0'),
+        ('1', C_DIV_REM,  X"0D", X"FB", '1', X"00", '0', X"00", '0'),
+        ('1', C_DIV_REM,  X"0D", X"FB", '0', X"00", '0', X"00", '0'),
+        ('0', C_DIV_REM,  X"00", X"00", '1', X"FE", '1', X"00", '0'),
+        ('0', C_DIV_REM,  X"00", X"00", '1', X"FE", '1', X"00", '0'),
+        ('0', C_DIV_REM,  X"00", X"00", '1', X"FE", '1', X"00", '0'),
+        ('0', C_DIV_REM,  X"00", X"00", '0', X"FE", '1', X"00", '0'),
+        ('0', C_DIV_REM,  X"00", X"00", '0', X"03", '1', X"00", '0'),
+
+        -- 8-bit floating point:
+        --   0.140625 = 00100001 = 0x21
+        --   1.0      = 00111000 = 0x38
+        --   2.25     = 01000001 = 0x41
+        --   3.0      = 01000100 = 0x44
+        --   7.0      = 01001110 = 0x4e
+        --  18.0      = 01011001 = 0x59
+        -- 120.0      = 01101111 = 0x6f
+
+        -- 7.0 / 1.0 = 7.0
+        ('1', C_DIV_FDIV, X"4e", X"38", '0', X"00", '0', X"00", '0'),
+        ('0', C_DIV_FDIV, X"00", X"00", '1', X"00", '0', X"00", '0'),
+        ('0', C_DIV_FDIV, X"00", X"00", '1', X"00", '0', X"00", '0'),
+        ('0', C_DIV_FDIV, X"00", X"00", '0', X"00", '0', X"00", '0'),
+        ('0', C_DIV_FDIV, X"00", X"00", '0', X"00", '0', X"00", '0'),
+        ('0', C_DIV_FDIV, X"00", X"00", '0', X"00", '0', X"4e", '1'),
+        ('0', C_DIV_FDIV, X"00", X"00", '0', X"00", '0', X"00", '0'),
+
+        -- 1.0 / 7.0 = 0.142857... ~= 0.140625
+        ('1', C_DIV_FDIV, X"38", X"4e", '0', X"00", '0', X"00", '0'),
+        ('0', C_DIV_FDIV, X"00", X"00", '1', X"00", '0', X"00", '0'),
+        ('0', C_DIV_FDIV, X"00", X"00", '1', X"00", '0', X"00", '0'),
+        ('0', C_DIV_FDIV, X"00", X"00", '0', X"00", '0', X"00", '0'),
+        ('0', C_DIV_FDIV, X"00", X"00", '0', X"00", '0', X"00", '0'),
+        ('0', C_DIV_FDIV, X"00", X"00", '0', X"00", '0', X"21", '1'),
+        ('0', C_DIV_FDIV, X"00", X"00", '0', X"00", '0', X"00", '0'),
+
+        -- 7.0 / 3.0 = 2.333... ~= 2.25
+        ('1', C_DIV_FDIV, X"4e", X"44", '0', X"00", '0', X"00", '0'),
+        ('0', C_DIV_FDIV, X"00", X"00", '1', X"00", '0', X"00", '0'),
+        ('0', C_DIV_FDIV, X"00", X"00", '1', X"00", '0', X"00", '0'),
+        ('0', C_DIV_FDIV, X"00", X"00", '0', X"00", '0', X"00", '0'),
+        ('0', C_DIV_FDIV, X"00", X"00", '0', X"00", '0', X"00", '0'),
+        ('0', C_DIV_FDIV, X"00", X"00", '0', X"00", '0', X"41", '1'),
+        ('0', C_DIV_FDIV, X"00", X"00", '0', X"00", '0', X"00", '0'),
+
+        -- 120.0 / 7.0 = 17.142857... ~= 18.0 (rounded)
+        -- 7.0 / 3.0 = 2.333... ~= 2.25
+        ('1', C_DIV_FDIV, X"6f", X"4e", '0', X"00", '0', X"00", '0'),
+        ('1', C_DIV_FDIV, X"4e", X"44", '1', X"00", '0', X"00", '0'),
+        ('1', C_DIV_FDIV, X"4e", X"44", '1', X"00", '0', X"00", '0'),
+        ('1', C_DIV_FDIV, X"4e", X"44", '0', X"00", '0', X"00", '0'),
+        ('0', C_DIV_FDIV, X"00", X"00", '1', X"00", '0', X"00", '0'),
+        ('0', C_DIV_FDIV, X"00", X"00", '1', X"00", '0', X"59", '1'),
+        ('0', C_DIV_FDIV, X"00", X"00", '0', X"00", '0', X"59", '1'),
+        ('0', C_DIV_FDIV, X"00", X"00", '0', X"00", '0', X"59", '1'),
+        ('0', C_DIV_FDIV, X"00", X"00", '0', X"00", '0', X"41", '1'),
 
         -- Tail cycles...
-        ('0', C_DIV_REM,  X"00", X"00", '0', X"00", '0'),
-        ('0', C_DIV_REM,  X"00", X"00", '0', X"00", '0'),
-        ('0', C_DIV_REM,  X"00", X"00", '0', X"00", '0'),
-        ('0', C_DIV_REM,  X"00", X"00", '0', X"00", '0'),
-        ('0', C_DIV_REM,  X"00", X"00", '0', X"00", '0'),
-        ('0', C_DIV_REM,  X"00", X"00", '0', X"00", '0')
+        ('0', C_DIV_REM,  X"00", X"00", '0', X"00", '0', X"00", '0'),
+        ('0', C_DIV_REM,  X"00", X"00", '0', X"00", '0', X"00", '0'),
+        ('0', C_DIV_REM,  X"00", X"00", '0', X"00", '0', X"00", '0'),
+        ('0', C_DIV_REM,  X"00", X"00", '0', X"00", '0', X"00", '0'),
+        ('0', C_DIV_REM,  X"00", X"00", '0', X"00", '0', X"00", '0'),
+        ('0', C_DIV_REM,  X"00", X"00", '0', X"00", '0', X"00", '0')
       );
   begin
     -- Start by resetting the signals.
@@ -135,13 +192,21 @@ begin
       wait for 1 ns;
 
       --  Check the outputs.
-      assert s_next_result = patterns(i).next_result or s_next_result_ready = '0'
-        report "Bad result value (" & integer'image(i) & "):" & lf &
-            "  r=" & to_string(s_next_result) & " (expected " & to_string(patterns(i).next_result) & ")"
+      assert s_d3_next_result = patterns(i).d3_next_result or s_d3_next_result_ready = '0'
+        report "Bad D3 result value (" & integer'image(i) & "):" & lf &
+            "  r=" & to_string(s_d3_next_result) & " (expected " & to_string(patterns(i).d3_next_result) & ")"
             severity error;
-      assert s_next_result_ready = patterns(i).next_result_ready
-        report "Bad result ready signal (" & integer'image(i) & "):" & lf &
-            "  r=" & to_string(s_next_result_ready) & " (expected " & to_string(patterns(i).next_result_ready) & ")"
+      assert s_d3_next_result_ready = patterns(i).d3_next_result_ready
+        report "Bad D3 result ready signal (" & integer'image(i) & "):" & lf &
+            "  r=" & to_string(s_d3_next_result_ready) & " (expected " & to_string(patterns(i).d3_next_result_ready) & ")"
+            severity error;
+      assert s_d4_next_result = patterns(i).d4_next_result or s_d4_next_result_ready = '0'
+        report "Bad D4 result value (" & integer'image(i) & "):" & lf &
+            "  r=" & to_string(s_d4_next_result) & " (expected " & to_string(patterns(i).d4_next_result) & ")"
+            severity error;
+      assert s_d4_next_result_ready = patterns(i).d4_next_result_ready
+        report "Bad D4 result ready signal (" & integer'image(i) & "):" & lf &
+            "  r=" & to_string(s_d4_next_result_ready) & " (expected " & to_string(patterns(i).d4_next_result_ready) & ")"
             severity error;
       assert s_stall = patterns(i).stall
         report "Bad stall signal (" & integer'image(i) & "):" & lf &

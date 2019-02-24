@@ -108,7 +108,7 @@ begin
   -- * Preliminary properties (NaN, Inf etc) for the final result.
   --================================================================================================
 
-  -- Determin the preliminary properties of the result (may be adjusted by final rounding).
+  -- Determine the preliminary properties of the result (may be adjusted by final rounding).
   s_f1_next_props.is_neg <= i_props_a.is_neg xor i_props_b.is_neg;
   s_f1_next_props.is_nan <= i_props_a.is_nan or
                             i_props_b.is_nan or
