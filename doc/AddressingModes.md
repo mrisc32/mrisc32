@@ -41,7 +41,8 @@ There are five different addressing modes for loads and stores to/from vector re
    - `Vd[k] <= Sa + imm * k`
    - `imm` is a signed 15-bit stride value.
 5. Register stride (load only).
-   - `Vd[k] <= Sa + Sb * k`
+   - `Vd[k] <= Sa + Sb * scale * k`
+   - `scale` can be 1 (default), 2, 4 or 8.
 
 
 ## Branch and jump instructions
