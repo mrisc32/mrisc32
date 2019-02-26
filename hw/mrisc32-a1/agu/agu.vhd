@@ -32,14 +32,22 @@ entity agu is
       i_address_offset_is_stride : in std_logic;
       i_base : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_offset : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_offset_shift : in std_logic_vector(1 downto 0);
       o_result : out std_logic_vector(C_WORD_SIZE-1 downto 0)
     );
 end agu;
  
 architecture rtl of agu is
+  signal s_scaled_offset : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_stride_offset : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_offset : std_logic_vector(C_WORD_SIZE-1 downto 0);
 begin
+  -- Scale the index offset.
+  s_scaled_offset <= i_offset(C_WORD_SIZE-2 downto 0) & "0" when i_offset_shift = "01" else
+                     i_offset(C_WORD_SIZE-3 downto 0) & "00" when i_offset_shift = "10" else
+                     i_offset(C_WORD_SIZE-4 downto 0) & "000" when i_offset_shift = "11" else
+                     i_offset;
+
   -- Stride generation (for certain vector memory addressing modes).
   vector_stride_gen_1: entity work.vector_stride_gen
     port map (
@@ -47,12 +55,12 @@ begin
       i_rst => i_rst,
       i_stall => i_stall,
       i_is_first_vector_op_cycle => i_is_first_vector_op_cycle,
-      i_stride => i_offset,
+      i_stride => s_scaled_offset,
       o_offset => s_stride_offset
     );
 
   -- Select which offset to use: constant offset or stride offset.
-  s_offset <= s_stride_offset when i_address_offset_is_stride = '1' else i_offset;
+  s_offset <= s_stride_offset when i_address_offset_is_stride = '1' else s_scaled_offset;
 
   -- The resulting address is the base address plus the offset.
   o_result <= std_logic_vector(unsigned(i_base) + unsigned(s_offset));

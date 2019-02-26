@@ -393,6 +393,7 @@ begin
       i_address_offset_is_stride => i_address_offset_is_stride,
       i_base => i_src_a,
       i_offset => i_src_b,
+      i_offset_shift => i_packed_mode,
       o_result => s_agu_result
     );
 

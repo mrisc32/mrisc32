@@ -806,7 +806,7 @@ test_fpu_correct_results:
 
 test_load_store:
     ; Allocate stack space.
-    add     sp, sp, #-8
+    add     sp, sp, #-16
 
     ; Store data of different types to memory.
     ldi     s10, #-56
@@ -825,6 +825,14 @@ test_load_store:
     sth     s12, sp, s10
     stw     s13, sp, s11
 
+    ; Register offset with index scale.
+    ldi     s10, #4
+    ldi     s11, #5
+    ldi     s14, #3
+    sth     s12, sp, s10*2
+    sth     s12, sp, s11*2
+    stw     s13, sp, s14*4
+
     ; Load data of different types from memory.
 
     ; Immediate offset.
@@ -840,8 +848,16 @@ test_load_store:
     lduh    s6, sp, s10
     ldw     s7, sp, s11
 
+    ; Register offset with index scale.
+    ldi     s10, #4
+    ldi     s11, #5
+    ldi     s14, #3
+    ldh     s8, sp, s10*2
+    lduh    s9, sp, s11*2
+    ldw     s10, sp, s14*4
+
     ; Free stack space.
-    add     sp, sp, #8
+    add     sp, sp, #16
 
     ; Store results.
     stw     s1, s25, #0
@@ -851,17 +867,21 @@ test_load_store:
     stw     s5, s25, #16
     stw     s6, s25, #20
     stw     s7, s25, #24
+    stw     s8, s25, #28
+    stw     s9, s25, #32
+    stw     s10, s25, #36
 
     ; Check results.
     add     s1, pc, #test_load_store_correct_results@pc
     mov     s2, s25
-    add     s25, s25, #28
+    add     s25, s25, #40
     b       #check_results
 
 
 test_load_store_correct_results:
-    .word   7
+    .word   10
     .word   0xffffffc8, 0xffffffb2, 0x000000c8, 0x000000b2
+    .word   0xfffffb2e, 0x0000fb2e, 0x00bc614e
     .word   0xfffffb2e, 0x0000fb2e, 0x00bc614e
 
 

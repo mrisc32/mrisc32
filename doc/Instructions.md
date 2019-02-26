@@ -31,7 +31,16 @@ The fields of the instruction word are interpreted as follows:
 | IMM | Immediate value |
 | VM | Vector mode (2-bit):<br>00: scalar <= op(scalar,scalar)<br>10: vector <= op(vector,scalar)<br>11: vector <= op(vector,vector)<br>01: vector <= op(vector,fold(vector)) |
 | V | Vector mode (1-bit):<br>0: scalar <= op(scalar,scalar)<br>1: vector <= op(vector,scalar) |
-| PM | Packed mode:<br>00: None (1 x 32 bits)<br>01: Byte (4 x 8 bits)<br>10: Half-word (2 x 16 bits)<br>11: (reserved) |
+| PM | Packed mode / Index scale (see below) |
+
+The interpretation of the PM field depends on the instruction type. For load/store instrcutions it is interpreted as an *Index scale* (a multiplication factor for the 3rd operand), and for all other instructions it is interpreted as a *Packed mode* descriptor:
+
+| PM | Packed mode | Index scale |
+|---|---|---|
+| 00 | None (1 x 32 bits) | *1 |
+| 01 | Byte (4 x 8 bits) | *2 |
+| 10 | Half-word (2 x 16 bits) | *4 |
+| 11 | (reserved) | *8 |
 
 # Instruction list
 
