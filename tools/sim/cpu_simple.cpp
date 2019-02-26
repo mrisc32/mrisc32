@@ -68,6 +68,10 @@ struct vector_state_t {
   bool active;           // True if a vector operation is currently active.
 };
 
+inline uint32_t index_scale_factor(const uint32_t packed_mode) {
+  return uint32_t(1u) << packed_mode;
+}
+
 inline float as_f32(const uint32_t x) {
   float result;
   std::memcpy(&result, &x, sizeof(float));
@@ -1031,7 +1035,8 @@ uint32_t cpu_simple_t::run() {
       // == VECTOR STATE HANDLING ==
 
       if (is_vector_op) {
-        const uint32_t vector_stride = op_class_B ? imm15 : m_regs[reg3];
+        const uint32_t vector_stride =
+            op_class_B ? imm15 : (m_regs[reg3] * index_scale_factor(packed_mode));
 
         // Start a new or continue an ongoing vector operartion?
         if (!vector.active) {
@@ -1116,11 +1121,11 @@ uint32_t cpu_simple_t::run() {
 
       // Is this a mem load/store operation?
       const bool is_ldx =
-          ((iword & 0xfc0001f8u) == 0x00000000u) && ((iword & 0x00000007u) != 0x00000000u);
+          ((iword & 0xfc000078u) == 0x00000000u) && ((iword & 0x00000007u) != 0x00000000u);
       const bool is_ld =
           ((iword & 0xe0000000u) == 0x00000000u) && ((iword & 0x1c000000u) != 0x00000000u);
       const bool is_mem_load = is_ldx || is_ld;
-      const bool is_stx = ((iword & 0xfc0001f8u) == 0x00000008u);
+      const bool is_stx = ((iword & 0xfc000078u) == 0x00000008u);
       const bool is_st = ((iword & 0xe0000000u) == 0x20000000u);
       const bool is_mem_store = is_stx || is_st;
       const bool is_mem_op = (is_mem_load || is_mem_store);
@@ -1141,7 +1146,8 @@ uint32_t cpu_simple_t::run() {
       const bool reg1_is_dst = !reg1_is_src;
 
       // Determine the source & destination register numbers (zero for none).
-      const uint32_t src_reg_a = (is_subroutine_branch || is_addpchi) ? REG_PC : (reg2_is_src ? reg2 : REG_Z);
+      const uint32_t src_reg_a =
+          (is_subroutine_branch || is_addpchi) ? REG_PC : (reg2_is_src ? reg2 : REG_Z);
       const uint32_t src_reg_b = reg3_is_src ? reg3 : REG_Z;
       const uint32_t src_reg_c = reg1_is_src ? reg1 : REG_Z;
       const uint32_t dst_reg = is_subroutine_branch ? REG_LR : (reg1_is_dst ? reg1 : REG_Z);
@@ -1179,9 +1185,9 @@ uint32_t cpu_simple_t::run() {
       // Determine MEM operation.
       uint32_t mem_op = MEM_OP_NONE;
       if (is_mem_load) {
-        mem_op = (is_ldx ? (iword & 0x000001ffu) : (iword >> 26u));
+        mem_op = (is_ldx ? (iword & 0x0000007fu) : (iword >> 26u));
       } else if (is_mem_store) {
-        mem_op = (is_stx ? (iword & 0x000001ffu) : (iword >> 26u));
+        mem_op = (is_stx ? (iword & 0x0000007fu) : (iword >> 26u));
       }
 
       // Check what type of registers should be used (vector or scalar).
@@ -1193,10 +1199,14 @@ uint32_t cpu_simple_t::run() {
       const uint32_t reg_a_data =
           reg2_is_vector ? m_vregs[src_reg_a][vector.idx] : m_regs[src_reg_a];
       const uint32_t vector_idx_b = vector.folding ? (vector.idx + m_regs[REG_VL]) : vector.idx;
-      const uint32_t reg_b_data =
-          reg3_is_vector ? m_vregs[src_reg_b][vector_idx_b] : m_regs[src_reg_b];
+      uint32_t reg_b_data = reg3_is_vector ? m_vregs[src_reg_b][vector_idx_b] : m_regs[src_reg_b];
       const uint32_t reg_c_data =
           reg1_is_vector ? m_vregs[src_reg_c][vector.idx] : m_regs[src_reg_c];
+
+      // Scale the second source (the index) if this is a memory op.
+      if (is_mem_op && op_class_A) {
+        reg_b_data *= index_scale_factor(packed_mode);
+      }
 
       // Select gather-scatter offset or stride offset for vector memory operations.
       const uint32_t vector_addr_offset = (vector_mode == 3u) ? reg_b_data : vector.addr_offset;
