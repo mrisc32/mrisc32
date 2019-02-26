@@ -13,8 +13,9 @@ There are three different addressing modes for loads and stores to/from scalar r
    - `Sd => MEM[Sa + imm]`
    - `imm` is a signed 15-bit offset (±16 KiB).
 2. Base register plus register offset.
-   - `Sd <= MEM[Sa + Sb]`
-   - `Sd => MEM[Sa + Sb]`
+   - `Sd <= MEM[Sa + Sb * scale]`
+   - `Sd => MEM[Sa + Sb * scale]`
+   - `scale` can be 1 (default), 2, 4 or 8.
 3. Immediate (load only).
    - `Sd <= imm`
    - `imm` is a signed 21-bit value that can optionally be shifted left 11 bits with either zero- or one-filled lower 11 bits.
@@ -29,11 +30,13 @@ There are five different addressing modes for loads and stores to/from vector re
    - `Vd[k] => MEM[Sa + imm * k]`
    - `imm` is a signed 15-bit stride value.
 2. Base register plus register stride.
-   - `Vd[k] <= MEM[Sa + Sb * k]`
-   - `Vd[k] => MEM[Sa + Sb * k]`
+   - `Vd[k] <= MEM[Sa + Sb * scale * k]`
+   - `Vd[k] => MEM[Sa + Sb * scale * k]`
+   - `scale` can be 1 (default), 2, 4 or 8.
 3. Base register plus vector offset (a.k.a. [gather-scatter](https://en.wikipedia.org/wiki/Gather-scatter_%28vector_addressing%29)).
-   - `Vd[k] <= MEM[Sa + Vb[k]]`
-   - `Vd[k] => MEM[Sa + Vb[k]]`
+   - `Vd[k] <= MEM[Sa + Vb[k] * scale]`
+   - `Vd[k] => MEM[Sa + Vb[k] * scale]`
+   - `scale` can be 1 (default), 2, 4 or 8.
 4. Immediate stride (load only).
    - `Vd[k] <= Sa + imm * k`
    - `imm` is a signed 15-bit stride value.
