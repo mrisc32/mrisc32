@@ -720,6 +720,15 @@ test_fpu:
     fsub    s4, s12, s14
     fmul    s5, s12, s13
     fmul    s6, s12, s14
+    fdiv    s7, s12, s13
+    fdiv    s8, s14, s12
+
+    ldhi    s10,      #0x42484170@hi  ; (3.1416, 2.7183)
+    or      s10, s10, #0x42484170@lo  ; (0100001001001000, 0100000101110000)
+    ldhi    s11,      #0x47c5c2a8@hi  ; (7.77, -3.33)
+    or      s11, s11, #0x47c5c2a8@lo  ; (0100011111000101, 1100001010101000)
+    fdiv.h  s9, s10, s11
+    fdiv.h  s10, s11, s10
 
     ; Store results.
     stw     s1, s25, #0
@@ -728,6 +737,10 @@ test_fpu:
     stw     s4, s25, #12
     stw     s5, s25, #16
     stw     s6, s25, #20
+    stw     s7, s25, #24
+    stw     s8, s25, #28
+    stw     s9, s25, #32
+    stw     s10, s25, #36
 
     ; Comparison operations.
     ; TODO(m): Add packed operations once we support that in the simulator too.
@@ -742,15 +755,15 @@ test_fpu:
     fsnan   s9, s12, s15
 
     ; Store results.
-    stw     s1, s25, #24
-    stw     s2, s25, #28
-    stw     s3, s25, #32
-    stw     s4, s25, #36
-    stw     s5, s25, #40
-    stw     s6, s25, #44
-    stw     s7, s25, #48
-    stw     s8, s25, #52
-    stw     s9, s25, #56
+    stw     s1, s25, #40
+    stw     s2, s25, #44
+    stw     s3, s25, #48
+    stw     s4, s25, #52
+    stw     s5, s25, #56
+    stw     s6, s25, #60
+    stw     s7, s25, #64
+    stw     s8, s25, #68
+    stw     s9, s25, #72
 
     ; Min/max operations
     ; TODO(m): Add packed operations once we support that in the simulator too.
@@ -760,10 +773,10 @@ test_fpu:
     fmax    s4, s12, s14
 
     ; Store results.
-    stw     s1, s25, #60
-    stw     s2, s25, #64
-    stw     s3, s25, #68
-    stw     s4, s25, #72
+    stw     s1, s25, #76
+    stw     s2, s25, #80
+    stw     s3, s25, #84
+    stw     s4, s25, #88
 
     ; Integer conversion operations.
     ; TODO(m): Add packed operations once we support that in the simulator too.
@@ -776,22 +789,23 @@ test_fpu:
     itof    s5, z, s5
 
     ; Store results.
-    stw     s1, s25, #76
-    stw     s2, s25, #80
-    stw     s3, s25, #84
-    stw     s4, s25, #88
-    stw     s5, s25, #92
+    stw     s1, s25, #92
+    stw     s2, s25, #96
+    stw     s3, s25, #100
+    stw     s4, s25, #104
+    stw     s5, s25, #108
 
     ; Check results.
     add     s1, pc, #test_fpu_correct_results@pc
     mov     s2, s25
-    add     s25, s25, #96
+    add     s25, s25, #112
     b       #check_results
 
 test_fpu_correct_results:
-    .word   24
+    .word   28
     .word   0x412e95e2, 0xc0941bea, 0xc0941bea, 0x412e95e2
-    .word   0x41c3480a, 0xc1c3480a
+    .word   0x41c3480a, 0xc1c3480a, 0x3ecf037a, 0xc01e4a05
+    .word   0x3678ba89, 0x40f3bce6
     .word   0x00000000, 0xffffffff, 0xffffffff, 0x00000000
     .word   0x00000000, 0xffffffff, 0xffffffff, 0x00000000
     .word   0xffffffff
