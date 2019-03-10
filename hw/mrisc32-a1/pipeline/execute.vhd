@@ -123,7 +123,6 @@ architecture rtl of execute is
   signal s_div_d4_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_div_d4_result_ready : std_logic;
   signal s_div_stall : std_logic;
-  signal s_fpu_stall : std_logic;
   signal s_fpu_f1_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_fpu_f1_result_ready : std_logic;
   signal s_fpu_f3_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -134,7 +133,6 @@ architecture rtl of execute is
   -- Should the EX pipeline be stalled?
   signal s_stall_ex : std_logic;
   signal s_stall_div : std_logic;
-  signal s_stall_fpu : std_logic;
 
   -- Signals related to memory I/O.
   signal s_mem_byte_mask_unshifted : std_logic_vector(C_WORD_SIZE/8-1 downto 0);
@@ -349,8 +347,7 @@ begin
       port map (
         i_clk => i_clk,
         i_rst => i_rst,
-        i_stall => s_stall_fpu,
-        o_stall => s_fpu_stall,
+        i_stall => s_stall_ex,
         i_enable => i_fpu_en,
         i_op => i_fpu_op,
         i_packed_mode => i_packed_mode,
@@ -364,7 +361,6 @@ begin
         o_f4_next_result_ready => s_fpu_f4_result_ready
       );
   else generate
-    s_fpu_stall <= '0';
     s_fpu_f1_result <= (others => '0');
     s_fpu_f1_result_ready <= '0';
     s_fpu_f3_result <= (others => '0');
@@ -623,8 +619,7 @@ begin
   o_ex4_next_result <= s_ex4_next_result;
 
   -- Stall logic (async).
-  s_stall_ex <= s_mem_stall or s_div_stall or s_fpu_stall;
-  s_stall_div <= s_mem_stall or s_fpu_stall;
-  s_stall_fpu <= s_mem_stall or s_div_stall;
+  s_stall_ex <= s_mem_stall or s_div_stall;
+  s_stall_div <= s_mem_stall;
   o_stall <= s_stall_ex;
 end rtl;

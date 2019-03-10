@@ -30,9 +30,6 @@
 --
 -- Four-cycle operations:
 --   FADD, FSUB, FMUL
---
--- Multi-cycle operations (stalls the pipeline):
---   FSQRT
 ----------------------------------------------------------------------------------------------------
 
 library ieee;
@@ -52,7 +49,6 @@ entity fpu_impl is
     i_clk : in std_logic;
     i_rst : in std_logic;
     i_stall : in std_logic;
-    o_stall : out std_logic;
 
     -- Inputs (async).
     i_enable : in std_logic;
@@ -471,8 +467,4 @@ begin
     );
 
   o_f4_next_result_ready <= s_fadd_result_ready or s_fmul_result_ready;
-
-  -- Stall logic.
-  -- TODO(m): Longer operations (DIV, SQRT) may stall.
-  o_stall <= '0';
 end rtl;

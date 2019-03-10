@@ -27,7 +27,6 @@ entity fpu_bench is
     i_clk : in std_logic;
     i_rst : in std_logic;
     i_stall : in std_logic;
-    o_stall : out std_logic;
 
     -- Inputs (sync).
     i_enable : in std_logic;
@@ -65,7 +64,6 @@ begin
       i_clk => i_clk,
       i_rst => i_rst,
       i_stall => i_stall,
-      o_stall => o_stall,
 
       i_enable => s_enable,
       i_op => s_op,

@@ -32,7 +32,6 @@ entity fpu is
     i_clk : in std_logic;
     i_rst : in std_logic;
     i_stall : in std_logic;
-    o_stall : out std_logic;
 
     -- Inputs (async).
     i_enable : in std_logic;
@@ -53,7 +52,6 @@ end fpu;
 
 architecture rtl of fpu is
   signal s_fpu32_enable : std_logic;
-  signal s_fpu32_stall : std_logic;
   signal s_f1_next_fpu32_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_f1_next_fpu32_result_ready : std_logic;
   signal s_f3_next_fpu32_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -62,7 +60,6 @@ architecture rtl of fpu is
   signal s_f4_next_fpu32_result_ready : std_logic;
 
   signal s_fpu16_enable : std_logic;
-  signal s_fpu16_stall : std_logic;
   signal s_f1_next_fpu16_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_f1_next_fpu16_result_ready : std_logic;
   signal s_f3_next_fpu16_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -71,7 +68,6 @@ architecture rtl of fpu is
   signal s_f4_next_fpu16_result_ready : std_logic;
 
   signal s_fpu8_enable : std_logic;
-  signal s_fpu8_stall : std_logic;
   signal s_f1_next_fpu8_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_f1_next_fpu8_result_ready : std_logic;
   signal s_f3_next_fpu8_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -96,7 +92,6 @@ begin
       i_clk => i_clk,
       i_rst => i_rst,
       i_stall => i_stall,
-      o_stall => s_fpu32_stall,
       i_enable => s_fpu32_enable,
       i_op => i_op,
       i_src_a => i_src_a,
@@ -115,7 +110,6 @@ begin
       signal s_f1_next_result_ready : std_logic_vector(1 to 2);
       signal s_f3_next_result_ready : std_logic_vector(1 to 2);
       signal s_f4_next_result_ready : std_logic_vector(1 to 2);
-      signal s_fpu_impl_stall : std_logic_vector(1 to 2);
     begin
       FPU16_1: entity work.fpu_impl
         generic map (
@@ -128,7 +122,6 @@ begin
           i_clk => i_clk,
           i_rst => i_rst,
           i_stall => i_stall,
-          o_stall => s_fpu_impl_stall(k),
           i_enable => s_fpu16_enable,
           i_op => i_op,
           i_src_a => i_src_a((16*k)-1 downto 16*(k-1)),
@@ -146,7 +139,6 @@ begin
           s_f1_next_fpu16_result_ready <= s_f1_next_result_ready(1);
           s_f3_next_fpu16_result_ready <= s_f3_next_result_ready(1);
           s_f4_next_fpu16_result_ready <= s_f4_next_result_ready(1);
-          s_fpu16_stall <= s_fpu_impl_stall(1);
         end generate;
     end generate;
 
@@ -155,7 +147,6 @@ begin
       signal s_f1_next_result_ready : std_logic_vector(1 to 4);
       signal s_f3_next_result_ready : std_logic_vector(1 to 4);
       signal s_f4_next_result_ready : std_logic_vector(1 to 4);
-      signal s_fpu_impl_stall : std_logic_vector(1 to 4);
     begin
       FPU8_x: entity work.fpu_impl
         generic map (
@@ -168,7 +159,6 @@ begin
           i_clk => i_clk,
           i_rst => i_rst,
           i_stall => i_stall,
-          o_stall => s_fpu_impl_stall(k),
           i_enable => s_fpu8_enable,
           i_op => i_op,
           i_src_a => i_src_a((8*k)-1 downto 8*(k-1)),
@@ -186,7 +176,6 @@ begin
           s_f1_next_fpu8_result_ready <= s_f1_next_result_ready(1);
           s_f3_next_fpu8_result_ready <= s_f3_next_result_ready(1);
           s_f4_next_fpu8_result_ready <= s_f4_next_result_ready(1);
-          s_fpu8_stall <= s_fpu_impl_stall(1);
         end generate;
     end generate;
 
@@ -219,9 +208,6 @@ begin
     o_f4_next_result_ready <= s_f4_next_fpu32_result_ready or
                               s_f4_next_fpu16_result_ready or
                               s_f4_next_fpu8_result_ready;
-
-    -- Did any of the FPU pipelines request a stall?
-    o_stall <= s_fpu32_stall or s_fpu16_stall or s_fpu8_stall;
   else generate
     -- In unpacked mode we only have to consider the 32-bit results.
     o_f1_next_result <= s_f1_next_fpu32_result;
@@ -230,6 +216,5 @@ begin
     o_f3_next_result_ready <= s_f3_next_fpu32_result_ready;
     o_f4_next_result <= s_f4_next_fpu32_result;
     o_f4_next_result_ready <= s_f4_next_fpu32_result_ready;
-    o_stall <= s_fpu32_stall;
   end generate;
 end rtl;
