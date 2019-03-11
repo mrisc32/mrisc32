@@ -24,10 +24,10 @@ The CPU is still under development. So far, the following components have been i
   - All ALU operations finish in one cycle.
 * A pipelined (three-cycle) integer multiply unit.
   - Supports all packed and unpacked integer multiplication operations.
-* A semi-pipelined integer division unit.
-  - 15 cycles stall for 32-bit division.
-  - 7 cycles stall for 2 x 16-bit division.
-  - 3 cycles stall for 4 x 8-bit division.
+* A semi-pipelined integer and floating point division unit.
+  - 32-bit division: 15/12 cycles stall (integer/float).
+  - 2 x 16-bit division: 7/5 cycles stall (integer/float).
+  - 4 x 8-bit division: 3/2 cycles stall (integer/float).
 * A pipelined (two-cycle) Saturating Arithmetic Unit (SAU).
   - Supports all packed and unpacked saturating and halving arithmetic instructions.
 * An IEEE 754 compliant(ish) FPU.
@@ -49,7 +49,7 @@ The CPU is still under development. So far, the following components have been i
 * Branch prediction and correction.
   - The branch misprediction penalty is 3 cycles.
 
-**TODO**: Caches, more FPU instrucions, etc.
+**TODO**: Caches etc.
 
 ## Configurability
 

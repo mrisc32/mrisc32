@@ -170,13 +170,14 @@ package common is
   constant C_MUL_MULHIU : T_MUL_OP := "11";
 
   -- DIV operations.
-  constant C_DIV_OP_SIZE : integer := 2;
+  constant C_DIV_OP_SIZE : integer := 3;
   subtype T_DIV_OP is std_logic_vector(C_DIV_OP_SIZE-1 downto 0);
 
-  constant C_DIV_DIV  : T_DIV_OP := "00";
-  constant C_DIV_DIVU : T_DIV_OP := "01";
-  constant C_DIV_REM  : T_DIV_OP := "10";
-  constant C_DIV_REMU : T_DIV_OP := "11";
+  constant C_DIV_DIV  : T_DIV_OP := "000";
+  constant C_DIV_DIVU : T_DIV_OP := "001";
+  constant C_DIV_REM  : T_DIV_OP := "010";
+  constant C_DIV_REMU : T_DIV_OP := "011";
+  constant C_DIV_FDIV : T_DIV_OP := "100";  -- Special decoding.
 
   -- FPU operations.
   constant C_FPU_OP_SIZE : integer := 5;
@@ -200,7 +201,7 @@ package common is
   constant C_FPU_FADD : T_FPU_OP := "10000";
   constant C_FPU_FSUB : T_FPU_OP := "10001";
   constant C_FPU_FMUL : T_FPU_OP := "10010";
-  constant C_FPU_FDIV : T_FPU_OP := "10011";
+  constant C_FPU_FDIV : T_FPU_OP := "10011";  -- Not handled by the FPU!
   constant C_FPU_FSQRT : T_FPU_OP := "10100";
 
   -- MEM operations.

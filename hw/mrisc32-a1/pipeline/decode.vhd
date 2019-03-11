@@ -142,6 +142,7 @@ architecture rtl of decode is
   signal s_is_mem_op : std_logic;
   signal s_is_mem_store : std_logic;
 
+  signal s_is_fdiv : std_logic;
   signal s_is_sau_op : std_logic;
   signal s_is_mul_op : std_logic;
   signal s_is_div_op : std_logic;
@@ -234,11 +235,14 @@ begin
   s_is_ldhio   <= '1' when s_op_high = 6X"3c" else '0';
   s_is_addpchi <= '1' when s_op_high = 6X"3d" else '0';
 
+  -- Is this FDIV?
+  s_is_fdiv <= '1' when (s_is_type_a = '1' and s_op_low = "11" & C_FPU_FDIV) else '0';
+
   -- Is this a SAU, MUL, DIV or FPU op?
-  s_is_sau_op <= '1' when (s_is_type_a = '1' and s_op_low(6 downto 3) = "0111") else '0';
-  s_is_mul_op <= '1' when (s_is_type_a = '1' and s_op_low(6 downto 2) = "10000") else '0';
-  s_is_div_op <= '1' when (s_is_type_a = '1' and s_op_low(6 downto 2) = "10001") else '0';
-  s_is_fpu_op <= '1' when (s_is_type_a = '1' and s_op_low(6 downto 5) = "11") else '0';
+  s_is_sau_op <= '1' when s_is_type_a = '1' and s_op_low(6 downto 3) = "0111" else '0';
+  s_is_mul_op <= '1' when s_is_type_a = '1' and s_op_low(6 downto 2) = "10000" else '0';
+  s_is_div_op <= '1' when (s_is_type_a = '1' and s_op_low(6 downto 2) = "10001") or s_is_fdiv = '1' else '0';
+  s_is_fpu_op <= '1' when s_is_type_a = '1' and s_op_low(6 downto 5) = "11" and s_is_fdiv = '0' else '0';
 
   -- Determine vector mode.
   s_vector_mode(1) <= i_instr(15) and not s_is_type_c;
@@ -421,8 +425,10 @@ begin
   s_mul_op <= s_op_low(C_MUL_OP_SIZE-1 downto 0);
 
   -- Select division operation.
-  -- Map the low order bits of the low order opcode directly to the division unit.
-  s_div_op <= s_op_low(C_DIV_OP_SIZE-1 downto 0);
+  -- Map the low order bits of the low order opcode directly to the division unit, except for
+  -- for FDIV, which is decoded separately.
+  s_div_op <= C_DIV_FDIV when s_is_fdiv = '1' else
+              "0" & s_op_low(C_DIV_OP_SIZE-2 downto 0);
 
   -- Select FPU operation.
   -- Map the low order bits of the low order opcode directly to the FPU.
