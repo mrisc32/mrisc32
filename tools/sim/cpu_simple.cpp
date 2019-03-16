@@ -19,6 +19,8 @@
 
 #include "cpu_simple.hpp"
 
+#include "packed_float.hpp"
+
 #include <cmath>
 #include <cstring>
 #include <exception>
@@ -658,11 +660,11 @@ inline uint32_t fadd32(const uint32_t a, const uint32_t b) {
 }
 
 inline uint32_t fadd16x2(const uint32_t a, const uint32_t b) {
-  throw std::runtime_error("Not yet implemented: Packed 16-bit FADD.");
+  return (f16x2_t(a) + f16x2_t(b)).packf();
 }
 
 inline uint32_t fadd8x4(const uint32_t a, const uint32_t b) {
-  throw std::runtime_error("Not yet implemented: Packed 8-bit FADD.");
+  return (f8x4_t(a) + f8x4_t(b)).packf();
 }
 
 inline uint32_t fsub32(const uint32_t a, const uint32_t b) {
@@ -670,11 +672,11 @@ inline uint32_t fsub32(const uint32_t a, const uint32_t b) {
 }
 
 inline uint32_t fsub16x2(const uint32_t a, const uint32_t b) {
-  throw std::runtime_error("Not yet implemented: Packed 16-bit FSUB.");
+  return (f16x2_t(a) - f16x2_t(b)).packf();
 }
 
 inline uint32_t fsub8x4(const uint32_t a, const uint32_t b) {
-  throw std::runtime_error("Not yet implemented: Packed 8-bit FSUB.");
+  return (f8x4_t(a) - f8x4_t(b)).packf();
 }
 
 inline uint32_t fmul32(const uint32_t a, const uint32_t b) {
@@ -682,11 +684,11 @@ inline uint32_t fmul32(const uint32_t a, const uint32_t b) {
 }
 
 inline uint32_t fmul16x2(const uint32_t a, const uint32_t b) {
-  throw std::runtime_error("Not yet implemented: Packed 16-bit FMUL.");
+  return (f16x2_t(a) * f16x2_t(b)).packf();
 }
 
 inline uint32_t fmul8x4(const uint32_t a, const uint32_t b) {
-  throw std::runtime_error("Not yet implemented: Packed 8-bit FMUL.");
+  return (f8x4_t(a) * f8x4_t(b)).packf();
 }
 
 inline uint32_t fdiv32(const uint32_t a, const uint32_t b) {
@@ -694,11 +696,11 @@ inline uint32_t fdiv32(const uint32_t a, const uint32_t b) {
 }
 
 inline uint32_t fdiv16x2(const uint32_t a, const uint32_t b) {
-  throw std::runtime_error("Not yet implemented: Packed 16-bit FDIV.");
+  return (f16x2_t(a) / f16x2_t(b)).packf();
 }
 
 inline uint32_t fdiv8x4(const uint32_t a, const uint32_t b) {
-  throw std::runtime_error("Not yet implemented: Packed 8-bit FDIV.");
+  return (f8x4_t(a) / f8x4_t(b)).packf();
 }
 
 inline uint32_t fsqrt32(const uint32_t a, const uint32_t b) {
@@ -707,11 +709,13 @@ inline uint32_t fsqrt32(const uint32_t a, const uint32_t b) {
 }
 
 inline uint32_t fsqrt16x2(const uint32_t a, const uint32_t b) {
-  throw std::runtime_error("Not yet implemented: Packed 16-bit FDIV.");
+  (void)b;
+  return f16x2_t(a).sqrt().packf();
 }
 
 inline uint32_t fsqrt8x4(const uint32_t a, const uint32_t b) {
-  throw std::runtime_error("Not yet implemented: Packed 8-bit FDIV.");
+  (void)b;
+  return f8x4_t(a).sqrt().packf();
 }
 
 inline uint32_t fmin32(const uint32_t a, const uint32_t b) {
@@ -719,11 +723,11 @@ inline uint32_t fmin32(const uint32_t a, const uint32_t b) {
 }
 
 inline uint32_t fmin16x2(const uint32_t a, const uint32_t b) {
-  throw std::runtime_error("Not yet implemented: Packed 16-bit FMIN.");
+  return min(f16x2_t(a), f16x2_t(b)).packf();
 }
 
 inline uint32_t fmin8x4(const uint32_t a, const uint32_t b) {
-  throw std::runtime_error("Not yet implemented: Packed 8-bit FMIN.");
+  return min(f8x4_t(a), f8x4_t(b)).packf();
 }
 
 inline uint32_t fmax32(const uint32_t a, const uint32_t b) {
@@ -731,11 +735,11 @@ inline uint32_t fmax32(const uint32_t a, const uint32_t b) {
 }
 
 inline uint32_t fmax16x2(const uint32_t a, const uint32_t b) {
-  throw std::runtime_error("Not yet implemented: Packed 16-bit FMAX.");
+  return max(f16x2_t(a), f16x2_t(b)).packf();
 }
 
 inline uint32_t fmax8x4(const uint32_t a, const uint32_t b) {
-  throw std::runtime_error("Not yet implemented: Packed 8-bit FMAX.");
+  return max(f8x4_t(a), f8x4_t(b)).packf();
 }
 
 inline uint32_t clz32(const uint32_t x) {
@@ -848,11 +852,11 @@ inline uint32_t itof32(const uint32_t a, const uint32_t b) {
 }
 
 inline uint32_t itof16x2(const uint32_t a, const uint32_t b) {
-  throw std::runtime_error("Not yet implemented: Packed 16-bit ITOF.");
+  return f16x2_t::itof(a, b).packf();
 }
 
 inline uint32_t itof8x4(const uint32_t a, const uint32_t b) {
-  throw std::runtime_error("Not yet implemented: Packed 8-bit ITOF.");
+  return f8x4_t::itof(a, b).packf();
 }
 
 inline uint32_t utof32(const uint32_t a, const uint32_t b) {
@@ -861,11 +865,11 @@ inline uint32_t utof32(const uint32_t a, const uint32_t b) {
 }
 
 inline uint32_t utof16x2(const uint32_t a, const uint32_t b) {
-  throw std::runtime_error("Not yet implemented: Packed 16-bit UTOF.");
+  return f16x2_t::utof(a, b).packf();
 }
 
 inline uint32_t utof8x4(const uint32_t a, const uint32_t b) {
-  throw std::runtime_error("Not yet implemented: Packed 8-bit UTOF.");
+  return f8x4_t::utof(a, b).packf();
 }
 
 inline uint32_t ftoi32(const uint32_t a, const uint32_t b) {
@@ -874,11 +878,11 @@ inline uint32_t ftoi32(const uint32_t a, const uint32_t b) {
 }
 
 inline uint32_t ftoi16x2(const uint32_t a, const uint32_t b) {
-  throw std::runtime_error("Not yet implemented: Packed 16-bit FTOI.");
+  return f16x2_t(a).packi(b);
 }
 
 inline uint32_t ftoi8x4(const uint32_t a, const uint32_t b) {
-  throw std::runtime_error("Not yet implemented: Packed 8-bit FTOI.");
+  return f8x4_t(a).packi(b);
 }
 
 inline uint32_t ftou32(const uint32_t a, const uint32_t b) {
@@ -887,11 +891,11 @@ inline uint32_t ftou32(const uint32_t a, const uint32_t b) {
 }
 
 inline uint32_t ftou16x2(const uint32_t a, const uint32_t b) {
-  throw std::runtime_error("Not yet implemented: Packed 16-bit FTOU.");
+  return f16x2_t(a).packu(b);
 }
 
 inline uint32_t ftou8x4(const uint32_t a, const uint32_t b) {
-  throw std::runtime_error("Not yet implemented: Packed 8-bit FTOU.");
+  return f8x4_t(a).packu(b);
 }
 
 inline uint32_t ftoir32(const uint32_t a, const uint32_t b) {
@@ -900,11 +904,11 @@ inline uint32_t ftoir32(const uint32_t a, const uint32_t b) {
 }
 
 inline uint32_t ftoir16x2(const uint32_t a, const uint32_t b) {
-  throw std::runtime_error("Not yet implemented: Packed 16-bit FTOIR.");
+  return f16x2_t(a).packir(b);
 }
 
 inline uint32_t ftoir8x4(const uint32_t a, const uint32_t b) {
-  throw std::runtime_error("Not yet implemented: Packed 8-bit FTOIR.");
+  return f8x4_t(a).packir(b);
 }
 
 inline uint32_t ftour32(const uint32_t a, const uint32_t b) {
@@ -913,11 +917,11 @@ inline uint32_t ftour32(const uint32_t a, const uint32_t b) {
 }
 
 inline uint32_t ftour16x2(const uint32_t a, const uint32_t b) {
-  throw std::runtime_error("Not yet implemented: Packed 16-bit FTOUR.");
+  return f16x2_t(a).packur(b);
 }
 
 inline uint32_t ftour8x4(const uint32_t a, const uint32_t b) {
-  throw std::runtime_error("Not yet implemented: Packed 8-bit FTOUR.");
+  return f8x4_t(a).packur(b);
 }
 }  // namespace
 
@@ -1916,9 +1920,11 @@ uint32_t cpu_simple_t::run() {
         case EX_OP_FSEQ:
           switch (ex_in.packed_mode) {
             case PACKED_BYTE:
-              throw std::runtime_error("Not yet implemented: Packed 8-bit FSEQ.");
+              ex_result = f8x4_t(ex_in.src_a).fseq(f8x4_t(ex_in.src_b));
+              break;
             case PACKED_HALF_WORD:
-              throw std::runtime_error("Not yet implemented: Packed 16-bit FSEQ.");
+              ex_result = f16x2_t(ex_in.src_a).fseq(f16x2_t(ex_in.src_b));
+              break;
             default:
               ex_result = set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) {
                 return as_f32(a) == as_f32(b);
@@ -1928,9 +1934,11 @@ uint32_t cpu_simple_t::run() {
         case EX_OP_FSNE:
           switch (ex_in.packed_mode) {
             case PACKED_BYTE:
-              throw std::runtime_error("Not yet implemented: Packed 8-bit FSNE.");
+              ex_result = f8x4_t(ex_in.src_a).fsne(f8x4_t(ex_in.src_b));
+              break;
             case PACKED_HALF_WORD:
-              throw std::runtime_error("Not yet implemented: Packed 16-bit FSNE.");
+              ex_result = f16x2_t(ex_in.src_a).fsne(f16x2_t(ex_in.src_b));
+              break;
             default:
               ex_result = set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) {
                 return as_f32(a) != as_f32(b);
@@ -1940,9 +1948,11 @@ uint32_t cpu_simple_t::run() {
         case EX_OP_FSLT:
           switch (ex_in.packed_mode) {
             case PACKED_BYTE:
-              throw std::runtime_error("Not yet implemented: Packed 8-bit FSLT.");
+              ex_result = f8x4_t(ex_in.src_a).fsle(f8x4_t(ex_in.src_b));
+              break;
             case PACKED_HALF_WORD:
-              throw std::runtime_error("Not yet implemented: Packed 16-bit FSLT.");
+              ex_result = f16x2_t(ex_in.src_a).fslt(f16x2_t(ex_in.src_b));
+              break;
             default:
               ex_result = set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) {
                 return as_f32(a) < as_f32(b);
@@ -1952,9 +1962,11 @@ uint32_t cpu_simple_t::run() {
         case EX_OP_FSLE:
           switch (ex_in.packed_mode) {
             case PACKED_BYTE:
-              throw std::runtime_error("Not yet implemented: Packed 8-bit FSLE.");
+              ex_result = f8x4_t(ex_in.src_a).fsle(f8x4_t(ex_in.src_b));
+              break;
             case PACKED_HALF_WORD:
-              throw std::runtime_error("Not yet implemented: Packed 16-bit FSLE.");
+              ex_result = f16x2_t(ex_in.src_a).fsle(f16x2_t(ex_in.src_b));
+              break;
             default:
               ex_result = set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) {
                 return as_f32(a) <= as_f32(b);
@@ -1964,9 +1976,11 @@ uint32_t cpu_simple_t::run() {
         case EX_OP_FSNAN:
           switch (ex_in.packed_mode) {
             case PACKED_BYTE:
-              throw std::runtime_error("Not yet implemented: Packed 8-bit FSNAN.");
+              ex_result = f8x4_t(ex_in.src_a).fsnan(f8x4_t(ex_in.src_b));
+              break;
             case PACKED_HALF_WORD:
-              throw std::runtime_error("Not yet implemented: Packed 16-bit FSNAN.");
+              ex_result = f16x2_t(ex_in.src_a).fsnan(f16x2_t(ex_in.src_b));
+              break;
             default:
               ex_result = set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) {
                 return float32_isnan(a) || float32_isnan(b);

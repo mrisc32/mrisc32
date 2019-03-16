@@ -12,6 +12,7 @@ set(MR32SIM_SRC mr32sim.cpp
                 cpu.hpp
                 cpu_simple.cpp
                 cpu_simple.hpp
+                packed_float.hpp
                 ram.hpp)
 set(MR32SIM_DEFINES)
 set(MR32SIM_LIBS)
