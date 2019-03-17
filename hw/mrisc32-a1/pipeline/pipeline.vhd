@@ -31,14 +31,18 @@ entity pipeline is
       i_clk : in std_logic;
       i_rst : in std_logic;
 
-      -- Memory interface.
-      o_mem_req : out std_logic;  -- 1 = request, 0 = nop
-      o_mem_we : out std_logic;   -- 1 = write, 0 = read
-      o_mem_byte_mask : out std_logic_vector(C_WORD_SIZE/8-1 downto 0);
-      o_mem_addr : out std_logic_vector(C_WORD_SIZE-1 downto 2);
-      o_mem_write_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_mem_read_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_mem_read_data_ready : in std_logic
+      -- Memory interface (Wishbone master).
+      -- TODO(m): This currently implements something similar to "Wishbone classic" (i.e.
+      -- non-pipelined). Instead, implement a proper pipelined Wishbone master (requires handling
+      -- of the Wishbone signals STB and STALL).
+      -- See: https://cdn.opencores.org/downloads/wbspec_b4.pdf
+      o_wb_adr : out std_logic_vector(C_WORD_SIZE-1 downto 2);
+      o_wb_dat : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_wb_we : out std_logic;
+      o_wb_sel : out std_logic_vector(C_WORD_SIZE/8-1 downto 0);
+      o_wb_cyc : out std_logic;
+      i_wb_dat : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_wb_ack : in std_logic
     );
 end pipeline;
 
@@ -793,13 +797,13 @@ begin
       o_dcache_read_data => s_dcache_mem_read_data,
       o_dcache_read_data_ready => s_dcache_mem_read_data_ready,
 
-      o_mem_req => o_mem_req,
-      o_mem_we => o_mem_we,
-      o_mem_byte_mask => o_mem_byte_mask,
-      o_mem_addr => o_mem_addr,
-      o_mem_write_data => o_mem_write_data,
-      i_mem_read_data => i_mem_read_data,
-      i_mem_read_data_ready => i_mem_read_data_ready
+      o_mem_req => o_wb_cyc,
+      o_mem_we => o_wb_we,
+      o_mem_byte_mask => o_wb_sel,
+      o_mem_addr => o_wb_adr,
+      o_mem_write_data => o_wb_dat,
+      i_mem_read_data => i_wb_dat,
+      i_mem_read_data_ready => i_wb_ack
     );
 
 end rtl;

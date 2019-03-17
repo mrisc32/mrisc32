@@ -32,13 +32,14 @@ architecture behavioral of pipeline_tb is
   signal s_rst : std_logic;
 
   -- Memory interface.
-  signal s_mem_req : std_logic;
-  signal s_mem_we : std_logic;
-  signal s_mem_byte_mask : std_logic_vector(C_WORD_SIZE/8-1 downto 0);
-  signal s_mem_addr : std_logic_vector(C_WORD_SIZE-1 downto 2);
-  signal s_mem_write_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_mem_read_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_mem_read_data_ready : std_logic;
+  signal s_wb_adr : std_logic_vector(C_WORD_SIZE-1 downto 2);
+  signal s_wb_dat : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_wb_we : std_logic;
+  signal s_wb_sel : std_logic_vector(C_WORD_SIZE/8-1 downto 0);
+  signal s_wb_cyc : std_logic;
+
+  signal s_mem_dat : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_mem_ack : std_logic;
 begin
   pipeline_0: entity work.pipeline
     port map (
@@ -46,13 +47,13 @@ begin
       i_rst => s_rst,
 
       -- Memory interface.
-      o_mem_req => s_mem_req,
-      o_mem_we => s_mem_we,
-      o_mem_byte_mask => s_mem_byte_mask,
-      o_mem_addr => s_mem_addr,
-      o_mem_write_data => s_mem_write_data,
-      i_mem_read_data => s_mem_read_data,
-      i_mem_read_data_ready => s_mem_read_data_ready
+      o_wb_adr => s_wb_adr,
+      o_wb_dat => s_wb_dat,
+      o_wb_we => s_wb_we,
+      o_wb_sel => s_wb_sel,
+      o_wb_cyc => s_wb_cyc,
+      i_wb_dat => s_mem_dat,
+      i_wb_ack => s_mem_ack
     );
 
   process
@@ -114,8 +115,8 @@ begin
     file_close(f_char_file);
 
     -- Reset the memory signals.
-    s_mem_read_data <= (others => '0');
-    s_mem_read_data_ready <= '0';
+    s_mem_dat <= (others => '0');
+    s_mem_ack <= '0';
 
     -- Start by resetting the pipeline (to have defined signals).
     s_rst <= '1';
@@ -141,12 +142,12 @@ begin
       wait for 1 ns;
 
       -- Read/write data to/from the memory.
-      v_write_mask(31 downto 24) := (others => s_mem_byte_mask(3));
-      v_write_mask(23 downto 16) := (others => s_mem_byte_mask(2));
-      v_write_mask(15 downto 8) := (others => s_mem_byte_mask(1));
-      v_write_mask(7 downto 0) := (others => s_mem_byte_mask(0));
-      if s_mem_req = '1' then
-        v_mem_idx := to_integer(unsigned(s_mem_addr));
+      v_write_mask(31 downto 24) := (others => s_wb_sel(3));
+      v_write_mask(23 downto 16) := (others => s_wb_sel(2));
+      v_write_mask(15 downto 8) := (others => s_wb_sel(1));
+      v_write_mask(7 downto 0) := (others => s_wb_sel(0));
+      if s_wb_cyc = '1' then
+        v_mem_idx := to_integer(unsigned(s_wb_adr));
         if v_mem_idx = 0 then
           report "Simulation finished after " & integer'image(i) & " cycles.";
           exit;
@@ -155,15 +156,17 @@ begin
         else
           v_data := X"00000000";
         end if;
-        if s_mem_we = '1' then
-          v_data := (v_data and (not v_write_mask)) or (s_mem_write_data and v_write_mask);
+        if s_wb_we = '1' then
+          v_data := (v_data and (not v_write_mask)) or (s_wb_dat and v_write_mask);
           if (v_mem_idx >= 0) and (v_mem_idx < C_MEM_NUM_WORDS) then
             v_mem_array(v_mem_idx) := v_data;
           end if;
         else
-          s_mem_read_data <= v_data;
-          s_mem_read_data_ready <= '1';
+          s_mem_dat <= v_data;
+          s_mem_ack <= '1';
         end if;
+      else
+        s_mem_ack <= '0';
       end if;
 
       -- Tick the clock.
