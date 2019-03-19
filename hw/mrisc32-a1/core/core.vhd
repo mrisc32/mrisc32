@@ -106,12 +106,6 @@ begin
   -- Caches and memory interface.
   --------------------------------------------------------------------------------------------------
 
-  -- TODO(m): Implement these!
-  s_icache_stall <= '0';
-  s_icache_err <= '0';
-  s_data_stall <= '0';
-  s_data_err <= '0';
-
   icache_1: entity work.icache
     port map (
       i_clk => i_clk,
@@ -141,8 +135,8 @@ begin
       i_instr_adr => s_icache_adr,
       o_instr_dat => s_icache_dat,
       o_instr_ack => s_icache_ack,
-      -- o_instr_stall => s_icache_stall,
-      -- o_instr_err => s_icache_err,
+      o_instr_stall => s_icache_stall,
+      o_instr_err => s_icache_err,
 
       i_data_cyc => s_data_cyc,
       i_data_we => s_data_we,
@@ -151,8 +145,8 @@ begin
       i_data_dat_w => s_data_dat_w,
       o_data_dat => s_data_dat,
       o_data_ack => s_data_ack,
-      -- o_data_stall => s_data_stall,
-      -- o_data_err => s_data_err,
+      o_data_stall => s_data_stall,
+      o_data_err => s_data_err,
 
       o_mem_cyc => o_wb_cyc,
       o_mem_we => o_wb_we,
@@ -160,8 +154,8 @@ begin
       o_mem_adr => o_wb_adr,
       o_mem_dat_w => o_wb_dat,
       i_mem_dat => i_wb_dat,
-      i_mem_ack => i_wb_ack
-      -- i_mem_stall => i_wb_stall,
-      -- i_mem_err => i_wb_err
+      i_mem_ack => i_wb_ack,
+      i_mem_stall => i_wb_stall,
+      i_mem_err => i_wb_err
     );
 end rtl;

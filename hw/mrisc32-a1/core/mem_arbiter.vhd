@@ -39,8 +39,8 @@ entity mem_arbiter is
       i_instr_adr : in std_logic_vector(C_WORD_SIZE-1 downto 2);
       o_instr_dat : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_instr_ack : out std_logic;
-      -- o_instr_stall : out std_logic;
-      -- o_instr_err : out std_logic;
+      o_instr_stall : out std_logic;
+      o_instr_err : out std_logic;
 
       -- Data interface.
       i_data_cyc : in std_logic;
@@ -50,8 +50,8 @@ entity mem_arbiter is
       i_data_dat_w : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_data_dat : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_data_ack : out std_logic;
-      -- o_data_stall : out std_logic;
-      -- o_data_err : out std_logic;
+      o_data_stall : out std_logic;
+      o_data_err : out std_logic;
 
       -- Memory interface.
       o_mem_cyc : out std_logic;
@@ -60,9 +60,9 @@ entity mem_arbiter is
       o_mem_adr : out std_logic_vector(C_WORD_SIZE-1 downto 2);
       o_mem_dat_w : out std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_mem_dat : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_mem_ack : in std_logic
-      -- i_mem_stall : in std_logic;
-      -- i_mem_err : in std_logic
+      i_mem_ack : in std_logic;
+      i_mem_stall : in std_logic;
+      i_mem_err : in std_logic
     );
 end mem_arbiter;
 
@@ -84,7 +84,11 @@ begin
   -- read data.
   o_instr_dat <= i_mem_dat;
   o_instr_ack <= i_mem_ack and i_instr_cyc and not s_service_data;
+  o_instr_stall <= i_mem_stall and i_instr_cyc and not s_service_data;
+  o_instr_err <= i_mem_err and i_instr_cyc and not s_service_data;
   o_data_dat <= i_mem_dat;
   o_data_ack <= i_mem_ack and i_data_cyc and (not i_data_we) and s_service_data;
+  o_data_stall <= i_mem_stall and i_instr_cyc and s_service_data;
+  o_data_err <= i_mem_err and i_instr_cyc and s_service_data;
 end behavioural;
 
