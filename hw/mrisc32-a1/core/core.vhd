@@ -107,8 +107,8 @@ begin
   --------------------------------------------------------------------------------------------------
 
   -- TODO(m): Implement these!
-  s_instr_stall <= '0';
-  s_instr_err <= '0';
+  s_icache_stall <= '0';
+  s_icache_err <= '0';
   s_data_stall <= '0';
   s_data_err <= '0';
 
@@ -117,17 +117,19 @@ begin
       i_clk => i_clk,
       i_rst => i_rst,
 
-      i_cpu_req => s_instr_cyc,
-      i_cpu_addr => s_instr_adr,
-      o_cpu_read_data => s_instr_dat,
-      o_cpu_read_data_ready => s_instr_ack,
+      i_instr_cyc => s_instr_cyc,
+      i_instr_adr => s_instr_adr,
+      o_instr_dat => s_instr_dat,
+      o_instr_ack => s_instr_ack,
+      o_instr_stall => s_instr_stall,
+      o_instr_err => s_instr_err,
 
-      o_mem_req => s_icache_cyc,
-      o_mem_addr => s_icache_adr,
-      i_mem_read_data => s_icache_dat,
-      i_mem_read_data_ready => s_icache_ack
-      -- i_mem_stall => s_icache_stall,
-      -- i_mem_err => s_icache_err
+      o_mem_cyc => s_icache_cyc,
+      o_mem_adr => s_icache_adr,
+      i_mem_dat => s_icache_dat,
+      i_mem_ack => s_icache_ack,
+      i_mem_stall => s_icache_stall,
+      i_mem_err => s_icache_err
     );
 
   arbiter_1: entity work.cache_access_arbiter
