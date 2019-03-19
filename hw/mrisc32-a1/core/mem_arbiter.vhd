@@ -24,7 +24,8 @@ use work.common.all;
 
 
 ----------------------------------------------------------------------------------------------------
--- This entity arbitrates memory access requests from the ICache and the DCache.
+-- This entity arbitrates memory access requests from the instruction and the data ports of the
+-- pipeline.
 ----------------------------------------------------------------------------------------------------
 
 entity mem_arbiter is
@@ -33,50 +34,57 @@ entity mem_arbiter is
       i_clk : in std_logic;
       i_rst : in std_logic;
 
-      -- ICache interface.
-      i_icache_req : in std_logic;
-      i_icache_addr : in std_logic_vector(C_WORD_SIZE-1 downto 2);
-      o_icache_read_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_icache_read_data_ready : out std_logic;
+      -- Instruction interface.
+      i_instr_cyc : in std_logic;
+      i_instr_adr : in std_logic_vector(C_WORD_SIZE-1 downto 2);
+      o_instr_dat : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_instr_ack : out std_logic;
+      -- o_instr_stall : out std_logic;
+      -- o_instr_err : out std_logic;
 
-      -- DCache interface.
-      i_dcache_req : in std_logic;
-      i_dcache_we : in std_logic;
-      i_dcache_byte_mask : in std_logic_vector(C_WORD_SIZE/8-1 downto 0);
-      i_dcache_addr : in std_logic_vector(C_WORD_SIZE-1 downto 2);
-      i_dcache_write_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_dcache_read_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_dcache_read_data_ready : out std_logic;
+      -- Data interface.
+      i_data_cyc : in std_logic;
+      i_data_we : in std_logic;
+      i_data_sel : in std_logic_vector(C_WORD_SIZE/8-1 downto 0);
+      i_data_adr : in std_logic_vector(C_WORD_SIZE-1 downto 2);
+      i_data_dat_w : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_data_dat : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      o_data_ack : out std_logic;
+      -- o_data_stall : out std_logic;
+      -- o_data_err : out std_logic;
 
       -- Memory interface.
-      -- TODO(m): This should be a DRAM controller or something.
-      o_mem_req : out std_logic;
+      o_mem_cyc : out std_logic;
       o_mem_we : out std_logic;
-      o_mem_byte_mask : out std_logic_vector(C_WORD_SIZE/8-1 downto 0);
-      o_mem_addr : out std_logic_vector(C_WORD_SIZE-1 downto 2);
-      o_mem_write_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_mem_read_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_mem_read_data_ready : in std_logic
+      o_mem_sel : out std_logic_vector(C_WORD_SIZE/8-1 downto 0);
+      o_mem_adr : out std_logic_vector(C_WORD_SIZE-1 downto 2);
+      o_mem_dat_w : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_mem_dat : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+      i_mem_ack : in std_logic
+      -- i_mem_stall : in std_logic;
+      -- i_mem_err : in std_logic
     );
 end mem_arbiter;
 
 architecture behavioural of mem_arbiter is
-  signal s_service_dcache : std_logic;
+  signal s_service_data : std_logic;
 begin
-  -- The DCache has priority over the ICache.
-  s_service_dcache <= i_dcache_req;
+  -- The data port has priority over the instruction port.
+  s_service_data <= i_data_cyc;
 
-  -- Send the request to the RAM from either the ICache or DCache.
-  o_mem_req <= i_icache_req or i_dcache_req;
-  o_mem_we <= i_dcache_we and s_service_dcache;
-  o_mem_byte_mask <= i_dcache_byte_mask when s_service_dcache = '1' else (others => '1');
-  o_mem_addr <= i_dcache_addr when s_service_dcache = '1' else i_icache_addr;
-  o_mem_write_data <= i_dcache_write_data;
+  -- Send the request to the memory bus from either the instruction or data ports
+  -- of the pipeline.
+  o_mem_cyc <= i_instr_cyc or i_data_cyc;
+  o_mem_we <= i_data_we and s_service_data;
+  o_mem_sel <= i_data_sel when s_service_data = '1' else (others => '1');
+  o_mem_adr <= i_data_adr when s_service_data = '1' else i_instr_adr;
+  o_mem_dat_w <= i_data_dat_w;
 
-  -- Send the result to the relevant cache, and optionally stall the cache(s) when waiting for read data.
-  o_icache_read_data <= i_mem_read_data;
-  o_icache_read_data_ready <= i_mem_read_data_ready and i_icache_req and not s_service_dcache;
-  o_dcache_read_data <= i_mem_read_data;
-  o_dcache_read_data_ready <= i_mem_read_data_ready and i_dcache_req and (not i_dcache_we) and s_service_dcache;
+  -- Send the result to the relevant port, and optionally stall the interfaces when waiting for
+  -- read data.
+  o_instr_dat <= i_mem_dat;
+  o_instr_ack <= i_mem_ack and i_instr_cyc and not s_service_data;
+  o_data_dat <= i_mem_dat;
+  o_data_ack <= i_mem_ack and i_data_cyc and (not i_data_we) and s_service_data;
 end behavioural;
 
