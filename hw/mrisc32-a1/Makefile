@@ -48,6 +48,7 @@ include muldiv/Makefile
 include sau/Makefile
 include cache/Makefile
 include pipeline/Makefile
+include core/Makefile
 include benchmark/Makefile
 
 all: $(TESTS) $(EXTRA)

@@ -38,7 +38,7 @@ $ sudo make install
 
 ## Building programs
 
-To build assembly language programs that can be used by the simulator or the VHDL testbench (pipeline_tb), do the following:
+To build assembly language programs that can be used by the simulator or the VHDL testbench (core_tb), do the following:
 
 ```bash
 $ mrisc32-as -o my-program.o my-program.s

@@ -24,10 +24,10 @@ library std;
 use std.textio.all;
 use work.common.all;
 
-entity pipeline_tb is
-end pipeline_tb;
+entity core_tb is
+end core_tb;
 
-architecture behavioral of pipeline_tb is
+architecture behavioral of core_tb is
   signal s_clk : std_logic;
   signal s_rst : std_logic;
 
@@ -40,8 +40,10 @@ architecture behavioral of pipeline_tb is
 
   signal s_mem_dat : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_mem_ack : std_logic;
+  signal s_mem_stall : std_logic;
+  signal s_mem_err : std_logic;
 begin
-  pipeline_0: entity work.pipeline
+  core_0: entity work.core
     port map (
       i_clk => s_clk,
       i_rst => s_rst,
@@ -53,7 +55,9 @@ begin
       o_wb_sel => s_wb_sel,
       o_wb_cyc => s_wb_cyc,
       i_wb_dat => s_mem_dat,
-      i_wb_ack => s_mem_ack
+      i_wb_ack => s_mem_ack,
+      i_wb_stall => s_mem_stall,
+      i_wb_err => s_mem_err
     );
 
   process
@@ -105,8 +109,8 @@ begin
       v_mem_array(i) := to_word(0);
     end loop;
 
-    -- Read the program to run from the binary file pipeline_tb_prg.bin.
-    file_open(f_char_file, "pipeline/pipeline_tb_prg.bin");
+    -- Read the program to run from the binary file core_tb_prg.bin.
+    file_open(f_char_file, "core/core_tb_prg.bin");
     v_mem_idx := to_integer(unsigned(read_word(f_char_file)))/4;  -- Fist word = program start.
     while not endfile(f_char_file) loop
       v_mem_array(v_mem_idx) := read_word(f_char_file);
@@ -117,8 +121,10 @@ begin
     -- Reset the memory signals.
     s_mem_dat <= (others => '0');
     s_mem_ack <= '0';
+    s_mem_stall <= '0';
+    s_mem_err <= '0';
 
-    -- Start by resetting the pipeline (to have defined signals).
+    -- Start by resetting the core (to have defined signals).
     s_rst <= '1';
     s_clk <= '1';
     wait for 5 ns;
@@ -175,8 +181,8 @@ begin
       wait for 5 ns;
     end loop;
 
-    -- Dump the memory to the binary file /tmp/mrisc32_pipeline_tb_ram.bin.
-    file_open(f_char_file, "/tmp/mrisc32_pipeline_tb_ram.bin", WRITE_MODE);
+    -- Dump the memory to a binary file.
+    file_open(f_char_file, "/tmp/mrisc32_core_tb_ram.bin", WRITE_MODE);
     for i in 0 to C_MEM_NUM_WORDS-1 loop
       write_word(f_char_file, v_mem_array(i));
     end loop;

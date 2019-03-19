@@ -1,5 +1,5 @@
 ####################################################################################################
-# Copyright (c) 2018 Marcus Geelnard
+# Copyright (c) 2019 Marcus Geelnard
 #
 # This software is provided 'as-is', without any express or implied warranty. In no event will the
 # authors be held liable for any damages arising from the use of this software.
@@ -19,34 +19,17 @@
 
 CP = cp
 
-PIPELINE_PATH = pipeline
+CORE_PATH = core
 
 SRCS += \
-    $(PIPELINE_PATH)/reg.vhd \
-    $(PIPELINE_PATH)/reg_tb.vhd \
-    $(PIPELINE_PATH)/regs_scalar.vhd \
-    $(PIPELINE_PATH)/regs_scalar_tb.vhd \
-    $(PIPELINE_PATH)/regs_vector.vhd \
-    $(PIPELINE_PATH)/regs_vector_tb.vhd \
-    $(PIPELINE_PATH)/vector_control.vhd \
-    $(PIPELINE_PATH)/vector_control_tb.vhd \
-    $(PIPELINE_PATH)/pc_plus_4.vhd \
-    $(PIPELINE_PATH)/pc_plus_offset.vhd \
-    $(PIPELINE_PATH)/branch_target_buffer.vhd \
-    $(PIPELINE_PATH)/program_counter.vhd \
-    $(PIPELINE_PATH)/program_counter_tb.vhd \
-    $(PIPELINE_PATH)/fetch.vhd \
-    $(PIPELINE_PATH)/decode.vhd \
-    $(PIPELINE_PATH)/register_fetch.vhd \
-    $(PIPELINE_PATH)/execute.vhd \
-    $(PIPELINE_PATH)/memory.vhd \
-    $(PIPELINE_PATH)/forward_to_vector_control.vhd \
-    $(PIPELINE_PATH)/forward_to_ex.vhd \
-    $(PIPELINE_PATH)/pipeline.vhd
+    $(CORE_PATH)/core.vhd \
+    $(CORE_PATH)/core_tb.vhd
 
 TESTS += \
-    reg_tb \
-    regs_scalar_tb \
-    regs_vector_tb \
-    vector_control_tb \
-    program_counter_tb
+    core_tb
+
+$(CORE_PATH)/core_tb_prg.bin: $(SW_SRC_DIR)/test/super_test.s
+	ninja -C $(SW_SRC_DIR) out/super_test.bin
+	$(CP) $(SW_SRC_DIR)/out/super_test.bin $(CORE_PATH)/core_tb_prg.bin
+
+core_tb: $(CORE_PATH)/core_tb_prg.bin
