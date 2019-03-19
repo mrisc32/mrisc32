@@ -46,7 +46,6 @@ include alu/Makefile
 include fpu/Makefile
 include muldiv/Makefile
 include sau/Makefile
-include cache/Makefile
 include pipeline/Makefile
 include core/Makefile
 include benchmark/Makefile

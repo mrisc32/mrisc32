@@ -132,7 +132,7 @@ begin
       i_mem_err => s_icache_err
     );
 
-  arbiter_1: entity work.cache_access_arbiter
+  mem_arbiter_1: entity work.mem_arbiter
     port map (
       i_clk => i_clk,
       i_rst => i_rst,

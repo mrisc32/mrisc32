@@ -22,6 +22,8 @@ CP = cp
 CORE_PATH = core
 
 SRCS += \
+    $(CORE_PATH)/icache.vhd \
+    $(CORE_PATH)/mem_arbiter.vhd \
     $(CORE_PATH)/core.vhd \
     $(CORE_PATH)/core_tb.vhd
 

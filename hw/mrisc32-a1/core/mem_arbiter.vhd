@@ -27,7 +27,7 @@ use work.common.all;
 -- This entity arbitrates memory access requests from the ICache and the DCache.
 ----------------------------------------------------------------------------------------------------
 
-entity cache_access_arbiter is
+entity mem_arbiter is
   port(
       -- (ignored)
       i_clk : in std_logic;
@@ -58,9 +58,9 @@ entity cache_access_arbiter is
       i_mem_read_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       i_mem_read_data_ready : in std_logic
     );
-end cache_access_arbiter;
+end mem_arbiter;
 
-architecture behavioural of cache_access_arbiter is
+architecture behavioural of mem_arbiter is
   signal s_service_dcache : std_logic;
 begin
   -- The DCache has priority over the ICache.
