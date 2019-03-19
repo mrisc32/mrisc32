@@ -21,6 +21,5 @@ CACHE_PATH = cache
 
 SRCS += \
     $(CACHE_PATH)/icache.vhd \
-    $(CACHE_PATH)/dcache.vhd \
     $(CACHE_PATH)/cache_access_arbiter.vhd
 
