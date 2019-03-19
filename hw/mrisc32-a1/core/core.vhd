@@ -32,11 +32,12 @@ entity core is
     i_rst : in std_logic;
 
     -- Memory interface to the outside world (Wishbone B4 pipelined master).
+    o_wb_cyc : out std_logic;
+    o_wb_stb : out std_logic;
     o_wb_adr : out std_logic_vector(C_WORD_SIZE-1 downto 2);
     o_wb_dat : out std_logic_vector(C_WORD_SIZE-1 downto 0);
     o_wb_we : out std_logic;
     o_wb_sel : out std_logic_vector(C_WORD_SIZE/8-1 downto 0);
-    o_wb_cyc : out std_logic;
     i_wb_dat : in std_logic_vector(C_WORD_SIZE-1 downto 0);
     i_wb_ack : in std_logic;
     i_wb_stall : in std_logic;
@@ -47,6 +48,7 @@ end core;
 architecture rtl of core is
   -- Pipeline instruction bus master signals.
   signal s_instr_cyc : std_logic;
+  signal s_instr_stb : std_logic;
   signal s_instr_adr : std_logic_vector(C_WORD_SIZE-1 downto 2);
   signal s_instr_dat : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_instr_ack : std_logic;
@@ -55,6 +57,7 @@ architecture rtl of core is
 
   -- Pipeline data bus master signals.
   signal s_data_cyc : std_logic;
+  signal s_data_stb : std_logic;
   signal s_data_adr : std_logic_vector(C_WORD_SIZE-1 downto 2);
   signal s_data_dat_w : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_data_we : std_logic;
@@ -66,6 +69,7 @@ architecture rtl of core is
 
   -- ICache bus master signals.
   signal s_icache_cyc : std_logic;
+  signal s_icache_stb : std_logic;
   signal s_icache_adr : std_logic_vector(C_WORD_SIZE-1 downto 2);
   signal s_icache_dat : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_icache_ack : std_logic;
@@ -83,6 +87,7 @@ begin
 
       -- Instruction interface.
       o_instr_cyc => s_instr_cyc,
+      o_instr_stb => s_instr_stb,
       o_instr_adr => s_instr_adr,
       i_instr_dat => s_instr_dat,
       i_instr_ack => s_instr_ack,
@@ -91,6 +96,7 @@ begin
 
       -- Data interface.
       o_data_cyc => s_data_cyc,
+      o_data_stb => s_data_stb,
       o_data_adr => s_data_adr,
       o_data_dat => s_data_dat_w,
       o_data_we => s_data_we,
@@ -112,6 +118,7 @@ begin
       i_rst => i_rst,
 
       i_instr_cyc => s_instr_cyc,
+      i_instr_stb => s_instr_stb,
       i_instr_adr => s_instr_adr,
       o_instr_dat => s_instr_dat,
       o_instr_ack => s_instr_ack,
@@ -119,6 +126,7 @@ begin
       o_instr_err => s_instr_err,
 
       o_mem_cyc => s_icache_cyc,
+      o_mem_stb => s_icache_stb,
       o_mem_adr => s_icache_adr,
       i_mem_dat => s_icache_dat,
       i_mem_ack => s_icache_ack,
@@ -132,6 +140,7 @@ begin
       i_rst => i_rst,
 
       i_instr_cyc => s_icache_cyc,
+      i_instr_stb => s_icache_stb,
       i_instr_adr => s_icache_adr,
       o_instr_dat => s_icache_dat,
       o_instr_ack => s_icache_ack,
@@ -139,6 +148,7 @@ begin
       o_instr_err => s_icache_err,
 
       i_data_cyc => s_data_cyc,
+      i_data_stb => s_data_stb,
       i_data_we => s_data_we,
       i_data_sel => s_data_sel,
       i_data_adr => s_data_adr,
@@ -149,6 +159,7 @@ begin
       o_data_err => s_data_err,
 
       o_mem_cyc => o_wb_cyc,
+      o_mem_stb => o_wb_stb,
       o_mem_we => o_wb_we,
       o_mem_sel => o_wb_sel,
       o_mem_adr => o_wb_adr,

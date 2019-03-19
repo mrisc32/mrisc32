@@ -33,6 +33,7 @@ entity pipeline is
 
     -- Instruction memory interface (Wishbone master).
     o_instr_cyc : out std_logic;
+    o_instr_stb : out std_logic;
     o_instr_adr : out std_logic_vector(C_WORD_SIZE-1 downto 2);
     i_instr_dat : in std_logic_vector(C_WORD_SIZE-1 downto 0);
     i_instr_ack : in std_logic;
@@ -41,6 +42,7 @@ entity pipeline is
 
     -- Data memory interface (Wishbone master).
     o_data_cyc : out std_logic;
+    o_data_stb : out std_logic;
     o_data_adr : out std_logic_vector(C_WORD_SIZE-1 downto 2);
     o_data_dat : out std_logic_vector(C_WORD_SIZE-1 downto 0);
     o_data_we : out std_logic;
@@ -53,12 +55,7 @@ entity pipeline is
 end pipeline;
 
 architecture rtl of pipeline is
-  -- From PC.
-  signal s_pc_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
-
   -- From IF.
-  signal s_if_stall : std_logic;
-
   signal s_if_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_if_instr : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_if_bubble : std_logic;
@@ -147,7 +144,7 @@ architecture rtl of pipeline is
   signal s_rf_div_en : std_logic;
   signal s_rf_fpu_en : std_logic;
 
-  -- From EX1/EX2/EX3.
+  -- From EX1/EX2/EX3/EX4.
   signal s_ex_stall : std_logic;
 
   -- From EX1.
@@ -194,6 +191,11 @@ architecture rtl of pipeline is
   signal s_ex4_next_dst_reg : T_DST_REG;
   signal s_ex4_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
+  -- Instruction Wishbone master signals.
+  signal s_pc_wb_adr : std_logic_vector(C_WORD_SIZE-1 downto 2);
+  signal s_if_wb_dat : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_if_wb_ack : std_logic;
+
   -- Operand forwarding signals.
   signal s_vl_fwd_value : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_vl_fwd_use_value : std_logic;
@@ -215,7 +217,6 @@ architecture rtl of pipeline is
   signal s_cancel_speculative_instructions : std_logic;
 
   -- Stall logic.
-  signal s_stall_pc : std_logic;
   signal s_stall_if : std_logic;
   signal s_stall_id : std_logic;
   signal s_stall_rf : std_logic;
@@ -224,14 +225,15 @@ begin
   -- Pipeline stages.
   --------------------------------------------------------------------------------------------------
 
-  -- PC: Program counter.
+  -- IF1/IF2: Program counter & Instruction fetch.
 
-  program_counter_0: entity work.program_counter
+  fetch_0: entity work.fetch
     port map (
+      -- Control signals.
       i_clk => i_clk,
       i_rst => i_rst,
-
-      i_stall => s_stall_pc,
+      i_stall => s_stall_if,
+      i_cancel => s_cancel_speculative_instructions,
 
       -- Results from the branch/PC correction unit in the EX stage (async).
       i_pccorr_source => s_ex1_pccorr_source,
@@ -241,32 +243,14 @@ begin
       i_pccorr_adjust => s_ex1_pccorr_adjust,
       i_pccorr_adjusted_pc => s_ex1_pccorr_adjusted_pc,
 
-      -- To IF stage (sync).
-      o_pc => s_pc_pc
-    );
-
-
-  -- IF: Instruction fetch.
-
-  fetch_0: entity work.fetch
-    port map (
-      i_clk => i_clk,
-      i_rst => i_rst,
-
-      i_stall => s_stall_if,
-      o_stall => s_if_stall,
-      i_cancel => s_cancel_speculative_instructions,
-
-      -- Signals from the PC stage.
-      i_pc => s_pc_pc,
-
-      -- Instruction Wishbone interface.
-      o_icache_req => o_instr_cyc,
-      o_icache_addr => o_instr_adr,
-      i_icache_data => i_instr_dat,
-      i_icache_data_ready => i_instr_ack,
-      -- i_icache_stall => i_instr_stall,
-      -- i_icache_err => i_instr_err,
+      -- Wishbone master interface.
+      o_wb_cyc => o_instr_cyc,
+      o_wb_stb => o_instr_stb,
+      o_wb_adr => o_instr_adr,
+      i_wb_dat => i_instr_dat,
+      i_wb_ack => i_instr_ack,
+      i_wb_stall => i_instr_stall,
+      i_wb_err => i_instr_err,
 
       -- To ID stage (sync).
       o_pc => s_if_pc,
@@ -465,7 +449,7 @@ begin
     );
 
 
-  -- EX1/EX2: Execute.
+  -- EX1/EX2/EX3/EX4: Execute.
 
   execute_0: entity work.execute
     port map (
@@ -516,15 +500,16 @@ begin
       o_pccorr_adjusted_pc => s_ex1_pccorr_adjusted_pc,
 
       -- Data Wishbone interface.
-      o_dcache_req => o_data_cyc,
-      o_dcache_we => o_data_we,
-      o_dcache_byte_mask => o_data_sel,
-      o_dcache_addr => o_data_adr,
-      o_dcache_write_data => o_data_dat,
-      i_dcache_read_data => i_data_dat,
-      i_dcache_read_data_ready => i_data_ack,
-      -- i_dcache_stall => i_data_stall,
-      -- i_dcache_err => i_data_err,
+      o_data_cyc => o_data_cyc,
+      o_data_stb => o_data_stb,
+      o_data_adr => o_data_adr,
+      o_data_we => o_data_we,
+      o_data_sel => o_data_sel,
+      o_data_dat => o_data_dat,
+      i_data_dat => i_data_dat,
+      i_data_ack => i_data_ack,
+      i_data_stall => i_data_stall,
+      i_data_err => i_data_err,
 
       -- To operand forwarding (async).
       o_ex1_next_dst_reg => s_ex1_next_dst_reg,
@@ -716,5 +701,4 @@ begin
   s_stall_rf <= s_ex_stall;
   s_stall_id <= s_rf_stall or s_stall_rf;
   s_stall_if <= s_id_stall or s_stall_id;
-  s_stall_pc <= s_if_stall or s_stall_if;
 end rtl;

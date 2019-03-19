@@ -29,6 +29,7 @@ entity icache is
 
     -- Instruction interface (WB slave).
     i_instr_cyc : in std_logic;
+    i_instr_stb : in std_logic;
     i_instr_adr : in std_logic_vector(C_WORD_SIZE-1 downto 2);
     o_instr_dat : out std_logic_vector(C_WORD_SIZE-1 downto 0);
     o_instr_ack : out std_logic;
@@ -37,6 +38,7 @@ entity icache is
 
     -- Memory interface (WB master).
     o_mem_cyc : out std_logic;
+    o_mem_stb : out std_logic;
     o_mem_adr : out std_logic_vector(C_WORD_SIZE-1 downto 2);
     i_mem_dat : in std_logic_vector(C_WORD_SIZE-1 downto 0);
     i_mem_ack : in std_logic;
@@ -49,6 +51,7 @@ architecture rtl of icache is
 begin
   -- We just forward all requests to the main memory interface.
   o_mem_cyc <= i_instr_cyc;
+  o_mem_stb <= i_instr_stb;
   o_mem_adr <= i_instr_adr;
 
   -- ...and send the result right back.

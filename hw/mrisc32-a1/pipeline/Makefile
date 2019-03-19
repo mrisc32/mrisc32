@@ -33,13 +33,13 @@ SRCS += \
     $(PIPELINE_PATH)/pc_plus_4.vhd \
     $(PIPELINE_PATH)/pc_plus_offset.vhd \
     $(PIPELINE_PATH)/branch_target_buffer.vhd \
-    $(PIPELINE_PATH)/program_counter.vhd \
-    $(PIPELINE_PATH)/program_counter_tb.vhd \
     $(PIPELINE_PATH)/fetch.vhd \
+    $(PIPELINE_PATH)/fetch_tb.vhd \
     $(PIPELINE_PATH)/decode.vhd \
     $(PIPELINE_PATH)/register_fetch.vhd \
     $(PIPELINE_PATH)/execute.vhd \
     $(PIPELINE_PATH)/memory.vhd \
+    $(PIPELINE_PATH)/memory_tb.vhd \
     $(PIPELINE_PATH)/forward_to_vector_control.vhd \
     $(PIPELINE_PATH)/forward_to_ex.vhd \
     $(PIPELINE_PATH)/pipeline.vhd
@@ -49,4 +49,5 @@ TESTS += \
     regs_scalar_tb \
     regs_vector_tb \
     vector_control_tb \
-    program_counter_tb
+    fetch_tb \
+    memory_tb

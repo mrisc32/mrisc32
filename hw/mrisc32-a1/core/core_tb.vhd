@@ -32,11 +32,12 @@ architecture behavioral of core_tb is
   signal s_rst : std_logic;
 
   -- Memory interface.
+  signal s_wb_cyc : std_logic;
+  signal s_wb_stb : std_logic;
   signal s_wb_adr : std_logic_vector(C_WORD_SIZE-1 downto 2);
   signal s_wb_dat : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_wb_we : std_logic;
   signal s_wb_sel : std_logic_vector(C_WORD_SIZE/8-1 downto 0);
-  signal s_wb_cyc : std_logic;
 
   signal s_mem_dat : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_mem_ack : std_logic;
@@ -49,11 +50,12 @@ begin
       i_rst => s_rst,
 
       -- Memory interface.
+      o_wb_cyc => s_wb_cyc,
+      o_wb_stb => s_wb_stb,
       o_wb_adr => s_wb_adr,
       o_wb_dat => s_wb_dat,
       o_wb_we => s_wb_we,
       o_wb_sel => s_wb_sel,
-      o_wb_cyc => s_wb_cyc,
       i_wb_dat => s_mem_dat,
       i_wb_ack => s_mem_ack,
       i_wb_stall => s_mem_stall,
@@ -74,6 +76,7 @@ begin
     variable v_mem_idx : integer;
     variable v_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
     variable v_write_mask : std_logic_vector(C_WORD_SIZE-1 downto 0);
+    variable v_ack : std_logic;
 
     -- How many CPU cycles should we simulate?
     constant C_TEST_CYCLES : integer := 20000000;
@@ -135,6 +138,10 @@ begin
     s_rst <= '0';
     s_clk <= '0';
     wait for 5 ns;
+    s_clk <= '1';
+    wait for 5 ns;
+    s_clk <= '0';
+    wait for 5 ns;
 
     -- Run the program.
     for i in 2 to C_TEST_CYCLES-1 loop
@@ -143,37 +150,39 @@ begin
         report "Cycles: " & integer'image(i);
       end if;
 
-      -- Positive clock flank -> we should get a PC address on the ICache interface.
-      s_clk <= '1';
-      wait for 1 ns;
+      -- We should now have a memory request from the Wishbone interface.
 
       -- Read/write data to/from the memory.
       v_write_mask(31 downto 24) := (others => s_wb_sel(3));
       v_write_mask(23 downto 16) := (others => s_wb_sel(2));
       v_write_mask(15 downto 8) := (others => s_wb_sel(1));
       v_write_mask(7 downto 0) := (others => s_wb_sel(0));
-      if s_wb_cyc = '1' then
+      v_data := X"00000000";
+      if s_wb_cyc = '1' and s_wb_stb = '1' then
         v_mem_idx := to_integer(unsigned(s_wb_adr));
         if v_mem_idx = 0 then
           report "Simulation finished after " & integer'image(i) & " cycles.";
           exit;
         elsif (v_mem_idx > 0) and (v_mem_idx < C_MEM_NUM_WORDS) then
           v_data := v_mem_array(v_mem_idx);
-        else
-          v_data := X"00000000";
         end if;
         if s_wb_we = '1' then
           v_data := (v_data and (not v_write_mask)) or (s_wb_dat and v_write_mask);
           if (v_mem_idx >= 0) and (v_mem_idx < C_MEM_NUM_WORDS) then
             v_mem_array(v_mem_idx) := v_data;
           end if;
-        else
-          s_mem_dat <= v_data;
-          s_mem_ack <= '1';
         end if;
+        v_ack := '1';
       else
-        s_mem_ack <= '0';
+        v_ack := '0';
       end if;
+
+      -- Positive clock flank -> time for us to respond on the Wishbone request.
+      s_clk <= '1';
+      wait for 1 ns;
+
+      s_mem_dat <= v_data;
+      s_mem_ack <= v_ack;
 
       -- Tick the clock.
       wait for 4 ns;
