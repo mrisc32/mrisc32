@@ -6,7 +6,7 @@ Note that the program counter (PC) can be used as a source operand, so PC-relati
 
 ## Scalar load/store
 
-There are three different addressing modes for loads and stores to/from scalar registers:
+There are four different addressing modes for loads and stores to/from scalar registers:
 
 1. Base register plus immediate offset.
    - `Sd <= MEM[Sa + imm]`
@@ -19,6 +19,9 @@ There are three different addressing modes for loads and stores to/from scalar r
 3. Immediate (load only).
    - `Sd <= imm`
    - `imm` is a signed 21-bit value that can optionally be shifted left 11 bits with either zero- or one-filled lower 11 bits.
+4. Load effective address (load only).
+   - `Sd <= Sa + Sb * scale`
+   - `scale` can be 1 (default), 2, 4 or 8.
 
 
 ## Vector load/store
@@ -37,10 +40,10 @@ There are five different addressing modes for loads and stores to/from vector re
    - `Vd[k] <= MEM[Sa + Vb[k] * scale]`
    - `Vd[k] => MEM[Sa + Vb[k] * scale]`
    - `scale` can be 1 (default), 2, 4 or 8.
-4. Immediate stride (load only).
+4. Load effective address - immediate stride (load only).
    - `Vd[k] <= Sa + imm * k`
    - `imm` is a signed 15-bit stride value.
-5. Register stride (load only).
+5. Load effective address - register stride (load only).
    - `Vd[k] <= Sa + Sb * scale * k`
    - `scale` can be 1 (default), 2, 4 or 8.
 

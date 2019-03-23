@@ -72,7 +72,7 @@ The interpretation of the PM field depends on the instruction type. For load/sto
 |LDI| x | x |   | dst, #i21 | dst <= signextend(i21) | Alt. 1: Load immediate (low 21 bits) |
 |LDHI| x | x |   | dst, #i21 | dst <= i21 << 11 | Alt. 2: Load immediate (high 21 bits) |
 |LDHIO| x | x |   | dst, #i21 | dst <= (i21 << 11) \| 0x7ff | Alt. 3: Load immediate with low ones (high 21 bits) |
-|LDSTRD| x | x |   | dst, src1, src2 | dst[k] <= src1 + src2 * k | Load a linear stride (vector instruction) |
+|LEA| x | x |   | dst, src1, src2 | dst <= src1 + src2 (scalar)<br>dst[k] <= src1 + src2 * k (vector) | Load effective address |
 
 **(1)**: The third operand in vector loads/stores is used as a stride or offset parameter (see [addressing modes](AddressingModes.md) for more details).
 
