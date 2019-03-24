@@ -41,7 +41,7 @@ main:
     lsl     s14, s13, #2    ; s14 = memory stride per vector operation
 
     add     s1, s13, #-1
-    lea     v4, s1, #-1     ; v4 is a ramp from vl-1 downto 0
+    ldea    v4, s1, #-1     ; v4 is a ramp from vl-1 downto 0
 
     add     s21, pc, #sine1024@pc  ; s21 = start of 1024-entry sine table
     ldi     s12, #0         ; s12 = last frame number

@@ -2041,7 +2041,7 @@ uint32_t cpu_simple_t::run() {
         case MEM_OP_LOAD32:
           mem_result = m_ram.at32(mem_in.mem_addr);
           break;
-        case MEM_OP_LEA:
+        case MEM_OP_LDEA:
           mem_result = mem_in.mem_addr;
           break;
         case MEM_OP_STORE8:
