@@ -8,7 +8,7 @@ This is a [VHDL](https://en.wikipedia.org/wiki/VHDL) implementation of a single 
 
 ## Progress
 
-The CPU is still under development. So far, the following components have been implemented:
+The CPU is nearing completion but still under development. The following components have been implemented:
 
 * A 9-stage pipeline.
   - PC and branching logic.
@@ -25,6 +25,7 @@ The CPU is still under development. So far, the following components have been i
 * A pipelined (three-cycle) integer multiply unit.
   - Supports all packed and unpacked integer multiplication operations.
 * A semi-pipelined integer and floating point division unit.
+  - The integer division pipeline is 3 stages long, while the floating point division pipeline is 4 stages long.
   - 32-bit division: 15/12 cycles stall (integer/float).
   - 2 x 16-bit division: 7/5 cycles stall (integer/float).
   - 4 x 8-bit division: 3/2 cycles stall (integer/float).
@@ -43,17 +44,21 @@ The CPU is still under development. So far, the following components have been i
   - There are three read ports and one write port.
 * The vector register file.
   - There are two read ports and one write port.
-  - Each vector register has 16 elements.
+  - Each vector register has 16 elements (configurable).
 * An address generation unit (AGU).
   - The AGU supports all [addressing modes](../../doc/AddressingModes.md).
+* A single 32-bit Wishbone (B4 pipelined) interface to the memory.
+  - Instruction and data requests are arbitrated (data has precedence).
+  - One memory request can be completed every cycle.
 * Branch prediction and correction.
-  - The branch misprediction penalty is 3 cycles.
+  - A simple 1-bit dynamic branch predictor.
+  - The branch misprediction penalty is 3 cycles (a correctly predicted branch incurs no penalty).
 
-**TODO**: Caches etc.
+**TODO**: Caches, interrupt logic.
 
 ## Configurability
 
-The aim is for the MRISC32-A1 to implement the complete MRISC32 ISA, which means that it is a fairly large design (e.g. including an FPU, hardware multiplication and division, etc).
+The aim is for the MRISC32-A1 to implement the complete MRISC32 ISA, which means that it is a fairly large design (including an FPU, hardware multiplication and division, packed operations, etc).
 
 If the design is too large or complex for a certain target chip (FPGA), it is possible to disable many features in the *"Machine configuration"* section of [common/common.vhd](common/common.vhd). E.g. setting `C_CPU_HAS_DIV` to `false` will disable support for hardware division.
 
@@ -63,5 +68,5 @@ It is also possible to change the vector register size by chaging the value of `
 
 The MRISC32-A1 can issue **one operation per clock cycle**.
 
-When synthesized against an [Intel Cyclone V FPGA](https://www.intel.com/content/www/us/en/products/programmable/fpga/cyclone-v.html), the maximum running frequency is around **100 MHz**.
+When synthesized against an [Intel Cyclone V FPGA](https://www.intel.com/content/www/us/en/products/programmable/fpga/cyclone-v.html), the maximum running frequency is close to **100 MHz**.
 
