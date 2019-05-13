@@ -24,6 +24,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use work.common.all;
+use work.debug.all;
 
 entity pipeline is
   port(
@@ -50,7 +51,10 @@ entity pipeline is
     i_data_dat : in std_logic_vector(C_WORD_SIZE-1 downto 0);
     i_data_ack : in std_logic;
     i_data_stall : in std_logic;
-    i_data_err : in std_logic
+    i_data_err : in std_logic;
+
+    -- Debug trace interface.
+    o_debug_trace : out T_DEBUG_TRACE
   );
 end pipeline;
 
@@ -62,6 +66,7 @@ architecture rtl of pipeline is
 
   -- From ID.
   signal s_id_stall : std_logic;
+  signal s_id_bubble : std_logic;
 
   signal s_id_vl_requested : std_logic;
 
@@ -269,6 +274,7 @@ begin
       i_stall => s_stall_id,
       o_stall => s_id_stall,
       i_cancel => s_cancel_speculative_instructions,
+      o_bubble => s_id_bubble,
 
       -- From the IF stage (sync).
       i_pc => s_if_pc,
@@ -345,6 +351,7 @@ begin
       i_stall_id => s_stall_id,
       o_stall => s_rf_stall,
       i_cancel => s_cancel_speculative_instructions,
+      i_bubble => s_id_bubble,
 
       -- PC signal from IF (sync).
       i_if_pc => s_if_pc,
@@ -445,7 +452,10 @@ begin
       o_sau_en => s_rf_sau_en,
       o_mul_en => s_rf_mul_en,
       o_div_en => s_rf_div_en,
-      o_fpu_en => s_rf_fpu_en
+      o_fpu_en => s_rf_fpu_en,
+
+      -- Debug trace interface.
+      o_debug_trace => o_debug_trace
     );
 
 

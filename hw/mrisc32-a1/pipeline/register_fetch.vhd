@@ -27,6 +27,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.common.all;
+use work.debug.all;
 
 entity register_fetch is
   port(
@@ -37,6 +38,7 @@ entity register_fetch is
       i_stall_id : in std_logic;  -- The stall signal to ID (we need it for the register files).
       o_stall : out std_logic;
       i_cancel : in std_logic;
+      i_bubble : in std_logic;
 
       -- PC signal from IF (sync).
       i_if_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -137,7 +139,10 @@ entity register_fetch is
       o_sau_en : out std_logic;
       o_mul_en : out std_logic;
       o_div_en : out std_logic;
-      o_fpu_en : out std_logic
+      o_fpu_en : out std_logic;
+
+      -- Debug trace interface.
+      o_debug_trace : out T_DEBUG_TRACE
     );
 end register_fetch;
 
@@ -190,6 +195,22 @@ architecture rtl of register_fetch is
   signal s_branch_is_branch_masked : std_logic;
   signal s_branch_is_unconditional_masked : std_logic;
 begin
+  --------------------------------------------------------------------------------------------------
+  -- Debug trace interface.
+  --------------------------------------------------------------------------------------------------
+
+  DEBUG_TRACE_GEN: if C_DEBUG_ENABLE_TRACE generate
+    o_debug_trace.valid <= (i_branch_is_branch or not i_bubble) and not (s_bubble or i_stall);
+    o_debug_trace.src_a_valid <= i_reg_a_required;
+    o_debug_trace.src_b_valid <= i_reg_b_required;
+    o_debug_trace.src_c_valid <= i_reg_c_required;
+    o_debug_trace.pc <= i_pc;
+    o_debug_trace.src_a <= s_src_a;
+    o_debug_trace.src_b <= s_src_b;
+    o_debug_trace.src_c <= s_src_c;
+  end generate;
+
+
   --------------------------------------------------------------------------------------------------
   -- Register files.
   --------------------------------------------------------------------------------------------------

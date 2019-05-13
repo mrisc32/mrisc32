@@ -23,6 +23,7 @@ SRCS += \
     $(COMMON_PATH)/common.vhd \
     $(COMMON_PATH)/comparator.vhd \
     $(COMMON_PATH)/comparator_tb.vhd \
+    $(COMMON_PATH)/debug.vhd \
     $(COMMON_PATH)/ram_dual_port.vhd
 
 TESTS += \

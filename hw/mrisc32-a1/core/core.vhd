@@ -24,6 +24,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use work.common.all;
+use work.debug.all;
 
 entity core is
   port(
@@ -41,7 +42,10 @@ entity core is
     i_wb_dat : in std_logic_vector(C_WORD_SIZE-1 downto 0);
     i_wb_ack : in std_logic;
     i_wb_stall : in std_logic;
-    i_wb_err : in std_logic
+    i_wb_err : in std_logic;
+
+    -- Debug trace interface.
+    o_debug_trace : out T_DEBUG_TRACE
   );
 end core;
 
@@ -104,7 +108,10 @@ begin
       i_data_dat => s_data_dat,
       i_data_ack => s_data_ack,
       i_data_stall => s_data_stall,
-      i_data_err => s_data_err
+      i_data_err => s_data_err,
+
+      -- Debug trace interface.
+      o_debug_trace => o_debug_trace
     );
 
 

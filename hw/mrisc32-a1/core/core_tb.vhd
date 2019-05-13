@@ -23,6 +23,7 @@ use ieee.numeric_std.all;
 library std;
 use std.textio.all;
 use work.common.all;
+use work.debug.all;
 
 entity core_tb is
 end core_tb;
@@ -43,6 +44,9 @@ architecture behavioral of core_tb is
   signal s_mem_ack : std_logic;
   signal s_mem_stall : std_logic;
   signal s_mem_err : std_logic;
+
+  -- Debug trace interface.
+  signal s_debug_trace : T_DEBUG_TRACE;
 begin
   core_0: entity work.core
     port map (
@@ -59,7 +63,10 @@ begin
       i_wb_dat => s_mem_dat,
       i_wb_ack => s_mem_ack,
       i_wb_stall => s_mem_stall,
-      i_wb_err => s_mem_err
+      i_wb_err => s_mem_err,
+
+      -- Debug trace interface.
+      o_debug_trace => s_debug_trace
     );
 
   process
@@ -71,6 +78,7 @@ begin
     -- File I/O.
     type T_CHAR_FILE is file of character;
     file f_char_file : T_CHAR_FILE;
+    file f_trace_file : T_CHAR_FILE;
 
     -- Variables for the memory interface.
     variable v_mem_idx : integer;
@@ -106,6 +114,34 @@ begin
         write(f, v_char);
       end loop;
     end procedure;
+
+    -- Helper function for writing a debug trace record to a binary file.
+    procedure write_trace(file f : T_CHAR_FILE; trace : T_DEBUG_TRACE) is
+      variable v_flags : std_logic_vector(C_WORD_SIZE-1 downto 0);
+    begin
+      v_flags := (0 => trace.valid,
+                  1 => trace.src_a_valid,
+                  2 => trace.src_b_valid,
+                  3 => trace.src_c_valid,
+                  others => '0');
+      write_word(f, v_flags);
+      write_word(f, trace.pc);
+      if trace.src_a_valid then
+        write_word(f, trace.src_a);
+      else
+        write_word(f, (others => '0'));
+      end if;
+      if trace.src_b_valid then
+        write_word(f, trace.src_b);
+      else
+        write_word(f, (others => '0'));
+      end if;
+      if trace.src_c_valid then
+        write_word(f, trace.src_c);
+      else
+        write_word(f, (others => '0'));
+      end if;
+    end procedure;
   begin
     -- Clear the memory with zeros.
     for i in 0 to C_MEM_NUM_WORDS-1 loop
@@ -120,6 +156,11 @@ begin
       v_mem_idx := v_mem_idx + 1;
     end loop;
     file_close(f_char_file);
+
+    -- Open the debug trace file.
+    if C_DEBUG_ENABLE_TRACE then
+      file_open(f_trace_file, "/tmp/mrisc32_core_tb_trace.bin", WRITE_MODE);
+    end if;
 
     -- Reset the memory signals.
     s_mem_dat <= (others => '0');
@@ -177,6 +218,12 @@ begin
         v_ack := '0';
       end if;
 
+      -- Write a recrod to the debug trace file.
+      -- Note: We skip the first few cycles until we are properly reset.
+      if C_DEBUG_ENABLE_TRACE and i >= 5 then
+        write_trace(f_trace_file, s_debug_trace);
+      end if;
+
       -- Positive clock flank -> time for us to respond on the Wishbone request.
       s_clk <= '1';
       wait for 1 ns;
@@ -189,6 +236,11 @@ begin
       s_clk <= '0';
       wait for 5 ns;
     end loop;
+
+    -- Close the debug trace file.
+    if C_DEBUG_ENABLE_TRACE then
+      file_close(f_trace_file);
+    end if;
 
     -- Dump the memory to a binary file.
     file_open(f_char_file, "/tmp/mrisc32_core_tb_ram.bin", WRITE_MODE);
