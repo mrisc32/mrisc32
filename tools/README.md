@@ -54,6 +54,11 @@ The final `.bin` file can be loaded into the simulator, for instance.
 The MRISC32 simulator is a C++ program that can run MRISC32 binaries. See [sim/README.md](sim/README.md).
 
 
+## Debug trace inspector
+
+Debug traces from the simulator or the VHDL test bench can be inspected using `mrisc32-trace-tool.py`. It can be useful for finding differences between different simulation runs.
+
+
 ## Syntax Highlighting
 
 ![MRISC32 Assembly Language](mrisc32-asm.png)
