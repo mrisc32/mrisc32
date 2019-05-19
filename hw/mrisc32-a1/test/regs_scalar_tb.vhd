@@ -28,7 +28,7 @@ end regs_scalar_tb;
 architecture behavioral of regs_scalar_tb is
   signal s_clk : std_logic;
   signal s_rst : std_logic;
-  signal s_stall : std_logic;
+  signal s_stall_read_ports : std_logic;
   signal s_sel_a : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_sel_b : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
   signal s_sel_c : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
@@ -52,7 +52,7 @@ begin
     port map (
       i_clk => s_clk,
       i_rst => s_rst,
-      i_stall => s_stall,
+      i_stall_read_ports => s_stall_read_ports,
       i_sel_a => s_sel_a,
       i_sel_b => s_sel_b,
       i_sel_c => s_sel_c,
@@ -76,7 +76,7 @@ begin
     s_sel_w <= reg(0);
     s_pc <= "00000000000000000000000000000000";
     s_clk <= '0';
-    s_stall <= '0';
+    s_stall_read_ports <= '0';
 
     -- Start by resetting the register file.
     s_rst <= '1';
