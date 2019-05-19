@@ -50,6 +50,9 @@ include pipeline/Makefile
 include core/Makefile
 include benchmark/Makefile
 
+SRCS += \
+    toplevel.vhd
+
 all: $(TESTS) $(EXTRA)
 
 $(TESTS): $(WORKDIR)/work-obj93.cf $(SRCS)
