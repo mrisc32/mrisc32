@@ -21,9 +21,5 @@ SAU_PATH = rtl/sau
 
 SRCS += \
     $(SAU_PATH)/sau_impl.vhd \
-    $(SAU_PATH)/sau.vhd \
-    $(SAU_PATH)/sau_tb.vhd
-
-TESTS += \
-    sau_tb
+    $(SAU_PATH)/sau.vhd
 

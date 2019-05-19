@@ -17,23 +17,10 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ####################################################################################################
 
-CP = cp
-
 CORE_PATH = rtl/core
 
 SRCS += \
     $(CORE_PATH)/icache.vhd \
     $(CORE_PATH)/mem_arbiter.vhd \
-    $(CORE_PATH)/mem_arbiter_tb.vhd \
-    $(CORE_PATH)/core.vhd \
-    $(CORE_PATH)/core_tb.vhd
+    $(CORE_PATH)/core.vhd
 
-TESTS += \
-    mem_arbiter_tb \
-    core_tb
-
-$(CORE_PATH)/core_tb_prg.bin: $(SW_SRC_DIR)/test/super_test.s
-	ninja -C $(SW_SRC_DIR) out/super_test.bin
-	$(CP) $(SW_SRC_DIR)/out/super_test.bin $(CORE_PATH)/core_tb_prg.bin
-
-core_tb: $(CORE_PATH)/core_tb_prg.bin

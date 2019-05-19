@@ -21,9 +21,5 @@ AGU_PATH = rtl/agu
 
 SRCS += \
     $(AGU_PATH)/vector_stride_gen.vhd \
-    $(AGU_PATH)/vector_stride_gen_tb.vhd \
     $(AGU_PATH)/agu.vhd
-
-TESTS += \
-    vector_stride_gen_tb
 

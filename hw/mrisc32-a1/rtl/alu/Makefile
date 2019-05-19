@@ -25,18 +25,8 @@ SRCS += \
     $(ALU_PATH)/cmp32.vhd \
     $(ALU_PATH)/rev32.vhd \
     $(ALU_PATH)/clz32.vhd \
-    $(ALU_PATH)/clz32_tb.vhd \
     $(ALU_PATH)/cpuid.vhd \
     $(ALU_PATH)/shift32.vhd \
-    $(ALU_PATH)/shift32_tb.vhd \
     $(ALU_PATH)/shuf32.vhd \
-    $(ALU_PATH)/shuf32_tb.vhd \
-    $(ALU_PATH)/alu.vhd \
-    $(ALU_PATH)/alu_tb.vhd
-
-TESTS += \
-    clz32_tb \
-    shift32_tb \
-    shuf32_tb \
-    alu_tb
+    $(ALU_PATH)/alu.vhd
 

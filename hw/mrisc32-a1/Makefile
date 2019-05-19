@@ -41,8 +41,8 @@ TESTS =
 EXTRA =
 
 include rtl/Makefile
+include test/Makefile
 include benchmark/Makefile
-#include test/Makefile
 
 all: $(TESTS) $(EXTRA)
 
