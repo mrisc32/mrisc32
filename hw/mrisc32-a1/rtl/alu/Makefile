@@ -17,41 +17,16 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ####################################################################################################
 
-FPU_PATH = fpu
+ALU_PATH = rtl/alu
 
 SRCS += \
-    $(FPU_PATH)/float_decompose.vhd \
-    $(FPU_PATH)/float_decompose_tb.vhd \
-    $(FPU_PATH)/float_compose.vhd \
-    $(FPU_PATH)/float_compare.vhd \
-    $(FPU_PATH)/float_compare_tb.vhd \
-    $(FPU_PATH)/fadd.vhd \
-    $(FPU_PATH)/fadd_tb.vhd \
-    $(FPU_PATH)/fmul.vhd \
-    $(FPU_PATH)/fmul_tb.vhd \
-    $(FPU_PATH)/ftoi.vhd \
-    $(FPU_PATH)/ftoi_tb.vhd \
-    $(FPU_PATH)/itof_clz_and_left_shift.vhd \
-    $(FPU_PATH)/itof_clz_and_left_shift_tb.vhd \
-    $(FPU_PATH)/itof.vhd \
-    $(FPU_PATH)/itof_tb.vhd \
-    $(FPU_PATH)/fpu_impl.vhd \
-    $(FPU_PATH)/fpu.vhd \
-    $(FPU_PATH)/fpu_tb.vhd
+    $(ALU_PATH)/add32.vhd \
+    $(ALU_PATH)/sub32.vhd \
+    $(ALU_PATH)/cmp32.vhd \
+    $(ALU_PATH)/rev32.vhd \
+    $(ALU_PATH)/clz32.vhd \
+    $(ALU_PATH)/cpuid.vhd \
+    $(ALU_PATH)/shift32.vhd \
+    $(ALU_PATH)/shuf32.vhd \
+    $(ALU_PATH)/alu.vhd
 
-TESTS += \
-    float_decompose_tb \
-    float_compare_tb \
-    fadd_tb \
-    fmul_tb \
-    ftoi_tb \
-    itof_clz_and_left_shift_tb \
-    itof_tb \
-    fpu_tb
-
-EXTRA += \
-    $(WORKDIR)/fpu_test_gen
-
-# Data generator for FPU test data.
-$(WORKDIR)/fpu_test_gen: $(FPU_PATH)/fpu_test_gen.cpp
-	g++ $(FPU_PATH)/fpu_test_gen.cpp -o $(WORKDIR)/fpu_test_gen

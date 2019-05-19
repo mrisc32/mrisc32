@@ -17,15 +17,13 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ####################################################################################################
 
-COMMON_PATH = common
+MULDIV_PATH = rtl/muldiv
 
 SRCS += \
-    $(COMMON_PATH)/common.vhd \
-    $(COMMON_PATH)/comparator.vhd \
-    $(COMMON_PATH)/comparator_tb.vhd \
-    $(COMMON_PATH)/debug.vhd \
-    $(COMMON_PATH)/ram_dual_port.vhd
-
-TESTS += \
-    comparator_tb
+    $(MULDIV_PATH)/mul_impl.vhd \
+    $(MULDIV_PATH)/mul.vhd \
+    $(MULDIV_PATH)/div.vhd \
+    $(MULDIV_PATH)/div_impl.vhd \
+    $(MULDIV_PATH)/div_stage.vhd \
+    $(MULDIV_PATH)/div_pipelined.vhd
 

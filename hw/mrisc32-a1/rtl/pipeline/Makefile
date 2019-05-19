@@ -17,42 +17,22 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ####################################################################################################
 
-WORKDIR = out
-SW_SRC_DIR = ../../sw
+PIPELINE_PATH = rtl/pipeline
 
-GHDL = ghdl
-GHDLWARNINGS = \
-    -Wbinding \
-    -Wreserved \
-    -Wlibrary \
-    -Wvital-generic \
-    -Wbody \
-    -Wspecs \
-    -Wunused \
-    -Werror
-GHDLFLAGS = --std=08 --work=work --workdir=$(WORKDIR) $(GHDLWARNINGS)
-
-.PHONY: all clean
-
-default: all
-
-SRCS =
-TESTS =
-EXTRA =
-
-include rtl/Makefile
-include test/Makefile
-include benchmark/Makefile
-
-all: $(TESTS) $(EXTRA)
-
-$(TESTS): $(WORKDIR)/work-obj93.cf $(SRCS)
-	$(GHDL) -m $(GHDLFLAGS) $@
-
-clean:
-	$(GHDL) --clean
-	rm -rf *.o *_tb *.vcd *.ghw $(WORKDIR)/*.o $(WORKDIR)/*.cf $(WORKDIR)/*_tb $(WORKDIR)/*.vcd $(WORKDIR)/*.ghw
-
-$(WORKDIR)/work-obj93.cf: $(SRCS)
-	$(GHDL) -i $(GHDLFLAGS) $(SRCS)
+SRCS += \
+    $(PIPELINE_PATH)/reg.vhd \
+    $(PIPELINE_PATH)/regs_scalar.vhd \
+    $(PIPELINE_PATH)/regs_vector.vhd \
+    $(PIPELINE_PATH)/vector_control.vhd \
+    $(PIPELINE_PATH)/pc_plus_4.vhd \
+    $(PIPELINE_PATH)/pc_plus_offset.vhd \
+    $(PIPELINE_PATH)/branch_target_buffer.vhd \
+    $(PIPELINE_PATH)/fetch.vhd \
+    $(PIPELINE_PATH)/decode.vhd \
+    $(PIPELINE_PATH)/register_fetch.vhd \
+    $(PIPELINE_PATH)/execute.vhd \
+    $(PIPELINE_PATH)/memory.vhd \
+    $(PIPELINE_PATH)/forward_to_vector_control.vhd \
+    $(PIPELINE_PATH)/forward_to_ex.vhd \
+    $(PIPELINE_PATH)/pipeline.vhd
 

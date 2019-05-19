@@ -1,5 +1,5 @@
 ####################################################################################################
-# Copyright (c) 2018 Marcus Geelnard
+# Copyright (c) 2019 Marcus Geelnard
 #
 # This software is provided 'as-is', without any express or implied warranty. In no event will the
 # authors be held liable for any damages arising from the use of this software.
@@ -17,13 +17,10 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ####################################################################################################
 
-SAU_PATH = sau
+CORE_PATH = rtl/core
 
 SRCS += \
-    $(SAU_PATH)/sau_impl.vhd \
-    $(SAU_PATH)/sau.vhd \
-    $(SAU_PATH)/sau_tb.vhd
-
-TESTS += \
-    sau_tb
+    $(CORE_PATH)/icache.vhd \
+    $(CORE_PATH)/mem_arbiter.vhd \
+    $(CORE_PATH)/core.vhd
 

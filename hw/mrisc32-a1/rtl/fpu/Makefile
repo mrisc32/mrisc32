@@ -17,13 +17,17 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ####################################################################################################
 
-AGU_PATH = agu
+FPU_PATH = rtl/fpu
 
 SRCS += \
-    $(AGU_PATH)/vector_stride_gen.vhd \
-    $(AGU_PATH)/vector_stride_gen_tb.vhd \
-    $(AGU_PATH)/agu.vhd
-
-TESTS += \
-    vector_stride_gen_tb
+    $(FPU_PATH)/float_decompose.vhd \
+    $(FPU_PATH)/float_compose.vhd \
+    $(FPU_PATH)/float_compare.vhd \
+    $(FPU_PATH)/fadd.vhd \
+    $(FPU_PATH)/fmul.vhd \
+    $(FPU_PATH)/ftoi.vhd \
+    $(FPU_PATH)/itof_clz_and_left_shift.vhd \
+    $(FPU_PATH)/itof.vhd \
+    $(FPU_PATH)/fpu_impl.vhd \
+    $(FPU_PATH)/fpu.vhd
 

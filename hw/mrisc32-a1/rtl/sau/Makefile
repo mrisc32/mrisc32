@@ -17,22 +17,9 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ####################################################################################################
 
-MULDIV_PATH = muldiv
+SAU_PATH = rtl/sau
 
 SRCS += \
-    $(MULDIV_PATH)/mul_impl.vhd \
-    $(MULDIV_PATH)/mul.vhd \
-    $(MULDIV_PATH)/mul_tb.vhd \
-    $(MULDIV_PATH)/div.vhd \
-    $(MULDIV_PATH)/div_impl.vhd \
-    $(MULDIV_PATH)/div_impl_tb.vhd \
-    $(MULDIV_PATH)/div_stage.vhd \
-    $(MULDIV_PATH)/div_pipelined.vhd \
-    $(MULDIV_PATH)/div_pipelined_tb.vhd
-
-
-TESTS += \
-    mul_tb \
-    div_impl_tb \
-    div_pipelined_tb
+    $(SAU_PATH)/sau_impl.vhd \
+    $(SAU_PATH)/sau.vhd
 

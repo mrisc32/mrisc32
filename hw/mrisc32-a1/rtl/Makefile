@@ -1,5 +1,5 @@
 ####################################################################################################
-# Copyright (c) 2019 Marcus Geelnard
+# Copyright (c) 2018 Marcus Geelnard
 #
 # This software is provided 'as-is', without any express or implied warranty. In no event will the
 # authors be held liable for any damages arising from the use of this software.
@@ -17,23 +17,15 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ####################################################################################################
 
-CP = cp
-
-CORE_PATH = core
+include rtl/common/Makefile
+include rtl/agu/Makefile
+include rtl/alu/Makefile
+include rtl/fpu/Makefile
+include rtl/muldiv/Makefile
+include rtl/sau/Makefile
+include rtl/pipeline/Makefile
+include rtl/core/Makefile
 
 SRCS += \
-    $(CORE_PATH)/icache.vhd \
-    $(CORE_PATH)/mem_arbiter.vhd \
-    $(CORE_PATH)/mem_arbiter_tb.vhd \
-    $(CORE_PATH)/core.vhd \
-    $(CORE_PATH)/core_tb.vhd
+    rtl/toplevel.vhd
 
-TESTS += \
-    mem_arbiter_tb \
-    core_tb
-
-$(CORE_PATH)/core_tb_prg.bin: $(SW_SRC_DIR)/test/super_test.s
-	ninja -C $(SW_SRC_DIR) out/super_test.bin
-	$(CP) $(SW_SRC_DIR)/out/super_test.bin $(CORE_PATH)/core_tb_prg.bin
-
-core_tb: $(CORE_PATH)/core_tb_prg.bin
