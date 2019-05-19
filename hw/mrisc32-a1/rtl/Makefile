@@ -17,15 +17,15 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ####################################################################################################
 
-COMMON_PATH = common
+include rtl/common/Makefile
+include rtl/agu/Makefile
+include rtl/alu/Makefile
+include rtl/fpu/Makefile
+include rtl/muldiv/Makefile
+include rtl/sau/Makefile
+include rtl/pipeline/Makefile
+include rtl/core/Makefile
 
 SRCS += \
-    $(COMMON_PATH)/common.vhd \
-    $(COMMON_PATH)/comparator.vhd \
-    $(COMMON_PATH)/comparator_tb.vhd \
-    $(COMMON_PATH)/debug.vhd \
-    $(COMMON_PATH)/ram_dual_port.vhd
-
-TESTS += \
-    comparator_tb
+    rtl/toplevel.vhd
 

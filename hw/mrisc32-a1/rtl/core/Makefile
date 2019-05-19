@@ -19,7 +19,7 @@
 
 CP = cp
 
-CORE_PATH = core
+CORE_PATH = rtl/core
 
 SRCS += \
     $(CORE_PATH)/icache.vhd \

@@ -17,13 +17,37 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ####################################################################################################
 
-AGU_PATH = agu
+CP = cp
+
+PIPELINE_PATH = rtl/pipeline
 
 SRCS += \
-    $(AGU_PATH)/vector_stride_gen.vhd \
-    $(AGU_PATH)/vector_stride_gen_tb.vhd \
-    $(AGU_PATH)/agu.vhd
+    $(PIPELINE_PATH)/reg.vhd \
+    $(PIPELINE_PATH)/reg_tb.vhd \
+    $(PIPELINE_PATH)/regs_scalar.vhd \
+    $(PIPELINE_PATH)/regs_scalar_tb.vhd \
+    $(PIPELINE_PATH)/regs_vector.vhd \
+    $(PIPELINE_PATH)/regs_vector_tb.vhd \
+    $(PIPELINE_PATH)/vector_control.vhd \
+    $(PIPELINE_PATH)/vector_control_tb.vhd \
+    $(PIPELINE_PATH)/pc_plus_4.vhd \
+    $(PIPELINE_PATH)/pc_plus_offset.vhd \
+    $(PIPELINE_PATH)/branch_target_buffer.vhd \
+    $(PIPELINE_PATH)/fetch.vhd \
+    $(PIPELINE_PATH)/fetch_tb.vhd \
+    $(PIPELINE_PATH)/decode.vhd \
+    $(PIPELINE_PATH)/register_fetch.vhd \
+    $(PIPELINE_PATH)/execute.vhd \
+    $(PIPELINE_PATH)/memory.vhd \
+    $(PIPELINE_PATH)/memory_tb.vhd \
+    $(PIPELINE_PATH)/forward_to_vector_control.vhd \
+    $(PIPELINE_PATH)/forward_to_ex.vhd \
+    $(PIPELINE_PATH)/pipeline.vhd
 
 TESTS += \
-    vector_stride_gen_tb
-
+    reg_tb \
+    regs_scalar_tb \
+    regs_vector_tb \
+    vector_control_tb \
+    fetch_tb \
+    memory_tb

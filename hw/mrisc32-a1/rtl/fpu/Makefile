@@ -17,42 +17,41 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ####################################################################################################
 
-WORKDIR = out
-SW_SRC_DIR = ../../sw
+FPU_PATH = rtl/fpu
 
-GHDL = ghdl
-GHDLWARNINGS = \
-    -Wbinding \
-    -Wreserved \
-    -Wlibrary \
-    -Wvital-generic \
-    -Wbody \
-    -Wspecs \
-    -Wunused \
-    -Werror
-GHDLFLAGS = --std=08 --work=work --workdir=$(WORKDIR) $(GHDLWARNINGS)
+SRCS += \
+    $(FPU_PATH)/float_decompose.vhd \
+    $(FPU_PATH)/float_decompose_tb.vhd \
+    $(FPU_PATH)/float_compose.vhd \
+    $(FPU_PATH)/float_compare.vhd \
+    $(FPU_PATH)/float_compare_tb.vhd \
+    $(FPU_PATH)/fadd.vhd \
+    $(FPU_PATH)/fadd_tb.vhd \
+    $(FPU_PATH)/fmul.vhd \
+    $(FPU_PATH)/fmul_tb.vhd \
+    $(FPU_PATH)/ftoi.vhd \
+    $(FPU_PATH)/ftoi_tb.vhd \
+    $(FPU_PATH)/itof_clz_and_left_shift.vhd \
+    $(FPU_PATH)/itof_clz_and_left_shift_tb.vhd \
+    $(FPU_PATH)/itof.vhd \
+    $(FPU_PATH)/itof_tb.vhd \
+    $(FPU_PATH)/fpu_impl.vhd \
+    $(FPU_PATH)/fpu.vhd \
+    $(FPU_PATH)/fpu_tb.vhd
 
-.PHONY: all clean
+TESTS += \
+    float_decompose_tb \
+    float_compare_tb \
+    fadd_tb \
+    fmul_tb \
+    ftoi_tb \
+    itof_clz_and_left_shift_tb \
+    itof_tb \
+    fpu_tb
 
-default: all
+EXTRA += \
+    $(WORKDIR)/fpu_test_gen
 
-SRCS =
-TESTS =
-EXTRA =
-
-include rtl/Makefile
-include benchmark/Makefile
-#include test/Makefile
-
-all: $(TESTS) $(EXTRA)
-
-$(TESTS): $(WORKDIR)/work-obj93.cf $(SRCS)
-	$(GHDL) -m $(GHDLFLAGS) $@
-
-clean:
-	$(GHDL) --clean
-	rm -rf *.o *_tb *.vcd *.ghw $(WORKDIR)/*.o $(WORKDIR)/*.cf $(WORKDIR)/*_tb $(WORKDIR)/*.vcd $(WORKDIR)/*.ghw
-
-$(WORKDIR)/work-obj93.cf: $(SRCS)
-	$(GHDL) -i $(GHDLFLAGS) $(SRCS)
-
+# Data generator for FPU test data.
+$(WORKDIR)/fpu_test_gen: $(FPU_PATH)/fpu_test_gen.cpp
+	g++ $(FPU_PATH)/fpu_test_gen.cpp -o $(WORKDIR)/fpu_test_gen

@@ -17,13 +17,26 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ####################################################################################################
 
-SAU_PATH = sau
+ALU_PATH = rtl/alu
 
 SRCS += \
-    $(SAU_PATH)/sau_impl.vhd \
-    $(SAU_PATH)/sau.vhd \
-    $(SAU_PATH)/sau_tb.vhd
+    $(ALU_PATH)/add32.vhd \
+    $(ALU_PATH)/sub32.vhd \
+    $(ALU_PATH)/cmp32.vhd \
+    $(ALU_PATH)/rev32.vhd \
+    $(ALU_PATH)/clz32.vhd \
+    $(ALU_PATH)/clz32_tb.vhd \
+    $(ALU_PATH)/cpuid.vhd \
+    $(ALU_PATH)/shift32.vhd \
+    $(ALU_PATH)/shift32_tb.vhd \
+    $(ALU_PATH)/shuf32.vhd \
+    $(ALU_PATH)/shuf32_tb.vhd \
+    $(ALU_PATH)/alu.vhd \
+    $(ALU_PATH)/alu_tb.vhd
 
 TESTS += \
-    sau_tb
+    clz32_tb \
+    shift32_tb \
+    shuf32_tb \
+    alu_tb
 
