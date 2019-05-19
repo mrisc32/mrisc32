@@ -64,7 +64,7 @@ If the design is too large or complex for a certain target chip (FPGA), it is po
 
 It is also possible to change the vector register size by chaging the value of `C_LOG2_VEC_REG_ELEMENTS` (4 means 16 elements, 5 means 32 elements, 8 means 256 elements, and so on).
 
-## Preformance
+## Performance
 
 The MRISC32-A1 can issue **one operation per clock cycle**.
 
