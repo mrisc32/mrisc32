@@ -19,36 +19,44 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
 use work.common.all;
 
 entity icache is
   port(
-      -- (ignored)
-      i_clk : in std_logic;
-      i_rst : in std_logic;
+    -- Control signals.
+    i_clk : in std_logic;
+    i_rst : in std_logic;
 
-      -- CPU interface.
-      i_cpu_req : in std_logic;
-      i_cpu_addr : in std_logic_vector(C_WORD_SIZE-1 downto 2);
-      o_cpu_read_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-      o_cpu_read_data_ready : out std_logic;
+    -- Instruction interface (WB slave).
+    i_instr_cyc : in std_logic;
+    i_instr_stb : in std_logic;
+    i_instr_adr : in std_logic_vector(C_WORD_SIZE-1 downto 2);
+    o_instr_dat : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+    o_instr_ack : out std_logic;
+    o_instr_stall : out std_logic;
+    o_instr_err : out std_logic;
 
-      -- Memory interface.
-      o_mem_req : out std_logic;
-      o_mem_addr : out std_logic_vector(C_WORD_SIZE-1 downto 2);
-      i_mem_read_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-      i_mem_read_data_ready : in std_logic
-    );
+    -- Memory interface (WB master).
+    o_mem_cyc : out std_logic;
+    o_mem_stb : out std_logic;
+    o_mem_adr : out std_logic_vector(C_WORD_SIZE-1 downto 2);
+    i_mem_dat : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+    i_mem_ack : in std_logic;
+    i_mem_stall : in std_logic;
+    i_mem_err : in std_logic
+  );
 end icache;
 
-architecture behavioural of icache is
+architecture rtl of icache is
 begin
   -- We just forward all requests to the main memory interface.
-  o_mem_req <= i_cpu_req;
-  o_mem_addr <= i_cpu_addr;
+  o_mem_cyc <= i_instr_cyc;
+  o_mem_stb <= i_instr_stb;
+  o_mem_adr <= i_instr_adr;
 
   -- ...and send the result right back.
-  o_cpu_read_data <= i_mem_read_data;
-  o_cpu_read_data_ready <= i_mem_read_data_ready;
-end behavioural;
+  o_instr_dat <= i_mem_dat;
+  o_instr_ack <= i_mem_ack;
+  o_instr_stall <= i_mem_stall;
+  o_instr_err <= i_mem_err;
+end rtl;

@@ -23,36 +23,50 @@ use ieee.numeric_std.all;
 library std;
 use std.textio.all;
 use work.common.all;
+use work.debug.all;
 
-entity pipeline_tb is
-end pipeline_tb;
+entity core_tb is
+end core_tb;
 
-architecture behavioral of pipeline_tb is
+architecture behavioral of core_tb is
   signal s_clk : std_logic;
   signal s_rst : std_logic;
 
   -- Memory interface.
-  signal s_mem_req : std_logic;
-  signal s_mem_we : std_logic;
-  signal s_mem_byte_mask : std_logic_vector(C_WORD_SIZE/8-1 downto 0);
-  signal s_mem_addr : std_logic_vector(C_WORD_SIZE-1 downto 2);
-  signal s_mem_write_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_mem_read_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_mem_read_data_ready : std_logic;
+  signal s_wb_cyc : std_logic;
+  signal s_wb_stb : std_logic;
+  signal s_wb_adr : std_logic_vector(C_WORD_SIZE-1 downto 2);
+  signal s_wb_dat : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_wb_we : std_logic;
+  signal s_wb_sel : std_logic_vector(C_WORD_SIZE/8-1 downto 0);
+
+  signal s_mem_dat : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_mem_ack : std_logic;
+  signal s_mem_stall : std_logic;
+  signal s_mem_err : std_logic;
+
+  -- Debug trace interface.
+  signal s_debug_trace : T_DEBUG_TRACE;
 begin
-  pipeline_0: entity work.pipeline
+  core_0: entity work.core
     port map (
       i_clk => s_clk,
       i_rst => s_rst,
 
       -- Memory interface.
-      o_mem_req => s_mem_req,
-      o_mem_we => s_mem_we,
-      o_mem_byte_mask => s_mem_byte_mask,
-      o_mem_addr => s_mem_addr,
-      o_mem_write_data => s_mem_write_data,
-      i_mem_read_data => s_mem_read_data,
-      i_mem_read_data_ready => s_mem_read_data_ready
+      o_wb_cyc => s_wb_cyc,
+      o_wb_stb => s_wb_stb,
+      o_wb_adr => s_wb_adr,
+      o_wb_dat => s_wb_dat,
+      o_wb_we => s_wb_we,
+      o_wb_sel => s_wb_sel,
+      i_wb_dat => s_mem_dat,
+      i_wb_ack => s_mem_ack,
+      i_wb_stall => s_mem_stall,
+      i_wb_err => s_mem_err,
+
+      -- Debug trace interface.
+      o_debug_trace => s_debug_trace
     );
 
   process
@@ -64,11 +78,13 @@ begin
     -- File I/O.
     type T_CHAR_FILE is file of character;
     file f_char_file : T_CHAR_FILE;
+    file f_trace_file : T_CHAR_FILE;
 
     -- Variables for the memory interface.
     variable v_mem_idx : integer;
     variable v_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
     variable v_write_mask : std_logic_vector(C_WORD_SIZE-1 downto 0);
+    variable v_ack : std_logic;
 
     -- How many CPU cycles should we simulate?
     constant C_TEST_CYCLES : integer := 20000000;
@@ -98,14 +114,42 @@ begin
         write(f, v_char);
       end loop;
     end procedure;
+
+    -- Helper function for writing a debug trace record to a binary file.
+    procedure write_trace(file f : T_CHAR_FILE; trace : T_DEBUG_TRACE) is
+      variable v_flags : std_logic_vector(C_WORD_SIZE-1 downto 0);
+    begin
+      v_flags := (0 => trace.valid,
+                  1 => trace.src_a_valid,
+                  2 => trace.src_b_valid,
+                  3 => trace.src_c_valid,
+                  others => '0');
+      write_word(f, v_flags);
+      write_word(f, trace.pc);
+      if trace.src_a_valid then
+        write_word(f, trace.src_a);
+      else
+        write_word(f, (others => '0'));
+      end if;
+      if trace.src_b_valid then
+        write_word(f, trace.src_b);
+      else
+        write_word(f, (others => '0'));
+      end if;
+      if trace.src_c_valid then
+        write_word(f, trace.src_c);
+      else
+        write_word(f, (others => '0'));
+      end if;
+    end procedure;
   begin
     -- Clear the memory with zeros.
     for i in 0 to C_MEM_NUM_WORDS-1 loop
       v_mem_array(i) := to_word(0);
     end loop;
 
-    -- Read the program to run from the binary file pipeline_tb_prg.bin.
-    file_open(f_char_file, "pipeline/pipeline_tb_prg.bin");
+    -- Read the program to run from the binary file core_tb_prg.bin.
+    file_open(f_char_file, "core/core_tb_prg.bin");
     v_mem_idx := to_integer(unsigned(read_word(f_char_file)))/4;  -- Fist word = program start.
     while not endfile(f_char_file) loop
       v_mem_array(v_mem_idx) := read_word(f_char_file);
@@ -113,11 +157,18 @@ begin
     end loop;
     file_close(f_char_file);
 
-    -- Reset the memory signals.
-    s_mem_read_data <= (others => '0');
-    s_mem_read_data_ready <= '0';
+    -- Open the debug trace file.
+    if C_DEBUG_ENABLE_TRACE then
+      file_open(f_trace_file, "/tmp/mrisc32_core_tb_trace.bin", WRITE_MODE);
+    end if;
 
-    -- Start by resetting the pipeline (to have defined signals).
+    -- Reset the memory signals.
+    s_mem_dat <= (others => '0');
+    s_mem_ack <= '0';
+    s_mem_stall <= '0';
+    s_mem_err <= '0';
+
+    -- Start by resetting the core (to have defined signals).
     s_rst <= '1';
     s_clk <= '1';
     wait for 5 ns;
@@ -128,6 +179,10 @@ begin
     s_rst <= '0';
     s_clk <= '0';
     wait for 5 ns;
+    s_clk <= '1';
+    wait for 5 ns;
+    s_clk <= '0';
+    wait for 5 ns;
 
     -- Run the program.
     for i in 2 to C_TEST_CYCLES-1 loop
@@ -136,35 +191,45 @@ begin
         report "Cycles: " & integer'image(i);
       end if;
 
-      -- Positive clock flank -> we should get a PC address on the ICache interface.
-      s_clk <= '1';
-      wait for 1 ns;
+      -- We should now have a memory request from the Wishbone interface.
 
       -- Read/write data to/from the memory.
-      v_write_mask(31 downto 24) := (others => s_mem_byte_mask(3));
-      v_write_mask(23 downto 16) := (others => s_mem_byte_mask(2));
-      v_write_mask(15 downto 8) := (others => s_mem_byte_mask(1));
-      v_write_mask(7 downto 0) := (others => s_mem_byte_mask(0));
-      if s_mem_req = '1' then
-        v_mem_idx := to_integer(unsigned(s_mem_addr));
+      v_write_mask(31 downto 24) := (others => s_wb_sel(3));
+      v_write_mask(23 downto 16) := (others => s_wb_sel(2));
+      v_write_mask(15 downto 8) := (others => s_wb_sel(1));
+      v_write_mask(7 downto 0) := (others => s_wb_sel(0));
+      v_data := X"00000000";
+      if s_wb_cyc = '1' and s_wb_stb = '1' then
+        v_mem_idx := to_integer(unsigned(s_wb_adr));
         if v_mem_idx = 0 then
           report "Simulation finished after " & integer'image(i) & " cycles.";
           exit;
         elsif (v_mem_idx > 0) and (v_mem_idx < C_MEM_NUM_WORDS) then
           v_data := v_mem_array(v_mem_idx);
-        else
-          v_data := X"00000000";
         end if;
-        if s_mem_we = '1' then
-          v_data := (v_data and (not v_write_mask)) or (s_mem_write_data and v_write_mask);
+        if s_wb_we = '1' then
+          v_data := (v_data and (not v_write_mask)) or (s_wb_dat and v_write_mask);
           if (v_mem_idx >= 0) and (v_mem_idx < C_MEM_NUM_WORDS) then
             v_mem_array(v_mem_idx) := v_data;
           end if;
-        else
-          s_mem_read_data <= v_data;
-          s_mem_read_data_ready <= '1';
         end if;
+        v_ack := '1';
+      else
+        v_ack := '0';
       end if;
+
+      -- Write a recrod to the debug trace file.
+      -- Note: We skip the first few cycles until we are properly reset.
+      if C_DEBUG_ENABLE_TRACE and i >= 5 then
+        write_trace(f_trace_file, s_debug_trace);
+      end if;
+
+      -- Positive clock flank -> time for us to respond on the Wishbone request.
+      s_clk <= '1';
+      wait for 1 ns;
+
+      s_mem_dat <= v_data;
+      s_mem_ack <= v_ack;
 
       -- Tick the clock.
       wait for 4 ns;
@@ -172,8 +237,13 @@ begin
       wait for 5 ns;
     end loop;
 
-    -- Dump the memory to the binary file /tmp/mrisc32_pipeline_tb_ram.bin.
-    file_open(f_char_file, "/tmp/mrisc32_pipeline_tb_ram.bin", WRITE_MODE);
+    -- Close the debug trace file.
+    if C_DEBUG_ENABLE_TRACE then
+      file_close(f_trace_file);
+    end if;
+
+    -- Dump the memory to a binary file.
+    file_open(f_char_file, "/tmp/mrisc32_core_tb_ram.bin", WRITE_MODE);
     for i in 0 to C_MEM_NUM_WORDS-1 loop
       write_word(f_char_file, v_mem_array(i));
     end loop;

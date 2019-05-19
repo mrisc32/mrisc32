@@ -906,8 +906,8 @@ test_load_store_correct_results:
 test_branch:
     ; Speculative instructions are cancelled.
     ldi     s1, #0x1000
-    ldw     s2, pc, #5$@pc
-    ldw     s3, pc, #6$@pc
+    ldw     s2, pc, #6$@pc
+    ldw     s3, pc, #7$@pc
     b       #1$
     ldi     s3, #0x2000
     ldi     s3, #0x3000
@@ -940,6 +940,16 @@ test_branch:
 4$:
     ldi     s7, #0x1006
 
+    ; Branch prediction during data port operations.
+    ldi     s9, #7
+    ldi     s8, #0x1000
+5$:
+    ldb     s10, pc, #test_branch_correct_results@pc
+    add     s8, s8, #1
+    add     s9, s9, #-1
+    nop
+    bgt     s9, #5$
+
     ; Store results.
     stw     s1, s25, #0
     stw     s2, s25, #4
@@ -948,22 +958,23 @@ test_branch:
     stw     s5, s25, #16
     stw     s6, s25, #20
     stw     s7, s25, #24
+    stw     s8, s25, #28
 
     ; Check results.
     add     s1, pc, #test_branch_correct_results@pc
     mov     s2, s25
-    add     s25, s25, #28
+    add     s25, s25, #32
     b       #check_results
 
-5$:
-    .word   0x1001
 6$:
+    .word   0x1001
+7$:
     .word   0x1002
 
 test_branch_correct_results:
-    .word   7
+    .word   8
     .word   0x1000, 0x1001, 0x1002, 0x1003
-    .word   0x1004, 0x1005, 0x1006
+    .word   0x1004, 0x1005, 0x1006, 0x1007
 
 
 

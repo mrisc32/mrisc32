@@ -1229,6 +1229,20 @@ uint32_t cpu_simple_t::run() {
       ex_in.ex_op = ex_op;
       ex_in.packed_mode = packed_mode;
       ex_in.mem_op = mem_op;
+
+      // Debug trace.
+      {
+        debug_trace_t trace;
+        trace.valid = true;
+        trace.src_a_valid = reg2_is_src;
+        trace.src_b_valid = reg3_is_src;
+        trace.src_c_valid = reg1_is_src;
+        trace.pc = id_in.pc;
+        trace.src_a = ex_in.src_a;
+        trace.src_b = ex_in.src_b;
+        trace.src_c = ex_in.src_c;
+        append_debug_trace(trace);
+      }
     }
 
     // EX

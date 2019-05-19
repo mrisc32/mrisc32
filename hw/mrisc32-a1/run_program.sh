@@ -1,5 +1,7 @@
+#!/bin/bash
+
 ####################################################################################################
-# Copyright (c) 2018 Marcus Geelnard
+# Copyright (c) 2019 Marcus Geelnard
 #
 # This software is provided 'as-is', without any express or implied warranty. In no event will the
 # authors be held liable for any damages arising from the use of this software.
@@ -17,10 +19,27 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ####################################################################################################
 
-CACHE_PATH = cache
+WORKDIR=out
+GHDL=ghdl
+GHDLFLAGS="--std=08 --work=work --workdir=${WORKDIR}"
 
-SRCS += \
-    $(CACHE_PATH)/icache.vhd \
-    $(CACHE_PATH)/dcache.vhd \
-    $(CACHE_PATH)/cache_access_arbiter.vhd
+if [ "$1" = "--vcd" ]; then
+  VCD=yes
+  shift
+fi
+if [ "$1" = "--wave" ]; then
+  WAVE=yes
+  shift
+fi
 
+# Copy the compiled program so that the VHDL test bench can find it.
+cp "$1" core/core_tb_prg.bin
+
+# Run the core_tb test bench.
+if [ "x${VCD}" = "xyes" ]; then
+  ${GHDL} -r ${GHDLFLAGS} core_tb "--vcd=${WORKDIR}/core_tb.vcd"
+elif [ "x${WAVE}" = "xyes" ]; then
+  ${GHDL} -r ${GHDLFLAGS} core_tb "--wave=${WORKDIR}/core_tb.ghw"
+else
+  ${GHDL} -r ${GHDLFLAGS} core_tb
+fi

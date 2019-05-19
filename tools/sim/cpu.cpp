@@ -19,11 +19,12 @@
 
 #include "cpu.hpp"
 
+#include "config.hpp"
+
 #include <algorithm>
-#include <fstream>
+#include <cstdio>
 #include <iomanip>
 #include <iostream>
-#include <cstdio>
 
 namespace {
 // Simulator routines.
@@ -32,11 +33,16 @@ const uint32_t SIM_ROUTINE_PUTC = 1u;
 }  // namespace
 
 cpu_t::cpu_t(ram_t& ram) : m_ram(ram) {
+  if (config_t::instance().trace_enabled()) {
+    m_trace_file.open(config_t::instance().trace_file_name(), std::ios::out | std::ios::binary);
+  }
   reset();
 }
 
 cpu_t::~cpu_t() {
-  // Nothing to do here...
+  if (m_trace_file.is_open()) {
+    m_trace_file.close();
+  }
 }
 
 void cpu_t::reset() {
@@ -66,6 +72,47 @@ void cpu_t::dump_ram(const uint32_t begin, const uint32_t end, const std::string
     file.write(reinterpret_cast<const char*>(&byte), 1);
   }
   file.close();
+}
+
+void cpu_t::append_debug_trace(const debug_trace_t& trace) {
+  if (!(m_trace_file.is_open() && trace.valid)) {
+    return;
+  }
+
+  uint8_t buf[5 * 4] = {};
+
+  const uint32_t flags = (trace.valid ? 1 : 0) | (trace.src_a_valid ? 2 : 0) |
+                         (trace.src_b_valid ? 4 : 0) | (trace.src_c_valid ? 8 : 0);
+  buf[0] = static_cast<uint8_t>(flags);
+  buf[1] = static_cast<uint8_t>(flags >> 8);
+  buf[2] = static_cast<uint8_t>(flags >> 16);
+  buf[3] = static_cast<uint8_t>(flags >> 24);
+
+  buf[4] = static_cast<uint8_t>(trace.pc);
+  buf[5] = static_cast<uint8_t>(trace.pc >> 8);
+  buf[6] = static_cast<uint8_t>(trace.pc >> 16);
+  buf[7] = static_cast<uint8_t>(trace.pc >> 24);
+
+  if (trace.src_a_valid) {
+    buf[8] = static_cast<uint8_t>(trace.src_a);
+    buf[9] = static_cast<uint8_t>(trace.src_a >> 8);
+    buf[10] = static_cast<uint8_t>(trace.src_a >> 16);
+    buf[11] = static_cast<uint8_t>(trace.src_a >> 24);
+  }
+  if (trace.src_b_valid) {
+    buf[12] = static_cast<uint8_t>(trace.src_b);
+    buf[13] = static_cast<uint8_t>(trace.src_b >> 8);
+    buf[14] = static_cast<uint8_t>(trace.src_b >> 16);
+    buf[15] = static_cast<uint8_t>(trace.src_b >> 24);
+  }
+  if (trace.src_c_valid) {
+    buf[16] = static_cast<uint8_t>(trace.src_c);
+    buf[17] = static_cast<uint8_t>(trace.src_c >> 8);
+    buf[18] = static_cast<uint8_t>(trace.src_c >> 16);
+    buf[19] = static_cast<uint8_t>(trace.src_c >> 24);
+  }
+
+  m_trace_file.write(reinterpret_cast<const char*>(&buf[0]), sizeof(buf));
 }
 
 void cpu_t::call_sim_routine(const uint32_t routine_no) {

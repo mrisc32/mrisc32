@@ -73,9 +73,10 @@ void print_help(const char* prg_name) {
   std::cout << "mr32sim - An MRISC32 CPU simulator\n";
   std::cout << "Usage: " << prg_name << " [options] bin-file\n";
   std::cout << "Options:\n";
-  std::cout << "  -h, --help          Display this information.\n";
-  std::cout << "  -g, --gfx           Enable graphics.\n";
-  std::cout << "  -R N, --ram-size N  Set the RAM size (in bytes).\n";
+  std::cout << "  -h, --help             Display this information.\n";
+  std::cout << "  -g, --gfx              Enable graphics.\n";
+  std::cout << "  -t FILE, --trace FILE  Enable debug trace.\n";
+  std::cout << "  -R N, --ram-size N     Set the RAM size (in bytes).\n";
   return;
 }
 }  // namespace
@@ -93,6 +94,14 @@ int main(const int argc, const char** argv) {
           exit(0);
         } else if ((std::strcmp(argv[k], "-g") == 0) || (std::strcmp(argv[k], "--gfx") == 0)) {
           config_t::instance().set_gfx_enabled(true);
+        } else if ((std::strcmp(argv[k], "-t") == 0) || (std::strcmp(argv[k], "--trace") == 0)) {
+          if (k >= (argc - 1)) {
+            std::cerr << "Missing option for " << argv[k] << "\n";
+            print_help(argv[0]);
+            exit(1);
+          }
+          config_t::instance().set_trace_file_name(std::string(argv[++k]));
+          config_t::instance().set_trace_enabled(true);
         } else if ((std::strcmp(argv[k], "-R") == 0) || (std::strcmp(argv[k], "--ram-size") == 0)) {
           if (k >= (argc - 1)) {
             std::cerr << "Missing option for " << argv[k] << "\n";

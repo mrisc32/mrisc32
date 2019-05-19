@@ -1,6 +1,5 @@
 *.o
 *.cf
 *_tb
-*.vcd
 *.bin
 *_gen

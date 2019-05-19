@@ -1,5 +1,5 @@
 ####################################################################################################
-# Copyright (c) 2018 Marcus Geelnard
+# Copyright (c) 2019 Marcus Geelnard
 #
 # This software is provided 'as-is', without any express or implied warranty. In no event will the
 # authors be held liable for any damages arising from the use of this software.
@@ -17,51 +17,23 @@
 #  3. This notice may not be removed or altered from any source distribution.
 ####################################################################################################
 
-WORKDIR = out
-SW_SRC_DIR = ../../sw
+CP = cp
 
-GHDL = ghdl
-GHDLWARNINGS = \
-    -Wbinding \
-    -Wreserved \
-    -Wlibrary \
-    -Wvital-generic \
-    -Wbody \
-    -Wspecs \
-    -Wunused \
-    -Werror
-GHDLFLAGS = --std=08 --work=work --workdir=$(WORKDIR) $(GHDLWARNINGS)
-
-.PHONY: all clean
-
-default: all
-
-SRCS =
-TESTS =
-EXTRA =
-
-include common/Makefile
-include agu/Makefile
-include alu/Makefile
-include fpu/Makefile
-include muldiv/Makefile
-include sau/Makefile
-include pipeline/Makefile
-include core/Makefile
-include benchmark/Makefile
+CORE_PATH = core
 
 SRCS += \
-    toplevel.vhd
+    $(CORE_PATH)/icache.vhd \
+    $(CORE_PATH)/mem_arbiter.vhd \
+    $(CORE_PATH)/mem_arbiter_tb.vhd \
+    $(CORE_PATH)/core.vhd \
+    $(CORE_PATH)/core_tb.vhd
 
-all: $(TESTS) $(EXTRA)
+TESTS += \
+    mem_arbiter_tb \
+    core_tb
 
-$(TESTS): $(WORKDIR)/work-obj93.cf $(SRCS)
-	$(GHDL) -m $(GHDLFLAGS) $@
+$(CORE_PATH)/core_tb_prg.bin: $(SW_SRC_DIR)/test/super_test.s
+	ninja -C $(SW_SRC_DIR) out/super_test.bin
+	$(CP) $(SW_SRC_DIR)/out/super_test.bin $(CORE_PATH)/core_tb_prg.bin
 
-clean:
-	$(GHDL) --clean
-	rm -rf *.o *_tb *.vcd *.ghw $(WORKDIR)/*.o $(WORKDIR)/*.cf $(WORKDIR)/*_tb $(WORKDIR)/*.vcd $(WORKDIR)/*.ghw
-
-$(WORKDIR)/work-obj93.cf: $(SRCS)
-	$(GHDL) -i $(GHDLFLAGS) $(SRCS)
-
+core_tb: $(CORE_PATH)/core_tb_prg.bin

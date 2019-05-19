@@ -24,6 +24,7 @@
 
 #include <array>
 #include <cstdint>
+#include <fstream>
 
 /// @brief A CPU core instance.
 class cpu_t {
@@ -49,7 +50,7 @@ protected:
 
   // Register configuration.
   static const uint32_t NUM_REGS = 32u;
-  static const uint32_t LOG2_NUM_VECTOR_ELEMENTS = 5u;  // Must be at least 4
+  static const uint32_t LOG2_NUM_VECTOR_ELEMENTS = 4u;  // Must be at least 4
   static const uint32_t NUM_VECTOR_ELEMENTS = 1u << LOG2_NUM_VECTOR_ELEMENTS;
   static const uint32_t NUM_VECTOR_REGS = 32u;
 
@@ -160,9 +161,28 @@ protected:
   // One vector register.
   using vreg_t = std::array<uint32_t, NUM_VECTOR_ELEMENTS>;
 
+  // Debug trace struct.
+  struct debug_trace_t {
+    bool valid;
+    bool src_a_valid;
+    bool src_b_valid;
+    bool src_c_valid;
+    uint32_t pc;
+    uint32_t src_a;
+    uint32_t src_b;
+    uint32_t src_c;
+  };
+
+  /// @brief Append a single debug trace record to the trace file.
+  /// @param trace The trace record.
+  void append_debug_trace(const debug_trace_t& trace);
+
   /// @brief Call a simulator routine.
   /// @param routine_no The routine to call (0, 1, ...).
   void call_sim_routine(const uint32_t routine_no);
+
+  // Debug trace file.
+  std::ofstream m_trace_file;
 
   // Memory interface.
   ram_t& m_ram;

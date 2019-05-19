@@ -21,6 +21,7 @@
 #define SIM_CONFIG_HPP_
 
 #include <cstdint>
+#include <string>
 
 class config_t {
 public:
@@ -32,6 +33,22 @@ public:
 
   void set_ram_size(const uint32_t x) {
     m_ram_size = x;
+  }
+
+  bool trace_enabled() const {
+    return m_trace_enabled;
+  }
+
+  void set_trace_enabled(const bool x) {
+    m_trace_enabled = x;
+  }
+
+  const std::string& trace_file_name() const {
+    return m_trace_file_name;
+  }
+
+  void set_trace_file_name(const std::string& x) {
+    m_trace_file_name = x;
   }
 
   bool gfx_enabled() const {
@@ -79,6 +96,7 @@ private:
 
   // Default values.
   static const uint32_t DEFAULT_RAM_SIZE = 0x1000000u;  // 16 MiB
+  static const bool DEFAULT_TRACE_ENABLED = false;
   static const bool DEFAULT_GFX_ENABLED = false;
   static const uint32_t DEFAULT_GFX_ADDR = 0x0008000u;
   static const uint32_t DEFAULT_GFX_WIDTH = 256u;
@@ -86,6 +104,8 @@ private:
   static const uint32_t DEFAULT_GFX_DEPTH = 8u;
 
   uint32_t m_ram_size = DEFAULT_RAM_SIZE;
+  bool m_trace_enabled = DEFAULT_TRACE_ENABLED;
+  std::string m_trace_file_name;
   bool m_gfx_enabled = DEFAULT_GFX_ENABLED;
   uint32_t m_gfx_addr = DEFAULT_GFX_ADDR;
   uint32_t m_gfx_width = DEFAULT_GFX_WIDTH;

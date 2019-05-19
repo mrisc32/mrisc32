@@ -18,7 +18,7 @@
 ----------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------
--- Pipeline Stages 5, 6, 7 & 8: Execute (EX1/EX2/EX3/EX3)
+-- Pipeline Stages 5, 6, 7 & 8: Execute (EX1/EX2/EX3/EX4)
 ----------------------------------------------------------------------------------------------------
 
 library ieee;
@@ -73,14 +73,17 @@ entity execute is
     o_pccorr_adjust : out std_logic;
     o_pccorr_adjusted_pc : out std_logic_vector(C_WORD_SIZE-1 downto 0);
 
-    -- DCache interface.
-    o_dcache_req : out std_logic;  -- 1 = request, 0 = nop
-    o_dcache_we : out std_logic;   -- 1 = write, 0 = read
-    o_dcache_byte_mask : out std_logic_vector(C_WORD_SIZE/8-1 downto 0);
-    o_dcache_addr : out std_logic_vector(C_WORD_SIZE-1 downto 2);
-    o_dcache_write_data : out std_logic_vector(C_WORD_SIZE-1 downto 0);
-    i_dcache_read_data : in std_logic_vector(C_WORD_SIZE-1 downto 0);
-    i_dcache_read_data_ready : in std_logic;
+    -- Data Wishbone interface.
+    o_data_cyc : out std_logic;
+    o_data_stb : out std_logic;
+    o_data_adr : out std_logic_vector(C_WORD_SIZE-1 downto 2);
+    o_data_we : out std_logic;
+    o_data_sel : out std_logic_vector(C_WORD_SIZE/8-1 downto 0);
+    o_data_dat : out std_logic_vector(C_WORD_SIZE-1 downto 0);
+    i_data_dat : in std_logic_vector(C_WORD_SIZE-1 downto 0);
+    i_data_ack : in std_logic;
+    i_data_stall : in std_logic;
+    i_data_err : in std_logic;
 
     -- Outputs from the different pipeline stages (async).
     o_ex1_next_dst_reg : out T_DST_REG;
@@ -114,6 +117,8 @@ architecture rtl of execute is
   signal s_alu_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_agu_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_agu_address_is_result : std_logic;
+  signal s_mem_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
+  signal s_mem_result_ready : std_logic;
   signal s_sau_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_sau_result_ready : std_logic;
   signal s_mul_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -132,12 +137,8 @@ architecture rtl of execute is
 
   -- Should the EX pipeline be stalled?
   signal s_stall_ex : std_logic;
+  signal s_stall_mem : std_logic;
   signal s_stall_div : std_logic;
-
-  -- Signals related to memory I/O.
-  signal s_mem_byte_mask_unshifted : std_logic_vector(C_WORD_SIZE/8-1 downto 0);
-  signal s_mem_byte_mask : std_logic_vector(C_WORD_SIZE/8-1 downto 0);
-  signal s_mem_store_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
   -- Branch condition signals.
   signal s_branch_cond_z : std_logic;
@@ -164,20 +165,12 @@ architecture rtl of execute is
   signal s_ex1_next_mem_enable : std_logic;
 
   -- Signals from the EX1 to the EX2 stage (sync).
-  signal s_ex1_mem_op : T_MEM_OP;
-  signal s_ex1_mem_addr : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_ex1_mem_enable : std_logic;
-  signal s_ex1_mem_we : std_logic;
-  signal s_ex1_mem_byte_mask : std_logic_vector(C_WORD_SIZE/8-1 downto 0);
   signal s_ex1_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ex1_result_ready : std_logic;
-  signal s_ex1_store_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_ex1_dst_reg : T_DST_REG;
 
   -- Signals from the memory interface (async).
   signal s_mem_stall : std_logic;
-  signal s_mem_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
-  signal s_mem_data_ready : std_logic;
 
   -- Signals from the EX2 to the EX3 stage (async).
   signal s_ex2_next_result : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -272,8 +265,45 @@ begin
 
 
   --------------------------------------------------------------------------------------------------
-  -- Multi cycle units: SAU (2 cycles), MUL (3 cycles), DIV (3+ cycles), FPU (1/4 cycles).
+  -- Multi cycle units:
+  --  MEM (2 cycles)
+  --  SAU (2 cycles)
+  --  MUL (3 cycles)
+  --  DIV (3+ cycles)
+  --  FPU (1/4 cycles)
   --------------------------------------------------------------------------------------------------
+
+  -- Instantiate the memory interface unit.
+  mem_1: entity work.memory
+    port map (
+      -- Control signals.
+      i_clk => i_clk,
+      i_rst => i_rst,
+      i_stall => s_stall_mem,
+      o_stall => s_mem_stall,
+
+      -- Operation definition.
+      i_mem_enable => s_ex1_next_mem_enable,
+      i_mem_op => i_mem_op,
+      i_mem_adr => s_agu_result,
+      i_mem_dat => i_src_c,
+
+      -- Wishbone master interface.
+      o_wb_cyc => o_data_cyc,
+      o_wb_stb => o_data_stb,
+      o_wb_adr => o_data_adr,
+      o_wb_we => o_data_we,
+      o_wb_sel => o_data_sel,
+      o_wb_dat => o_data_dat,
+      i_wb_dat => i_data_dat,
+      i_wb_ack => i_data_ack,
+      i_wb_stall => i_data_stall,
+      i_wb_err => i_data_err,
+
+      -- Result (async, ready in EX2).
+      o_result => s_mem_result,
+      o_result_ready => s_mem_result_ready
+    );
 
   -- Instantiate the saturating arithmetic unit.
   SAU_GEN: if C_CPU_HAS_SA generate
@@ -371,7 +401,7 @@ begin
 
 
   --------------------------------------------------------------------------------------------------
-  -- EX1: ALU, FPU (single cycle operations), AGU, memory store preparation.
+  -- EX1: ALU, FPU (single cycle operations), AGU.
   --------------------------------------------------------------------------------------------------
 
   -- Instantiate the ALU (arithmetic logic unit).
@@ -403,28 +433,6 @@ begin
   s_agu_address_is_result <= i_mem_en when i_mem_op = C_MEM_OP_LDEA else '0';
   s_ex1_next_mem_enable <= i_mem_en and not s_agu_address_is_result;
 
-  -- Prepare the byte mask for the MEM stage.
-  ByteMaskMux: with i_mem_op(1 downto 0) select
-    s_mem_byte_mask_unshifted <=
-      "0001" when "01",    -- byte
-      "0011" when "10",    -- halfword
-      "1111" when others;  -- word (11) and undefined (00)
-
-  ByteMaskShiftMux: with s_agu_result(1 downto 0) select
-    s_mem_byte_mask <=
-      s_mem_byte_mask_unshifted(3 downto 0)         when "00",
-      s_mem_byte_mask_unshifted(2 downto 0) & "0"   when "01",
-      s_mem_byte_mask_unshifted(1 downto 0) & "00"  when "10",
-      s_mem_byte_mask_unshifted(0 downto 0) & "000" when others;  -- "11"
-
-  -- Prepare the store data for the MEM stage (shift it into position).
-  StoreDataShiftMux: with s_agu_result(1 downto 0) select
-    s_mem_store_data <=
-      i_src_c(31 downto 0)             when "00",
-      i_src_c(23 downto 0) & X"00"     when "01",
-      i_src_c(15 downto 0) & X"0000"   when "10",
-      i_src_c(7 downto 0)  & X"000000" when others;  -- "11"
-
   -- Select the result from the EX1 stage.
   s_ex1_next_result <= s_fpu_f1_result when s_fpu_f1_result_ready = '1' else
                        s_agu_result when s_agu_address_is_result = '1' else
@@ -435,28 +443,16 @@ begin
   process(i_clk, i_rst)
   begin
     if i_rst = '1' then
-      s_ex1_mem_op <= (others => '0');
-      s_ex1_mem_addr <= (others => '0');
-      s_ex1_mem_enable <= '0';
-      s_ex1_mem_we <= '0';
-      s_ex1_mem_byte_mask <= (others => '0');
       s_ex1_result <= (others => '0');
       s_ex1_result_ready <= '0';
-      s_ex1_store_data <= (others => '0');
       s_ex1_dst_reg.is_target <= '0';
       s_ex1_dst_reg.reg <= (others => '0');
       s_ex1_dst_reg.element <= (others => '0');
       s_ex1_dst_reg.is_vector <= '0';
     elsif rising_edge(i_clk) then
       if s_stall_ex = '0' then
-        s_ex1_mem_op <= i_mem_op;
-        s_ex1_mem_addr <= s_agu_result;
-        s_ex1_mem_enable <= s_ex1_next_mem_enable;
-        s_ex1_mem_we <= i_mem_op(3);
-        s_ex1_mem_byte_mask <= s_mem_byte_mask;
         s_ex1_result <= s_ex1_next_result;
         s_ex1_result_ready <= s_ex1_next_result_ready;
-        s_ex1_store_data <= s_mem_store_data;
         s_ex1_dst_reg <= i_dst_reg;
       end if;
     end if;
@@ -475,40 +471,14 @@ begin
 
 
   --------------------------------------------------------------------------------------------------
-  -- EX2: Memory.
+  -- EX2: MEM, SAU.
   --------------------------------------------------------------------------------------------------
 
-  memory_0: entity work.memory
-    port map (
-      o_stall => s_mem_stall,
-
-      -- From EX1 stage (sync).
-      i_mem_op => s_ex1_mem_op,
-      i_mem_enable => s_ex1_mem_enable,
-      i_mem_we => s_ex1_mem_we,
-      i_mem_byte_mask => s_ex1_mem_byte_mask,
-      i_mem_addr => s_ex1_mem_addr,
-      i_store_data => s_ex1_store_data,
-
-      -- DCache interface.
-      o_dcache_req => o_dcache_req,
-      o_dcache_we => o_dcache_we,
-      o_dcache_byte_mask => o_dcache_byte_mask,
-      o_dcache_addr => o_dcache_addr,
-      o_dcache_write_data => o_dcache_write_data,
-      i_dcache_read_data => i_dcache_read_data,
-      i_dcache_read_data_ready => i_dcache_read_data_ready,
-
-      -- Memory read data (async).
-      o_data => s_mem_data,
-      o_data_ready => s_mem_data_ready
-    );
-
   -- Select the result from the EX2 stage.
-  s_ex2_next_result <= s_mem_data when s_mem_data_ready = '1' else
+  s_ex2_next_result <= s_mem_result when s_mem_result_ready = '1' else
                        s_sau_result when s_sau_result_ready = '1' else
                        s_ex1_result;
-  s_ex2_next_result_ready <= s_mem_data_ready or
+  s_ex2_next_result_ready <= s_mem_result_ready or
                              s_sau_result_ready or
                              s_ex1_result_ready;
 
@@ -620,6 +590,7 @@ begin
 
   -- Stall logic (async).
   s_stall_ex <= s_mem_stall or s_div_stall;
+  s_stall_mem <= s_div_stall;
   s_stall_div <= s_mem_stall;
   o_stall <= s_stall_ex;
 end rtl;

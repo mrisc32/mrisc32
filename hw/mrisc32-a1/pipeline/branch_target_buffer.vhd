@@ -37,6 +37,7 @@ entity branch_target_buffer is
       i_invalidate : in std_logic;
 
       -- Buffer lookup (sync).
+      i_read_en : in std_logic;
       i_read_pc : in std_logic_vector(C_WORD_SIZE-1 downto 0);
       o_predict_taken : out std_logic;
       o_predict_target : out std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -54,6 +55,7 @@ architecture rtl of branch_target_buffer is
   constant C_TAG_SIZE : integer := C_WORD_SIZE - C_LOG2_ENTRIES;
   constant C_TARGET_SIZE : integer := C_WORD_SIZE + 2;  -- is_valid  & is_taken & target_address
 
+  signal s_prev_read_en : std_logic;
   signal s_prev_read_pc : std_logic_vector(C_WORD_SIZE-1 downto 0);
   signal s_got_match : std_logic;
   signal s_got_branch : std_logic;
@@ -106,8 +108,10 @@ begin
   process(i_clk, i_rst)
   begin
     if i_rst = '1' then
+      s_prev_read_en <= '0';
       s_prev_read_pc <= (others => '0');
     elsif rising_edge(i_clk) then
+      s_prev_read_en <= i_read_en;
       s_prev_read_pc <= i_read_pc;
     end if;
   end process;
@@ -126,7 +130,7 @@ begin
   s_got_match <= '1' when s_prev_read_pc(C_WORD_SIZE-1 downto C_LOG2_ENTRIES) = s_tag_read_data else '0';
 
   -- Determine if we should take the branch.
-  o_predict_taken <= s_got_match and s_got_branch and s_got_taken;
+  o_predict_taken <= s_prev_read_en and s_got_match and s_got_branch and s_got_taken;
 
 
   --------------------------------------------------------------------------------------------------
