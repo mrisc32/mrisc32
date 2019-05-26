@@ -33,7 +33,7 @@ if [ "$1" = "--wave" ]; then
 fi
 
 # Copy the compiled program so that the VHDL test bench can find it.
-cp "$1" core/core_tb_prg.bin
+cp "$1" out/core_tb_prg.bin
 
 # Run the core_tb test bench.
 if [ "x${VCD}" = "xyes" ]; then

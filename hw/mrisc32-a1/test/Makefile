@@ -84,9 +84,9 @@ EXTRA += \
 $(WORKDIR)/fpu_test_gen: $(FPU_PATH)/fpu_test_gen.cpp
 	g++ $(FPU_PATH)/fpu_test_gen.cpp -o $(WORKDIR)/fpu_test_gen
 
-$(CORE_PATH)/core_tb_prg.bin: $(SW_SRC_DIR)/test/super_test.s
+out/core_tb_prg.bin: $(SW_SRC_DIR)/test/super_test.s
 	ninja -C $(SW_SRC_DIR) out/super_test.bin
-	$(CP) $(SW_SRC_DIR)/out/super_test.bin $(CORE_PATH)/core_tb_prg.bin
+	$(CP) $(SW_SRC_DIR)/out/super_test.bin out/core_tb_prg.bin
 
-core_tb: $(CORE_PATH)/core_tb_prg.bin
+core_tb: out/core_tb_prg.bin
 
