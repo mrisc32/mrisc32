@@ -22,7 +22,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.config.all;
 
-package common is
+package types is
   ------------------------------------------------------------------------------------------------
   -- Source and target register meta data.
   ------------------------------------------------------------------------------------------------
@@ -238,7 +238,7 @@ package common is
 
 end package;
 
-package body common is
+package body types is
   function to_vector(x: integer; size: integer) return std_logic_vector is
   begin
     return std_logic_vector(to_unsigned(x, size));

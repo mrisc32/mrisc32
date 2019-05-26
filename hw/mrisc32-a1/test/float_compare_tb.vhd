@@ -19,7 +19,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
-use work.common.all;
+use work.types.all;
 
 entity float_compare_tb is
 end float_compare_tb;

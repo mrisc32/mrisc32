@@ -23,7 +23,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
-use work.common.all;
+use work.types.all;
 use work.config.all;
 
 entity execute is

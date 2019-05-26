@@ -19,7 +19,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
-use work.common.all;
+use work.types.all;
 
 --  A testbench has no ports.
 entity itof_tb is

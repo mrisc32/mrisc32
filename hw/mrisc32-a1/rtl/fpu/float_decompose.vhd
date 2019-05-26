@@ -19,7 +19,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
-use work.common.all;
+use work.types.all;
 
 ----------------------------------------------------------------------------------------------------
 -- This entity decomposes an IEEE 754 binary floating point number into its components, and reports
