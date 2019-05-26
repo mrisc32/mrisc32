@@ -60,7 +60,7 @@ The CPU is nearing completion but still under development. The following compone
 
 The aim is for the MRISC32-A1 to implement the complete MRISC32 ISA, which means that it is a fairly large design (including an FPU, hardware multiplication and division, packed operations, etc).
 
-If the design is too large or complex for a certain target chip (FPGA), it is possible to disable many features in the *"Machine configuration"* section of [common/common.vhd](common/common.vhd). E.g. setting `C_CPU_HAS_DIV` to `false` will disable support for hardware division.
+If the design is too large or complex for a certain target chip (FPGA), it is possible to disable many features in [common/config.vhd](common/config.vhd). E.g. setting `C_CPU_HAS_MUL` to `false` will disable support for hardware multiplication.
 
 It is also possible to change the vector register size by chaging the value of `C_LOG2_VEC_REG_ELEMENTS` (4 means 16 elements, 5 means 32 elements, 8 means 256 elements, and so on).
 

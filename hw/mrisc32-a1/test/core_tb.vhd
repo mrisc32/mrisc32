@@ -23,6 +23,7 @@ use ieee.numeric_std.all;
 library std;
 use std.textio.all;
 use work.common.all;
+use work.config.all;
 use work.debug.all;
 
 entity core_tb is

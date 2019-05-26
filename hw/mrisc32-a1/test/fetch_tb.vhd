@@ -21,6 +21,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.common.all;
+use work.config.all;
 
 entity fetch_tb is
 end fetch_tb;

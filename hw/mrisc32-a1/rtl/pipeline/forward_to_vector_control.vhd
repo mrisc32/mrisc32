@@ -32,6 +32,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use work.common.all;
+use work.config.all;
 
 entity forward_to_vector_control is
   port(

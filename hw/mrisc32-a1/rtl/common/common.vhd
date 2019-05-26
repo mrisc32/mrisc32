@@ -20,39 +20,12 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use work.config.all;
 
 package common is
   ------------------------------------------------------------------------------------------------
-  -- Machine configuration
+  -- Source and target register meta data.
   ------------------------------------------------------------------------------------------------
-
-  constant C_LOG2_WORD_SIZE : integer := 5;
-  constant C_WORD_SIZE : integer := 2**C_LOG2_WORD_SIZE;
-  constant C_LOG2_NUM_REGS : integer := 5;
-  constant C_NUM_REGS : integer := 2**C_LOG2_NUM_REGS;
-  constant C_LOG2_VEC_REG_ELEMENTS : integer := 4;  -- Minimum: 4
-  constant C_VEC_REG_ELEMENTS : integer := 2**C_LOG2_VEC_REG_ELEMENTS;
-
-  constant C_CPU_HAS_VEC : boolean := true;
-  constant C_CPU_HAS_PO : boolean := true;
-  constant C_CPU_HAS_MUL : boolean := true;
-  constant C_CPU_HAS_DIV : boolean := true;
-  constant C_CPU_HAS_SA : boolean := true;
-  constant C_CPU_HAS_FP : boolean := true;
-  constant C_CPU_HAS_SQRT : boolean := false;
-
-  -- The start PC after reset.
-  constant C_RESET_PC : std_logic_vector(C_WORD_SIZE-1 downto 0) := X"00000200";
-
-
-  ------------------------------------------------------------------------------------------------
-  -- Registers
-  ------------------------------------------------------------------------------------------------
-
-  constant C_Z_REG  : integer := 0;   -- Z  = S0
-  constant C_VL_REG : integer := 29;  -- VL = S29
-  constant C_LR_REG : integer := 30;  -- LR = S30
-  constant C_PC_REG : integer := 31;  -- PC = S31
 
   type T_SRC_REG is record
     reg : std_logic_vector(C_LOG2_NUM_REGS-1 downto 0);
