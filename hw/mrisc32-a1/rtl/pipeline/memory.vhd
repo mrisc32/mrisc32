@@ -75,6 +75,8 @@ architecture rtl of memory is
   signal s_extend_bit : std_logic;
   signal s_adjusted_read_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
 
+  signal s_repeat_request : std_logic;
+
   signal s_m1_enable : std_logic;
   signal s_m1_we : std_logic;
   signal s_m1_mem_op : T_MEM_OP;
@@ -119,7 +121,7 @@ begin
 
   -- Outputs to the Wishbone interface (async).
   o_wb_cyc <= (i_mem_enable or s_m1_enable) and ((not i_stall) or s_m2_pending_ack or i_wb_ack);
-  o_wb_stb <= i_mem_enable and (i_wb_stall or not s_stall_m1);
+  o_wb_stb <= i_mem_enable and (s_repeat_request or not (i_stall or s_m2_pending_ack));
   o_wb_adr <= i_mem_adr(C_WORD_SIZE-1 downto 2);
   o_wb_we <= s_mem_we;
   o_wb_sel <= s_mem_byte_mask;
@@ -127,6 +129,16 @@ begin
 
   -- Should M1 be stalled?
   s_stall_m1 <= i_stall or s_m2_pending_ack or i_wb_stall;
+
+  -- Did we get a stall (i.e. repeat) request from the Wishbone interface?
+  process(i_clk, i_rst)
+  begin
+    if i_rst = '1' then
+      s_repeat_request <= '0';
+    elsif rising_edge(i_clk) then
+      s_repeat_request <= i_wb_stall;
+    end if;
+  end process;
 
   -- Signals from the M1 stage to the M2 stage (sync).
   process(i_clk, i_rst)
