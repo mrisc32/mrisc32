@@ -24,7 +24,15 @@ This is an experimental, custom 32-bit RISC/Vector CPU, primarily inspired by th
   - Compare instructions generate bit masks.
   - Branch instructions can act on bit masks (all bits set, all bits zero, etc) as well as signed quantities (less than zero, etc).
   - Bit masks are suitable for masking in conditional operations (for scalars, vectors and packed data types).
-* Unlike early RISC architectures, there are no delay slots.
+* Powerful addressing modes:
+  - Scaled indexed load/store (x1, x2, x4, x8).
+  - Gather-scatter and stride-based vector load/store.
+  - PC-releative load/store:
+    - ±16 KiB range with one instruction.
+    - Full 32-bit range with two instructions.
+  - PC-relative branch:
+    - ±4 MiB range with one instruction.
+    - Full 32-bit range with two instructions.
 * Many traditional floating point operations can be handled in whole or partially by integer operations, reducing the number of necessary instructions:
   - Load/store.
   - Branch.
