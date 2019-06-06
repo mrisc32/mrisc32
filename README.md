@@ -9,7 +9,7 @@ This is an experimental, custom 32-bit RISC/Vector CPU, primarily inspired by th
 * There are two register files:
   - **S0-S31**: 32 scalar registers, each 32 bits wide.
     - Four registers have special meaning in hardware: Z, PC, LR, VL.
-    - 28 registers are general purpose (of which three are reserved: SP, TP, FP).
+    - 28 registers are general purpose (of which three are reserved by the ABI: SP, TP, FP).
     - All registers can be used for all types (integers, addresses and floating point).
     - PC is user-visible (for arithmetic and addressing) but read-only (to simplify branching logic).
   - **V0-V31**: 32 vector registers, each with *at least* 16 32-bit elements.
@@ -27,10 +27,10 @@ This is an experimental, custom 32-bit RISC/Vector CPU, primarily inspired by th
 * Powerful addressing modes:
   - Scaled indexed load/store (x1, x2, x4, x8).
   - Gather-scatter and stride-based vector load/store.
-  - PC-releative load/store:
+  - PC-releative and absolute load/store:
     - ±16 KiB range with one instruction.
     - Full 32-bit range with two instructions.
-  - PC-relative branch:
+  - PC-relative and absolute branch:
     - ±4 MiB range with one instruction.
     - Full 32-bit range with two instructions.
 * Many traditional floating point operations can be handled in whole or partially by integer operations, reducing the number of necessary instructions:
