@@ -21,7 +21,7 @@ Configure and build:
 $ cd binutils-mrisc32
 $ mkdir build
 $ cd build
-$ ../configure --target=mrisc32 --program-prefix=mrisc32- --with-system-zlib
+$ ../configure --target=mrisc32 --program-prefix=mrisc32- --with-system-zlib --disable-gdb --disable-sim
 $ make
 ```
 
