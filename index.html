@@ -31,14 +31,37 @@
         <h2>Features</h2>
         <ul>
             <li>Unified scalar/vector/integer/floating point ISA</li>
+            <li>Load/store architecture</li>
             <li>Two register files:
                 <ul>
-                    <li>32 scalar registers</li>
-                    <li>32 vector registers (implementation defined register size)</li>
+                    <li>32 scalar registers (s0-s31)</li>
+                    <li>32 vector registers (v0-v31)</li>
                 </ul>
             </li>
-            <li>Easily decoded fixed size 32 bits wide instruction words.</li>
-            <li>...</li>
+            <li>Easily decoded fixed size 32 bits wide instruction words</li>
+            <li>Branches are based on register content
+                <ul>
+                    <li>There is no special condition code register</li>
+                    <li>Compare instructions generate bit masks that can be used by branch instructions as well as for masking and other purposes</li>
+                </ul>
+            </li>
+            <li>Dynamic and future proof vector model:
+                <li>Most instructions can operate on both scalar and vector registers</li>
+                <li>Vector operation lengths are variable on a per-instruction basis</li>
+                <li>The vector register size is implementation defined in a binary compatible fashion</li>
+            </li>
+            <li>8-bit and 16-bit data types are packed in 32-bit registers
+                <ul>
+                    <li>Most instructions (integer and floating point alike) offer increased parallelism for packed data types:
+                        <ul>
+                            <li>2x parallelism for 16-bit data types</li>
+                            <li>4x parallelism for 8-bit data types</li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+            <li>Supports 32, 16 and 8-bit floating point</li>
+            <li>Supports 32, 16 and 8-bit fixed point</li>
         </ul>
 
         <h2>Implementations</h2>
