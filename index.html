@@ -46,11 +46,13 @@
                 </ul>
             </li>
             <li>Dynamic and future proof vector model:
-                <li>Most instructions can operate on both scalar and vector registers</li>
-                <li>Vector operation lengths are variable on a per-instruction basis</li>
-                <li>The vector register size is implementation defined in a binary compatible fashion</li>
+                <ul>
+                    <li>Most instructions can operate on both scalar and vector registers</li>
+                    <li>Vector operation lengths are variable on a per-instruction basis</li>
+                    <li>The vector register size is implementation defined in a binary compatible fashion</li>
+                </ul>
             </li>
-            <li>8-bit and 16-bit data types are packed in 32-bit registers
+            <li>8-bit and 16-bit data types can be packed in 32-bit chunks
                 <ul>
                     <li>Most instructions (integer and floating point alike) offer increased parallelism for packed data types:
                         <ul>
@@ -62,6 +64,13 @@
             </li>
             <li>Supports 32, 16 and 8-bit floating point</li>
             <li>Supports 32, 16 and 8-bit fixed point</li>
+            <li>Powerful adressing modes:
+                <ul>
+                    <li>Wide range PC-relative and absolute addressing for load/store and branches</li>
+                    <li>Gather/scatter and stride-based vector load/store</li>
+                    <li>Scaled indexed load/store addressing (register + scale * register)</li>
+                </ul>
+            </li>
         </ul>
 
         <h2>Implementations</h2>
