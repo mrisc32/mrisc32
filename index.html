@@ -15,21 +15,31 @@
             (<a href="https://en.wikipedia.org/wiki/Instruction_set_architecture">ISA</a>).
         </p>
         <p>
+            The focus is to create a clean, modern ISA that is equally attractive to software,
+            hardware and compiler developers. Another key goal is to enable high performance
+            implementations, with good scalar and vector integer, floating point and fixed point
+            support.
+        </p>
+        <p>
             The ISA is primarily inspired by the <a href="https://en.wikipedia.org/wiki/Cray-1">Cray-1</a>
             and <a href="https://en.wikipedia.org/wiki/MIPS_architecture">MIPS</a> architectures,
             and is further influenced by the excellent <a href="https://en.wikipedia.org/wiki/RISC-V">RISC-V</a>
             architecture (in particular "<a href="https://people.eecs.berkeley.edu/~krste/papers/EECS-2016-1.pdf">Design of the RISC-V Instruction Set Architecture</a>"
             by Andrew Waterman).
         </p>
-        <p>
-            The focus is to create a clean, modern ISA that is equally attractive to software,
-            hardware and compiler developers. Another key goal is to enable high performance
-            implementations, with good scalar and vector integer, floating point and fixed point
-            support.
-        </p>
 
         <h2>Features</h2>
-        <p>...</p>
+        <ul>
+            <li>Unified scalar/vector/integer/floating point ISA</li>
+            <li>Two register files:
+                <ul>
+                    <li>32 scalar registers</li>
+                    <li>32 vector registers (implementation defined register size)</li>
+                </ul>
+            </li>
+            <li>Easily decoded fixed size 32 bits wide instruction words.</li>
+            <li>...</li>
+        </ul>
 
         <h2>Implementations</h2>
         <p>MRISC32-A1...</p>
