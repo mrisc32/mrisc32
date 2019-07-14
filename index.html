@@ -79,6 +79,20 @@
             which is a soft processor implemented in VHDL. It is a single issue, in order
             architecture, and it implements the entire MRISC32 ISA.
         </p>
+        <p>
+            Future improvements of the A1 are planned. The A series are based on
+            the single instruciton issue principle, but further vector parallelism
+            can be extracted in one or more of the following ways:
+            <ul>
+                <li>Execute scalar instructions during vector operartions</li>
+                <li>Execute consecutive vector instructions in parallel</li>
+                <li>Duplicate execution units and process more than one vector element per cycle</li>
+            </ul>
+        </p>
+        <p>
+            Superscalar Tomasulo-based implementations of the ISA are planned
+            in the form of the B series.
+        </p>
 
         <h2>Resources</h2>
         <p>
@@ -86,7 +100,7 @@
             at the GitHub repository: <a href="https://github.com/mbitsnbites/mrisc32">mbitsnbites/mrisc32</a>.
         </p>
         <p>
-            The blog post "<a href="https://www.bitsnbites.eu/the-mrisc32-a-vector-first-cpu-design/">"The MRISC32 – A vector first CPU design</a>"
+            The blog post "<a href="https://www.bitsnbites.eu/the-mrisc32-a-vector-first-cpu-design/">The MRISC32 – A vector first CPU design</a>"
             gives some information regarding the architectural features of the MRISC32 ISA.
         </p>
 
