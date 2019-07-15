@@ -50,7 +50,7 @@
                 </li>
                 <li>Branches are based on register content, not condition codes:
                     <ul>
-                        <li>Compare instructions generate bit masks</li>
+                        <li>Compare instructions generate bit masks (all 1:s or all 0:s)</li>
                         <li>Branch instructions can act on bit masks and signed quantities</li>
                         <li>Bit masks can further be used for masking and arithmetic</li>
                     </ul>
@@ -86,7 +86,7 @@
                 </li>
                 <li>Many parts of the ISA are optional:
                     <ul>
-                        <li>It is possible to create a very light weight MRISC32 core</li>
+                        <li>It is possible to create a very lightweight MRISC32 core</li>
                         <li>Things like floating point, vector operations and hardware division are optional</li>
                     </ul>
                 </li>
@@ -95,14 +95,24 @@
 
         <h2>Implementations</h2>
         <div class="text-section">
+            <h3>MRISC32-A1</h3>
             <p>
                 The first implementation of the MRISC32 ISA is <a href="https://github.com/mbitsnbites/mrisc32/tree/master/hw/mrisc32-a1">MRISC32-A1</a>,
-                which is a soft processor implemented in VHDL (suitable for running on an
-                FPGA). It is a single issue, in order architecture (i.e. it can execute up
-                to one operation per clock cycle), and it implements the entire MRISC32 ISA.
+                which is a soft processor implemented in portable VHDL, suitable for running
+                on an FPGA. It is a single issue, in order architecture (i.e. it can execute
+                up to one operation per clock cycle), and it implements the entire MRISC32 ISA.
             </p>
             <p>
-                Future designs in the "A" series (A2+) will use the same simple in order
+                The CPU easily fits in a low- to mid-range FPGA, such as the <a href="https://www.intel.com/content/www/us/en/products/programmable/fpga/cyclone-v.html">Cyclone® V</a>,
+                in which it consumes about 5000 ALM:s and runs at around 80 MHz at the
+                time of writing. It can also be configured to use much less resources
+                (down to 30% of the full design) by disabling certain features, such as
+                floating point support.
+            </p>
+
+            <h3>Planned</h3>
+            <p>
+                Future designs in the "A" series (A2+) will use the same simple in-order
                 principles as the A1, but increase vector parallelism in one or more of
                 the following ways:
                 <ul>
