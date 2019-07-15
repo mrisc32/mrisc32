@@ -34,36 +34,46 @@
             <li>Load/store architecture</li>
             <li>Two register files:
                 <ul>
-                    <li>32 scalar registers (s0-s31)</li>
-                    <li>32 vector registers (v0-v31)</li>
+                    <li>32 scalar registers</li>
+                    <li>32 vector registers</li>
                 </ul>
             </li>
-            <li>Easily decoded fixed size 32 bits wide instruction words</li>
-            <li>Branches are based on register content
+            <li>Fixed size 32 bits wide instruction words:
                 <ul>
-                    <li>There is no special condition code register</li>
-                    <li>Compare instructions generate bit masks that can be used by branch instructions as well as for masking and other purposes</li>
+                    <li>Easily decoded instructions (only three basic formats)</li>
+                    <li>Less than 60% of the avilable instruction space is used, allowing for future extensions</li>
+                    <li>Space has been reserved for future multi-word encodings</li>
                 </ul>
             </li>
+            <li>Branches are based on register content, not condition codes:
+                <ul>
+                    <li>Compare instructions generate bit masks</li>
+                    <li>Branch instructions can act on bit masks and signed quantities</li>
+                    <li>Bit masks can further be used for masking and arithmetic</li>
+                </ul>
+            </li>
+            <li>Supports IEEE 754 floating point</li>
+            <li>Supports fixed point operations</li>
             <li>Dynamic and future proof vector model:
                 <ul>
                     <li>Most instructions can operate on both scalar and vector registers</li>
                     <li>Vector operation lengths are variable on a per-instruction basis</li>
-                    <li>The vector register size is implementation defined in a binary compatible fashion</li>
+                    <li>Each vector register can hold at least 16 32-bit elements</li>
+                    <li>Implementers may choose to provide significantly larger registers</li>
+                    <li>Software is binary compatible between different vector register sizes</li>
                 </ul>
             </li>
-            <li>8-bit and 16-bit data types can be packed in 32-bit chunks
+            <li>8-bit and 16-bit data types can be packed in 32-bit chunks:
                 <ul>
-                    <li>Most instructions (integer and floating point alike) offer increased parallelism for packed data types:
+                    <li>Most instructions offer increased parallelism for packed data types:
                         <ul>
                             <li>2x parallelism for 16-bit data types</li>
                             <li>4x parallelism for 8-bit data types</li>
                         </ul>
                     </li>
+                    <li>Supports packed integer, fixed point and floating point types</li>
                 </ul>
             </li>
-            <li>Supports 32, 16 and 8-bit floating point</li>
-            <li>Supports 32, 16 and 8-bit fixed point</li>
             <li>Powerful adressing modes:
                 <ul>
                     <li>Wide range PC-relative and absolute addressing for load/store and branches</li>
@@ -73,7 +83,7 @@
             </li>
             <li>Many parts of the ISA are optional:
                 <ul>
-                    <li>It's possible to create a very light weight MRISC32 core</li>
+                    <li>It is possible to create a very light weight MRISC32 core</li>
                     <li>Things like floating point, vector operations and hardware division are optional</li>
                 </ul>
             </li>
@@ -82,7 +92,7 @@
         <h2>Implementations</h2>
         <p>
             The first implementation of the MRISC32 ISA is <a href="https://github.com/mbitsnbites/mrisc32/tree/master/hw/mrisc32-a1">MRISC32-A1</a>,
-            which is a soft processor implemented in VHDL (suitable for running in an
+            which is a soft processor implemented in VHDL (suitable for running on an
             FPGA). It is a single issue, in order architecture (i.e. it can execute up
             to one operation per clock cycle), and it implements the entire MRISC32 ISA.
         </p>
@@ -103,8 +113,8 @@
 
         <h2>Resources</h2>
         <p>
-            Current documentation and the MRISC32-A1 VHDL code is available
-            at the GitHub repository: <a href="https://github.com/mbitsnbites/mrisc32">mbitsnbites/mrisc32</a>.
+            Documentation and the MRISC32-A1 VHDL code is available at the GitHub
+            repository: <a href="https://github.com/mbitsnbites/mrisc32">mbitsnbites/mrisc32</a>.
         </p>
         <p>
             The blog post "<a href="https://www.bitsnbites.eu/the-mrisc32-a-vector-first-cpu-design/">The MRISC32 – A vector first CPU design</a>"
