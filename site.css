@@ -1,3 +1,12 @@
+h1 {
+    text-align: center;
+}
+
+div.text-section {
+    padding-left: 2%;
+    padding-right: 1%;
+}
+
 .footer {
     color: #888;
     text-align: center;
