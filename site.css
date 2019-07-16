@@ -1,5 +1,22 @@
-h1 {
-    text-align: center;
+.header {
+    margin: 0.5em 0em 2em 0em;
+}
+.banner {
+    padding: 1em 1em;
+    margin: 0;
+}
+.banner h1 {
+    margin: 0;
+}
+.menu {
+    background: #7e9cb0;
+    padding: 0.3em 0.5em;
+}
+.menu a {
+    text-decoration: none;
+    color: #fff;
+    font-family: Helvetica,sans-serif;
+    padding: 0.5em 1%;
 }
 
 div.text-section {
@@ -7,13 +24,12 @@ div.text-section {
     padding-right: 1%;
 }
 
+hr {
+    margin-top: 50px;
+}
 .footer {
     color: #888;
     text-align: center;
     font-size: 70%;
     font-style: italic;
-}
-
-hr {
-    margin-top: 50px;
 }

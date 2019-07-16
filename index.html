@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1">
@@ -8,7 +8,19 @@
         <link rel="stylesheet" href="site.css">
     </head>
     <body>
-        <h1>MRISC32: An open 32-bit RISC/Vector ISA</h2>
+        <!-- Begin: Header -->
+        <div class="header">
+            <div class="banner">
+                <h1>MRISC32: An open 32-bit RISC/Vector ISA</h1>
+            </div>
+            <div class="menu">
+                <a href="./">About</a>
+                <a href="resources.html">Resources</a>
+                <a href="https://github.com/mbitsnbites/mrisc32">GitHub</a>
+            </div>
+        </div>
+
+        <!-- Begin: Page content -->
         <div class="text-section">
             <p>
                 MRISC32, short for <i>"<u>M</u>ostly harmless <u>R</u>educed <u>I</u>nstruction <u>S</u>et <u>C</u>omputer, <u>32</u>-bit edition"</i>,
@@ -115,44 +127,15 @@
                 Future designs in the "A" series (A2+) will use the same simple in-order
                 principles as the A1, but increase vector parallelism in one or more of
                 the following ways:
-                <ul>
-                    <li>Execute scalar instructions during vector operartions</li>
-                    <li>Execute consecutive vector instructions in parallel (called "<a href="http://homepages.inf.ed.ac.uk/cgi/rni/comp-arch.pl?Vect/cray1-ch.html,Vect/cray1-ch-f.html,Vect/menu-cr1.html">chaining</a>" in Cray terms)</li>
-                    <li>Duplicate execution units and process more than one vector element per cycle</li>
-                </ul>
             </p>
+            <ul>
+                <li>Execute scalar instructions during vector operartions</li>
+                <li>Execute consecutive vector instructions in parallel (called "<a href="http://homepages.inf.ed.ac.uk/cgi/rni/comp-arch.pl?Vect/cray1-ch.html,Vect/cray1-ch-f.html,Vect/menu-cr1.html">chaining</a>" in Cray terms)</li>
+                <li>Duplicate execution units and process more than one vector element per cycle</li>
+            </ul>
             <p>
                 Superscalar <a href="https://en.wikipedia.org/wiki/Tomasulo_algorithm">Tomasulo</a>-based
                 implementations of the ISA are planned for the "B" series.
-            </p>
-        </div>
-
-        <h2>Resources</h2>
-        <div class="text-section">
-                <p>
-                Documentation and the MRISC32-A1 VHDL code is available at the GitHub
-                repository: <a href="https://github.com/mbitsnbites/mrisc32">mbitsnbites/mrisc32</a>.
-            </p>
-            <p>
-                The blog post "<a href="https://www.bitsnbites.eu/the-mrisc32-a-vector-first-cpu-design/">The MRISC32 – A vector first CPU design</a>"
-                gives some information regarding the architectural features of the MRISC32 ISA.
-            </p>
-        </div>
-
-        <h2>Software toolchains</h2>
-        <div class="text-section">
-            <p>
-                There is currently an MRISC32 port of GNU binutils: <a href="https://github.com/mbitsnbites/binutils-mrisc32">mbitsnbites/binutils-mrisc32</a>.
-                It provides:
-                <ul>
-                    <li>An assembler</li>
-                    <li>A linker</li>
-                    <li>Various elf32 tools (e.g. objdump)</li>
-                </ul>
-            </p>
-            <p>
-                Support for higher level languages is planned (via LLVM and/or GCC), but has
-                not yet been implemented.
             </p>
         </div>
 
@@ -165,6 +148,7 @@
             </p>
         </div>
 
+        <!-- Begin: Footer -->
         <hr>
         <p class="footer">Copyright © 2018-2019 Marcus Geelnard</p>
     </body>
