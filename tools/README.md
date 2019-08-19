@@ -65,4 +65,6 @@ Debug traces from the simulator or the VHDL test bench can be inspected using `m
 
 ### gedit / GtkSourceView
 
-Copy `tools/support/gtksourceview/mr32asm.lang` to `~/.local/share/gtksourceview-3.0/language-specs/`.
+Copy or symlink `tools/support/gtksourceview/mr32asm.lang` to `~/.local/share/gtksourceview-3.0/language-specs/`.
+
+For GtkSourceView 4 (e.g. used in gedit in Ubuntu 19.04 and later), copy to `~/.local/share/gtksourceview-4/language-specs/` instead.
