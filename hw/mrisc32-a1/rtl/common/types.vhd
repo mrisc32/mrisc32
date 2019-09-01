@@ -91,6 +91,9 @@ package types is
   constant C_ALU_LDHIO : T_ALU_OP := "000011";
   constant C_ALU_ADDHI : T_ALU_OP := "000100";
 
+  constant C_ALU_CLZ   : T_ALU_OP := "001000";  -- Two-operand (op=0x7c, func=0x00)
+  constant C_ALU_REV   : T_ALU_OP := "001001";  -- Two-operand (op=0x7c, func=0x01)
+
   constant C_ALU_OR    : T_ALU_OP := "010000";
   constant C_ALU_NOR   : T_ALU_OP := "010001";
   constant C_ALU_AND   : T_ALU_OP := "010010";
@@ -115,10 +118,8 @@ package types is
   constant C_ALU_LSR   : T_ALU_OP := "100011";
   constant C_ALU_SHUF  : T_ALU_OP := "100100";
 
-  constant C_ALU_CLZ   : T_ALU_OP := "110001";
-  constant C_ALU_REV   : T_ALU_OP := "110010";
-  constant C_ALU_PACKB : T_ALU_OP := "110011";
-  constant C_ALU_PACKH : T_ALU_OP := "110100";
+  constant C_ALU_PACKB : T_ALU_OP := "110000";
+  constant C_ALU_PACKH : T_ALU_OP := "110001";
 
   -- SAU operations.
   constant C_SAU_OP_SIZE : integer := 3;
@@ -175,7 +176,6 @@ package types is
   constant C_FPU_FSUB : T_FPU_OP := "10001";
   constant C_FPU_FMUL : T_FPU_OP := "10010";
   constant C_FPU_FDIV : T_FPU_OP := "10011";  -- Not handled by the FPU!
-  constant C_FPU_FSQRT : T_FPU_OP := "10100";
 
   -- MEM operations.
   constant C_MEM_OP_SIZE : integer := 4;

@@ -136,7 +136,7 @@ begin
   -- C_ALU_PACKB, C_ALU_PACKH
   s_packb_res <= i_src_a(23 downto 16) & i_src_a(7 downto 0) & i_src_b(23 downto 16) & i_src_b(7 downto 0);
   s_packh_res <= i_src_a(15 downto 0) & i_src_b(15 downto 0);
-  s_pack_res <= s_packb_res when i_op(0) = '1' else s_packh_res;
+  s_pack_res <= s_packb_res when i_op(0) = '0' else s_packh_res;
 
   -- C_ALU_LDI, C_ALU_LDHI, C_ALU_LDHIO
   -- Note: This MUX should be optimized by the synthesis tool to only depend on a single
