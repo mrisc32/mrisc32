@@ -77,7 +77,6 @@ architecture rtl of fpu_impl is
   signal s_is_minmax_op : std_logic;
   signal s_is_add_op : std_logic;
   signal s_is_mul_op : std_logic;
-  signal s_is_sqrt_op : std_logic;
   signal s_is_single_cycle_op : std_logic;
 
   -- Decomposed inputs.
@@ -175,7 +174,6 @@ begin
       '0' when others;
 
   s_is_mul_op <= '1' when i_op = C_FPU_FMUL else '0';
-  s_is_sqrt_op <= '1' when i_op = C_FPU_FSQRT else '0';
 
   -- Is this a single cycle operation?
   s_is_single_cycle_op <= s_is_compare_op or s_is_minmax_op;

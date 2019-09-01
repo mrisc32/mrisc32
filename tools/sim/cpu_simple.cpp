@@ -1019,6 +1019,10 @@ uint32_t cpu_simple_t::run() {
       const bool op_class_C = ((iword & 0xc0000000u) == 0xc0000000u);
       const bool op_class_B = !op_class_A && !op_class_C;
 
+      // Is this a two-operand instruction with an extra function ID paramter?
+      const bool is_two_operand_A = op_class_A && ((iword & 0x0000007cu) == 0x0000007cu);
+      const uint32_t func_id = is_two_operand_A ? (iword & 0x00003e00u) : 0u;
+
       // Is this a vector operation?
       const uint32_t vec_mask = op_class_A ? 3u : (op_class_B ? 2u : 0u);
       const uint32_t vector_mode = (iword >> 14u) & vec_mask;
@@ -1180,6 +1184,9 @@ uint32_t cpu_simple_t::run() {
             break;
         }
       }
+
+      // Add function ID to the operand.
+      ex_op = ex_op | func_id;
 
       // Mask away packed op from the EX operation.
       if (packed_mode != PACKED_NONE) {

@@ -96,10 +96,8 @@ protected:
   static const uint32_t EX_OP_LSR = 0x23u;
   static const uint32_t EX_OP_SHUF = 0x24u;
 
-  static const uint32_t EX_OP_CLZ = 0x31u;
-  static const uint32_t EX_OP_REV = 0x32u;
-  static const uint32_t EX_OP_PACKB = 0x33u;
-  static const uint32_t EX_OP_PACKH = 0x34u;
+  static const uint32_t EX_OP_PACKB = 0x30u;
+  static const uint32_t EX_OP_PACKH = 0x31u;
 
   static const uint32_t EX_OP_ADDS = 0x38u;
   static const uint32_t EX_OP_ADDSU = 0x39u;
@@ -139,7 +137,12 @@ protected:
   static const uint32_t EX_OP_FSUB = 0x71u;
   static const uint32_t EX_OP_FMUL = 0x72u;
   static const uint32_t EX_OP_FDIV = 0x73u;
-  static const uint32_t EX_OP_FSQRT = 0x74u;
+
+  // Two-operand type A operations.
+  static const uint32_t EX_OP_CLZ = 0x007cu;
+  static const uint32_t EX_OP_REV = 0x027cu;
+
+  static const uint32_t EX_OP_FSQRT = 0x007du;
 
   // Memory operations.
   static const uint32_t MEM_OP_NONE = 0x0u;

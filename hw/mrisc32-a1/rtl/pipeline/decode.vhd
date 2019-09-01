@@ -156,6 +156,10 @@ architecture rtl of decode is
   signal s_is_ldhio : std_logic;
   signal s_is_addpchi : std_logic;
 
+  signal s_is_two_operand : std_logic;
+  signal s_is_two_operand_alu : std_logic;
+  signal s_func : std_logic_vector(4 downto 0);
+
   -- VL register signals.
   signal s_vl_we : std_logic;
   signal s_vl_data : std_logic_vector(C_WORD_SIZE-1 downto 0);
@@ -238,6 +242,11 @@ begin
   s_is_ldhio   <= '1' when s_op_high = 6X"3c" else '0';
   s_is_addpchi <= '1' when s_op_high = 6X"3d" else '0';
 
+  -- Is this a two-operand operation?
+  s_is_two_operand <= '1' when (s_is_type_a = '1' and s_op_low(6 downto 2) = "11111") else '0';
+  s_func <= i_instr(13 downto 9) when s_is_two_operand = '1' else (others => '0');
+  s_is_two_operand_alu <= '1' when (s_is_two_operand = '1' and s_op_low(1 downto 0) = "00") else '0';
+
   -- Is this FDIV?
   s_is_fdiv <= '1' when (s_is_type_a = '1' and s_op_low = "11" & C_FPU_FDIV) else '0';
 
@@ -245,7 +254,7 @@ begin
   s_is_sau_op <= '1' when s_is_type_a = '1' and s_op_low(6 downto 3) = "0111" else '0';
   s_is_mul_op <= '1' when s_is_type_a = '1' and s_op_low(6 downto 2) = "10000" else '0';
   s_is_div_op <= '1' when (s_is_type_a = '1' and s_op_low(6 downto 2) = "10001") or s_is_fdiv = '1' else '0';
-  s_is_fpu_op <= '1' when s_is_type_a = '1' and s_op_low(6 downto 5) = "11" and s_is_fdiv = '0' else '0';
+  s_is_fpu_op <= '1' when s_is_type_a = '1' and s_op_low(6 downto 5) = "11" and s_is_two_operand = '0' and s_is_fdiv = '0' else '0';
 
   -- Determine vector mode.
   s_vector_mode(1) <= i_instr(15) and not s_is_type_c;
@@ -412,6 +421,10 @@ begin
 
       -- Use NOP for non-ALU ops and non-linking branches (they do not produce any result).
       C_ALU_CPUID when s_alu_en = '0' or (s_is_branch and not s_is_link_branch) = '1' else
+
+      -- We map the two-operand FUNC ID into the opcode for such instructions.
+      -- Note: This is a hack. We should really send the entire FUNC code to the ALU.
+      "001" & s_func(2 downto 0) when s_is_two_operand_alu = '1' else
 
       -- Map the low order bits of the low order opcode directly to the ALU.
       s_op_low(C_ALU_OP_SIZE-1 downto 0) when s_is_type_a = '1' else
