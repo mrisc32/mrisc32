@@ -274,7 +274,7 @@ begin
 
   -- What source registers are required for this operation?
   s_reg_a_required <= not s_is_type_c;
-  s_reg_b_required <= s_is_type_a;
+  s_reg_b_required <= s_is_type_a and not s_is_two_operand;
   s_reg_c_required <= s_is_mem_store or s_is_branch;
 
   -- Is this a stride offset or regular offset memory addressing mode instruction?
