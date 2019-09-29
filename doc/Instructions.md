@@ -5,7 +5,7 @@ An instruction is encoded as a 32-bit word. There are three different formats: A
 | Most significant bits | Format | # Instr. | Comment |
 |---|---|---|---|
 | 000000 | A | 252 | Reg, Reg, Reg (124 instr)<br>Reg, Reg (128 instr)|
-| 000001..101111 | B | 47 | Reg, Reg, 14-bit immediate |
+| 000001..101111 | B | 47 | Reg, Reg, 15-bit immediate |
 | 110000..111110 | C | 15 | Reg, 21-bit immediate |
 | 111111 | ? | (many) | Reserved for future multi-word encodings |
 
