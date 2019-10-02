@@ -138,7 +138,7 @@ protected:
   static const uint32_t EX_OP_FMUL = 0x72u;
   static const uint32_t EX_OP_FDIV = 0x73u;
 
-  // Two-operand type A operations.
+  // Two-operand type B operations.
   static const uint32_t EX_OP_CLZ = 0x007cu;
   static const uint32_t EX_OP_REV = 0x027cu;
 
