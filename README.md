@@ -16,8 +16,8 @@ This is a 32-bit RISC/Vector instruction set architecture ([ISA](https://en.wiki
   - **V0-V31**: 32 vector registers, each with *at least* 16 32-bit elements.
     - All registers can be used for all types (integers, addresses and floating point).
 * All instructions are 32 bits wide and easy to decode.
-  - There are only three basic types of instruction encodings.
-  - There is room for 252 register-based and 62 immediate-based instructions (where each instruction may have several scalar/vector/unpacked/packed variants).
+  - There are only four basic types of instruction encodings (all using a similar layout).
+  - There is room for 380 register-based and 62 immediate-based instructions (where each instruction may have several scalar/vector/unpacked/packed variants).
   - Space has been reserved for future double-word instruction encodings (for an almost endless number of instructions).
 * Instructions are non-destructive 3-operand (two sources, one destination).
 * All conditionals are based on register content.
