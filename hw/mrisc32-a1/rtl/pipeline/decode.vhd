@@ -115,6 +115,7 @@ architecture rtl of decode is
   signal s_is_type_a : std_logic;
   signal s_is_type_b : std_logic;
   signal s_is_type_c : std_logic;
+  signal s_is_type_d : std_logic;
 
   signal s_vector_mode : std_logic_vector(1 downto 0);
   signal s_is_vector_op : std_logic;
@@ -156,9 +157,8 @@ architecture rtl of decode is
   signal s_is_ldhio : std_logic;
   signal s_is_addpchi : std_logic;
 
-  signal s_is_two_operand : std_logic;
-  signal s_is_two_operand_alu : std_logic;
-  signal s_func : std_logic_vector(4 downto 0);
+  signal s_is_type_b_alu : std_logic;
+  signal s_func : std_logic_vector(5 downto 0);
 
   -- VL register signals.
   signal s_vl_we : std_logic;
@@ -211,13 +211,14 @@ begin
   s_op_low <= i_instr(6 downto 0);
 
   -- Determine encoding type.
-  s_is_type_a <= '1' when s_op_high = "000000" else '0';
-  s_is_type_c <= '1' when s_op_high(5 downto 4) = "11" else '0';
-  s_is_type_b <= not (s_is_type_a or s_is_type_c);
+  s_is_type_a <= '1' when s_op_high = "000000" and s_op_low(6 downto 2) /= "11111" else '0';
+  s_is_type_b <= '1' when s_op_high = "000000" and s_op_low(6 downto 2) = "11111" else '0';
+  s_is_type_c <= '1' when s_op_high /= "000000" and s_op_high(5 downto 4) /= "11" else '0';
+  s_is_type_d <= '1' when s_op_high(5 downto 4) = "11" else '0';
 
   -- Extract immediate.
   s_imm_from_instr(14 downto 0) <= i_instr(14 downto 0);
-  s_imm_from_instr(20 downto 15) <= i_instr(20 downto 15) when s_is_type_c = '1' else (others => i_instr(14));
+  s_imm_from_instr(20 downto 15) <= i_instr(20 downto 15) when s_is_type_d = '1' else (others => i_instr(14));
   s_imm_from_instr(31 downto 21) <= (others => s_imm_from_instr(20));
 
   -- Extract register numbers.
@@ -227,7 +228,7 @@ begin
 
   -- Determine MEM operation.
   s_mem_op_type(0) <= s_is_type_a when (s_op_low(6 downto 4) = "000") and (s_op_low(3 downto 0) /= "0000") else '0';
-  s_mem_op_type(1) <= s_is_type_b when (s_op_high(5 downto 4) = "00") else '0';
+  s_mem_op_type(1) <= s_is_type_c when (s_op_high(5 downto 4) = "00") else '0';
   MemOpMux: with s_mem_op_type select
     s_mem_op <=
         s_op_low(3 downto 0) when "01",    -- Addr = reg + reg
@@ -243,9 +244,8 @@ begin
   s_is_addpchi <= '1' when s_op_high = 6X"3d" else '0';
 
   -- Is this a two-operand operation?
-  s_is_two_operand <= '1' when (s_is_type_a = '1' and s_op_low(6 downto 2) = "11111") else '0';
-  s_func <= i_instr(13 downto 9) when s_is_two_operand = '1' else (others => '0');
-  s_is_two_operand_alu <= '1' when (s_is_two_operand = '1' and s_op_low(1 downto 0) = "00") else '0';
+  s_func <= i_instr(14 downto 9) when s_is_type_b = '1' else (others => '0');
+  s_is_type_b_alu <= '1' when (s_is_type_b = '1' and s_op_low(1 downto 0) = "00") else '0';
 
   -- Is this FDIV?
   s_is_fdiv <= '1' when (s_is_type_a = '1' and s_op_low = "11" & C_FPU_FDIV) else '0';
@@ -254,10 +254,10 @@ begin
   s_is_sau_op <= '1' when s_is_type_a = '1' and s_op_low(6 downto 3) = "0111" else '0';
   s_is_mul_op <= '1' when s_is_type_a = '1' and s_op_low(6 downto 2) = "10000" else '0';
   s_is_div_op <= '1' when (s_is_type_a = '1' and s_op_low(6 downto 2) = "10001") or s_is_fdiv = '1' else '0';
-  s_is_fpu_op <= '1' when s_is_type_a = '1' and s_op_low(6 downto 5) = "11" and s_is_two_operand = '0' and s_is_fdiv = '0' else '0';
+  s_is_fpu_op <= '1' when s_is_type_a = '1' and s_op_low(6 downto 5) = "11" and s_is_fdiv = '0' else '0';
 
   -- Determine vector mode.
-  s_vector_mode(1) <= i_instr(15) and not s_is_type_c;
+  s_vector_mode(1) <= i_instr(15) and not s_is_type_d;
   s_vector_mode(0) <= i_instr(14) and s_is_type_a;
   s_is_vector_op <= '1' when s_vector_mode /= "00" and (i_bubble or i_cancel) = '0' else '0';
   s_reg_a_is_vector <= s_is_vector_op and not s_is_mem_op;
@@ -270,11 +270,11 @@ begin
   -- Note: Only instructions that support packed operation will care about this value, so it is safe
   -- to just pick bits 7 and 8 from the instruction word without masking against instruction type,
   -- as long as this is a format A instruction.
-  s_packed_mode <= i_instr(8 downto 7) when s_is_type_a = '1' else C_PACKED_NONE;
+  s_packed_mode <= i_instr(8 downto 7) when s_is_type_a = '1' or s_is_type_b = '1' else C_PACKED_NONE;
 
   -- What source registers are required for this operation?
-  s_reg_a_required <= not s_is_type_c;
-  s_reg_b_required <= s_is_type_a and not s_is_two_operand;
+  s_reg_a_required <= s_is_type_a or s_is_type_b or s_is_type_c;
+  s_reg_b_required <= s_is_type_a;
   s_reg_c_required <= s_is_mem_store or s_is_branch;
 
   -- Is this a stride offset or regular offset memory addressing mode instruction?
@@ -424,7 +424,7 @@ begin
 
       -- We map the two-operand FUNC ID into the opcode for such instructions.
       -- Note: This is a hack. We should really send the entire FUNC code to the ALU.
-      "001" & s_func(2 downto 0) when s_is_two_operand_alu = '1' else
+      "001" & s_func(2 downto 0) when s_is_type_b_alu = '1' else
 
       -- Map the low order bits of the low order opcode directly to the ALU.
       s_op_low(C_ALU_OP_SIZE-1 downto 0) when s_is_type_a = '1' else

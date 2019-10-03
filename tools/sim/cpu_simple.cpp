@@ -1015,22 +1015,19 @@ uint32_t cpu_simple_t::run() {
       const uint32_t iword = id_in.instr;
 
       // Detect encoding class (A, B or C).
-      const bool op_class_A = ((iword & 0xfc000000u) == 0x00000000u);
-      const bool op_class_C = ((iword & 0xc0000000u) == 0xc0000000u);
-      const bool op_class_B = !op_class_A && !op_class_C;
-
-      // Is this a two-operand instruction with an extra function ID paramter?
-      const bool is_two_operand_A = op_class_A && ((iword & 0x0000007cu) == 0x0000007cu);
-      const uint32_t func_id = is_two_operand_A ? (iword & 0x00003e00u) : 0u;
+      const bool op_class_B = ((iword & 0xfc00007cu) == 0x0000007cu);
+      const bool op_class_A = ((iword & 0xfc000000u) == 0x00000000u) && !op_class_B;
+      const bool op_class_D = ((iword & 0xc0000000u) == 0xc0000000u);
+      const bool op_class_C = !op_class_A && !op_class_B && !op_class_D;
 
       // Is this a vector operation?
-      const uint32_t vec_mask = op_class_A ? 3u : (op_class_B ? 2u : 0u);
+      const uint32_t vec_mask = op_class_A ? 3u : (op_class_B || op_class_C ? 2u : 0u);
       const uint32_t vector_mode = (iword >> 14u) & vec_mask;
       const bool is_vector_op = (vector_mode != 0u);
       const bool is_folding_vector_op = (vector_mode == 1u);
 
       // Is this a packed operation?
-      const uint32_t packed_mode = (op_class_A ? ((iword & 0x00000180u) >> 7) : 0u);
+      const uint32_t packed_mode = (op_class_A || op_class_B ? ((iword & 0x00000180u) >> 7) : 0u);
 
       // Extract parts of the instruction.
       // NOTE: These may or may not be valid, depending on the instruction type.
@@ -1044,7 +1041,7 @@ uint32_t cpu_simple_t::run() {
 
       if (is_vector_op) {
         const uint32_t vector_stride =
-            op_class_B ? imm15 : (m_regs[reg3] * index_scale_factor(packed_mode));
+            op_class_C ? imm15 : (m_regs[reg3] * index_scale_factor(packed_mode));
 
         // Start a new or continue an ongoing vector operartion?
         if (!vector.active) {
@@ -1145,7 +1142,7 @@ uint32_t cpu_simple_t::run() {
       const bool reg1_is_src = is_mem_store || is_branch;
 
       // Should we use reg2 as a source?
-      const bool reg2_is_src = op_class_A || op_class_B;
+      const bool reg2_is_src = op_class_A || op_class_B || op_class_C;
 
       // Should we use reg3 as a source?
       const bool reg3_is_src = op_class_A;
@@ -1165,10 +1162,12 @@ uint32_t cpu_simple_t::run() {
       if (is_subroutine_branch || is_mem_op) {
         ex_op = EX_OP_ADD;
       } else if (op_class_A && ((iword & 0x000001f0u) != 0x00000000u)) {
-        ex_op = iword & 0x000001ffu;
-      } else if (op_class_B && ((iword & 0xc0000000u) != 0x00000000u)) {
+        ex_op = iword & 0x0000007fu;
+      } else if (op_class_B) {
+        ex_op = iword & 0x00007e7fu;
+      } else if (op_class_C && ((iword & 0xc0000000u) != 0x00000000u)) {
         ex_op = iword >> 26u;
-      } else if (op_class_C) {
+      } else if (op_class_D) {
         switch (iword & 0xfc000000u) {
           case 0xe8000000u:  // ldi
             ex_op = EX_OP_OR;
@@ -1183,14 +1182,6 @@ uint32_t cpu_simple_t::run() {
             ex_op = EX_OP_ADDPCHI;
             break;
         }
-      }
-
-      // Add function ID to the operand.
-      ex_op = ex_op | func_id;
-
-      // Mask away packed op from the EX operation.
-      if (packed_mode != PACKED_NONE) {
-        ex_op = ex_op & ~0x00000180u;
       }
 
       // Determine MEM operation.
@@ -1228,7 +1219,7 @@ uint32_t cpu_simple_t::run() {
                         ? 4
                         : ((is_vector_op && is_mem_op)
                                ? vector_addr_offset
-                               : (op_class_B ? imm15 : (op_class_C ? imm21 : reg_b_data)));
+                               : (op_class_C ? imm15 : (op_class_D ? imm21 : reg_b_data)));
       ex_in.src_c = reg_c_data;
       ex_in.dst_reg = dst_reg;
       ex_in.dst_idx = vector.idx;

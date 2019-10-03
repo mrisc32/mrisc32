@@ -1,24 +1,26 @@
 # Instruction encoding
 
-An instruction is encoded as a 32-bit word. There are three different formats: A, B and C. The format of the instruction is determined by the 6 most significant bits of the instruction word:
+An instruction is encoded as a 32-bit word. There are three different formats: A, B and C. The format of the instruction is determined by a combination of the 6 most significant bits and the 7 least significant bits of the instruction word.
 
-| Most significant bits | Format | # Instr. | Comment |
-|---|---|---|---|
-| 000000 | A | 252 | Reg, Reg, Reg (124 instr)<br>Reg, Reg (128 instr)|
-| 000001..101111 | B | 47 | Reg, Reg, 15-bit immediate |
-| 110000..111110 | C | 15 | Reg, 21-bit immediate |
-| 111111 | ? | (many) | Reserved for future multi-word encodings |
+| Format | # Instr. | Operands |
+|---|---|---|
+| A | 124 | Reg, Reg, Reg |
+| B | 256 | Reg, Reg |
+| C | 47 | Reg, Reg, 15-bit immediate |
+| D | 15 | Reg, 21-bit immediate |
 
 
 ```
       3             2               1
      |1| | | | | | |4| | | | | | | |6| | | | | | | |8| | | | | | | |0|
      +-----------+---------+---------+---+---------+---+-------------+
- A:  |0 0 0 0 0 0|REG1     |REG2     |VM |REG3/FUNC|PM | OP (7b)     |
-     +-----------+---------+---------+-+-+---------+---+-------------+
- B:  |OP (6b)    |REG1     |REG2     |V|IMM (15b)                    |
+ A:  |0 0 0 0 0 0|REG1     |REG2     |VM |REG3     |PM |OP (7b)      |
+     +-----------+---------+---------+-+-+---------+---+---------+---+
+ B:  |0 0 0 0 0 0|REG1     |REG2     |V|FUNC (6b)  |PM |1 1 1 1 1|OP |
+     +-----------+---------+---------+-+-----------+---+---------+---+
+ C:  |OP (6b)    |REG1     |REG2     |V|IMM (15b)                    |
      +---+-------+---------+---------+-+-----------------------------+
- C:  |1 1|OP (4b)|REG1     |IMM (21b)                                |
+ D:  |1 1|OP (4b)|REG1     |IMM (21b)                                |
      +---+-------+---------+-----------------------------------------+
 ```
 
@@ -28,13 +30,11 @@ The fields of the instruction word are interpreted as follows:
 |---|---|
 | OP | Operation |
 | REG*n* | Register (5 bit identifier) |
-| FUNC | A 5-bit function identifier (for two-operand instructions) |
+| FUNC | A 6-bit function identifier |
 | IMM | Immediate value |
 | VM | Vector mode (2-bit):<br>00: scalar <= op(scalar,scalar)<br>10: vector <= op(vector,scalar)<br>11: vector <= op(vector,vector)<br>01: vector <= op(vector,fold(vector)) |
-| V | Vector mode (1-bit):<br>0: scalar <= op(scalar,scalar)<br>1: vector <= op(vector,scalar) |
+| V | Vector mode (1-bit):<br>0: scalar <= op(scalar[,scalar])<br>1: vector <= op(vector[,scalar]) |
 | PM | Packed mode / Index scale (see below) |
-
-The `FUNC` field replaces the `REG3` field for instructions that only require a single source operand.
 
 The interpretation of the PM field depends on the instruction type. For load/store instrcutions it is interpreted as an *Index scale* (a multiplication factor for the 3rd operand), and for all other instructions it is interpreted as a *Packed mode* descriptor:
 
