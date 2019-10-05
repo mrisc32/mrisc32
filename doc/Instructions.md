@@ -1,6 +1,6 @@
 # Instruction encoding
 
-An instruction is encoded as a 32-bit word. There are three different formats: A, B and C. The format of the instruction is determined by a combination of the 6 most significant bits and the 7 least significant bits of the instruction word.
+An instruction is encoded as a 32-bit word. There are four different formats: A, B, C and D. The format of the instruction is determined by the six most significant bits of the instruction word, and another five bits (bits 2 to 6) are used to distinguish between format A and B.
 
 | Format | # Instr. | Operands |
 |---|---|---|
@@ -8,7 +8,6 @@ An instruction is encoded as a 32-bit word. There are three different formats: A
 | B | 256 | Reg, Reg |
 | C | 47 | Reg, Reg, 15-bit immediate |
 | D | 15 | Reg, 21-bit immediate |
-
 
 ```
       3             2               1
@@ -44,6 +43,8 @@ The interpretation of the PM field depends on the instruction type. For load/sto
 | 01 | Byte (4 x 8 bits) | *2 |
 | 10 | Half-word (2 x 16 bits) | *4 |
 | 11 | (reserved) | *8 |
+
+Note that most C type instructions are immediate operand versions of corresponding A type instructions. For instance the A type instruction `ADD reg1, reg2, reg3` has a corresponding C type instruction `ADD reg1, reg2, #imm`.
 
 # Instruction list
 
