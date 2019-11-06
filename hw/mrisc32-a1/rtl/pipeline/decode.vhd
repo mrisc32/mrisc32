@@ -19,8 +19,6 @@
 
 ----------------------------------------------------------------------------------------------------
 -- Pipeline Stage 3: Instruction Decode (ID)
---
--- Note: This entity also implements the WB stage (stage 5), since the register files live here.
 ----------------------------------------------------------------------------------------------------
 
 library ieee;
