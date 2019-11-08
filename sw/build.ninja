@@ -36,9 +36,9 @@ srcdir = .
 builddir = out
 
 # Programs.
-as = mrisc32-as
-ld = mrisc32-ld
-ar = mrisc32-ar
+as = mrisc32-elf-as
+ld = mrisc32-elf-ld
+ar = mrisc32-elf-ar
 elf2bin = ../tools/elf2bin.py
 
 # Program flags.

@@ -76,7 +76,7 @@ def convert(in_path, out_path):
     # Use objcopy to convert the file into raw binary.
     with tempfile.NamedTemporaryFile(mode='w+b') as tf:
         tmp_file = tf.name
-        cmd = ['mrisc32-objcopy', '-O', 'binary', in_path, tmp_file]
+        cmd = ['mrisc32-elf-objcopy', '-O', 'binary', in_path, tmp_file]
         subprocess.run(cmd, check=True)
 
         # Prepend the load address and copy the converted file to the
@@ -100,7 +100,7 @@ def convert(in_path, out_path):
 def main():
     # Parse command line arguments.
     parser = argparse.ArgumentParser(
-            description='Convert elf32-mrisc32 to MRISC32 bin (requires mrisc32-objcopy)')
+            description='Convert elf32-mrisc32 to MRISC32 bin (requires mrisc32-elf-objcopy)')
     parser.add_argument('file', metavar='ELF_FILE', help='the ELF file to convert')
     parser.add_argument('output', metavar='BIN_FILE', help='the output bin file')
     args = parser.parse_args()

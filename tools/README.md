@@ -2,7 +2,7 @@
 
 ## Assembler / Linker
 
-The only way to program the MRISC32 is using [assembly language](https://en.wikipedia.org/wiki/Assembly_language) (high level languages such as C++ via LLVM and/or GCC are planned but not yet implemented).
+The only way to program the MRISC32 is using [assembly language](https://en.wikipedia.org/wiki/Assembly_language) (high level languages such as C++ via GCC is currently under development.
 
 The primary tool is [GNU binutils](https://www.gnu.org/software/binutils/), which includes an assembler (as) and a linker (ld). A special [MRISC32 port of binutils](https://github.com/mbitsnbites/binutils-mrisc32) is required to build software for MRISC32.
 
@@ -15,25 +15,7 @@ Clone the Git repository:
 $ git clone https://github.com/mbitsnbites/binutils-mrisc32.git
 ```
 
-Configure and build:
-
-```bash
-$ cd binutils-mrisc32
-$ mkdir build
-$ cd build
-$ ../configure --target=mrisc32 --program-prefix=mrisc32- --with-system-zlib --disable-gdb --disable-sim
-$ make
-```
-
-Install:
-
-```bash
-$ sudo make install
-```
-
-> Warning 1: The MRISC32 port of binutils is maintained as a branch that is periodically rebased on top of the latest upstream master branch and force pushed to the fork repository. To update your local clone you need to `git fetch origin` and then `git reset --hard origin/users/mbitsnbites/mrisc32`.
-
-> Warning 2: The binutils build system is not very robust. Using `make -j N` is tempting, but may result in failing builds. You may also need to `make clean` if some of the sources have changed, since the depency graph isn't 100% accurate.
+Read the [README.md](https://github.com/mbitsnbites/binutils-mrisc32/blob/users/mbitsnbites/mrisc32/README.md) file for information about how to build and install binutils for MRISC32.
 
 
 ## Building programs
