@@ -23,8 +23,8 @@ Read the [README.md](https://github.com/mbitsnbites/binutils-mrisc32/blob/users/
 To build assembly language programs that can be used by the simulator or the VHDL testbench (core_tb), do the following:
 
 ```bash
-$ mrisc32-as -o my-program.o my-program.s
-$ mrisc32-ld -o my-program.elf my-program.o
+$ mrisc32-elf-as -o my-program.o my-program.s
+$ mrisc32-elf-ld -o my-program.elf my-program.o
 $ tools/elf2bin.py my-program.elf my-program.bin
 ```
 
