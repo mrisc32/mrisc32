@@ -112,6 +112,7 @@ build all: phony $builddir/super_test.bin $
                  $builddir/mandelbrot.bin $
                  $builddir/mandelbrot-float.bin $
                  $builddir/test1.bin $
-                 $builddir/test2.bin
+                 $builddir/test2.bin $
+                 $builddir/libc.a
 
 default all
