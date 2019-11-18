@@ -36,17 +36,23 @@ srcdir = .
 builddir = out
 
 # Programs.
+cc = mrisc32-elf-gcc
 as = mrisc32-elf-as
 ld = mrisc32-elf-ld
 ar = mrisc32-elf-ar
 elf2bin = ../tools/elf2bin.py
 
 # Program flags.
+ccflags = -O2 -S
 asflags = -I$srcdir/lib
 ldflags = -L$builddir
 arflags = crs
 
 # Rules.
+rule cc
+  command = $cc $ccflags -o $out $in
+  description = CC $out
+
 rule as
   command = $as $asflags -o $out $in
   description = AS $out
@@ -81,7 +87,11 @@ build $builddir/libsys.a: ar $builddir/sys.o
 build $builddir/memcpy.o: as $srcdir/lib/libc/memcpy.s
 build $builddir/libc.a: ar $builddir/memcpy.o
 
+# Compile the C programs.
+build $builddir/distray.s: cc $srcdir/demo/distray.c
+
 # Build program object files.
+build $builddir/distray.o: as $builddir/distray.s
 build $builddir/super_test.o: as $srcdir/test/super_test.s | $srcdir/lib/mrisc32-macros.inc
 build $builddir/test1.o: as $srcdir/test/test1.s | $srcdir/lib/mrisc32-macros.inc
 build $builddir/test2.o: as $srcdir/test/test2.s | $srcdir/lib/mrisc32-macros.inc
@@ -90,6 +100,7 @@ build $builddir/mandelbrot.o: as $srcdir/demo/mandelbrot.s | $srcdir/lib/mrisc32
 build $builddir/mandelbrot-float.o: as $srcdir/demo/mandelbrot-float.s | $srcdir/lib/mrisc32-macros.inc
 
 # Build executable elf files.
+build $builddir/distray.elf: ld $builddir/crt0.o $builddir/distray.o
 build $builddir/super_test.elf: ld $builddir/crt0.o $builddir/super_test.o
 build $builddir/test1.elf: ld $builddir/crt0.o $builddir/test1.o | $builddir/libsys.a
   libs = -lsys
@@ -100,6 +111,7 @@ build $builddir/mandelbrot.elf: ld $builddir/crt0.o $builddir/mandelbrot.o
 build $builddir/mandelbrot-float.elf: ld $builddir/crt0.o $builddir/mandelbrot-float.o
 
 # Build bin files.
+build $builddir/distray.bin: elf2bin $builddir/distray.elf
 build $builddir/super_test.bin: elf2bin $builddir/super_test.elf
 build $builddir/test1.bin: elf2bin $builddir/test1.elf
 build $builddir/test2.bin: elf2bin $builddir/test2.elf
@@ -107,7 +119,8 @@ build $builddir/graphics.bin: elf2bin $builddir/graphics.elf
 build $builddir/mandelbrot.bin: elf2bin $builddir/mandelbrot.elf
 build $builddir/mandelbrot-float.bin: elf2bin $builddir/mandelbrot-float.elf
 
-build all: phony $builddir/super_test.bin $
+build all: phony $builddir/distray.bin $
+                 $builddir/super_test.bin $
                  $builddir/graphics.bin $
                  $builddir/mandelbrot.bin $
                  $builddir/mandelbrot-float.bin $
