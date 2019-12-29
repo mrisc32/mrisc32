@@ -8,10 +8,26 @@
 ; -------------------------------------------------------------------------------------------------
 
     .text
-    .globl  main
 
+selftest_result_fun:
+    ldi     s3, #33
+    and     s4, s1, #9
+    add     s1, s3, s4      ; s1 = "*" for pass, "!" for fail
+    j       pc, #_putc@pc
+
+
+    .globl  main
 main:
     push_all_scalar_callee_saved_regs
+
+    ; Start by running the self tests.
+    ldea    s1, pc, #selftest_msg@pc
+    bl      _puts
+    ldea    s1, pc, #selftest_result_fun@pc
+    bl      selftest_run
+
+    ldi     s1, #10
+    bl      _putc
 
     ldi     s16, #0         ; s16 is the return code (0 = success, 1 = fail)
 
@@ -89,10 +105,14 @@ test_failed:
     b       #_puts
 
 
+
+selftest_msg:
+    .asciz  "Selftest: "
+
 fail_msg:
     .asciz  "*** Failed!"
-    .align  4
 
+    .p2align  2
 
 ; ----------------------------------------------------------------------------
 ; A loop with a decrementing conunter.

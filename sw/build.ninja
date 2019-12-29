@@ -43,8 +43,8 @@ ar = mrisc32-elf-ar
 elf2bin = ../tools/elf2bin.py
 
 # Program flags.
-ccflags = -O2 -S
-asflags = -I$srcdir/lib
+ccflags = -O2 -S -ffreestanding
+asflags = -I$srcdir/lib -I$srcdir/lib/selftest/src
 ldflags = -L$builddir
 arflags = crs
 
@@ -87,6 +87,11 @@ build $builddir/libsys.a: ar $builddir/sys.o
 build $builddir/memcpy.o: as $srcdir/lib/libc/memcpy.s
 build $builddir/libc.a: ar $builddir/memcpy.o
 
+# Build the selftest library.
+build $builddir/selftest.o: as $srcdir/lib/selftest/src/selftest.s
+build $builddir/test_add.o: as $srcdir/lib/selftest/src/test_add.s
+build $builddir/libselftest.a: ar $builddir/selftest.o $builddir/test_add.o
+
 # Compile the C programs.
 build $builddir/distray.s: cc $srcdir/demo/distray.c
 
@@ -102,8 +107,8 @@ build $builddir/mandelbrot-float.o: as $srcdir/demo/mandelbrot-float.s | $srcdir
 # Build executable elf files.
 build $builddir/distray.elf: ld $builddir/crt0.o $builddir/distray.o
 build $builddir/super_test.elf: ld $builddir/crt0.o $builddir/super_test.o
-build $builddir/test1.elf: ld $builddir/crt0.o $builddir/test1.o | $builddir/libsys.a
-  libs = -lsys
+build $builddir/test1.elf: ld $builddir/crt0.o $builddir/test1.o | $builddir/libsys.a $builddir/libselftest.a
+  libs = -lsys -lselftest
 build $builddir/test2.elf: ld $builddir/crt0.o $builddir/test2.o | $builddir/libsys.a
   libs = -lsys
 build $builddir/graphics.elf: ld $builddir/crt0.o $builddir/graphics.o
