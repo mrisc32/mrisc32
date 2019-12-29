@@ -217,7 +217,7 @@
     </context>
 
     <context id="data-2" style-ref="data">
-      <match>\.(ascii|asciz|space|zero)</match>
+      <match>\.(ascii|asciz|space|zero|string|local|comm|lcomm)</match>
     </context>
 
     <context id="data">
@@ -228,11 +228,11 @@
     </context>
 
     <context id="directive" style-ref="directive">
-      <match>\.(align|include|text|data|globl|global)</match>
+      <match>\.(align|data|endfunc|endif|endm|file|func|global|globl|ident|if|include|macro|p2align|section|size|text|type)</match>
     </context>
 
     <context id="modifier" style-ref="modifier">
-      <match>@(hi|lo|pc|pchi|pclo)</match>
+      <match>@(hi|lo|pchi|pclo|pc)</match>
     </context>
 
     <context id="mr32asm" class="no-spell-check">
