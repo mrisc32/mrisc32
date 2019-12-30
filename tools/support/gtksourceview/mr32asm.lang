@@ -199,8 +199,9 @@
       <!-- Aliases -->
       <keyword>b</keyword>
       <keyword>bl</keyword>
-      <keyword>nop</keyword>
       <keyword>mov</keyword>
+      <keyword>nop</keyword>
+      <keyword>ret</keyword>
     </context>
 
 
