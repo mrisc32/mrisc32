@@ -34,7 +34,7 @@ main:
     ; Return from main() with exit code 0.
     pop_all_scalar_callee_saved_regs
     ldi     s1, #0
-    j       lr
+    ret
 
 
 ; -------------------------------------------------------------------------------------------------
@@ -51,7 +51,7 @@ init_video:
     ldi     s11, #8
     stw     s11, s10, #MMIO_GPU_DEPTH
 
-    j       lr
+    ret
 
 
 ; -------------------------------------------------------------------------------------------------
@@ -111,7 +111,7 @@ inner_loop_done:
     fadd    s2, s2, s13     ; im(c) = im(c) + coord_step
     bgt     s16, #outer_loop_y
 
-    j       lr
+    ret
 
 
 max_num_iterations:
@@ -171,4 +171,4 @@ loop_x:
 
     bgt     s17, #loop_y
 
-    j       lr
+    ret

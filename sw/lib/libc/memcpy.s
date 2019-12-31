@@ -97,7 +97,7 @@ done:
 
 exit:
     ; At this point s1 should contain it's original value (dest).
-    j       lr
+    ret
 
 
 ; ----------------------------------------------------------------------------

@@ -13,7 +13,7 @@ selftest_result_fun:
     ldi     s3, #33
     and     s4, s1, #9
     add     s1, s3, s4      ; s1 = "*" for pass, "!" for fail
-    j       pc, #_putc@pc
+    b       _putc
 
 
     .globl  main
@@ -97,7 +97,7 @@ test10_passed:
 
     ; Return from main().
     pop_all_scalar_callee_saved_regs
-    j       lr
+    ret
 
 
 test_failed:
@@ -141,7 +141,7 @@ test_1:
 
     ldw     lr, sp, #0
     add     sp, sp, #4
-    j       lr
+    ret
 
 2$:
     .word   0x12345678, 0xffffffff
@@ -176,7 +176,7 @@ test_2:
     ldw     s17, sp, #8
     add     sp, sp, #12
 
-    j       lr
+    ret
 
 1$:
     .word   0x40, 1, 0xbeef0001
@@ -196,7 +196,7 @@ test_3:
     ldw     lr, sp, #0
     add     sp, sp, #4
     ldi     s1, #0
-    j       lr
+    ret
 
 
 1$:
@@ -237,7 +237,7 @@ test_4:
     add     sp, sp, #8
 
     ldi     s1, #0
-    j       lr
+    ret
 
 1$:
     .word   0x89abcdef, 0x01234567
@@ -277,7 +277,7 @@ test_5:
     ldi     s1, #1
 1$:
 
-    j       lr
+    ret
 
 
 test_5_one:
@@ -359,7 +359,7 @@ test_6:
     add     sp, sp, #20
 
     ldi     s1, #0
-    j       lr
+    ret
 
 test_6_in:
     .word   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16
@@ -391,7 +391,7 @@ test_7:
     ldw     lr, sp, #0
     add     sp, sp, #4
     ldi     s1, #0
-    j       lr
+    ret
 
 
 ; ----------------------------------------------------------------------------
@@ -417,7 +417,7 @@ test_8:
     ldw     lr, sp, #0
     add     sp, sp, #8
     ldi     s1, #0
-    j       lr
+    ret
 
 
 ; ----------------------------------------------------------------------------
@@ -463,7 +463,7 @@ test_9:
     ldw     s19, sp, #16
     add     sp, sp, #20
 
-    j       lr
+    ret
 
 
 1$:
@@ -525,7 +525,7 @@ test_10:
     xor     s1, s1, #-1
 
     add     sp, sp, #24
-    j       lr
+    ret
 
 test_10_data1:
     .word   1,2,3,4

@@ -27,7 +27,7 @@ main:
     ; Return from main().
     pop_all_scalar_callee_saved_regs
     ldi     s1, #0
-    j       lr
+    ret
 
 
 ;-------------------------------------------------------------------------------
@@ -75,7 +75,7 @@ abs_diff_vectors:
 2$:
     ldw     vl, sp, #0
     add     sp, sp, #4
-    j       lr
+    ret
 
 
 abs_diff_vectors_scalar:
@@ -102,5 +102,5 @@ abs_diff_vectors_scalar:
     bnz     s4, #1$
 
 2$:
-    j       lr
+    ret
 

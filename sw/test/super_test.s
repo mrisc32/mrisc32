@@ -54,7 +54,7 @@ main:
     ; Return from main() with exit code 0.
     pop_all_scalar_callee_saved_regs
     ldi     s1, #0
-    j       lr
+    ret
 
 
 test_list:
@@ -144,7 +144,7 @@ check_results:
     stw     s3, s1, #4      ; Update fail count.
 
     mov     s1, s5          ; Return pass/fail in s1.
-    j       lr
+    ret
 
 
 ;--------------------------------------------------------------------------------------------------
