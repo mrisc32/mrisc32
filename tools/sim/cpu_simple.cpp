@@ -744,7 +744,7 @@ inline uint32_t fmax8x4(const uint32_t a, const uint32_t b) {
 
 inline uint32_t clz32(const uint32_t x) {
 #if defined(__GNUC__) || defined(__clang__)
-  return static_cast<uint32_t>(__builtin_clz(x));
+  return (x == 0u) ? 32u : static_cast<uint32_t>(__builtin_clz(x));
 #else
   uint32_t count = 0u;
   for (; (count != 32u) && ((x & (0x80000000u >> count)) == 0u); ++count)
