@@ -23,6 +23,7 @@ VID_DEPTH  = 32
 
     .text
     .globl  main
+    .p2align 2
 
 main:
     ; Set up the graphics mode.

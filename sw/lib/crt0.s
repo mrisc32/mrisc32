@@ -7,8 +7,8 @@
 STACK_START   = 0x20000     ; We grow down from 128 KB.
 
     .text
-
     .globl  _start
+    .p2align 2
 
 _start:
     ; ------------------------------------------------------------------------
@@ -162,6 +162,7 @@ _start:
 
 
     .data
+    .p2align 2
 
 argv:
     .word   arg0

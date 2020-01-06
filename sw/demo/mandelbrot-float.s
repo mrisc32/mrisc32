@@ -23,6 +23,7 @@ VIDEO_HEIGHT = 256
 
     .text
     .globl  main
+    .p2align 2
 
 main:
     push_all_scalar_callee_saved_regs

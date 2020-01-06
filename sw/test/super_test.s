@@ -14,6 +14,7 @@ TEST_OUTPUT   = 0x11000     ; Start of memory area where the test output is stor
 ;--------------------------------------------------------------------------------------------------
 
     .text
+    .p2align 2
     .globl  main
 
 main:

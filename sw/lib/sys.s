@@ -7,6 +7,7 @@ EMUL_EXIT = 0xffff0000  ; exit()
 EMUL_PUTC = 0xffff0004  ; putc()
 
     .text
+    .p2align 2
 
 ; -----------------------------------------------------------------------------
 ; exit(int exit_code)
