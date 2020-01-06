@@ -22,6 +22,7 @@
 
 #include <cstdint>
 #include <stdexcept>
+#include <sstream>
 #include <vector>
 
 /// @brief Simulated RAM.
@@ -34,7 +35,9 @@ public:
 
   uint8_t& at8(const uint32_t byte_addr) {
     if (static_cast<std::vector<uint8_t>::size_type>(byte_addr) >= m_memory.size()) {
-      throw std::runtime_error("Out of range memory access.");
+      std::ostringstream ss;
+      ss << "Out of range memory access: " << byte_addr << " >= " << m_memory.size();
+      throw std::runtime_error(ss.str().c_str());
     }
     return m_memory[byte_addr];
   }
@@ -43,7 +46,9 @@ public:
   // methods instead.
   uint16_t& at16(const uint32_t byte_addr) {
     if ((byte_addr % 2u) != 0u) {
-      throw std::runtime_error("Unaligned 16-bit memory access.");
+      std::ostringstream ss;
+      ss << "Unaligned 16-bit memory access: " << byte_addr;
+      throw std::runtime_error(ss.str().c_str());
     }
     auto& data8 = at8(byte_addr);
     return reinterpret_cast<uint16_t&>(data8);
@@ -51,7 +56,9 @@ public:
 
   uint32_t& at32(const uint32_t byte_addr) {
     if ((byte_addr % 4u) != 0u) {
-      throw std::runtime_error("Unaligned 32-bit memory access.");
+      std::ostringstream ss;
+      ss << "Unaligned 32-bit memory access: " << byte_addr;
+      throw std::runtime_error(ss.str().c_str());
     }
     auto& data8 = at8(byte_addr);
     return reinterpret_cast<uint32_t&>(data8);
