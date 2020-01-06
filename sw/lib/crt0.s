@@ -6,14 +6,32 @@
 
 STACK_START   = 0x20000     ; We grow down from 128 KB.
 
-    .text
+    .section .entry
     .globl  _start
-    .p2align 2
 
+    .p2align 2
 _start:
     ; ------------------------------------------------------------------------
     ; Boot + process/thread startup.
     ; ------------------------------------------------------------------------
+
+    ; Clear the BSS data.
+
+    ldhi    s2, #__bss_size@hi
+    or      s2, s2, #__bss_size@lo
+    bz      s2, bss_cleared
+    lsr     s2, s2, #2      ; BSS size is always a multiple of 4 bytes.
+
+    ldhi    s1, #__bss_start@hi
+    or      s1, s1, #__bss_start@lo
+    cpuid   s3, z, z
+clear_bss_loop:
+    min     vl, s2, s3
+    sub     s2, s2, vl
+    stw     vz, s1, #4
+    ldea    s1, s1, vl*4
+    bnz     s2, clear_bss_loop
+bss_cleared:
 
     ; Set all the scalar registers (except Z and PC) to a known state.
     ldi     s1, #0

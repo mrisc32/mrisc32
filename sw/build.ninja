@@ -47,7 +47,7 @@ make = make
 # Program flags.
 ccflags = -O2 -S -ffreestanding
 asflags = -I$srcdir/lib
-ldflags = -L$builddir
+ldflags = -L$builddir --script link.ld
 arflags = crs
 
 # Rules.
