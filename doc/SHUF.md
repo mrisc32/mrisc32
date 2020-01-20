@@ -97,7 +97,7 @@ Examples:
 | `0` | `0`           | `00`          | `0`           | `00`          | `0`           | `00`          | `0`           | `00`          |
 
 Examples:
-- `0x12349ABC` → `0xABABABAB`
+- `0x12349ABC` → `0xBCBCBCBC`
 - `0xDEF05678` → `0x78787878`
 
 ### Convert RGBA to ARGB (32-bit color)
