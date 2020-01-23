@@ -261,7 +261,9 @@ inline uint32_t saturateu8(const uint16_t x) {
 inline uint32_t saturating_op_32(const uint32_t a,
                                  const uint32_t b,
                                  int64_t (*op)(int64_t, int64_t)) {
-  return saturate32(op(static_cast<int64_t>(a), static_cast<int64_t>(b)));
+  const auto a64 = static_cast<int64_t>(static_cast<int32_t>(a));
+  const auto b64 = static_cast<int64_t>(static_cast<int32_t>(b));
+  return saturate32(op(a64, b64));
 }
 
 inline uint32_t saturating_op_16x2(const uint32_t a,
@@ -355,7 +357,9 @@ inline uint32_t halveu8(const uint16_t x) {
 }
 
 inline uint32_t halving_op_32(const uint32_t a, const uint32_t b, int64_t (*op)(int64_t, int64_t)) {
-  return halve32(op(static_cast<int64_t>(a), static_cast<int64_t>(b)));
+  const auto a64 = static_cast<int64_t>(static_cast<int32_t>(a));
+  const auto b64 = static_cast<int64_t>(static_cast<int32_t>(b));
+  return halve32(op(a64, b64));
 }
 
 inline uint32_t halving_op_16x2(const uint32_t a,
