@@ -68,7 +68,7 @@ There are a few tools that aid software development for MRISC32. See [Tools](too
 
 # Hardware/HDL
 
-A single issue, in-order CPU is currently under development: [MRISC32-A1](https://github.com/mbitsnbites/mrisc32-a1).
+A single issue, in-order CPU is currently under development: [MRISC32-A1](https://github.com/mrisc32/mrisc32-a1).
 
 
 # Goals
