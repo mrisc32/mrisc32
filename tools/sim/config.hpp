@@ -98,7 +98,7 @@ private:
   static const uint64_t DEFAULT_RAM_SIZE = 0x100000000u;  // 4 GiB
   static const bool DEFAULT_TRACE_ENABLED = false;
   static const bool DEFAULT_GFX_ENABLED = false;
-  static const uint32_t DEFAULT_GFX_ADDR = 0x4003cee4u;  // Start of MC1 VCON.
+  static const uint32_t DEFAULT_GFX_ADDR = 0x4003d480u;  // Start of MC1 VCON framebuffer.
   static const uint32_t DEFAULT_GFX_WIDTH = 320u;
   static const uint32_t DEFAULT_GFX_HEIGHT = 180u;
   static const uint32_t DEFAULT_GFX_DEPTH = 1u;
