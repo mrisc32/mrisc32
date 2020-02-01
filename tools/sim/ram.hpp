@@ -30,7 +30,7 @@
 /// The memory is 32-bit addressable. All memory is allocated up front from the host machine.
 class ram_t {
 public:
-  ram_t(const uint32_t ram_size) : m_memory(ram_size, 0u) {
+  ram_t(const uint64_t ram_size) : m_memory(ram_size, 0u) {
   }
 
   uint8_t& at8(const uint32_t byte_addr) {

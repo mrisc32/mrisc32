@@ -27,12 +27,12 @@ class config_t {
 public:
   static config_t& instance();
 
-  uint32_t ram_size() const {
+  uint64_t ram_size() const {
     return m_ram_size;
   }
 
-  void set_ram_size(const uint32_t x) {
-    m_ram_size = x;
+  void set_ram_size(const uint64_t x) {
+    m_ram_size = std::min(x, 4294967296u);
   }
 
   bool trace_enabled() const {
@@ -95,15 +95,15 @@ private:
   config_t() {}
 
   // Default values.
-  static const uint32_t DEFAULT_RAM_SIZE = 0x1000000u;  // 16 MiB
+  static const uint64_t DEFAULT_RAM_SIZE = 0x100000000u;  // 4 GiB
   static const bool DEFAULT_TRACE_ENABLED = false;
   static const bool DEFAULT_GFX_ENABLED = false;
-  static const uint32_t DEFAULT_GFX_ADDR = 0x0008000u;
-  static const uint32_t DEFAULT_GFX_WIDTH = 256u;
-  static const uint32_t DEFAULT_GFX_HEIGHT = 256u;
-  static const uint32_t DEFAULT_GFX_DEPTH = 8u;
+  static const uint32_t DEFAULT_GFX_ADDR = 0x4003cee4u;  // Start of MC1 VCON.
+  static const uint32_t DEFAULT_GFX_WIDTH = 320u;
+  static const uint32_t DEFAULT_GFX_HEIGHT = 180u;
+  static const uint32_t DEFAULT_GFX_DEPTH = 1u;
 
-  uint32_t m_ram_size = DEFAULT_RAM_SIZE;
+  uint64_t m_ram_size = DEFAULT_RAM_SIZE;
   bool m_trace_enabled = DEFAULT_TRACE_ENABLED;
   std::string m_trace_file_name;
   bool m_gfx_enabled = DEFAULT_GFX_ENABLED;

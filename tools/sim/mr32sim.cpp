@@ -109,7 +109,7 @@ int main(const int argc, const char** argv) {
             exit(1);
           }
           const auto ram_size_str = std::string(argv[++k]);
-          const auto ram_size = static_cast<uint32_t>(std::stol(ram_size_str));
+          const auto ram_size = static_cast<uint64_t>(std::stol(ram_size_str));
           config_t::instance().set_ram_size(ram_size);
         } else {
           std::cerr << "Error: Unknown option: " << argv[k] << "\n";
@@ -141,6 +141,16 @@ int main(const int argc, const char** argv) {
 
     // Load the program file into RAM.
     read_bin_file(bin_file, ram);
+
+    // HACK: Populate MMIO memory with MC1 fields.
+    const uint32_t MMIO_START = 0xc0000000u;
+    if (config_t::instance().ram_size() >= (MMIO_START + 64)) {
+      ram.at32(MMIO_START + 8) = 70000000;     // CPUCLK
+      ram.at32(MMIO_START + 12) = 256 * 1024;  // VRAMSIZE
+      ram.at32(MMIO_START + 20) = 1920;        // VIDWIDTH
+      ram.at32(MMIO_START + 24) = 1080;        // VIDHEIGHT
+      ram.at32(MMIO_START + 28) = 60 * 65536;  // VIDFPS
+    }
 
     // Initialize the CPU.
     cpu_simple_t cpu(ram);
@@ -267,8 +277,8 @@ int main(const int argc, const char** argv) {
     // Show some stats.
     cpu.dump_stats();
 
-    // Dump some RAM (we use the same range as the VHDL testbench).
-    cpu.dump_ram(0x00000000, 0x00020000, "/tmp/mrisc32_sim_ram.bin");
+    // Dump some RAM (we use the same range as the MC1 VRAM).
+    cpu.dump_ram(0x40000000u, 0x40040000u, "/tmp/mrisc32_sim_vram.bin");
 
     std::exit(exit_code);
   } catch (std::exception& e) {

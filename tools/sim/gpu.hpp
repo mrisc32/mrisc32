@@ -25,6 +25,7 @@
 #include <glad/glad.h>
 
 #include <cstdint>
+#include <vector>
 
 class gpu_t {
 public:
@@ -63,13 +64,15 @@ private:
 
   ram_t& m_ram;
 
+  std::vector<uint8_t> m_conv_buffer;
+
   uint32_t m_gfx_ram_start = 0u;
   uint32_t m_width = 0u;
   uint32_t m_height = 0u;
   uint32_t m_depth = 0u;
   uint32_t m_frame_no = 0u;
 
-  uint32_t m_bytes_per_pixel;
+  uint32_t m_bits_per_pixel;
   GLint m_tex_internalformat;
   GLenum m_tex_format;
   GLenum m_tex_type;

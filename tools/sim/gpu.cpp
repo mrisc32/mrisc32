@@ -27,7 +27,7 @@
 
 namespace {
 // Memory mapped I/O: GPU configuration registers.
-const uint32_t MMIO_GPU_BASE = 0x00000100u;
+const uint32_t MMIO_GPU_BASE = 0xc0000100u;
 const uint32_t MMIO_GPU_ADDR = MMIO_GPU_BASE + 0u;       // Start of the framebuffer memory area.
 const uint32_t MMIO_GPU_WIDTH = MMIO_GPU_BASE + 4u;      // Width of the framebuffer (in pixels).
 const uint32_t MMIO_GPU_HEIGHT = MMIO_GPU_BASE + 8u;     // Height of the framebuffer (in pixels).
@@ -137,7 +137,8 @@ uint32_t gpu_t::mem32_or_default(const uint32_t addr, const uint32_t default_val
 }
 
 void gpu_t::check_gfx_config() {
-  const auto video_ram_end = m_gfx_ram_start + (m_width * m_height * m_bytes_per_pixel);
+  const auto video_ram_end = static_cast<uint64_t>(m_gfx_ram_start) +
+                             static_cast<uint64_t>(m_width * m_height * m_bits_per_pixel * 8);
   const auto ram_end = config_t::instance().ram_size();
   if (video_ram_end > ram_end) {
     throw std::runtime_error("Invalid gfx RAM configuration (does not fit in CPU RAM).");
@@ -225,14 +226,21 @@ void gpu_t::configure() {
   // Determine the pixel format.
   switch (m_depth) {
     case 32u:
-      m_bytes_per_pixel = 4u;
+      m_bits_per_pixel = 32u;
       m_tex_internalformat = GL_RGBA;
       m_tex_format = GL_BGRA;
       m_tex_type = GL_UNSIGNED_BYTE;
       break;
 
     case 8u:
-      m_bytes_per_pixel = 1u;
+      m_bits_per_pixel = 8u;
+      m_tex_internalformat = GL_RED;
+      m_tex_format = GL_RED;
+      m_tex_type = GL_UNSIGNED_BYTE;
+      break;
+
+    case 1u:
+      m_bits_per_pixel = 1u;
       m_tex_internalformat = GL_RED;
       m_tex_format = GL_RED;
       m_tex_type = GL_UNSIGNED_BYTE;
@@ -241,7 +249,7 @@ void gpu_t::configure() {
     default:
       throw std::runtime_error("Invalid pixel format.");
   }
-  std::cout << "Gfx mode: " << m_width << " x " << m_height << " : " << (m_bytes_per_pixel * 8)
+  std::cout << "Gfx mode: " << m_width << " x " << m_height << " : " << m_bits_per_pixel
             << " bpp\n";
 
   // Make sure that we can use the current GFX configuration.
@@ -273,6 +281,28 @@ void gpu_t::paint(const int actual_fb_width, const int actual_fb_height) {
   // Set the viewport.
   glViewport(0, 0, static_cast<GLsizei>(actual_fb_width), static_cast<GLsizei>(actual_fb_height));
 
+  // Convert <8 bpp formats to 8bpp.
+  // TODO(m): Add support for 2bpp and 4bpp.
+  const auto* pixel_buffer = &m_ram.at8(m_gfx_ram_start);
+  if (m_bits_per_pixel == 1u) {
+    const auto buf_size = m_width * m_height;
+    if (m_conv_buffer.size() != buf_size) {
+      m_conv_buffer.resize(buf_size);
+    }
+
+    for (uint32_t y = 0; y < m_height; ++y) {
+      const auto *src = &pixel_buffer[(y * m_width) >> 3];
+      auto *dst = &m_conv_buffer[y * m_width];
+      for (uint32_t x = 0; x < m_width; ++x) {
+        const auto bit_pos = x & 7u;
+        const auto c = (src[x >> 3] & static_cast<uint8_t>(0x01u << bit_pos)) >> bit_pos;
+        dst[x] = static_cast<uint8_t>(c * static_cast<uint8_t>(0xffu));
+      }
+    }
+
+    pixel_buffer = &m_conv_buffer[0];
+  }
+
   // Upload the frame buffer from ram to the framebuffer texture.
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_RECTANGLE, m_fb_tex);
@@ -284,14 +314,14 @@ void gpu_t::paint(const int actual_fb_width, const int actual_fb_height) {
                   static_cast<GLsizei>(m_height),
                   m_tex_format,
                   m_tex_type,
-                  &m_ram.at8(m_gfx_ram_start));
+                  pixel_buffer);
   check_gl_error();
 
   // Set up the shader.
   glUseProgram(m_program);
   glUniform2f(m_resolution_uniform, static_cast<GLfloat>(m_width), static_cast<GLfloat>(m_height));
   glUniform1i(m_sampler_uniform, 0);
-  glUniform1i(m_monochrome_uniform, m_bytes_per_pixel == 1 ? 1 : 0);
+  glUniform1i(m_monochrome_uniform, m_bits_per_pixel <= 8 ? 1 : 0);
   check_gl_error();
 
   // Draw the frame buffer texture to the screen.
@@ -304,7 +334,7 @@ void gpu_t::paint(const int actual_fb_width, const int actual_fb_height) {
                         GL_FALSE,                   // Normalized?
                         0,                          // Stride
                         reinterpret_cast<void*>(0)  // Array buffer offset = 0
-                        );
+  );
   glDrawArrays(GL_TRIANGLES, 0, 6);  // 6 vertices -> 2 triangles
   glDisableVertexAttribArray(0);
   check_gl_error();
