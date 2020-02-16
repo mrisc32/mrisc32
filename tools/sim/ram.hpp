@@ -21,9 +21,33 @@
 #define SIM_RAM_HPP_
 
 #include <cstdint>
-#include <stdexcept>
 #include <sstream>
+#include <stdexcept>
 #include <vector>
+
+// Convert a word between host endianity and MRISC32 endianity (little endian).
+static inline uint32_t convert_endianity(const uint32_t x) {
+#if defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+  return x;
+#elif (defined(__GNUC__) || defined(__llvm__)) && defined(__BYTE_ORDER__) && \
+    (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+  return __builtin_bswap32(x);
+#else
+  return (x >> 24) | ((x >> 8) & 0x0000ff00u) | ((x << 8) & 0x00ff0000u) | (x << 24);
+#endif
+}
+
+// Convert a half-word between host endianity and MRISC32 endianity (little endian).
+static inline uint16_t convert_endianity(const uint16_t x) {
+#if defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+  return x;
+#elif (defined(__GNUC__) || defined(__llvm__)) && defined(__BYTE_ORDER__) && \
+    (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+  return __builtin_bswap16(x);
+#else
+  return (x >> 8) | (x << 8);
+#endif
+}
 
 /// @brief Simulated RAM.
 ///
@@ -33,38 +57,82 @@ public:
   ram_t(const uint64_t ram_size) : m_memory(ram_size, 0u) {
   }
 
-  uint8_t& at8(const uint32_t byte_addr) {
-    if (static_cast<std::vector<uint8_t>::size_type>(byte_addr) >= m_memory.size()) {
-      std::ostringstream ss;
-      ss << "Out of range memory access: " << byte_addr << " >= " << m_memory.size();
-      throw std::runtime_error(ss.str().c_str());
-    }
+  uint8_t& at(const uint32_t byte_addr) {
+    check_addr(byte_addr, sizeof(uint8_t));
     return m_memory[byte_addr];
   }
 
-  // Note: These functions are host machine endian dependent. Consider converting them to read/write
-  // methods instead.
-  uint16_t& at16(const uint32_t byte_addr) {
-    if ((byte_addr % 2u) != 0u) {
-      std::ostringstream ss;
-      ss << "Unaligned 16-bit memory access: " << byte_addr;
-      throw std::runtime_error(ss.str().c_str());
-    }
-    auto& data8 = at8(byte_addr);
-    return reinterpret_cast<uint16_t&>(data8);
+  uint32_t load8(const uint32_t addr) {
+    check_addr(addr, sizeof(uint8_t));
+    return m_memory[addr];
   }
 
-  uint32_t& at32(const uint32_t byte_addr) {
-    if ((byte_addr % 4u) != 0u) {
-      std::ostringstream ss;
-      ss << "Unaligned 32-bit memory access: " << byte_addr;
-      throw std::runtime_error(ss.str().c_str());
-    }
-    auto& data8 = at8(byte_addr);
-    return reinterpret_cast<uint32_t&>(data8);
+  uint32_t load8signed(const uint32_t addr) {
+    return s8_as_u32(load8(addr));
+  }
+
+  void store8(const uint32_t addr, const uint32_t value) {
+    check_addr(addr, sizeof(uint8_t));
+    check_align(addr, sizeof(uint8_t));
+    m_memory[addr] = static_cast<uint8_t>(value);
+  }
+
+  uint32_t load16(const uint32_t addr) const {
+    check_addr(addr, sizeof(uint16_t));
+    check_align(addr, sizeof(uint16_t));
+    return convert_endianity(reinterpret_cast<const uint16_t&>(m_memory[addr]));
+  }
+
+  uint32_t load16signed(const uint32_t addr) const {
+    return s16_as_u32(load16(addr));
+  }
+
+  void store16(const uint32_t addr, const uint32_t value) {
+    check_addr(addr, sizeof(uint16_t));
+    check_align(addr, sizeof(uint16_t));
+    reinterpret_cast<uint16_t&>(m_memory[addr]) = convert_endianity(static_cast<uint16_t>(value));
+  }
+
+  uint32_t load32(const uint32_t addr) {
+    check_addr(addr, sizeof(uint32_t));
+    check_align(addr, sizeof(uint32_t));
+    return convert_endianity(reinterpret_cast<const uint32_t&>(m_memory[addr]));
+  }
+
+  void store32(const uint32_t addr, const uint32_t value) {
+    check_addr(addr, sizeof(uint32_t));
+    check_align(addr, sizeof(uint32_t));
+    reinterpret_cast<uint32_t&>(m_memory[addr]) = convert_endianity(value);
   }
 
 private:
+  void check_addr(const uint32_t addr, const uint32_t size) const {
+    const auto addr_first = static_cast<std::vector<uint8_t>::size_type>(addr);
+    const auto addr_last = static_cast<std::vector<uint8_t>::size_type>(addr + size - 1);
+    const auto mem_size = m_memory.size();
+    if (addr_first >= mem_size || addr_last >= mem_size) {
+      std::ostringstream ss;
+      ss << "Out of range memory access: " << addr << " >= " << mem_size;
+      throw std::runtime_error(ss.str().c_str());
+    }
+  }
+
+  void check_align(const uint32_t addr, const uint32_t size) const {
+    if ((addr % size) != 0u) {
+      std::ostringstream ss;
+      ss << "Unaligned " << (8 * size) << "-bit memory access: " << addr;
+      throw std::runtime_error(ss.str().c_str());
+    }
+  }
+
+  static uint32_t s8_as_u32(const uint32_t x) {
+    return static_cast<uint32_t>(static_cast<int32_t>(static_cast<int8_t>(x)));
+  }
+
+  static uint32_t s16_as_u32(const uint32_t x) {
+    return static_cast<uint32_t>(static_cast<int32_t>(static_cast<int16_t>(x)));
+  }
+
   std::vector<uint8_t> m_memory;
 
   // The RAM object is non-copyable.

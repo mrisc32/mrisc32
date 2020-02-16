@@ -68,7 +68,7 @@ void cpu_t::dump_ram(const uint32_t begin, const uint32_t end, const std::string
   std::ofstream file;
   file.open(file_name, std::ios::out | std::ios::binary);
   for (uint32_t addr = begin; addr < end; ++addr) {
-    const uint8_t& byte = m_ram.at8(addr);
+    const uint8_t byte = static_cast<uint8_t>(m_ram.load8(addr));
     file.write(reinterpret_cast<const char*>(&byte), 1);
   }
   file.close();

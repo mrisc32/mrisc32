@@ -132,7 +132,7 @@ gpu_t::gpu_t(ram_t& ram) : m_ram(ram) {
 }
 
 uint32_t gpu_t::mem32_or_default(const uint32_t addr, const uint32_t default_value) {
-  const auto value = m_ram.at32(addr);
+  const auto value = m_ram.load32(addr);
   return (value == 0u) ? default_value : value;
 }
 
@@ -283,7 +283,7 @@ void gpu_t::paint(const int actual_fb_width, const int actual_fb_height) {
 
   // Convert <8 bpp formats to 8bpp.
   // TODO(m): Add support for 2bpp and 4bpp.
-  const auto* pixel_buffer = &m_ram.at8(m_gfx_ram_start);
+  const auto* pixel_buffer = &m_ram.at(m_gfx_ram_start);
   if (m_bits_per_pixel == 1u) {
     const auto buf_size = m_width * m_height;
     if (m_conv_buffer.size() != buf_size) {
@@ -341,5 +341,5 @@ void gpu_t::paint(const int actual_fb_width, const int actual_fb_height) {
 
   // Update the frame number.
   ++m_frame_no;
-  m_ram.at32(MMIO_GPU_FRAME_NO) = m_frame_no;
+  m_ram.store32(MMIO_GPU_FRAME_NO, m_frame_no);
 }

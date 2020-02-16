@@ -56,8 +56,9 @@ void read_bin_file(const char* file_name, ram_t& ram) {
   uint32_t current_addr = start_addr;
   uint32_t total_bytes_read = 0u;
   while (f.good()) {
-    auto& byte = ram.at8(current_addr);
+    uint8_t byte;
     f.read(reinterpret_cast<char*>(&byte), 1);
+    ram.store8(current_addr, byte);
     const uint32_t bytes_read = f ? 1 : static_cast<uint32_t>(f.gcount());
     total_bytes_read += bytes_read;
     current_addr += bytes_read;
@@ -145,11 +146,11 @@ int main(const int argc, const char** argv) {
     // HACK: Populate MMIO memory with MC1 fields.
     const uint32_t MMIO_START = 0xc0000000u;
     if (config_t::instance().ram_size() >= (MMIO_START + 64)) {
-      ram.at32(MMIO_START + 8) = 70000000;     // CPUCLK
-      ram.at32(MMIO_START + 12) = 256 * 1024;  // VRAMSIZE
-      ram.at32(MMIO_START + 20) = 1920;        // VIDWIDTH
-      ram.at32(MMIO_START + 24) = 1080;        // VIDHEIGHT
-      ram.at32(MMIO_START + 28) = 60 * 65536;  // VIDFPS
+      ram.store32(MMIO_START + 8, 70000000);     // CPUCLK
+      ram.store32(MMIO_START + 12, 256 * 1024);  // VRAMSIZE
+      ram.store32(MMIO_START + 20, 1920);        // VIDWIDTH
+      ram.store32(MMIO_START + 24, 1080);        // VIDHEIGHT
+      ram.store32(MMIO_START + 28, 60 * 65536);  // VIDFPS
     }
 
     // Initialize the CPU.

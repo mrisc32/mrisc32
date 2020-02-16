@@ -86,22 +86,6 @@ inline uint32_t as_u32(const float x) {
   return result;
 }
 
-inline uint32_t s8_as_u32(const int8_t x) {
-  return static_cast<uint32_t>(static_cast<int32_t>(x));
-}
-
-inline uint32_t u8_as_u32(const uint8_t x) {
-  return static_cast<uint32_t>(x);
-}
-
-inline uint32_t s16_as_u32(const int16_t x) {
-  return static_cast<uint32_t>(static_cast<int32_t>(x));
-}
-
-inline uint32_t u16_as_u32(const uint16_t x) {
-  return static_cast<uint32_t>(x);
-}
-
 inline uint32_t add32(const uint32_t a, const uint32_t b) {
   return a + b;
 }
@@ -977,7 +961,6 @@ uint32_t cpu_simple_t::run() {
   wb_in_t wb_in = wb_in_t();
 
   while (!m_terminate) {
-    uint32_t instr_cycles = 1u;
     uint32_t next_pc;
     bool next_cycle_continues_a_vector_loop;
 
@@ -1000,7 +983,7 @@ uint32_t cpu_simple_t::run() {
 
         // Read the instruction from the current (predicted) PC.
         id_in.pc = instr_pc;
-        id_in.instr = m_ram.at32(instr_pc);
+        id_in.instr = m_ram.load32(instr_pc);
 
         // We terminate the simulation when we encounter a jump to address zero.
         if (instr_pc == 0x00000000) {
@@ -2042,31 +2025,31 @@ uint32_t cpu_simple_t::run() {
       uint32_t mem_result = 0u;
       switch (mem_in.mem_op) {
         case MEM_OP_LOAD8:
-          mem_result = s8_as_u32(static_cast<int8_t>(m_ram.at8(mem_in.mem_addr)));
+          mem_result = m_ram.load8signed(mem_in.mem_addr);
           break;
         case MEM_OP_LOADU8:
-          mem_result = u8_as_u32(m_ram.at8(mem_in.mem_addr));
+          mem_result = m_ram.load8(mem_in.mem_addr);
           break;
         case MEM_OP_LOAD16:
-          mem_result = s16_as_u32(static_cast<int16_t>(m_ram.at16(mem_in.mem_addr)));
+          mem_result = m_ram.load16signed(mem_in.mem_addr);
           break;
         case MEM_OP_LOADU16:
-          mem_result = u16_as_u32(m_ram.at16(mem_in.mem_addr));
+          mem_result = m_ram.load16(mem_in.mem_addr);
           break;
         case MEM_OP_LOAD32:
-          mem_result = m_ram.at32(mem_in.mem_addr);
+          mem_result = m_ram.load32(mem_in.mem_addr);
           break;
         case MEM_OP_LDEA:
           mem_result = mem_in.mem_addr;
           break;
         case MEM_OP_STORE8:
-          m_ram.at8(mem_in.mem_addr) = static_cast<uint8_t>(mem_in.store_data);
+          m_ram.store8(mem_in.mem_addr, mem_in.store_data);
           break;
         case MEM_OP_STORE16:
-          m_ram.at16(mem_in.mem_addr) = static_cast<uint16_t>(mem_in.store_data);
+          m_ram.store16(mem_in.mem_addr, mem_in.store_data);
           break;
         case MEM_OP_STORE32:
-          m_ram.at32(mem_in.mem_addr) = mem_in.store_data;
+          m_ram.store32(mem_in.mem_addr, mem_in.store_data);
           break;
       }
 
@@ -2093,7 +2076,7 @@ uint32_t cpu_simple_t::run() {
       m_regs[REG_PC] = next_pc;
     }
 
-    m_total_cycle_count += instr_cycles;
+    ++m_total_cycle_count;
   }
 
   return m_exit_code;
