@@ -1071,60 +1071,59 @@ uint32_t cpu_simple_t::run() {
       const bool is_subroutine_branch = ((iword & 0xfc000000u) == 0xe4000000u);
       const bool is_branch = is_bcc || is_j;
 
-      // Branch source register is reg1 (for b[cc] and j/jl/b/bl).
-      const uint32_t branch_cond_reg = is_branch ? reg1 : REG_Z;
+      if (is_branch) {
+        // Branch source register is reg1 (for b[cc] and j/jl/b/bl).
+        const uint32_t branch_cond_reg = is_branch ? reg1 : REG_Z;
 
-      // Read the branch/condition register.
-      const uint32_t branch_cond_value = m_regs[branch_cond_reg];
+        // Read the branch/condition register.
+        const uint32_t branch_cond_value = m_regs[branch_cond_reg];
 
-      // Evaluate condition (for b[cc]).
-      const uint32_t condition = (iword >> 26u) & 0x0000003fu;
-      bool condition_satisfied = false;
-      switch (condition) {
-        case 0x30u:  // bz
-          condition_satisfied = (branch_cond_value == 0u);
-          break;
-        case 0x31u:  // bnz
-          condition_satisfied = (branch_cond_value != 0u);
-          break;
-        case 0x32u:  // bs
-          condition_satisfied = (branch_cond_value == 0xffffffffu);
-          break;
-        case 0x33u:  // bns
-          condition_satisfied = (branch_cond_value != 0xffffffffu);
-          break;
-        case 0x34u:  // blt
-          condition_satisfied = ((branch_cond_value & 0x80000000u) != 0u);
-          break;
-        case 0x35u:  // bge
-          condition_satisfied = ((branch_cond_value & 0x80000000u) == 0u);
-          break;
-        case 0x36u:  // ble
-          condition_satisfied =
-              ((branch_cond_value & 0x80000000u) != 0u) || (branch_cond_value == 0u);
-          break;
-        case 0x37u:  // bgt
-          condition_satisfied =
-              ((branch_cond_value & 0x80000000u) == 0u) && (branch_cond_value != 0u);
-          break;
+        bool branch_taken = false;
+        uint32_t branch_target = 0u;
+
+        // b[cc]?
+        if (is_bcc) {
+          // Evaluate condition (for b[cc]).
+          const uint32_t condition = (iword >> 26u) & 0x0000003fu;
+          switch (condition) {
+            case 0x30u:  // bz
+              branch_taken = (branch_cond_value == 0u);
+              break;
+            case 0x31u:  // bnz
+              branch_taken = (branch_cond_value != 0u);
+              break;
+            case 0x32u:  // bs
+              branch_taken = (branch_cond_value == 0xffffffffu);
+              break;
+            case 0x33u:  // bns
+              branch_taken = (branch_cond_value != 0xffffffffu);
+              break;
+            case 0x34u:  // blt
+              branch_taken = ((branch_cond_value & 0x80000000u) != 0u);
+              break;
+            case 0x35u:  // bge
+              branch_taken = ((branch_cond_value & 0x80000000u) == 0u);
+              break;
+            case 0x36u:  // ble
+              branch_taken = ((branch_cond_value & 0x80000000u) != 0u) || (branch_cond_value == 0u);
+              break;
+            case 0x37u:  // bgt
+              branch_taken = ((branch_cond_value & 0x80000000u) == 0u) && (branch_cond_value != 0u);
+              break;
+          }
+          branch_target = id_in.pc + (imm21 << 2u);
+        }
+
+        // j/jl/b/bl?
+        if (is_j) {
+          branch_taken = true;
+          branch_target = branch_cond_value + (imm21 << 2u);
+        }
+
+        next_pc = branch_taken ? branch_target : (id_in.pc + 4u);
+      } else {
+        next_pc = id_in.pc + 4u;
       }
-
-      bool branch_taken = false;
-      uint32_t branch_target = 0u;
-
-      // b[cc]?
-      if (is_bcc) {
-        branch_taken = condition_satisfied;
-        branch_target = id_in.pc + (imm21 << 2u);
-      }
-
-      // j/jl/b/bl?
-      if (is_j) {
-        branch_taken = true;
-        branch_target = branch_cond_value + (imm21 << 2u);
-      }
-
-      next_pc = branch_taken ? branch_target : (id_in.pc + 4u);
 
       // == DECODE ==
 
