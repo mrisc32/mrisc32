@@ -147,7 +147,7 @@
       <!-- Load / store -->
       <keyword>ldb</keyword>
       <keyword>ldh</keyword>
-      <keyword>ldi</keyword>
+      <keyword>ldli</keyword>
       <keyword>ldhi</keyword>
       <keyword>ldhio</keyword>
       <keyword>ldub</keyword>
@@ -199,6 +199,8 @@
       <!-- Aliases -->
       <keyword>b</keyword>
       <keyword>bl</keyword>
+      <keyword>call</keyword>
+      <keyword>ldi</keyword>
       <keyword>mov</keyword>
       <keyword>nop</keyword>
       <keyword>ret</keyword>
