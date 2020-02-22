@@ -74,7 +74,7 @@ Note that most C type instructions are immediate operand versions of correspondi
 |STB| x | (1) |   | src1, src2, src3 | [src2 + src3] <= src1 (byte) | Store byte |
 |STH| x | (1) |   | src1, src2, src3 | [src2 + src3] <= src1 (halfword) | Store halfowrd |
 |STW| x | (1) |   | src1, src2, src3 | [src2 + src3] <= src1 (word) | Store word |
-|LDI| x |   |   | dst, #i21 | dst <= signextend(i21) | Alt. 1: Load immediate (low 21 bits) |
+|LDLI| x |   |   | dst, #i21 | dst <= signextend(i21) | Alt. 1: Load immediate (low 21 bits) |
 |LDHI| x |   |   | dst, #i21 | dst <= i21 << 11 | Alt. 2: Load immediate (high 21 bits) |
 |LDHIO| x |   |   | dst, #i21 | dst <= (i21 << 11) \| 0x7ff | Alt. 3: Load immediate with low ones (high 21 bits) |
 
