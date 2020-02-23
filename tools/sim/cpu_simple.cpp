@@ -1144,7 +1144,7 @@ uint32_t cpu_simple_t::run() {
         ex_op = iword >> 26u;
       } else if (op_class_D) {
         switch (iword & 0xfc000000u) {
-          case 0xe8000000u:  // ldi
+          case 0xe8000000u:  // ldli
             ex_op = EX_OP_OR;
             break;
           case 0xec000000u:  // ldhi
