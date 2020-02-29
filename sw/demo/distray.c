@@ -95,9 +95,34 @@ static float fabsf(float x) {
   return __builtin_fabsf(x);
 }
 
+static unsigned float_to_uint(float x) {
+  return *(unsigned*)&x;
+}
+
+static float uint_to_float(unsigned x) {
+  return *(float*)&x;
+}
+
 static float sqrtf(float x) {
-  /* TODO(m): Implement me!  */
-  return x;
+  // Note: This function should complete in less than 100 clock cycles.
+  float a, b;
+
+  if (x < 0.0f)
+    return uint_to_float(0x7fffffffu);  // NaN
+
+
+  // Initial guess is based on halving the exponent.
+  unsigned c = float_to_uint(x);
+  c = ((((c & 0x7f800000u) - 0x3f800000u) / 2 + 0x3f800000u)  & 0x7f800000u) | (c & 0x007fffffu);
+  a = uint_to_float(c);
+
+  // Newton...
+  b = x / a; a = (a + b) * 0.5f;
+  b = x / a; a = (a + b) * 0.5f;
+  b = x / a; a = (a + b) * 0.5f;
+  b = x / a; a = (a + b) * 0.5f;
+
+  return a;
 }
 
 static float atanf(float x) {
