@@ -8,6 +8,12 @@
  * MRISC32:ified by Marcus Geelnard
  *************************************************************************************************/
 
+#ifndef __MRISC32__
+#include <stdio.h>
+#include <stdlib.h>
+#endif
+
+
 /*************************************************************************************************
  *  Types
  *************************************************************************************************/
@@ -74,7 +80,7 @@ static const VECTOR Lightpos = {-3.0f, 1.0f, 5.0f};
 static const FLOAT Lightr = 0.4f; /* Light-radius (for soft shadows) */
 
 /* The camera position (x,y,z), and orientation. */
-static const VECTOR Camerapos = {1.5f, -1.4f, 1.2f};
+static const VECTOR Camerapos = {1.5f, -1.4f, 0.6f};
 static const VECTOR Cameraright = {3.0f, 1.0f, 0.0f};
 static const VECTOR Cameradir = {-1.0f, 3.0f, 0.0f};
 static const VECTOR Cameraup = {0.0f, 0.0f, 3.16228f*((FLOAT)HEIGHT/(FLOAT)WIDTH)};
@@ -85,8 +91,10 @@ static const FLOAT Ambient = 0.3f;
 /* Skycolors (Skycolor[0] = horizon, Skycolor[1] = zenit ). */
 static const VECTOR Skycolor[2] = {{0.5f, 0.3f, 0.7f}, {0.0f, 0.0f, 0.2f}};
 
+
 /*************************************************************************************************
- *  For now we implement our own math functions. These should go in libm at some point.
+ *  For now we implement our own std functions. These should be provided by newlib or similar at
+ *  some point.
  *************************************************************************************************/
 
 static float fabsf(float x) {
@@ -102,10 +110,10 @@ static float uint_to_float(unsigned x) {
 }
 
 static float sqrtf(float x) {
-  // Note: This function should complete in less than 100 clock cycles.
+  // This is a classic Newton-Raphson implementation of the sqrt() function. It should complete in
+  // less than 100 clock cycles on an MRSIC32-A1.
   // TODO(m): Implement this using polynomial approximations instead to avoid the floating point
   // divisions.
-  float a, b;
 
   if (x < 0.0f)
     return uint_to_float(0x7fffffffu);  // NaN
@@ -113,15 +121,16 @@ static float sqrtf(float x) {
   // Initial guess is based on halving the exponent.
   unsigned c = float_to_uint(x);
   c = (((c & 0x7f800000u) - 0x3f800000u) / 2 + 0x3f800000u) & 0x7f800000u;
-  a = uint_to_float(c);
+  float y = uint_to_float(c);
 
-  // Newton...
-  b = x / a; a = (a + b) * 0.5f;
-  b = x / a; a = (a + b) * 0.5f;
-  b = x / a; a = (a + b) * 0.5f;
-  b = x / a; a = (a + b) * 0.5f;
+  // Do a few iterations to converge...
+  float b;
+  b = x / y; y = (y + b) * 0.5f;
+  b = x / y; y = (y + b) * 0.5f;
+  b = x / y; y = (y + b) * 0.5f;
+  b = x / y; y = (y + b) * 0.5f;
 
-  return a;
+  return y;
 }
 
 
@@ -397,8 +406,22 @@ static void TraceScene(unsigned char* memory) {
 
 int main(void) {
   /* Allocate the memory area that we output the result in. */
-  static unsigned char* memory = (unsigned char*)0x40000000U;
+#ifdef __MRISC32__
+  unsigned char* memory = (unsigned char*)0x40000000U;
+#else
+  unsigned char* memory = (unsigned char*)malloc(WIDTH*HEIGHT*4);
+#endif
 
   TraceScene(memory);
+
+#ifndef __MRISC32__
+  FILE* f = fopen("/tmp/distray-out.data", "wb");
+  if (f) {
+    fwrite(memory, 1, WIDTH * HEIGHT * 4, f);
+    fclose(f);
+  }
+  free(memory);
+#endif
+
   return 0;
 }
