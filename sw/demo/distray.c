@@ -8,6 +8,7 @@
  * MRISC32:ified by Marcus Geelnard
  *************************************************************************************************/
 
+#include <stdint.h>
 #ifndef __MRISC32__
 #include <stdio.h>
 #include <stdlib.h>
@@ -109,11 +110,11 @@ static float uint_to_float(unsigned x) {
   return *(float*)&x;
 }
 
+#if 0
+
 static float sqrtf(float x) {
   // This is a classic Newton-Raphson implementation of the sqrt() function. It should complete in
   // less than 100 clock cycles on an MRSIC32-A1.
-  // TODO(m): Implement this using polynomial approximations instead to avoid the floating point
-  // divisions.
 
   if (x < 0.0f)
     return uint_to_float(0x7fffffffu);  // NaN
@@ -133,6 +134,109 @@ static float sqrtf(float x) {
   return y;
 }
 
+#else
+
+static float frexp(const float arg, int* exp)
+{
+  // Bit-level cast from float to uint32_t (preserve the IEEE 754 representation).
+  const uint32_t arg_bits = *(uint32_t*)(&arg);
+
+  // Find the exponent (power of 2).
+  const uint32_t old_exponent = (arg_bits >> 23) & 0xffu;
+  *exp = ((int)old_exponent) - 0x7e;
+
+  // Set the exponent to 0.
+  const uint32_t normalized_bits = (arg_bits & 0x807fffffu) | 0x3f000000u;
+
+  // Bit-level cast back to float.
+  return *(float*)(&normalized_bits);
+}
+
+static float ldexp(const float x, const int exp)
+{
+  // Bit-level cast from float to uint32_t (preserve the IEEE 754 representation).
+  const uint32_t normalized_bits = *(uint32_t*)(&x);
+
+  // Find the old exponent (power of 2).
+  const uint32_t old_exponent = (normalized_bits >> 23) & 0xffu;
+
+  // Add the new exponent to the old exponent.
+  const int new_exponent_signed = ((int)old_exponent) + exp;
+  uint32_t y_bits;
+  const uint32_t new_exponent = (uint32_t)(new_exponent_signed);
+  y_bits = (normalized_bits & 0x807fffffu) | (new_exponent << 23);
+
+  // Bit-level cast back to float.
+  return *(float*)(&y_bits);
+}
+
+static float sqrtf(float x)
+{
+  // This implementation of sqrt is inspired by the Cephes Math Library Release 2.2.
+  // Original copyright 1984, 1987, 1988, 1992 by Stephen L. Moshier
+
+  // Separate significand and exponent.
+  int e;
+  x = frexp(x, &e);
+
+  // Adjust for odd powers of 2.
+  // TODO(m): We should be able to use modified frexp/ldexp that use power-of-4 exponents instead
+  // of power-of-2 exponents.
+  if ((e & 1) != 0)
+  {
+    x = 2.0F * x;
+    e -= 1;
+  }
+
+  // Divide the exponent by 2 to get the exponent of the square root.
+  e = e / 2;
+
+  // Evaluate one of three polynomials depending on which range the value is in.
+  float y;
+  if (x > 1.41421356237F)
+  {
+    // x is between sqrt(2) and 2.
+    x = x - 2.0F;
+    y = -9.8843065718E-4F;
+    y = (y * x) + 7.9479950957E-4F;
+    y = (y * x) - 3.5890535377E-3F;
+    y = (y * x) + 1.1028809744E-2F;
+    y = (y * x) - 4.4195203560E-2F;
+    y = (y * x) + 3.5355338194E-1F;
+    y = (y * x) + 1.41421356237F;
+  }
+  else if (x > 0.707106781187F)
+  {
+    // x is between sqrt(2)/2 and sqrt(2).
+    x = x - 1.0F;
+    y = 1.35199291026E-2F;
+    y = (y * x) - 2.26657767832E-2F;
+    y = (y * x) + 2.78720776889E-2F;
+    y = (y * x) - 3.89582788321E-2F;
+    y = (y * x) + 6.24811144548E-2F;
+    y = (y * x) - 1.25001503933E-1F;
+    y = y * (x * x) + (0.5F * x) + 1.0F;
+  }
+  else
+  {
+    // x is between 0.5 and sqrt(2)/2.
+    x = x - 0.5F;
+    y = -3.9495006054E-1F;
+    y = (y * x) + 5.1743034569E-1F;
+    y = (y * x) - 4.3214437330E-1F;
+    y = (y * x) + 3.5310730460E-1F;
+    y = (y * x) - 3.5354581892E-1F;
+    y = (y * x) + 7.0710676017E-1F;
+    y = (y * x) + 7.07106781187E-1F;
+  }
+
+  // Re-apply the exponent.
+  y = ldexp(y, e);
+
+  return y;
+}
+
+#endif
 
 /*************************************************************************************************
  *  Helpers (geometrical etc).
