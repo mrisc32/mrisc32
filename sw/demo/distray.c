@@ -36,16 +36,14 @@ typedef struct {
  *  Configuration
  *************************************************************************************************/
 
-/* Define the memory area that we output the result in. */
-static unsigned char* memory = (unsigned char*)0x00002000U;
+#define WIDTH 320
+#define HEIGHT 180
 
-#define WIDTH 640
-#define HEIGHT 480
 #define EPSILON (1e-5f) /* Very small value, used for coordinate-comparsions */
 #define MAXT (1e5f)     /* Maximum t-distance for an intersection-point */
-#define MAXREC 6        /* Maximum amount of recursions (reflection etc.) */
-#define DISTRIB 12      /* Number of distributed rays per "virtual" ray */
-#define DISTLEVELS 3    /* How deep in the recursion-tree to allow distribution */
+#define MAXREC 5        /* Maximum amount of recursions (reflection etc.) */
+#define DISTRIB 8       /* Number of distributed rays per "virtual" ray */
+#define DISTLEVELS 0    /* How deep in the recursion-tree to allow distribution */
 
 /*************************************************************************************************
  *  Scene specification.
@@ -79,7 +77,7 @@ static const FLOAT Lightr = 0.4f; /* Light-radius (for soft shadows) */
 static const VECTOR Camerapos = {1.5f, -1.4f, 1.2f};
 static const VECTOR Cameraright = {3.0f, 1.0f, 0.0f};
 static const VECTOR Cameradir = {-1.0f, 3.0f, 0.0f};
-static const VECTOR Cameraup = {0.0f, 0.0f, 2.3717f};
+static const VECTOR Cameraup = {0.0f, 0.0f, 3.16228f*((FLOAT)HEIGHT/(FLOAT)WIDTH)};
 
 /* Ambient lighting (0.0-1.0) */
 static const FLOAT Ambient = 0.3f;
@@ -88,7 +86,7 @@ static const FLOAT Ambient = 0.3f;
 static const VECTOR Skycolor[2] = {{0.5f, 0.3f, 0.7f}, {0.0f, 0.0f, 0.2f}};
 
 /*************************************************************************************************
- *  For now we implement out own math functions. These should go in libm at some point.
+ *  For now we implement our own math functions. These should go in libm at some point.
  *************************************************************************************************/
 
 static float fabsf(float x) {
@@ -105,15 +103,16 @@ static float uint_to_float(unsigned x) {
 
 static float sqrtf(float x) {
   // Note: This function should complete in less than 100 clock cycles.
+  // TODO(m): Implement this using polynomial approximations instead to avoid the floating point
+  // divisions.
   float a, b;
 
   if (x < 0.0f)
     return uint_to_float(0x7fffffffu);  // NaN
 
-
   // Initial guess is based on halving the exponent.
   unsigned c = float_to_uint(x);
-  c = ((((c & 0x7f800000u) - 0x3f800000u) / 2 + 0x3f800000u)  & 0x7f800000u) | (c & 0x007fffffu);
+  c = (((c & 0x7f800000u) - 0x3f800000u) / 2 + 0x3f800000u) & 0x7f800000u;
   a = uint_to_float(c);
 
   // Newton...
@@ -125,10 +124,6 @@ static float sqrtf(float x) {
   return a;
 }
 
-static float atanf(float x) {
-  /* TODO(m): Implement me!  */
-  return x;
-}
 
 /*************************************************************************************************
  *  Helpers (geometrical etc).
@@ -336,11 +331,8 @@ static void TraceLine(const VECTOR* LinP, const VECTOR* LinD, VECTOR* Color, int
       }
     } else {
       /* Get sky-color (interpolate between horizon and zenit) */
-      A = sqrtf(LinD->x * LinD->x + LinD->y * LinD->y);
-      if (A > 0.0f)
-        A = atanf(fabsf(LinD->z) / A) * 0.63661977f;
-      else
-        A = 1.0f;
+      A = sqrtf(LinD->x * LinD->x + LinD->y * LinD->y + LinD->z * LinD->z);
+      A = fabsf(LinD->z) / A;
       Color->x = Skycolor[1].x * A + Skycolor[0].x * (1.0f - A);
       Color->y = Skycolor[1].y * A + Skycolor[0].y * (1.0f - A);
       Color->z = Skycolor[1].z * A + Skycolor[0].z * (1.0f - A);
@@ -356,7 +348,7 @@ static void TraceLine(const VECTOR* LinP, const VECTOR* LinD, VECTOR* Color, int
   }
 }
 
-static void TraceScene(void) {
+static void TraceScene(unsigned char* memory) {
   VECTOR PixColor, Col, LinD, Scale;
   VECTOR LinD2, D;
   int sx, sy, i;
@@ -391,9 +383,10 @@ static void TraceScene(void) {
       TraceLine(&Camerapos, &LinD, &PixColor, MAXREC);
 #endif
 
-      memory[3 * (sx + sy * WIDTH)] = (UBYTE)(PixColor.x * 255.0f);
-      memory[3 * (sx + sy * WIDTH) + 1] = (UBYTE)(PixColor.y * 255.0f);
-      memory[3 * (sx + sy * WIDTH) + 2] = (UBYTE)(PixColor.z * 255.0f);
+      memory[4 * (sx + sy * WIDTH)] = (UBYTE)(PixColor.x * 255.0f);
+      memory[4 * (sx + sy * WIDTH) + 1] = (UBYTE)(PixColor.y * 255.0f);
+      memory[4 * (sx + sy * WIDTH) + 2] = (UBYTE)(PixColor.z * 255.0f);
+      memory[4 * (sx + sy * WIDTH) + 3] = (UBYTE)255;
     }
   }
 }
@@ -403,6 +396,9 @@ static void TraceScene(void) {
  *************************************************************************************************/
 
 int main(void) {
-  TraceScene();
+  /* Allocate the memory area that we output the result in. */
+  static unsigned char* memory = (unsigned char*)0x40000000U;
+
+  TraceScene(memory);
   return 0;
 }
