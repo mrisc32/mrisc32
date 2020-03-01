@@ -218,11 +218,15 @@ static float sqrtf(float x)
  *  Helpers (geometrical etc).
  *************************************************************************************************/
 
-static unsigned long rnd = 0x52462467L;
+static unsigned long s_rnd;
+
+static void SetSeed(unsigned long seed) {
+  s_rnd = seed;
+}
 
 static FLOAT Jitter(void) {
-  rnd = (1103515245L * rnd + 12345L) & 0x7fffffffL;
-  return (1.0f - ((FLOAT)rnd / (FLOAT)0x3fffffff));
+  s_rnd = (1103515245L * s_rnd + 12345L) & 0x7fffffffL;
+  return (1.0f - ((FLOAT)s_rnd / (FLOAT)0x3fffffff));
 }
 
 static void ReflectVector(VECTOR* v2, const VECTOR* v1, const VECTOR* n) {
@@ -492,6 +496,7 @@ int main(void) {
   unsigned char* memory = (unsigned char*)malloc(WIDTH*HEIGHT*4);
 #endif
 
+  SetSeed(0x52462467L);
   TraceScene(memory);
 
 #ifndef __MRISC32__
