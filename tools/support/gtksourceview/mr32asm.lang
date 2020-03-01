@@ -181,8 +181,12 @@
       <keyword>remu(\.b|\.h)?(/f)?</keyword>
 
       <!-- Floating point -->
-      <keyword>ftoi</keyword>
-      <keyword>itof</keyword>
+      <keyword>itof(\.b|\.h)?(/f)?</keyword>
+      <keyword>utof(\.b|\.h)?(/f)?</keyword>
+      <keyword>ftoi(\.b|\.h)?(/f)?</keyword>
+      <keyword>ftou(\.b|\.h)?(/f)?</keyword>
+      <keyword>ftoir(\.b|\.h)?(/f)?</keyword>
+      <keyword>ftour(\.b|\.h)?(/f)?</keyword>
       <keyword>fadd(\.b|\.h)?(/f)?</keyword>
       <keyword>fdiv(\.b|\.h)?(/f)?</keyword>
       <keyword>fmax(\.b|\.h)?(/f)?</keyword>
