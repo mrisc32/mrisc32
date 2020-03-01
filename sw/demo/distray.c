@@ -136,37 +136,25 @@ static float sqrtf(float x) {
 
 #else
 
-static float frexp(const float arg, int* exp)
+static float sqrtf_normalize(const float arg, int* exp)
 {
-  // Bit-level cast from float to uint32_t (preserve the IEEE 754 representation).
   const uint32_t arg_bits = *(uint32_t*)(&arg);
 
-  // Find the exponent (power of 2).
-  const uint32_t old_exponent = (arg_bits >> 23) & 0xffu;
-  *exp = ((int)old_exponent) - 0x7e;
+  // Find the exponent (power of 4, divided by 2).
+  const uint32_t old_exponent = (arg_bits >> 24) & 0x7fu;
+  *exp = ((int)old_exponent) - 63;
 
-  // Set the exponent to 0.
-  const uint32_t normalized_bits = (arg_bits & 0x807fffffu) | 0x3f000000u;
+  // Set the exponent to 0 or 1.
+  const uint32_t normalized_bits = (arg_bits & 0x80ffffffu) | 0x3f000000u;
 
-  // Bit-level cast back to float.
   return *(float*)(&normalized_bits);
 }
 
-static float ldexp(const float x, const int exp)
+static float sqrtf_add_exp(const float x, const int exp)
 {
-  // Bit-level cast from float to uint32_t (preserve the IEEE 754 representation).
   const uint32_t normalized_bits = *(uint32_t*)(&x);
-
-  // Find the old exponent (power of 2).
-  const uint32_t old_exponent = (normalized_bits >> 23) & 0xffu;
-
-  // Add the new exponent to the old exponent.
-  const int new_exponent_signed = ((int)old_exponent) + exp;
-  uint32_t y_bits;
-  const uint32_t new_exponent = (uint32_t)(new_exponent_signed);
-  y_bits = (normalized_bits & 0x807fffffu) | (new_exponent << 23);
-
-  // Bit-level cast back to float.
+  const uint32_t y_bits = (normalized_bits & 0x807fffffu) |
+                          ((normalized_bits + (uint32_t)(exp << 23)) & 0x7f800000u);
   return *(float*)(&y_bits);
 }
 
@@ -177,19 +165,7 @@ static float sqrtf(float x)
 
   // Separate significand and exponent.
   int e;
-  x = frexp(x, &e);
-
-  // Adjust for odd powers of 2.
-  // TODO(m): We should be able to use modified frexp/ldexp that use power-of-4 exponents instead
-  // of power-of-2 exponents.
-  if ((e & 1) != 0)
-  {
-    x = 2.0F * x;
-    e -= 1;
-  }
-
-  // Divide the exponent by 2 to get the exponent of the square root.
-  e = e / 2;
+  x = sqrtf_normalize(x, &e);
 
   // Evaluate one of three polynomials depending on which range the value is in.
   float y;
@@ -231,7 +207,7 @@ static float sqrtf(float x)
   }
 
   // Re-apply the exponent.
-  y = ldexp(y, e);
+  y = sqrtf_add_exp(y, e);
 
   return y;
 }
