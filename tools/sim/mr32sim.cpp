@@ -39,7 +39,10 @@
 #include <thread>
 
 namespace {
-void read_bin_file(const char* file_name, ram_t& ram) {
+void read_bin_file(const char* file_name,
+                   ram_t& ram,
+                   const bool override_addr,
+                   const uint32_t addr) {
   std::ifstream f(file_name, std::fstream::in | std::fstream::binary);
   if (f.bad()) {
     throw std::runtime_error("Unable to open the binary file.");
@@ -47,9 +50,13 @@ void read_bin_file(const char* file_name, ram_t& ram) {
 
   // Read the start address.
   uint32_t start_addr;
-  f.read(reinterpret_cast<char*>(&start_addr), 4);
-  if (!f.good()) {
-    throw std::runtime_error("Premature end of file.");
+  if (!override_addr) {
+    f.read(reinterpret_cast<char*>(&start_addr), 4);
+    if (!f.good()) {
+      throw std::runtime_error("Premature end of file.");
+    }
+  } else {
+    start_addr = addr;
   }
 
   // Read blocks from the file into RAM.
@@ -78,6 +85,7 @@ void print_help(const char* prg_name) {
   std::cout << "  -g, --gfx              Enable graphics.\n";
   std::cout << "  -t FILE, --trace FILE  Enable debug trace.\n";
   std::cout << "  -R N, --ram-size N     Set the RAM size (in bytes).\n";
+  std::cout << "  -A ADDR, --addr ADDR   Set the program (ROM) start address.\n";
   return;
 }
 }  // namespace
@@ -86,6 +94,8 @@ int main(const int argc, const char** argv) {
   // Parse command line options.
   // TODO(m): Add options for graphics (e.g. framebuffer size).
   const auto* bin_file = static_cast<const char*>(0);
+  uint32_t bin_addr = 0u;
+  bool bin_addr_defined = false;
   try {
     for (int k = 1; k < argc; ++k) {
       if (argv[k][0] == '-') {
@@ -112,6 +122,15 @@ int main(const int argc, const char** argv) {
           const auto ram_size_str = std::string(argv[++k]);
           const auto ram_size = static_cast<uint64_t>(std::stol(ram_size_str));
           config_t::instance().set_ram_size(ram_size);
+        } else if ((std::strcmp(argv[k], "-A") == 0) || (std::strcmp(argv[k], "--addr") == 0)) {
+          if (k >= (argc - 1)) {
+            std::cerr << "Missing option for " << argv[k] << "\n";
+            print_help(argv[0]);
+            exit(1);
+          }
+          const auto bin_addr_str = std::string(argv[++k]);
+          bin_addr = static_cast<uint32_t>(std::stol(bin_addr_str));
+          bin_addr_defined = true;
         } else {
           std::cerr << "Error: Unknown option: " << argv[k] << "\n";
           print_help(argv[0]);
@@ -141,7 +160,7 @@ int main(const int argc, const char** argv) {
     ram_t ram(config_t::instance().ram_size());
 
     // Load the program file into RAM.
-    read_bin_file(bin_file, ram);
+    read_bin_file(bin_file, ram, bin_addr_defined, bin_addr);
 
     // HACK: Populate MMIO memory with MC1 fields.
     const uint32_t MMIO_START = 0xc0000000u;
