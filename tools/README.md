@@ -1,21 +1,8 @@
 # Tools
 
-## Assembler / Linker
+## MRISC32 GNU toolchain
 
-The only way to program the MRISC32 is using [assembly language](https://en.wikipedia.org/wiki/Assembly_language) (high level languages such as C++ via GCC is currently under development.
-
-The primary tool is [GNU binutils](https://www.gnu.org/software/binutils/), which includes an assembler (as) and a linker (ld). A special [MRISC32 port of binutils](https://github.com/mrisc32/binutils-mrisc32) is required to build software for MRISC32.
-
-
-### Building/installing binutils
-
-Clone the Git repository:
-
-```bash
-$ git clone https://github.com/mrisc32/binutils-mrisc32.git
-```
-
-Read the [README.md](https://github.com/mrisc32/binutils-mrisc32/blob/users/mbitsnbites/mrisc32/README.md) file for information about how to build and install binutils for MRISC32.
+There is a GNU toolchain capable of compiling and linking C and Assembly source code programs for MRISC32. For futher information see [mrisc32/mrisc32-gnu-toolchain](https://github.com/mrisc32/mrisc32-gnu-toolchain).
 
 
 ## Building programs
