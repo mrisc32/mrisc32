@@ -26,13 +26,7 @@
 #include <iomanip>
 #include <iostream>
 
-namespace {
-// Simulator routines.
-const uint32_t SIM_ROUTINE_EXIT = 0u;
-const uint32_t SIM_ROUTINE_PUTC = 1u;
-}  // namespace
-
-cpu_t::cpu_t(ram_t& ram) : m_ram(ram) {
+cpu_t::cpu_t(ram_t& ram) : m_ram(ram), m_syscalls(ram) {
   if (config_t::instance().trace_enabled()) {
     m_trace_file.open(config_t::instance().trace_file_name(), std::ios::out | std::ios::binary);
   }
@@ -115,15 +109,3 @@ void cpu_t::append_debug_trace(const debug_trace_t& trace) {
   m_trace_file.write(reinterpret_cast<const char*>(&buf[0]), sizeof(buf));
 }
 
-void cpu_t::call_sim_routine(const uint32_t routine_no) {
-  switch (routine_no) {
-    case SIM_ROUTINE_EXIT:
-      m_terminate = true;
-      m_exit_code = m_regs[1];
-      break;
-    case SIM_ROUTINE_PUTC:
-      const int c = static_cast<int>(m_regs[1]);
-      std::putc(c, stdout);
-      break;
-  }
-}

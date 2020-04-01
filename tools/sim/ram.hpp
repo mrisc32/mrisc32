@@ -105,14 +105,18 @@ public:
     reinterpret_cast<uint32_t&>(m_memory[addr]) = convert_endianity(value);
   }
 
-private:
-  void check_addr(const uint32_t addr, const uint32_t size) const {
+  bool valid_range(const uint32_t addr, const uint32_t size) const {
     const auto addr_first = static_cast<std::vector<uint8_t>::size_type>(addr);
     const auto addr_last = static_cast<std::vector<uint8_t>::size_type>(addr + size - 1);
     const auto mem_size = m_memory.size();
-    if (addr_first >= mem_size || addr_last >= mem_size) {
+    return (addr_first < mem_size && addr_last < mem_size);
+  }
+
+private:
+  void check_addr(const uint32_t addr, const uint32_t size) const {
+    if (!valid_range(addr, size)) {
       std::ostringstream ss;
-      ss << "Out of range memory access: " << addr << " >= " << mem_size;
+      ss << "Out of range memory access: " << addr << " >= " << m_memory.size();
       throw std::runtime_error(ss.str().c_str());
     }
   }

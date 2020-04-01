@@ -92,6 +92,8 @@ test9_passed:
     bl      #test_failed
 test10_passed:
 
+    bl      #test_11
+
     ; return s16 != 0 ? 1 : 0;
     sne     s1, s16, z
     and     s1, s1, #1
@@ -540,4 +542,77 @@ test_10_answer1:
 
 test_10_answer2:
     .word   8, 8
+
+
+; ----------------------------------------------------------------------------
+; Syscalls
+
+    ; Syscall routine addresses
+    SYSC_ID_EXIT          = 0xffff0000+4*1
+    SYSCALL_PUTCHAR       = 0xffff0000+4*1
+    SYSCALL_GETCHAR       = 0xffff0000+4*2
+    SYSCALL_CLOSE         = 0xffff0000+4*3
+    SYSCALL_FSTAT         = 0xffff0000+4*4
+    SYSCALL_ISATTY        = 0xffff0000+4*5
+    SYSCALL_LINK          = 0xffff0000+4*6
+    SYSCALL_LSEEK         = 0xffff0000+4*7
+    SYSCALL_MKDIR         = 0xffff0000+4*8
+    SYSCALL_OPEN          = 0xffff0000+4*9
+    SYSCALL_READ          = 0xffff0000+4*10
+    SYSCALL_STAT          = 0xffff0000+4*11
+    SYSCALL_UNLINK        = 0xffff0000+4*12
+    SYSCALL_WRITE         = 0xffff0000+4*13
+    SYSCALL_GETTIMEMICROS = 0xffff0000+4*14
+
+    ; From newlib sys/_default_fcntl.h
+    O_RDONLY = 0
+    O_WRONLY = 1
+    O_RDWR = 2
+    O_APPEND = 0x0008
+    O_CREAT = 0x0200
+    S_IRWXU = 0700
+
+test_11:
+    add     sp, sp, #-16
+    stw     lr, sp, #0
+
+    ; PUTCHAR
+    ldi     s1, #66
+    ldi     s9, #SYSCALL_PUTCHAR
+    jl      s9
+
+    ; OPEN
+    ldi     s1, #test_11_path1@pc   ; path
+    ldi     s2, #O_WRONLY+O_CREAT   ; flags
+    ldi     s3, #S_IRWXU            ; mode
+    ldi     s9, #SYSCALL_OPEN
+    jl      s9
+    stw     s1, sp, #4              ; sp + 4 = fd
+
+    ; WRITE
+    ldw     s1, sp, #4              ; fd
+    ldi     s2, #test_11_text@pc    ; buf
+    ldi     s3, #test_11_text_size  ; nbytes
+    ldi     s9, #SYSCALL_WRITE
+    jl      s9
+
+    ; CLOSE
+    ldw     s1, sp, #4              ; fd
+    ldi     s9, #SYSCALL_CLOSE
+    jl      s9
+
+    ldw     lr, sp, #0
+    add     sp, sp, #16
+    ret
+
+
+test_11_path1:
+    .asciz  "/tmp/test1_out.txt"
+    .p2align    2
+
+
+test_11_text:
+    .ascii  "Hello world!\n"
+    test_11_text_size = .-test_11_text
+    .p2align    2
 

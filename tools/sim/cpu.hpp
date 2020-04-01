@@ -21,6 +21,7 @@
 #define SIM_CPU_HPP_
 
 #include "ram.hpp"
+#include "syscalls.hpp"
 
 #include <array>
 #include <cstdint>
@@ -180,15 +181,14 @@ protected:
   /// @param trace The trace record.
   void append_debug_trace(const debug_trace_t& trace);
 
-  /// @brief Call a simulator routine.
-  /// @param routine_no The routine to call (0, 1, ...).
-  void call_sim_routine(const uint32_t routine_no);
-
   // Debug trace file.
   std::ofstream m_trace_file;
 
   // Memory interface.
   ram_t& m_ram;
+
+  // Syscalls interface.
+  syscalls_t m_syscalls;
 
   // Scalar registers.
   std::array<uint32_t, NUM_REGS> m_regs;

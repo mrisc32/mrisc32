@@ -969,7 +969,7 @@ uint32_t cpu_simple_t::run() {
     if ((m_regs[REG_PC] & 0xffff0000u) == 0xffff0000u) {
       // Call the routine.
       const uint32_t routine_no = (m_regs[REG_PC] - 0xffff0000u) >> 2u;
-      call_sim_routine(routine_no);
+      m_syscalls.call(routine_no, m_regs);
 
       // Simulate jmp lr.
       m_regs[REG_PC] = m_regs[REG_LR];
