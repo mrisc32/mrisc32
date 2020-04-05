@@ -70,6 +70,19 @@ struct vector_state_t {
   bool active;           // True if a vector operation is currently active.
 };
 
+inline std::string as_hex32(const uint32_t x) {
+  char str[16];
+  std::snprintf(str, sizeof(str) - 1, "0x%08x", x);
+  return std::string(&str[0]);
+}
+
+template <typename T>
+inline std::string as_dec(const T x) {
+  char str[32];
+  std::snprintf(str, sizeof(str) - 1, "%d", static_cast<int>(x));
+  return std::string(&str[0]);
+}
+
 inline uint32_t index_scale_factor(const uint32_t packed_mode) {
   return uint32_t(1u) << packed_mode;
 }
@@ -960,1112 +973,1148 @@ uint32_t cpu_simple_t::run() {
   mem_in_t mem_in = mem_in_t();
   wb_in_t wb_in = wb_in_t();
 
-  while (!m_terminate) {
-    uint32_t next_pc;
-    bool next_cycle_continues_a_vector_loop;
+  try {
+    while (!m_terminate) {
+      uint32_t next_pc;
+      bool next_cycle_continues_a_vector_loop;
 
-    // Simulator routine call handling.
-    // Simulator routines start at PC = 0xffff0000.
-    if ((m_regs[REG_PC] & 0xffff0000u) == 0xffff0000u) {
-      // Call the routine.
-      const uint32_t routine_no = (m_regs[REG_PC] - 0xffff0000u) >> 2u;
-      m_syscalls.call(routine_no, m_regs);
+      // Simulator routine call handling.
+      // Simulator routines start at PC = 0xffff0000.
+      if ((m_regs[REG_PC] & 0xffff0000u) == 0xffff0000u) {
+        // Call the routine.
+        const uint32_t routine_no = (m_regs[REG_PC] - 0xffff0000u) >> 2u;
+        m_syscalls.call(routine_no, m_regs);
 
-      // Simulate jmp lr.
-      m_regs[REG_PC] = m_regs[REG_LR];
-    }
-
-    // We stall the IF stage when a vector operation is active.
-    if (!vector.active) {
-      // IF
-      {
-        const uint32_t instr_pc = m_regs[REG_PC];
-
-        // Read the instruction from the current (predicted) PC.
-        id_in.pc = instr_pc;
-        id_in.instr = m_ram.load32(instr_pc);
-
-        // We terminate the simulation when we encounter a jump to address zero.
-        if (instr_pc == 0x00000000) {
-          m_terminate = true;
-        }
-
-        ++m_fetched_instr_count;
-      }
-    } else {
-      ++m_vector_loop_count;
-    }
-
-    // ID/RF
-    {
-      // Get the instruction word.
-      const uint32_t iword = id_in.instr;
-
-      // Detect encoding class (A, B or C).
-      const bool op_class_B = ((iword & 0xfc00007cu) == 0x0000007cu);
-      const bool op_class_A = ((iword & 0xfc000000u) == 0x00000000u) && !op_class_B;
-      const bool op_class_D = ((iword & 0xc0000000u) == 0xc0000000u);
-      const bool op_class_C = !op_class_A && !op_class_B && !op_class_D;
-
-      // Is this a vector operation?
-      const uint32_t vec_mask = op_class_A ? 3u : (op_class_B || op_class_C ? 2u : 0u);
-      const uint32_t vector_mode = (iword >> 14u) & vec_mask;
-      const bool is_vector_op = (vector_mode != 0u);
-      const bool is_folding_vector_op = (vector_mode == 1u);
-
-      // Is this a packed operation?
-      const uint32_t packed_mode = (op_class_A || op_class_B ? ((iword & 0x00000180u) >> 7) : 0u);
-
-      // Extract parts of the instruction.
-      // NOTE: These may or may not be valid, depending on the instruction type.
-      const uint32_t reg1 = (iword >> 21u) & 31u;
-      const uint32_t reg2 = (iword >> 16u) & 31u;
-      const uint32_t reg3 = (iword >> 9u) & 31u;
-      const uint32_t imm15 = (iword & 0x00007fffu) | ((iword & 0x00004000u) ? 0xffff8000u : 0u);
-      const uint32_t imm21 = (iword & 0x001fffffu) | ((iword & 0x00100000u) ? 0xffe00000u : 0u);
-
-      // == VECTOR STATE HANDLING ==
-
-      if (is_vector_op) {
-        const uint32_t vector_stride =
-            op_class_C ? imm15 : (m_regs[reg3] * index_scale_factor(packed_mode));
-
-        // Start a new or continue an ongoing vector operartion?
-        if (!vector.active) {
-          vector.idx = 0u;
-          vector.stride = vector_stride;
-          vector.addr_offset = 0u;
-          vector.folding = is_folding_vector_op;
-        } else {
-          // Do vector offset increments in the ID/RF stage.
-          ++vector.idx;
-          vector.addr_offset += vector.stride;
-        }
+        // Simulate jmp lr.
+        m_regs[REG_PC] = m_regs[REG_LR];
       }
 
-      // Check if the next cycle will continue a vector loop (i.e. we should stall the IF stage).
-      next_cycle_continues_a_vector_loop =
-          is_vector_op && ((vector.idx + 1) < (m_regs[REG_VL] & (2 * NUM_VECTOR_ELEMENTS - 1)));
+      // We stall the IF stage when a vector operation is active.
+      if (!vector.active) {
+        // IF
+        {
+          const uint32_t instr_pc = m_regs[REG_PC];
 
-      // == BRANCH HANDLING ==
+          // Read the instruction from the current (predicted) PC.
+          id_in.pc = instr_pc;
+          id_in.instr = m_ram.load32(instr_pc);
 
-      const bool is_bcc = ((iword & 0xe0000000u) == 0xc0000000u);
-      const bool is_j = ((iword & 0xf8000000u) == 0xe0000000u);
-      const bool is_subroutine_branch = ((iword & 0xfc000000u) == 0xe4000000u);
-      const bool is_branch = is_bcc || is_j;
+          // We terminate the simulation when we encounter a jump to address zero.
+          if (instr_pc == 0x00000000) {
+            m_terminate = true;
+          }
 
-      if (is_bcc) {
-        // b[cc]: Evaluate condition (for b[cc]).
-        bool branch_taken = false;
-        const uint32_t branch_condition_value = m_regs[reg1];
-        const uint32_t condition = (iword >> 26u) & 0x0000003fu;
-        switch (condition) {
-          case 0x30u:  // bz
-            branch_taken = (branch_condition_value == 0u);
-            break;
-          case 0x31u:  // bnz
-            branch_taken = (branch_condition_value != 0u);
-            break;
-          case 0x32u:  // bs
-            branch_taken = (branch_condition_value == 0xffffffffu);
-            break;
-          case 0x33u:  // bns
-            branch_taken = (branch_condition_value != 0xffffffffu);
-            break;
-          case 0x34u:  // blt
-            branch_taken = ((branch_condition_value & 0x80000000u) != 0u);
-            break;
-          case 0x35u:  // bge
-            branch_taken = ((branch_condition_value & 0x80000000u) == 0u);
-            break;
-          case 0x36u:  // ble
-            branch_taken =
-                ((branch_condition_value & 0x80000000u) != 0u) || (branch_condition_value == 0u);
-            break;
-          case 0x37u:  // bgt
-            branch_taken =
-                ((branch_condition_value & 0x80000000u) == 0u) && (branch_condition_value != 0u);
-            break;
+          ++m_fetched_instr_count;
         }
-        next_pc = branch_taken ? (id_in.pc + (imm21 << 2u)) : (id_in.pc + 4u);
-      } else if (is_j) {
-        // j/jl
-        const uint32_t base_address = m_regs[reg1];
-        next_pc = base_address + (imm21 << 2u);
       } else {
-        // No branch: Increment the PC by 4.
-        next_pc = id_in.pc + 4u;
+        ++m_vector_loop_count;
       }
 
-      // == DECODE ==
+      // ID/RF
+      {
+        // Get the instruction word.
+        const uint32_t iword = id_in.instr;
 
-      // Is this a mem load/store operation?
-      const bool is_ldx =
-          ((iword & 0xfc000078u) == 0x00000000u) && ((iword & 0x00000007u) != 0x00000000u);
-      const bool is_ld =
-          ((iword & 0xe0000000u) == 0x00000000u) && ((iword & 0x1c000000u) != 0x00000000u);
-      const bool is_mem_load = is_ldx || is_ld;
-      const bool is_stx = ((iword & 0xfc000078u) == 0x00000008u);
-      const bool is_st = ((iword & 0xe0000000u) == 0x20000000u);
-      const bool is_mem_store = is_stx || is_st;
-      const bool is_mem_op = (is_mem_load || is_mem_store);
+        // Detect encoding class (A, B or C).
+        const bool op_class_B = ((iword & 0xfc00007cu) == 0x0000007cu);
+        const bool op_class_A = ((iword & 0xfc000000u) == 0x00000000u) && !op_class_B;
+        const bool op_class_D = ((iword & 0xc0000000u) == 0xc0000000u);
+        const bool op_class_C = !op_class_A && !op_class_B && !op_class_D;
 
-      // Is this ADDPCHI?
-      const bool is_addpchi = ((iword & 0xfc000000u) == 0xf4000000u);
+        // Is this a vector operation?
+        const uint32_t vec_mask = op_class_A ? 3u : (op_class_B || op_class_C ? 2u : 0u);
+        const uint32_t vector_mode = (iword >> 14u) & vec_mask;
+        const bool is_vector_op = (vector_mode != 0u);
+        const bool is_folding_vector_op = (vector_mode == 1u);
 
-      // Should we use reg1 as a source (special case)?
-      const bool reg1_is_src = is_mem_store || is_branch;
+        // Is this a packed operation?
+        const uint32_t packed_mode = (op_class_A || op_class_B ? ((iword & 0x00000180u) >> 7) : 0u);
 
-      // Should we use reg2 as a source?
-      const bool reg2_is_src = op_class_A || op_class_B || op_class_C;
+        // Extract parts of the instruction.
+        // NOTE: These may or may not be valid, depending on the instruction type.
+        const uint32_t reg1 = (iword >> 21u) & 31u;
+        const uint32_t reg2 = (iword >> 16u) & 31u;
+        const uint32_t reg3 = (iword >> 9u) & 31u;
+        const uint32_t imm15 = (iword & 0x00007fffu) | ((iword & 0x00004000u) ? 0xffff8000u : 0u);
+        const uint32_t imm21 = (iword & 0x001fffffu) | ((iword & 0x00100000u) ? 0xffe00000u : 0u);
 
-      // Should we use reg3 as a source?
-      const bool reg3_is_src = op_class_A;
+        // == VECTOR STATE HANDLING ==
 
-      // Should we use reg1 as a destination?
-      const bool reg1_is_dst = !reg1_is_src;
+        if (is_vector_op) {
+          const uint32_t vector_stride =
+              op_class_C ? imm15 : (m_regs[reg3] * index_scale_factor(packed_mode));
 
-      // Determine the source & destination register numbers (zero for none).
-      const uint32_t src_reg_a =
-          (is_subroutine_branch || is_addpchi) ? REG_PC : (reg2_is_src ? reg2 : REG_Z);
-      const uint32_t src_reg_b = reg3_is_src ? reg3 : REG_Z;
-      const uint32_t src_reg_c = reg1_is_src ? reg1 : REG_Z;
-      const uint32_t dst_reg = is_subroutine_branch ? REG_LR : (reg1_is_dst ? reg1 : REG_Z);
+          // Start a new or continue an ongoing vector operartion?
+          if (!vector.active) {
+            vector.idx = 0u;
+            vector.stride = vector_stride;
+            vector.addr_offset = 0u;
+            vector.folding = is_folding_vector_op;
+          } else {
+            // Do vector offset increments in the ID/RF stage.
+            ++vector.idx;
+            vector.addr_offset += vector.stride;
+          }
+        }
 
-      // Determine EX operation.
-      uint32_t ex_op = EX_OP_CPUID;
-      if (is_subroutine_branch || is_mem_op) {
-        ex_op = EX_OP_ADD;
-      } else if (op_class_A && ((iword & 0x000001f0u) != 0x00000000u)) {
-        ex_op = iword & 0x0000007fu;
-      } else if (op_class_B) {
-        ex_op = iword & 0x00007e7fu;
-      } else if (op_class_C && ((iword & 0xc0000000u) != 0x00000000u)) {
-        ex_op = iword >> 26u;
-      } else if (op_class_D) {
-        switch (iword & 0xfc000000u) {
-          case 0xe8000000u:  // ldli
-            ex_op = EX_OP_OR;
-            break;
-          case 0xec000000u:  // ldhi
-            ex_op = EX_OP_LDHI;
-            break;
-          case 0xf0000000u:  // ldhio
-            ex_op = EX_OP_LDHIO;
-            break;
-          case 0xf4000000u:  // addpchi
-            ex_op = EX_OP_ADDPCHI;
-            break;
+        // Check if the next cycle will continue a vector loop (i.e. we should stall the IF stage).
+        next_cycle_continues_a_vector_loop =
+            is_vector_op && ((vector.idx + 1) < (m_regs[REG_VL] & (2 * NUM_VECTOR_ELEMENTS - 1)));
+
+        // == BRANCH HANDLING ==
+
+        const bool is_bcc = ((iword & 0xe0000000u) == 0xc0000000u);
+        const bool is_j = ((iword & 0xf8000000u) == 0xe0000000u);
+        const bool is_subroutine_branch = ((iword & 0xfc000000u) == 0xe4000000u);
+        const bool is_branch = is_bcc || is_j;
+
+        if (is_bcc) {
+          // b[cc]: Evaluate condition (for b[cc]).
+          bool branch_taken = false;
+          const uint32_t branch_condition_value = m_regs[reg1];
+          const uint32_t condition = (iword >> 26u) & 0x0000003fu;
+          switch (condition) {
+            case 0x30u:  // bz
+              branch_taken = (branch_condition_value == 0u);
+              break;
+            case 0x31u:  // bnz
+              branch_taken = (branch_condition_value != 0u);
+              break;
+            case 0x32u:  // bs
+              branch_taken = (branch_condition_value == 0xffffffffu);
+              break;
+            case 0x33u:  // bns
+              branch_taken = (branch_condition_value != 0xffffffffu);
+              break;
+            case 0x34u:  // blt
+              branch_taken = ((branch_condition_value & 0x80000000u) != 0u);
+              break;
+            case 0x35u:  // bge
+              branch_taken = ((branch_condition_value & 0x80000000u) == 0u);
+              break;
+            case 0x36u:  // ble
+              branch_taken =
+                  ((branch_condition_value & 0x80000000u) != 0u) || (branch_condition_value == 0u);
+              break;
+            case 0x37u:  // bgt
+              branch_taken =
+                  ((branch_condition_value & 0x80000000u) == 0u) && (branch_condition_value != 0u);
+              break;
+          }
+          next_pc = branch_taken ? (id_in.pc + (imm21 << 2u)) : (id_in.pc + 4u);
+        } else if (is_j) {
+          // j/jl
+          const uint32_t base_address = m_regs[reg1];
+          next_pc = base_address + (imm21 << 2u);
+        } else {
+          // No branch: Increment the PC by 4.
+          next_pc = id_in.pc + 4u;
+        }
+
+        // == DECODE ==
+
+        // Is this a mem load/store operation?
+        const bool is_ldx =
+            ((iword & 0xfc000078u) == 0x00000000u) && ((iword & 0x00000007u) != 0x00000000u);
+        const bool is_ld =
+            ((iword & 0xe0000000u) == 0x00000000u) && ((iword & 0x1c000000u) != 0x00000000u);
+        const bool is_mem_load = is_ldx || is_ld;
+        const bool is_stx = ((iword & 0xfc000078u) == 0x00000008u);
+        const bool is_st = ((iword & 0xe0000000u) == 0x20000000u);
+        const bool is_mem_store = is_stx || is_st;
+        const bool is_mem_op = (is_mem_load || is_mem_store);
+
+        // Is this ADDPCHI?
+        const bool is_addpchi = ((iword & 0xfc000000u) == 0xf4000000u);
+
+        // Should we use reg1 as a source (special case)?
+        const bool reg1_is_src = is_mem_store || is_branch;
+
+        // Should we use reg2 as a source?
+        const bool reg2_is_src = op_class_A || op_class_B || op_class_C;
+
+        // Should we use reg3 as a source?
+        const bool reg3_is_src = op_class_A;
+
+        // Should we use reg1 as a destination?
+        const bool reg1_is_dst = !reg1_is_src;
+
+        // Determine the source & destination register numbers (zero for none).
+        const uint32_t src_reg_a =
+            (is_subroutine_branch || is_addpchi) ? REG_PC : (reg2_is_src ? reg2 : REG_Z);
+        const uint32_t src_reg_b = reg3_is_src ? reg3 : REG_Z;
+        const uint32_t src_reg_c = reg1_is_src ? reg1 : REG_Z;
+        const uint32_t dst_reg = is_subroutine_branch ? REG_LR : (reg1_is_dst ? reg1 : REG_Z);
+
+        // Determine EX operation.
+        uint32_t ex_op = EX_OP_CPUID;
+        if (is_subroutine_branch || is_mem_op) {
+          ex_op = EX_OP_ADD;
+        } else if (op_class_A && ((iword & 0x000001f0u) != 0x00000000u)) {
+          ex_op = iword & 0x0000007fu;
+        } else if (op_class_B) {
+          ex_op = iword & 0x00007e7fu;
+        } else if (op_class_C && ((iword & 0xc0000000u) != 0x00000000u)) {
+          ex_op = iword >> 26u;
+        } else if (op_class_D) {
+          switch (iword & 0xfc000000u) {
+            case 0xe8000000u:  // ldli
+              ex_op = EX_OP_OR;
+              break;
+            case 0xec000000u:  // ldhi
+              ex_op = EX_OP_LDHI;
+              break;
+            case 0xf0000000u:  // ldhio
+              ex_op = EX_OP_LDHIO;
+              break;
+            case 0xf4000000u:  // addpchi
+              ex_op = EX_OP_ADDPCHI;
+              break;
+          }
+        }
+
+        // Determine MEM operation.
+        uint32_t mem_op = MEM_OP_NONE;
+        if (is_mem_load) {
+          mem_op = (is_ldx ? (iword & 0x0000007fu) : (iword >> 26u));
+        } else if (is_mem_store) {
+          mem_op = (is_stx ? (iword & 0x0000007fu) : (iword >> 26u));
+        }
+
+        // Check what type of registers should be used (vector or scalar).
+        const bool reg1_is_vector = is_vector_op;
+        const bool reg2_is_vector = is_vector_op && !is_mem_op;
+        const bool reg3_is_vector = ((vector_mode & 1u) != 0u);
+
+        // Read from the register files.
+        const uint32_t reg_a_data =
+            reg2_is_vector ? m_vregs[src_reg_a][vector.idx] : m_regs[src_reg_a];
+        const uint32_t vector_idx_b = vector.folding ? (vector.idx + m_regs[REG_VL]) : vector.idx;
+        uint32_t reg_b_data = reg3_is_vector ? m_vregs[src_reg_b][vector_idx_b] : m_regs[src_reg_b];
+        const uint32_t reg_c_data =
+            reg1_is_vector ? m_vregs[src_reg_c][vector.idx] : m_regs[src_reg_c];
+
+        // Scale the second source (the index) if this is a memory op.
+        if (is_mem_op && op_class_A) {
+          reg_b_data *= index_scale_factor(packed_mode);
+        }
+
+        // Select gather-scatter offset or stride offset for vector memory operations.
+        const uint32_t vector_addr_offset = (vector_mode == 3u) ? reg_b_data : vector.addr_offset;
+
+        // Output of the ID step.
+        ex_in.src_a = reg_a_data;
+        ex_in.src_b = is_subroutine_branch
+                          ? 4
+                          : ((is_vector_op && is_mem_op)
+                                 ? vector_addr_offset
+                                 : (op_class_C ? imm15 : (op_class_D ? imm21 : reg_b_data)));
+        ex_in.src_c = reg_c_data;
+        ex_in.dst_reg = dst_reg;
+        ex_in.dst_idx = vector.idx;
+        ex_in.dst_is_vector = is_vector_op;
+        ex_in.ex_op = ex_op;
+        ex_in.packed_mode = packed_mode;
+        ex_in.mem_op = mem_op;
+
+        // Debug trace.
+        {
+          debug_trace_t trace;
+          trace.valid = true;
+          trace.src_a_valid = reg2_is_src;
+          trace.src_b_valid = reg3_is_src;
+          trace.src_c_valid = reg1_is_src;
+          trace.pc = id_in.pc;
+          trace.src_a = ex_in.src_a;
+          trace.src_b = ex_in.src_b;
+          trace.src_c = ex_in.src_c;
+          append_debug_trace(trace);
         }
       }
 
-      // Determine MEM operation.
-      uint32_t mem_op = MEM_OP_NONE;
-      if (is_mem_load) {
-        mem_op = (is_ldx ? (iword & 0x0000007fu) : (iword >> 26u));
-      } else if (is_mem_store) {
-        mem_op = (is_stx ? (iword & 0x0000007fu) : (iword >> 26u));
-      }
-
-      // Check what type of registers should be used (vector or scalar).
-      const bool reg1_is_vector = is_vector_op;
-      const bool reg2_is_vector = is_vector_op && !is_mem_op;
-      const bool reg3_is_vector = ((vector_mode & 1u) != 0u);
-
-      // Read from the register files.
-      const uint32_t reg_a_data =
-          reg2_is_vector ? m_vregs[src_reg_a][vector.idx] : m_regs[src_reg_a];
-      const uint32_t vector_idx_b = vector.folding ? (vector.idx + m_regs[REG_VL]) : vector.idx;
-      uint32_t reg_b_data = reg3_is_vector ? m_vregs[src_reg_b][vector_idx_b] : m_regs[src_reg_b];
-      const uint32_t reg_c_data =
-          reg1_is_vector ? m_vregs[src_reg_c][vector.idx] : m_regs[src_reg_c];
-
-      // Scale the second source (the index) if this is a memory op.
-      if (is_mem_op && op_class_A) {
-        reg_b_data *= index_scale_factor(packed_mode);
-      }
-
-      // Select gather-scatter offset or stride offset for vector memory operations.
-      const uint32_t vector_addr_offset = (vector_mode == 3u) ? reg_b_data : vector.addr_offset;
-
-      // Output of the ID step.
-      ex_in.src_a = reg_a_data;
-      ex_in.src_b = is_subroutine_branch
-                        ? 4
-                        : ((is_vector_op && is_mem_op)
-                               ? vector_addr_offset
-                               : (op_class_C ? imm15 : (op_class_D ? imm21 : reg_b_data)));
-      ex_in.src_c = reg_c_data;
-      ex_in.dst_reg = dst_reg;
-      ex_in.dst_idx = vector.idx;
-      ex_in.dst_is_vector = is_vector_op;
-      ex_in.ex_op = ex_op;
-      ex_in.packed_mode = packed_mode;
-      ex_in.mem_op = mem_op;
-
-      // Debug trace.
+      // EX
       {
-        debug_trace_t trace;
-        trace.valid = true;
-        trace.src_a_valid = reg2_is_src;
-        trace.src_b_valid = reg3_is_src;
-        trace.src_c_valid = reg1_is_src;
-        trace.pc = id_in.pc;
-        trace.src_a = ex_in.src_a;
-        trace.src_b = ex_in.src_b;
-        trace.src_c = ex_in.src_c;
-        append_debug_trace(trace);
-      }
-    }
+        uint32_t ex_result = 0u;
 
-    // EX
-    {
-      uint32_t ex_result = 0u;
+        // Do the operation.
+        switch (ex_in.ex_op) {
+          case EX_OP_CPUID:
+            ex_result = cpuid32(ex_in.src_a, ex_in.src_b);
+            break;
 
-      // Do the operation.
-      switch (ex_in.ex_op) {
-        case EX_OP_CPUID:
-          ex_result = cpuid32(ex_in.src_a, ex_in.src_b);
-          break;
+          case EX_OP_LDHI:
+            ex_result = ex_in.src_b << 11u;
+            break;
+          case EX_OP_LDHIO:
+            ex_result = (ex_in.src_b << 11u) | 0x7ffu;
+            break;
+          case EX_OP_ADDPCHI:
+            ex_result = ex_in.src_a + (ex_in.src_b << 11u);
+            break;
 
-        case EX_OP_LDHI:
-          ex_result = ex_in.src_b << 11u;
-          break;
-        case EX_OP_LDHIO:
-          ex_result = (ex_in.src_b << 11u) | 0x7ffu;
-          break;
-        case EX_OP_ADDPCHI:
-          ex_result = ex_in.src_a + (ex_in.src_b << 11u);
-          break;
+          case EX_OP_OR:
+            ex_result = ex_in.src_a | ex_in.src_b;
+            break;
+          case EX_OP_NOR:
+            ex_result = ~(ex_in.src_a | ex_in.src_b);
+            break;
+          case EX_OP_AND:
+            ex_result = ex_in.src_a & ex_in.src_b;
+            break;
+          case EX_OP_BIC:
+            ex_result = ex_in.src_a & ~ex_in.src_b;
+            break;
+          case EX_OP_XOR:
+            ex_result = ex_in.src_a ^ ex_in.src_b;
+            break;
+          case EX_OP_ADD:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = add8x4(ex_in.src_a, ex_in.src_b);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = add16x2(ex_in.src_a, ex_in.src_b);
+                break;
+              default:
+                ex_result = add32(ex_in.src_a, ex_in.src_b);
+            }
+            break;
+          case EX_OP_SUB:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = sub8x4(ex_in.src_a, ex_in.src_b);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = sub16x2(ex_in.src_a, ex_in.src_b);
+                break;
+              default:
+                ex_result = sub32(ex_in.src_a, ex_in.src_b);
+            }
+            break;
+          case EX_OP_SEQ:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result =
+                    set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t a, uint8_t b) { return a == b; });
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = set16x2(
+                    ex_in.src_a, ex_in.src_b, [](uint16_t a, uint16_t b) { return a == b; });
+                break;
+              default:
+                ex_result =
+                    set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) { return a == b; });
+            }
+            break;
+          case EX_OP_SNE:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result =
+                    set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t a, uint8_t b) { return a != b; });
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = set16x2(
+                    ex_in.src_a, ex_in.src_b, [](uint16_t a, uint16_t b) { return a != b; });
+                break;
+              default:
+                ex_result =
+                    set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) { return a != b; });
+            }
+            break;
+          case EX_OP_SLT:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t a, uint8_t b) {
+                  return static_cast<int8_t>(a) < static_cast<int8_t>(b);
+                });
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t a, uint16_t b) {
+                  return static_cast<int16_t>(a) < static_cast<int16_t>(b);
+                });
+                break;
+              default:
+                ex_result = set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) {
+                  return static_cast<int32_t>(a) < static_cast<int32_t>(b);
+                });
+            }
+            break;
+          case EX_OP_SLTU:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result =
+                    set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t a, uint8_t b) { return a < b; });
+                break;
+              case PACKED_HALF_WORD:
+                ex_result =
+                    set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t a, uint16_t b) { return a < b; });
+                break;
+              default:
+                ex_result =
+                    set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) { return a < b; });
+            }
+            break;
+          case EX_OP_SLE:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t a, uint8_t b) {
+                  return static_cast<int8_t>(a) <= static_cast<int8_t>(b);
+                });
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t a, uint16_t b) {
+                  return static_cast<int16_t>(a) <= static_cast<int16_t>(b);
+                });
+                break;
+              default:
+                ex_result = set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) {
+                  return static_cast<int32_t>(a) <= static_cast<int32_t>(b);
+                });
+            }
+            break;
+          case EX_OP_SLEU:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result =
+                    set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t a, uint8_t b) { return a <= b; });
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = set16x2(
+                    ex_in.src_a, ex_in.src_b, [](uint16_t a, uint16_t b) { return a <= b; });
+                break;
+              default:
+                ex_result =
+                    set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) { return a <= b; });
+            }
+            break;
+          case EX_OP_MIN:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = sel32(ex_in.src_a,
+                                  ex_in.src_b,
+                                  set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t x, uint8_t y) {
+                                    return static_cast<int8_t>(x) < static_cast<int8_t>(y);
+                                  }));
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = sel32(ex_in.src_a,
+                                  ex_in.src_b,
+                                  set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t x, uint16_t y) {
+                                    return static_cast<int16_t>(x) < static_cast<int16_t>(y);
+                                  }));
+                break;
+              default:
+                ex_result = sel32(ex_in.src_a,
+                                  ex_in.src_b,
+                                  set32(ex_in.src_a, ex_in.src_b, [](uint32_t x, uint32_t y) {
+                                    return static_cast<int32_t>(x) < static_cast<int32_t>(y);
+                                  }));
+            }
+            break;
+          case EX_OP_MAX:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = sel32(ex_in.src_a,
+                                  ex_in.src_b,
+                                  set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t x, uint8_t y) {
+                                    return static_cast<int8_t>(x) > static_cast<int8_t>(y);
+                                  }));
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = sel32(ex_in.src_a,
+                                  ex_in.src_b,
+                                  set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t x, uint16_t y) {
+                                    return static_cast<int16_t>(x) > static_cast<int16_t>(y);
+                                  }));
+                break;
+              default:
+                ex_result = sel32(ex_in.src_a,
+                                  ex_in.src_b,
+                                  set32(ex_in.src_a, ex_in.src_b, [](uint32_t x, uint32_t y) {
+                                    return static_cast<int32_t>(x) > static_cast<int32_t>(y);
+                                  }));
+            }
+            break;
+          case EX_OP_MINU:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = sel32(
+                    ex_in.src_a,
+                    ex_in.src_b,
+                    set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t x, uint8_t y) { return x < y; }));
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = sel32(ex_in.src_a,
+                                  ex_in.src_b,
+                                  set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t x, uint16_t y) {
+                                    return x < y;
+                                  }));
+                break;
+              default:
+                ex_result = sel32(
+                    ex_in.src_a,
+                    ex_in.src_b,
+                    set32(ex_in.src_a, ex_in.src_b, [](uint32_t x, uint32_t y) { return x < y; }));
+            }
+            break;
+          case EX_OP_MAXU:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = sel32(
+                    ex_in.src_a,
+                    ex_in.src_b,
+                    set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t x, uint8_t y) { return x > y; }));
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = sel32(ex_in.src_a,
+                                  ex_in.src_b,
+                                  set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t x, uint16_t y) {
+                                    return x > y;
+                                  }));
+                break;
+              default:
+                ex_result = sel32(
+                    ex_in.src_a,
+                    ex_in.src_b,
+                    set32(ex_in.src_a, ex_in.src_b, [](uint32_t x, uint32_t y) { return x > y; }));
+            }
+            break;
+          case EX_OP_ASR:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = asr8x4(ex_in.src_a, ex_in.src_b);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = asr16x2(ex_in.src_a, ex_in.src_b);
+                break;
+              default:
+                ex_result = asr32(ex_in.src_a, ex_in.src_b);
+            }
+            break;
+          case EX_OP_LSL:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = lsl8x4(ex_in.src_a, ex_in.src_b);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = lsl16x2(ex_in.src_a, ex_in.src_b);
+                break;
+              default:
+                ex_result = lsl32(ex_in.src_a, ex_in.src_b);
+            }
+            break;
+          case EX_OP_LSR:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = lsr8x4(ex_in.src_a, ex_in.src_b);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = lsr16x2(ex_in.src_a, ex_in.src_b);
+                break;
+              default:
+                ex_result = lsr32(ex_in.src_a, ex_in.src_b);
+            }
+            break;
+          case EX_OP_SHUF:
+            ex_result = shuf32(ex_in.src_a, ex_in.src_b);
+            break;
+          case EX_OP_CLZ:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = clz8x4(ex_in.src_a);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = clz16x2(ex_in.src_a);
+                break;
+              default:
+                ex_result = clz32(ex_in.src_a);
+            }
+            break;
+          case EX_OP_REV:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = rev8x4(ex_in.src_a);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = rev16x2(ex_in.src_a);
+                break;
+              default:
+                ex_result = rev32(ex_in.src_a);
+            }
+            break;
+          case EX_OP_PACKB:
+            ex_result = packb32(ex_in.src_a, ex_in.src_b);
+            break;
+          case EX_OP_PACKH:
+            ex_result = packh32(ex_in.src_a, ex_in.src_b);
+            break;
 
-        case EX_OP_OR:
-          ex_result = ex_in.src_a | ex_in.src_b;
-          break;
-        case EX_OP_NOR:
-          ex_result = ~(ex_in.src_a | ex_in.src_b);
-          break;
-        case EX_OP_AND:
-          ex_result = ex_in.src_a & ex_in.src_b;
-          break;
-        case EX_OP_BIC:
-          ex_result = ex_in.src_a & ~ex_in.src_b;
-          break;
-        case EX_OP_XOR:
-          ex_result = ex_in.src_a ^ ex_in.src_b;
-          break;
-        case EX_OP_ADD:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = add8x4(ex_in.src_a, ex_in.src_b);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = add16x2(ex_in.src_a, ex_in.src_b);
-              break;
-            default:
-              ex_result = add32(ex_in.src_a, ex_in.src_b);
-          }
-          break;
-        case EX_OP_SUB:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = sub8x4(ex_in.src_a, ex_in.src_b);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = sub16x2(ex_in.src_a, ex_in.src_b);
-              break;
-            default:
-              ex_result = sub32(ex_in.src_a, ex_in.src_b);
-          }
-          break;
-        case EX_OP_SEQ:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result =
-                  set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t a, uint8_t b) { return a == b; });
-              break;
-            case PACKED_HALF_WORD:
-              ex_result =
-                  set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t a, uint16_t b) { return a == b; });
-              break;
-            default:
-              ex_result =
-                  set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) { return a == b; });
-          }
-          break;
-        case EX_OP_SNE:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result =
-                  set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t a, uint8_t b) { return a != b; });
-              break;
-            case PACKED_HALF_WORD:
-              ex_result =
-                  set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t a, uint16_t b) { return a != b; });
-              break;
-            default:
-              ex_result =
-                  set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) { return a != b; });
-          }
-          break;
-        case EX_OP_SLT:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t a, uint8_t b) {
-                return static_cast<int8_t>(a) < static_cast<int8_t>(b);
-              });
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t a, uint16_t b) {
-                return static_cast<int16_t>(a) < static_cast<int16_t>(b);
-              });
-              break;
-            default:
-              ex_result = set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) {
-                return static_cast<int32_t>(a) < static_cast<int32_t>(b);
-              });
-          }
-          break;
-        case EX_OP_SLTU:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result =
-                  set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t a, uint8_t b) { return a < b; });
-              break;
-            case PACKED_HALF_WORD:
-              ex_result =
-                  set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t a, uint16_t b) { return a < b; });
-              break;
-            default:
-              ex_result =
-                  set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) { return a < b; });
-          }
-          break;
-        case EX_OP_SLE:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t a, uint8_t b) {
-                return static_cast<int8_t>(a) <= static_cast<int8_t>(b);
-              });
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t a, uint16_t b) {
-                return static_cast<int16_t>(a) <= static_cast<int16_t>(b);
-              });
-              break;
-            default:
-              ex_result = set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) {
-                return static_cast<int32_t>(a) <= static_cast<int32_t>(b);
-              });
-          }
-          break;
-        case EX_OP_SLEU:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result =
-                  set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t a, uint8_t b) { return a <= b; });
-              break;
-            case PACKED_HALF_WORD:
-              ex_result =
-                  set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t a, uint16_t b) { return a <= b; });
-              break;
-            default:
-              ex_result =
-                  set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) { return a <= b; });
-          }
-          break;
-        case EX_OP_MIN:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = sel32(ex_in.src_a,
-                                ex_in.src_b,
-                                set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t x, uint8_t y) {
-                                  return static_cast<int8_t>(x) < static_cast<int8_t>(y);
-                                }));
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = sel32(ex_in.src_a,
-                                ex_in.src_b,
-                                set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t x, uint16_t y) {
-                                  return static_cast<int16_t>(x) < static_cast<int16_t>(y);
-                                }));
-              break;
-            default:
-              ex_result = sel32(ex_in.src_a,
-                                ex_in.src_b,
-                                set32(ex_in.src_a, ex_in.src_b, [](uint32_t x, uint32_t y) {
-                                  return static_cast<int32_t>(x) < static_cast<int32_t>(y);
-                                }));
-          }
-          break;
-        case EX_OP_MAX:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = sel32(ex_in.src_a,
-                                ex_in.src_b,
-                                set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t x, uint8_t y) {
-                                  return static_cast<int8_t>(x) > static_cast<int8_t>(y);
-                                }));
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = sel32(ex_in.src_a,
-                                ex_in.src_b,
-                                set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t x, uint16_t y) {
-                                  return static_cast<int16_t>(x) > static_cast<int16_t>(y);
-                                }));
-              break;
-            default:
-              ex_result = sel32(ex_in.src_a,
-                                ex_in.src_b,
-                                set32(ex_in.src_a, ex_in.src_b, [](uint32_t x, uint32_t y) {
-                                  return static_cast<int32_t>(x) > static_cast<int32_t>(y);
-                                }));
-          }
-          break;
-        case EX_OP_MINU:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = sel32(
-                  ex_in.src_a,
-                  ex_in.src_b,
-                  set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t x, uint8_t y) { return x < y; }));
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = sel32(
-                  ex_in.src_a,
-                  ex_in.src_b,
-                  set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t x, uint16_t y) { return x < y; }));
-              break;
-            default:
-              ex_result = sel32(
-                  ex_in.src_a,
-                  ex_in.src_b,
-                  set32(ex_in.src_a, ex_in.src_b, [](uint32_t x, uint32_t y) { return x < y; }));
-          }
-          break;
-        case EX_OP_MAXU:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = sel32(
-                  ex_in.src_a,
-                  ex_in.src_b,
-                  set8x4(ex_in.src_a, ex_in.src_b, [](uint8_t x, uint8_t y) { return x > y; }));
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = sel32(
-                  ex_in.src_a,
-                  ex_in.src_b,
-                  set16x2(ex_in.src_a, ex_in.src_b, [](uint16_t x, uint16_t y) { return x > y; }));
-              break;
-            default:
-              ex_result = sel32(
-                  ex_in.src_a,
-                  ex_in.src_b,
-                  set32(ex_in.src_a, ex_in.src_b, [](uint32_t x, uint32_t y) { return x > y; }));
-          }
-          break;
-        case EX_OP_ASR:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = asr8x4(ex_in.src_a, ex_in.src_b);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = asr16x2(ex_in.src_a, ex_in.src_b);
-              break;
-            default:
-              ex_result = asr32(ex_in.src_a, ex_in.src_b);
-          }
-          break;
-        case EX_OP_LSL:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = lsl8x4(ex_in.src_a, ex_in.src_b);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = lsl16x2(ex_in.src_a, ex_in.src_b);
-              break;
-            default:
-              ex_result = lsl32(ex_in.src_a, ex_in.src_b);
-          }
-          break;
-        case EX_OP_LSR:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = lsr8x4(ex_in.src_a, ex_in.src_b);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = lsr16x2(ex_in.src_a, ex_in.src_b);
-              break;
-            default:
-              ex_result = lsr32(ex_in.src_a, ex_in.src_b);
-          }
-          break;
-        case EX_OP_SHUF:
-          ex_result = shuf32(ex_in.src_a, ex_in.src_b);
-          break;
-        case EX_OP_CLZ:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = clz8x4(ex_in.src_a);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = clz16x2(ex_in.src_a);
-              break;
-            default:
-              ex_result = clz32(ex_in.src_a);
-          }
-          break;
-        case EX_OP_REV:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = rev8x4(ex_in.src_a);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = rev16x2(ex_in.src_a);
-              break;
-            default:
-              ex_result = rev32(ex_in.src_a);
-          }
-          break;
-        case EX_OP_PACKB:
-          ex_result = packb32(ex_in.src_a, ex_in.src_b);
-          break;
-        case EX_OP_PACKH:
-          ex_result = packh32(ex_in.src_a, ex_in.src_b);
-          break;
-
-        case EX_OP_ADDS:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = saturating_op_8x4(
-                  ex_in.src_a, ex_in.src_b, [](int16_t x, int16_t y) -> int16_t { return x + y; });
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = saturating_op_16x2(
-                  ex_in.src_a, ex_in.src_b, [](int32_t x, int32_t y) -> int32_t { return x + y; });
-              break;
-            default:
-              ex_result = saturating_op_32(
-                  ex_in.src_a, ex_in.src_b, [](int64_t x, int64_t y) -> int64_t { return x + y; });
-          }
-          break;
-        case EX_OP_ADDSU:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = saturating_op_u8x4(
-                  ex_in.src_a, ex_in.src_b, [](uint16_t x, uint16_t y) -> uint16_t {
-                    return x + y;
-                  });
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = saturating_op_u16x2(
-                  ex_in.src_a, ex_in.src_b, [](uint32_t x, uint32_t y) -> uint32_t {
-                    return x + y;
-                  });
-              break;
-            default:
-              ex_result = saturating_op_u32(
-                  ex_in.src_a, ex_in.src_b, [](uint64_t x, uint64_t y) -> uint64_t {
-                    return x + y;
-                  });
-          }
-          break;
-        case EX_OP_ADDH:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = halving_op_8x4(
-                  ex_in.src_a, ex_in.src_b, [](int16_t x, int16_t y) -> int16_t { return x + y; });
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = halving_op_16x2(
-                  ex_in.src_a, ex_in.src_b, [](int32_t x, int32_t y) -> int32_t { return x + y; });
-              break;
-            default:
-              ex_result = halving_op_32(
-                  ex_in.src_a, ex_in.src_b, [](int64_t x, int64_t y) -> int64_t { return x + y; });
-          }
-          break;
-        case EX_OP_ADDHU:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = halving_op_u8x4(ex_in.src_a,
+          case EX_OP_ADDS:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = saturating_op_8x4(
+                    ex_in.src_a, ex_in.src_b, [](int16_t x, int16_t y) -> int16_t {
+                      return x + y;
+                    });
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = saturating_op_16x2(
+                    ex_in.src_a, ex_in.src_b, [](int32_t x, int32_t y) -> int32_t {
+                      return x + y;
+                    });
+                break;
+              default:
+                ex_result = saturating_op_32(ex_in.src_a,
+                                             ex_in.src_b,
+                                             [](int64_t x, int64_t y) -> int64_t { return x + y; });
+            }
+            break;
+          case EX_OP_ADDSU:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = saturating_op_u8x4(
+                    ex_in.src_a, ex_in.src_b, [](uint16_t x, uint16_t y) -> uint16_t {
+                      return x + y;
+                    });
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = saturating_op_u16x2(
+                    ex_in.src_a, ex_in.src_b, [](uint32_t x, uint32_t y) -> uint32_t {
+                      return x + y;
+                    });
+                break;
+              default:
+                ex_result = saturating_op_u32(
+                    ex_in.src_a, ex_in.src_b, [](uint64_t x, uint64_t y) -> uint64_t {
+                      return x + y;
+                    });
+            }
+            break;
+          case EX_OP_ADDH:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = halving_op_8x4(ex_in.src_a,
+                                           ex_in.src_b,
+                                           [](int16_t x, int16_t y) -> int16_t { return x + y; });
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = halving_op_16x2(ex_in.src_a,
+                                            ex_in.src_b,
+                                            [](int32_t x, int32_t y) -> int32_t { return x + y; });
+                break;
+              default:
+                ex_result = halving_op_32(ex_in.src_a,
                                           ex_in.src_b,
-                                          [](uint16_t x, uint16_t y) -> uint16_t { return x + y; });
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = halving_op_u16x2(
-                  ex_in.src_a, ex_in.src_b, [](uint32_t x, uint32_t y) -> uint32_t {
-                    return x + y;
-                  });
-              break;
-            default:
-              ex_result = halving_op_u32(ex_in.src_a,
-                                         ex_in.src_b,
-                                         [](uint64_t x, uint64_t y) -> uint64_t { return x + y; });
-          }
-          break;
-        case EX_OP_SUBS:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = saturating_op_8x4(
-                  ex_in.src_a, ex_in.src_b, [](int16_t x, int16_t y) -> int16_t { return x - y; });
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = saturating_op_16x2(
-                  ex_in.src_a, ex_in.src_b, [](int32_t x, int32_t y) -> int32_t { return x - y; });
-              break;
-            default:
-              ex_result = saturating_op_32(
-                  ex_in.src_a, ex_in.src_b, [](int64_t x, int64_t y) -> int64_t { return x - y; });
-          }
-          break;
-        case EX_OP_SUBSU:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = saturating_op_u8x4(
-                  ex_in.src_a, ex_in.src_b, [](uint16_t x, uint16_t y) -> uint16_t {
-                    return x - y;
-                  });
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = saturating_op_u16x2(
-                  ex_in.src_a, ex_in.src_b, [](uint32_t x, uint32_t y) -> uint32_t {
-                    return x - y;
-                  });
-              break;
-            default:
-              ex_result = saturating_op_u32(
-                  ex_in.src_a, ex_in.src_b, [](uint64_t x, uint64_t y) -> uint64_t {
-                    return x - y;
-                  });
-          }
-          break;
-        case EX_OP_SUBH:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = halving_op_8x4(
-                  ex_in.src_a, ex_in.src_b, [](int16_t x, int16_t y) -> int16_t { return x - y; });
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = halving_op_16x2(
-                  ex_in.src_a, ex_in.src_b, [](int32_t x, int32_t y) -> int32_t { return x - y; });
-              break;
-            default:
-              ex_result = halving_op_32(
-                  ex_in.src_a, ex_in.src_b, [](int64_t x, int64_t y) -> int64_t { return x - y; });
-          }
-          break;
-        case EX_OP_SUBHU:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = halving_op_u8x4(ex_in.src_a,
+                                          [](int64_t x, int64_t y) -> int64_t { return x + y; });
+            }
+            break;
+          case EX_OP_ADDHU:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = halving_op_u8x4(
+                    ex_in.src_a, ex_in.src_b, [](uint16_t x, uint16_t y) -> uint16_t {
+                      return x + y;
+                    });
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = halving_op_u16x2(
+                    ex_in.src_a, ex_in.src_b, [](uint32_t x, uint32_t y) -> uint32_t {
+                      return x + y;
+                    });
+                break;
+              default:
+                ex_result = halving_op_u32(
+                    ex_in.src_a, ex_in.src_b, [](uint64_t x, uint64_t y) -> uint64_t {
+                      return x + y;
+                    });
+            }
+            break;
+          case EX_OP_SUBS:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = saturating_op_8x4(
+                    ex_in.src_a, ex_in.src_b, [](int16_t x, int16_t y) -> int16_t {
+                      return x - y;
+                    });
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = saturating_op_16x2(
+                    ex_in.src_a, ex_in.src_b, [](int32_t x, int32_t y) -> int32_t {
+                      return x - y;
+                    });
+                break;
+              default:
+                ex_result = saturating_op_32(ex_in.src_a,
+                                             ex_in.src_b,
+                                             [](int64_t x, int64_t y) -> int64_t { return x - y; });
+            }
+            break;
+          case EX_OP_SUBSU:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = saturating_op_u8x4(
+                    ex_in.src_a, ex_in.src_b, [](uint16_t x, uint16_t y) -> uint16_t {
+                      return x - y;
+                    });
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = saturating_op_u16x2(
+                    ex_in.src_a, ex_in.src_b, [](uint32_t x, uint32_t y) -> uint32_t {
+                      return x - y;
+                    });
+                break;
+              default:
+                ex_result = saturating_op_u32(
+                    ex_in.src_a, ex_in.src_b, [](uint64_t x, uint64_t y) -> uint64_t {
+                      return x - y;
+                    });
+            }
+            break;
+          case EX_OP_SUBH:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = halving_op_8x4(ex_in.src_a,
+                                           ex_in.src_b,
+                                           [](int16_t x, int16_t y) -> int16_t { return x - y; });
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = halving_op_16x2(ex_in.src_a,
+                                            ex_in.src_b,
+                                            [](int32_t x, int32_t y) -> int32_t { return x - y; });
+                break;
+              default:
+                ex_result = halving_op_32(ex_in.src_a,
                                           ex_in.src_b,
-                                          [](uint16_t x, uint16_t y) -> uint16_t { return x - y; });
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = halving_op_u16x2(
-                  ex_in.src_a, ex_in.src_b, [](uint32_t x, uint32_t y) -> uint32_t {
-                    return x - y;
-                  });
-              break;
-            default:
-              ex_result = halving_op_u32(ex_in.src_a,
-                                         ex_in.src_b,
-                                         [](uint64_t x, uint64_t y) -> uint64_t { return x - y; });
-          }
-          break;
+                                          [](int64_t x, int64_t y) -> int64_t { return x - y; });
+            }
+            break;
+          case EX_OP_SUBHU:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = halving_op_u8x4(
+                    ex_in.src_a, ex_in.src_b, [](uint16_t x, uint16_t y) -> uint16_t {
+                      return x - y;
+                    });
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = halving_op_u16x2(
+                    ex_in.src_a, ex_in.src_b, [](uint32_t x, uint32_t y) -> uint32_t {
+                      return x - y;
+                    });
+                break;
+              default:
+                ex_result = halving_op_u32(
+                    ex_in.src_a, ex_in.src_b, [](uint64_t x, uint64_t y) -> uint64_t {
+                      return x - y;
+                    });
+            }
+            break;
 
-        case EX_OP_MULQ:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = mulq7x4(ex_in.src_a, ex_in.src_b);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = mulq15x2(ex_in.src_a, ex_in.src_b);
-              break;
-            default:
-              ex_result = mulq31(ex_in.src_a, ex_in.src_b);
-          }
-          break;
-        case EX_OP_MUL:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = mul8x4(ex_in.src_a, ex_in.src_b);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = mul16x2(ex_in.src_a, ex_in.src_b);
-              break;
-            default:
-              ex_result = mul32(ex_in.src_a, ex_in.src_b);
-          }
-          break;
-        case EX_OP_MULHI:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = mulhi8x4(ex_in.src_a, ex_in.src_b);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = mulhi16x2(ex_in.src_a, ex_in.src_b);
-              break;
-            default:
-              ex_result = mulhi32(ex_in.src_a, ex_in.src_b);
-          }
-          break;
-        case EX_OP_MULHIU:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = mulhiu8x4(ex_in.src_a, ex_in.src_b);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = mulhiu16x2(ex_in.src_a, ex_in.src_b);
-              break;
-            default:
-              ex_result = mulhiu32(ex_in.src_a, ex_in.src_b);
-          }
-          break;
+          case EX_OP_MULQ:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = mulq7x4(ex_in.src_a, ex_in.src_b);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = mulq15x2(ex_in.src_a, ex_in.src_b);
+                break;
+              default:
+                ex_result = mulq31(ex_in.src_a, ex_in.src_b);
+            }
+            break;
+          case EX_OP_MUL:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = mul8x4(ex_in.src_a, ex_in.src_b);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = mul16x2(ex_in.src_a, ex_in.src_b);
+                break;
+              default:
+                ex_result = mul32(ex_in.src_a, ex_in.src_b);
+            }
+            break;
+          case EX_OP_MULHI:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = mulhi8x4(ex_in.src_a, ex_in.src_b);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = mulhi16x2(ex_in.src_a, ex_in.src_b);
+                break;
+              default:
+                ex_result = mulhi32(ex_in.src_a, ex_in.src_b);
+            }
+            break;
+          case EX_OP_MULHIU:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = mulhiu8x4(ex_in.src_a, ex_in.src_b);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = mulhiu16x2(ex_in.src_a, ex_in.src_b);
+                break;
+              default:
+                ex_result = mulhiu32(ex_in.src_a, ex_in.src_b);
+            }
+            break;
 
-        case EX_OP_DIV:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = div8x4(ex_in.src_a, ex_in.src_b);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = div16x2(ex_in.src_a, ex_in.src_b);
-              break;
-            default:
-              ex_result = div32(ex_in.src_a, ex_in.src_b);
-          }
-          break;
-        case EX_OP_DIVU:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = divu8x4(ex_in.src_a, ex_in.src_b);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = divu16x2(ex_in.src_a, ex_in.src_b);
-              break;
-            default:
-              ex_result = divu32(ex_in.src_a, ex_in.src_b);
-          }
-          break;
-        case EX_OP_REM:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = rem8x4(ex_in.src_a, ex_in.src_b);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = rem16x2(ex_in.src_a, ex_in.src_b);
-              break;
-            default:
-              ex_result = rem32(ex_in.src_a, ex_in.src_b);
-          }
-          break;
-        case EX_OP_REMU:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = remu8x4(ex_in.src_a, ex_in.src_b);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = remu16x2(ex_in.src_a, ex_in.src_b);
-              break;
-            default:
-              ex_result = remu32(ex_in.src_a, ex_in.src_b);
-          }
-          break;
+          case EX_OP_DIV:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = div8x4(ex_in.src_a, ex_in.src_b);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = div16x2(ex_in.src_a, ex_in.src_b);
+                break;
+              default:
+                ex_result = div32(ex_in.src_a, ex_in.src_b);
+            }
+            break;
+          case EX_OP_DIVU:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = divu8x4(ex_in.src_a, ex_in.src_b);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = divu16x2(ex_in.src_a, ex_in.src_b);
+                break;
+              default:
+                ex_result = divu32(ex_in.src_a, ex_in.src_b);
+            }
+            break;
+          case EX_OP_REM:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = rem8x4(ex_in.src_a, ex_in.src_b);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = rem16x2(ex_in.src_a, ex_in.src_b);
+                break;
+              default:
+                ex_result = rem32(ex_in.src_a, ex_in.src_b);
+            }
+            break;
+          case EX_OP_REMU:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = remu8x4(ex_in.src_a, ex_in.src_b);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = remu16x2(ex_in.src_a, ex_in.src_b);
+                break;
+              default:
+                ex_result = remu32(ex_in.src_a, ex_in.src_b);
+            }
+            break;
 
-        case EX_OP_ITOF:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = itof8x4(ex_in.src_a, ex_in.src_b);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = itof16x2(ex_in.src_a, ex_in.src_b);
-              break;
-            default:
-              ex_result = itof32(ex_in.src_a, ex_in.src_b);
-          }
-          break;
-        case EX_OP_UTOF:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = utof8x4(ex_in.src_a, ex_in.src_b);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = utof16x2(ex_in.src_a, ex_in.src_b);
-              break;
-            default:
-              ex_result = utof32(ex_in.src_a, ex_in.src_b);
-          }
-          break;
-        case EX_OP_FTOI:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = ftoi8x4(ex_in.src_a, ex_in.src_b);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = ftoi16x2(ex_in.src_a, ex_in.src_b);
-              break;
-            default:
-              ex_result = ftoi32(ex_in.src_a, ex_in.src_b);
-          }
-          break;
-        case EX_OP_FTOU:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = ftou8x4(ex_in.src_a, ex_in.src_b);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = ftou16x2(ex_in.src_a, ex_in.src_b);
-              break;
-            default:
-              ex_result = ftou32(ex_in.src_a, ex_in.src_b);
-          }
-          break;
-        case EX_OP_FTOIR:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = ftoir8x4(ex_in.src_a, ex_in.src_b);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = ftoir16x2(ex_in.src_a, ex_in.src_b);
-              break;
-            default:
-              ex_result = ftoir32(ex_in.src_a, ex_in.src_b);
-          }
-          break;
-        case EX_OP_FTOUR:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = ftour8x4(ex_in.src_a, ex_in.src_b);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = ftour16x2(ex_in.src_a, ex_in.src_b);
-              break;
-            default:
-              ex_result = ftour32(ex_in.src_a, ex_in.src_b);
-          }
-          break;
-        case EX_OP_FADD:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = fadd8x4(ex_in.src_a, ex_in.src_b);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = fadd16x2(ex_in.src_a, ex_in.src_b);
-              break;
-            default:
-              ex_result = fadd32(ex_in.src_a, ex_in.src_b);
-          }
-          break;
-        case EX_OP_FSUB:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = fsub8x4(ex_in.src_a, ex_in.src_b);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = fsub16x2(ex_in.src_a, ex_in.src_b);
-              break;
-            default:
-              ex_result = fsub32(ex_in.src_a, ex_in.src_b);
-          }
-          break;
-        case EX_OP_FMUL:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = fmul8x4(ex_in.src_a, ex_in.src_b);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = fmul16x2(ex_in.src_a, ex_in.src_b);
-              break;
-            default:
-              ex_result = fmul32(ex_in.src_a, ex_in.src_b);
-          }
-          break;
-        case EX_OP_FDIV:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = fdiv8x4(ex_in.src_a, ex_in.src_b);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = fdiv16x2(ex_in.src_a, ex_in.src_b);
-              break;
-            default:
-              ex_result = fdiv32(ex_in.src_a, ex_in.src_b);
-          }
-          break;
-        case EX_OP_FSQRT:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = fsqrt8x4(ex_in.src_a, ex_in.src_b);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = fsqrt16x2(ex_in.src_a, ex_in.src_b);
-              break;
-            default:
-              ex_result = fsqrt32(ex_in.src_a, ex_in.src_b);
-          }
-          break;
-        case EX_OP_FSEQ:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = f8x4_t(ex_in.src_a).fseq(f8x4_t(ex_in.src_b));
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = f16x2_t(ex_in.src_a).fseq(f16x2_t(ex_in.src_b));
-              break;
-            default:
-              ex_result = set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) {
-                return as_f32(a) == as_f32(b);
-              });
-          }
-          break;
-        case EX_OP_FSNE:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = f8x4_t(ex_in.src_a).fsne(f8x4_t(ex_in.src_b));
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = f16x2_t(ex_in.src_a).fsne(f16x2_t(ex_in.src_b));
-              break;
-            default:
-              ex_result = set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) {
-                return as_f32(a) != as_f32(b);
-              });
-          }
-          break;
-        case EX_OP_FSLT:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = f8x4_t(ex_in.src_a).fsle(f8x4_t(ex_in.src_b));
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = f16x2_t(ex_in.src_a).fslt(f16x2_t(ex_in.src_b));
-              break;
-            default:
-              ex_result = set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) {
-                return as_f32(a) < as_f32(b);
-              });
-          }
-          break;
-        case EX_OP_FSLE:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = f8x4_t(ex_in.src_a).fsle(f8x4_t(ex_in.src_b));
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = f16x2_t(ex_in.src_a).fsle(f16x2_t(ex_in.src_b));
-              break;
-            default:
-              ex_result = set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) {
-                return as_f32(a) <= as_f32(b);
-              });
-          }
-          break;
-        case EX_OP_FSNAN:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = f8x4_t(ex_in.src_a).fsnan(f8x4_t(ex_in.src_b));
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = f16x2_t(ex_in.src_a).fsnan(f16x2_t(ex_in.src_b));
-              break;
-            default:
-              ex_result = set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) {
-                return float32_isnan(a) || float32_isnan(b);
-              });
-          }
-          break;
-        case EX_OP_FMIN:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = fmin8x4(ex_in.src_a, ex_in.src_b);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = fmin16x2(ex_in.src_a, ex_in.src_b);
-              break;
-            default:
-              ex_result = fmin32(ex_in.src_a, ex_in.src_b);
-          }
-          break;
-        case EX_OP_FMAX:
-          switch (ex_in.packed_mode) {
-            case PACKED_BYTE:
-              ex_result = fmax8x4(ex_in.src_a, ex_in.src_b);
-              break;
-            case PACKED_HALF_WORD:
-              ex_result = fmax16x2(ex_in.src_a, ex_in.src_b);
-              break;
-            default:
-              ex_result = fmax32(ex_in.src_a, ex_in.src_b);
-          }
-          break;
+          case EX_OP_ITOF:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = itof8x4(ex_in.src_a, ex_in.src_b);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = itof16x2(ex_in.src_a, ex_in.src_b);
+                break;
+              default:
+                ex_result = itof32(ex_in.src_a, ex_in.src_b);
+            }
+            break;
+          case EX_OP_UTOF:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = utof8x4(ex_in.src_a, ex_in.src_b);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = utof16x2(ex_in.src_a, ex_in.src_b);
+                break;
+              default:
+                ex_result = utof32(ex_in.src_a, ex_in.src_b);
+            }
+            break;
+          case EX_OP_FTOI:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = ftoi8x4(ex_in.src_a, ex_in.src_b);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = ftoi16x2(ex_in.src_a, ex_in.src_b);
+                break;
+              default:
+                ex_result = ftoi32(ex_in.src_a, ex_in.src_b);
+            }
+            break;
+          case EX_OP_FTOU:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = ftou8x4(ex_in.src_a, ex_in.src_b);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = ftou16x2(ex_in.src_a, ex_in.src_b);
+                break;
+              default:
+                ex_result = ftou32(ex_in.src_a, ex_in.src_b);
+            }
+            break;
+          case EX_OP_FTOIR:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = ftoir8x4(ex_in.src_a, ex_in.src_b);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = ftoir16x2(ex_in.src_a, ex_in.src_b);
+                break;
+              default:
+                ex_result = ftoir32(ex_in.src_a, ex_in.src_b);
+            }
+            break;
+          case EX_OP_FTOUR:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = ftour8x4(ex_in.src_a, ex_in.src_b);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = ftour16x2(ex_in.src_a, ex_in.src_b);
+                break;
+              default:
+                ex_result = ftour32(ex_in.src_a, ex_in.src_b);
+            }
+            break;
+          case EX_OP_FADD:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = fadd8x4(ex_in.src_a, ex_in.src_b);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = fadd16x2(ex_in.src_a, ex_in.src_b);
+                break;
+              default:
+                ex_result = fadd32(ex_in.src_a, ex_in.src_b);
+            }
+            break;
+          case EX_OP_FSUB:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = fsub8x4(ex_in.src_a, ex_in.src_b);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = fsub16x2(ex_in.src_a, ex_in.src_b);
+                break;
+              default:
+                ex_result = fsub32(ex_in.src_a, ex_in.src_b);
+            }
+            break;
+          case EX_OP_FMUL:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = fmul8x4(ex_in.src_a, ex_in.src_b);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = fmul16x2(ex_in.src_a, ex_in.src_b);
+                break;
+              default:
+                ex_result = fmul32(ex_in.src_a, ex_in.src_b);
+            }
+            break;
+          case EX_OP_FDIV:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = fdiv8x4(ex_in.src_a, ex_in.src_b);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = fdiv16x2(ex_in.src_a, ex_in.src_b);
+                break;
+              default:
+                ex_result = fdiv32(ex_in.src_a, ex_in.src_b);
+            }
+            break;
+          case EX_OP_FSQRT:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = fsqrt8x4(ex_in.src_a, ex_in.src_b);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = fsqrt16x2(ex_in.src_a, ex_in.src_b);
+                break;
+              default:
+                ex_result = fsqrt32(ex_in.src_a, ex_in.src_b);
+            }
+            break;
+          case EX_OP_FSEQ:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = f8x4_t(ex_in.src_a).fseq(f8x4_t(ex_in.src_b));
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = f16x2_t(ex_in.src_a).fseq(f16x2_t(ex_in.src_b));
+                break;
+              default:
+                ex_result = set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) {
+                  return as_f32(a) == as_f32(b);
+                });
+            }
+            break;
+          case EX_OP_FSNE:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = f8x4_t(ex_in.src_a).fsne(f8x4_t(ex_in.src_b));
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = f16x2_t(ex_in.src_a).fsne(f16x2_t(ex_in.src_b));
+                break;
+              default:
+                ex_result = set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) {
+                  return as_f32(a) != as_f32(b);
+                });
+            }
+            break;
+          case EX_OP_FSLT:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = f8x4_t(ex_in.src_a).fsle(f8x4_t(ex_in.src_b));
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = f16x2_t(ex_in.src_a).fslt(f16x2_t(ex_in.src_b));
+                break;
+              default:
+                ex_result = set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) {
+                  return as_f32(a) < as_f32(b);
+                });
+            }
+            break;
+          case EX_OP_FSLE:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = f8x4_t(ex_in.src_a).fsle(f8x4_t(ex_in.src_b));
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = f16x2_t(ex_in.src_a).fsle(f16x2_t(ex_in.src_b));
+                break;
+              default:
+                ex_result = set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) {
+                  return as_f32(a) <= as_f32(b);
+                });
+            }
+            break;
+          case EX_OP_FSNAN:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = f8x4_t(ex_in.src_a).fsnan(f8x4_t(ex_in.src_b));
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = f16x2_t(ex_in.src_a).fsnan(f16x2_t(ex_in.src_b));
+                break;
+              default:
+                ex_result = set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) {
+                  return float32_isnan(a) || float32_isnan(b);
+                });
+            }
+            break;
+          case EX_OP_FMIN:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = fmin8x4(ex_in.src_a, ex_in.src_b);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = fmin16x2(ex_in.src_a, ex_in.src_b);
+                break;
+              default:
+                ex_result = fmin32(ex_in.src_a, ex_in.src_b);
+            }
+            break;
+          case EX_OP_FMAX:
+            switch (ex_in.packed_mode) {
+              case PACKED_BYTE:
+                ex_result = fmax8x4(ex_in.src_a, ex_in.src_b);
+                break;
+              case PACKED_HALF_WORD:
+                ex_result = fmax16x2(ex_in.src_a, ex_in.src_b);
+                break;
+              default:
+                ex_result = fmax32(ex_in.src_a, ex_in.src_b);
+            }
+            break;
+        }
+
+        mem_in.mem_addr = ex_result;
+        mem_in.dst_data = ex_result;
+        mem_in.dst_reg = ex_in.dst_reg;
+        mem_in.dst_idx = ex_in.dst_idx;
+        mem_in.dst_is_vector = ex_in.dst_is_vector;
+        mem_in.mem_op = ex_in.mem_op;
+        mem_in.store_data = ex_in.src_c;
       }
 
-      mem_in.mem_addr = ex_result;
-      mem_in.dst_data = ex_result;
-      mem_in.dst_reg = ex_in.dst_reg;
-      mem_in.dst_idx = ex_in.dst_idx;
-      mem_in.dst_is_vector = ex_in.dst_is_vector;
-      mem_in.mem_op = ex_in.mem_op;
-      mem_in.store_data = ex_in.src_c;
-    }
+      // MEM
+      {
+        uint32_t mem_result = 0u;
+        switch (mem_in.mem_op) {
+          case MEM_OP_LOAD8:
+            mem_result = m_ram.load8signed(mem_in.mem_addr);
+            break;
+          case MEM_OP_LOADU8:
+            mem_result = m_ram.load8(mem_in.mem_addr);
+            break;
+          case MEM_OP_LOAD16:
+            mem_result = m_ram.load16signed(mem_in.mem_addr);
+            break;
+          case MEM_OP_LOADU16:
+            mem_result = m_ram.load16(mem_in.mem_addr);
+            break;
+          case MEM_OP_LOAD32:
+            mem_result = m_ram.load32(mem_in.mem_addr);
+            break;
+          case MEM_OP_LDEA:
+            mem_result = mem_in.mem_addr;
+            break;
+          case MEM_OP_STORE8:
+            m_ram.store8(mem_in.mem_addr, mem_in.store_data);
+            break;
+          case MEM_OP_STORE16:
+            m_ram.store16(mem_in.mem_addr, mem_in.store_data);
+            break;
+          case MEM_OP_STORE32:
+            m_ram.store32(mem_in.mem_addr, mem_in.store_data);
+            break;
+        }
 
-    // MEM
-    {
-      uint32_t mem_result = 0u;
-      switch (mem_in.mem_op) {
-        case MEM_OP_LOAD8:
-          mem_result = m_ram.load8signed(mem_in.mem_addr);
-          break;
-        case MEM_OP_LOADU8:
-          mem_result = m_ram.load8(mem_in.mem_addr);
-          break;
-        case MEM_OP_LOAD16:
-          mem_result = m_ram.load16signed(mem_in.mem_addr);
-          break;
-        case MEM_OP_LOADU16:
-          mem_result = m_ram.load16(mem_in.mem_addr);
-          break;
-        case MEM_OP_LOAD32:
-          mem_result = m_ram.load32(mem_in.mem_addr);
-          break;
-        case MEM_OP_LDEA:
-          mem_result = mem_in.mem_addr;
-          break;
-        case MEM_OP_STORE8:
-          m_ram.store8(mem_in.mem_addr, mem_in.store_data);
-          break;
-        case MEM_OP_STORE16:
-          m_ram.store16(mem_in.mem_addr, mem_in.store_data);
-          break;
-        case MEM_OP_STORE32:
-          m_ram.store32(mem_in.mem_addr, mem_in.store_data);
-          break;
+        wb_in.dst_data = (mem_in.mem_op != MEM_OP_NONE) ? mem_result : mem_in.dst_data;
+        wb_in.dst_reg = mem_in.dst_reg;
+        wb_in.dst_idx = mem_in.dst_idx;
+        wb_in.dst_is_vector = mem_in.dst_is_vector;
       }
 
-      wb_in.dst_data = (mem_in.mem_op != MEM_OP_NONE) ? mem_result : mem_in.dst_data;
-      wb_in.dst_reg = mem_in.dst_reg;
-      wb_in.dst_idx = mem_in.dst_idx;
-      wb_in.dst_is_vector = mem_in.dst_is_vector;
-    }
-
-    // WB
-    if (wb_in.dst_reg != REG_Z) {
-      if (wb_in.dst_is_vector) {
-        m_vregs[wb_in.dst_reg][wb_in.dst_idx] = wb_in.dst_data;
-      } else if (wb_in.dst_reg != REG_PC) {
-        m_regs[wb_in.dst_reg] = wb_in.dst_data;
+      // WB
+      if (wb_in.dst_reg != REG_Z) {
+        if (wb_in.dst_is_vector) {
+          m_vregs[wb_in.dst_reg][wb_in.dst_idx] = wb_in.dst_data;
+        } else if (wb_in.dst_reg != REG_PC) {
+          m_regs[wb_in.dst_reg] = wb_in.dst_data;
+        }
       }
+
+      // Update the vector operation state.
+      vector.active = next_cycle_continues_a_vector_loop;
+
+      // Only update the PC if no vector operation is active.
+      if (!next_cycle_continues_a_vector_loop) {
+        m_regs[REG_PC] = next_pc;
+      }
+
+      ++m_total_cycle_count;
     }
-
-    // Update the vector operation state.
-    vector.active = next_cycle_continues_a_vector_loop;
-
-    // Only update the PC if no vector operation is active.
-    if (!next_cycle_continues_a_vector_loop) {
-      m_regs[REG_PC] = next_pc;
+  } catch (std::exception& e) {
+    std::string dump("\n");
+    for (int i = 1; i <= 25; ++i) {
+      dump += "S" + as_dec(i) + ": " + as_hex32(m_regs[i]) + "\n";
     }
-
-    ++m_total_cycle_count;
+    dump += "FP: " + as_hex32(m_regs[REG_FP]) + "\n";
+    dump += "TP: " + as_hex32(m_regs[REG_TP]) + "\n";
+    dump += "SP: " + as_hex32(m_regs[REG_SP]) + "\n";
+    dump += "VL: " + as_hex32(m_regs[REG_VL]) + "\n";
+    dump += "LR: " + as_hex32(m_regs[REG_LR]) + "\n";
+    dump += "PC: " + as_hex32(m_regs[REG_PC]) + "\n";
+    throw std::runtime_error(e.what() + dump);
   }
 
   return m_exit_code;

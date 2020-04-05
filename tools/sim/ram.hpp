@@ -113,18 +113,24 @@ public:
   }
 
 private:
+  static std::string as_hex32(const uint32_t x) {
+    char str[16];
+    std::snprintf(str, sizeof(str) - 1, "0x%08x", x);
+    return std::string(&str[0]);
+  }
+
   void check_addr(const uint32_t addr, const uint32_t size) const {
     if (!valid_range(addr, size)) {
       std::ostringstream ss;
-      ss << "Out of range memory access: " << addr << " >= " << m_memory.size();
-      throw std::runtime_error(ss.str().c_str());
+      ss << "Out of range memory access: " << as_hex32(addr) << " >= " << m_memory.size();
+      throw std::runtime_error(ss.str());
     }
   }
 
   void check_align(const uint32_t addr, const uint32_t size) const {
     if ((addr % size) != 0u) {
       std::ostringstream ss;
-      ss << "Unaligned " << (8 * size) << "-bit memory access: " << addr;
+      ss << "Unaligned " << (8 * size) << "-bit memory access: " << as_hex32(addr);
       throw std::runtime_error(ss.str().c_str());
     }
   }
