@@ -3,8 +3,23 @@
 ; == System library
 ; =============================================================================
 
-EMUL_EXIT = 0xffff0000  ; exit()
-EMUL_PUTC = 0xffff0004  ; putc()
+    ; Syscall routine addresses
+    SYSCALL_EXIT          = 0xffff0000+4*0
+    SYSCALL_PUTCHAR       = 0xffff0000+4*1
+    SYSCALL_GETCHAR       = 0xffff0000+4*2
+    SYSCALL_CLOSE         = 0xffff0000+4*3
+    SYSCALL_FSTAT         = 0xffff0000+4*4
+    SYSCALL_ISATTY        = 0xffff0000+4*5
+    SYSCALL_LINK          = 0xffff0000+4*6
+    SYSCALL_LSEEK         = 0xffff0000+4*7
+    SYSCALL_MKDIR         = 0xffff0000+4*8
+    SYSCALL_OPEN          = 0xffff0000+4*9
+    SYSCALL_READ          = 0xffff0000+4*10
+    SYSCALL_STAT          = 0xffff0000+4*11
+    SYSCALL_UNLINK        = 0xffff0000+4*12
+    SYSCALL_WRITE         = 0xffff0000+4*13
+    SYSCALL_GETTIMEMICROS = 0xffff0000+4*14
+
 
     .text
     .p2align 2
@@ -14,8 +29,7 @@ EMUL_PUTC = 0xffff0004  ; putc()
 ; -----------------------------------------------------------------------------
     .globl  _exit
 _exit:
-    ldi     s9, #EMUL_EXIT
-    j       s9
+    j       z, #SYSCALL_EXIT
 
 
 ; -----------------------------------------------------------------------------
@@ -23,17 +37,7 @@ _exit:
 ; -----------------------------------------------------------------------------
     .globl  _putc
 _putc:
-    add     sp, sp, #-8
-    stw     lr, sp, #0
-    stw     s16, sp, #4
-
-    ldi     s16, #EMUL_PUTC
-    jl      s16
-
-    ldw     lr, sp, #0
-    ldw     s16, sp, #4
-    add     sp, sp, #8
-    ret
+    j       z, #SYSCALL_PUTCHAR
 
 
 ; -----------------------------------------------------------------------------

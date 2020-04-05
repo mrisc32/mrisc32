@@ -548,7 +548,7 @@ test_10_answer2:
 ; Syscalls
 
     ; Syscall routine addresses
-    SYSC_ID_EXIT          = 0xffff0000+4*1
+    SYSCALL_EXIT          = 0xffff0000+4*0
     SYSCALL_PUTCHAR       = 0xffff0000+4*1
     SYSCALL_GETCHAR       = 0xffff0000+4*2
     SYSCALL_CLOSE         = 0xffff0000+4*3
