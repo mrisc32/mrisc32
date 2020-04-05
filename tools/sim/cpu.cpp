@@ -107,5 +107,6 @@ void cpu_t::append_debug_trace(const debug_trace_t& trace) {
   }
 
   m_trace_file.write(reinterpret_cast<const char*>(&buf[0]), sizeof(buf));
+  m_trace_file.flush();
 }
 
