@@ -959,9 +959,8 @@ uint32_t cpu_simple_t::cpuid32(const uint32_t a, const uint32_t b) {
 }
 
 uint32_t cpu_simple_t::run() {
+  m_syscalls.clear();
   m_regs[REG_PC] = RESET_PC;
-  m_terminate = false;
-  m_exit_code = 0u;
   m_fetched_instr_count = 0u;
   m_vector_loop_count = 0u;
   m_total_cycle_count = 0u;
@@ -974,7 +973,7 @@ uint32_t cpu_simple_t::run() {
   wb_in_t wb_in = wb_in_t();
 
   try {
-    while (!m_terminate) {
+    while (!m_syscalls.terminate()) {
       uint32_t next_pc;
       bool next_cycle_continues_a_vector_loop;
 
@@ -1001,7 +1000,8 @@ uint32_t cpu_simple_t::run() {
 
           // We terminate the simulation when we encounter a jump to address zero.
           if (instr_pc == 0x00000000) {
-            m_terminate = true;
+            m_regs[1] = 1;
+            m_syscalls.call(static_cast<uint32_t>(syscalls_t::routine_t::EXIT), m_regs);
           }
 
           ++m_fetched_instr_count;
@@ -2117,5 +2117,5 @@ uint32_t cpu_simple_t::run() {
     throw std::runtime_error(e.what() + dump);
   }
 
-  return m_exit_code;
+  return m_syscalls.exit_code();
 }

@@ -53,6 +53,9 @@ public:
   syscalls_t(ram_t& ram);
   ~syscalls_t();
 
+  /// @brief Clear the run state.
+  void clear();
+
   /// @brief Call a system routine.
   /// @param routine_no Syscall routine ID.
   /// @param regs A mutable array of the current register state.
@@ -64,7 +67,7 @@ public:
   }
 
   /// @returns the exit code for the process.
-  int exit_code() const {
+  uint32_t exit_code() const {
     return m_exit_code;
   }
 
@@ -94,7 +97,7 @@ private:
   ram_t& m_ram;
 
   bool m_terminate = false;
-  int m_exit_code = 0;
+  uint32_t m_exit_code = 0u;
 };
 
 #endif  // SIM_SYSCALLS_HPP_

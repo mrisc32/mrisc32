@@ -33,6 +33,11 @@ syscalls_t::~syscalls_t() {
   // TODO(m): Close open fd:s etc.
 }
 
+void syscalls_t::clear() {
+  m_terminate = false;
+  m_exit_code = 0u;
+}
+
 void syscalls_t::call(const uint32_t routine_no, std::array<uint32_t, 32>& regs) {
   if (routine_no >= static_cast<uint32_t>(routine_t::LAST_)) {
     // TODO(m): Warn!
@@ -214,7 +219,7 @@ int syscalls_t::open_flags_to_host(uint32_t flags) {
 
 void syscalls_t::sim_exit(int status) {
   m_terminate = true;
-  m_exit_code = status;
+  m_exit_code = static_cast<uint32_t>(status);
 }
 
 int syscalls_t::sim_putchar(int c) {
@@ -226,6 +231,11 @@ int syscalls_t::sim_getchar(void) {
 }
 
 int syscalls_t::sim_close(int fd) {
+  if (fd >= 0 && fd <= 2) {
+    // We don't want to close stdin (0), stdout (1) or stderr (2), since they are used by the
+    // simulator.
+    return 0;
+  }
   return ::close(fd);
 }
 
