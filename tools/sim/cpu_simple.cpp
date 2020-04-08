@@ -1214,7 +1214,7 @@ uint32_t cpu_simple_t::run() {
         ex_in.dst_idx = vector.idx;
         ex_in.dst_is_vector = is_vector_op;
         ex_in.ex_op = ex_op;
-        ex_in.packed_mode = packed_mode;
+        ex_in.packed_mode = (is_mem_op ? PACKED_NONE : packed_mode);
         ex_in.mem_op = mem_op;
 
         // Debug trace.
