@@ -51,6 +51,13 @@ public:
     m_trace_file_name = x;
   }
 
+  bool verbose() const {
+    return m_verbose;
+  }
+  void set_verbose(const bool x) {
+    m_verbose = x;
+  }
+
   bool gfx_enabled() const {
     return m_gfx_enabled;
   }
@@ -97,6 +104,7 @@ private:
   // Default values.
   static const uint64_t DEFAULT_RAM_SIZE = 0x100000000u;  // 4 GiB
   static const bool DEFAULT_TRACE_ENABLED = false;
+  static const bool DEFAULT_VERBOSE = false;
   static const bool DEFAULT_GFX_ENABLED = false;
   static const uint32_t DEFAULT_GFX_ADDR = 0x4003d480u;  // Start of MC1 VCON framebuffer.
   static const uint32_t DEFAULT_GFX_WIDTH = 320u;
@@ -106,6 +114,7 @@ private:
   uint64_t m_ram_size = DEFAULT_RAM_SIZE;
   bool m_trace_enabled = DEFAULT_TRACE_ENABLED;
   std::string m_trace_file_name;
+  bool m_verbose = DEFAULT_VERBOSE;
   bool m_gfx_enabled = DEFAULT_GFX_ENABLED;
   uint32_t m_gfx_addr = DEFAULT_GFX_ADDR;
   uint32_t m_gfx_width = DEFAULT_GFX_WIDTH;

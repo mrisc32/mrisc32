@@ -72,9 +72,11 @@ void read_bin_file(const char* file_name,
   }
 
   f.close();
-  std::cout << "Read " << total_bytes_read << " bytes from " << file_name << " into RAM @ 0x"
-            << std::hex << std::setw(8) << std::setfill('0') << start_addr << "\n";
-  std::cout << std::resetiosflags(std::ios::hex);
+  if (config_t::instance().verbose()) {
+    std::cout << "Read " << total_bytes_read << " bytes from " << file_name << " into RAM @ 0x"
+              << std::hex << std::setw(8) << std::setfill('0') << start_addr << "\n";
+    std::cout << std::resetiosflags(std::ios::hex);
+  }
 }
 
 void print_help(const char* prg_name) {
@@ -82,6 +84,7 @@ void print_help(const char* prg_name) {
   std::cout << "Usage: " << prg_name << " [options] bin-file\n";
   std::cout << "Options:\n";
   std::cout << "  -h, --help             Display this information.\n";
+  std::cout << "  -v, --verbose          Print stats.\n";
   std::cout << "  -g, --gfx              Enable graphics.\n";
   std::cout << "  -t FILE, --trace FILE  Enable debug trace.\n";
   std::cout << "  -R N, --ram-size N     Set the RAM size (in bytes).\n";
@@ -103,6 +106,8 @@ int main(const int argc, const char** argv) {
             (std::strcmp(argv[k], "-?") == 0)) {
           print_help(argv[0]);
           exit(0);
+        } else if ((std::strcmp(argv[k], "-v") == 0) || (std::strcmp(argv[k], "--verbose") == 0)) {
+          config_t::instance().set_verbose(true);
         } else if ((std::strcmp(argv[k], "-g") == 0) || (std::strcmp(argv[k], "--gfx") == 0)) {
           config_t::instance().set_gfx_enabled(true);
         } else if ((std::strcmp(argv[k], "-t") == 0) || (std::strcmp(argv[k], "--trace") == 0)) {
@@ -175,6 +180,10 @@ int main(const int argc, const char** argv) {
     // Initialize the CPU.
     cpu_simple_t cpu(ram);
 
+    if (config_t::instance().verbose()) {
+      std::cout << "------------------------------------------------------------------------\n";
+    }
+
     // Run the CPU in a separate thread.
     std::atomic_bool cpu_done(false);
     uint32_t cpu_exit_code = 0u;
@@ -232,7 +241,9 @@ int main(const int argc, const char** argv) {
             glfwTerminate();
             throw std::runtime_error("Unable to initialize GLAD.");
           }
-          std::cerr << "OpenGL version: " << GLVersion.major << "." << GLVersion.minor << "\n";
+          if (config_t::instance().verbose()) {
+            std::cerr << "OpenGL version: " << GLVersion.major << "." << GLVersion.minor << "\n";
+          }
 
           // Init the "GPU".
           gpu_t gpu(ram);
@@ -294,8 +305,12 @@ int main(const int argc, const char** argv) {
     cpu_thread.join();
     const int exit_code = static_cast<int>(cpu_exit_code);
 
-    // Show some stats.
-    cpu.dump_stats();
+    if (config_t::instance().verbose()) {
+      // Show some stats.
+      std::cout << "------------------------------------------------------------------------\n";
+      std::cout << "Exit code: " << exit_code << "\n";
+      cpu.dump_stats();
+    }
 
     // Dump some RAM (we use the same range as the MC1 VRAM).
     cpu.dump_ram(0x40000000u, 0x40040000u, "/tmp/mrisc32_sim_vram.bin");
