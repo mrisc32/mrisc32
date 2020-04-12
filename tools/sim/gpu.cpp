@@ -232,6 +232,13 @@ void gpu_t::configure() {
       m_tex_type = GL_UNSIGNED_BYTE;
       break;
 
+    case 16u:
+      m_bits_per_pixel = 16u;
+      m_tex_internalformat = GL_RGB5_A1;
+      m_tex_format = GL_BGRA;
+      m_tex_type = GL_UNSIGNED_SHORT_1_5_5_5_REV;  // GL_UNSIGNED_SHORT_5_5_5_1
+      break;
+
     case 8u:
       m_bits_per_pixel = 8u;
       m_tex_internalformat = GL_RED;
@@ -265,6 +272,7 @@ void gpu_t::configure() {
   glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
   glTexImage2D(GL_TEXTURE_RECTANGLE,
                0,
                m_tex_internalformat,
