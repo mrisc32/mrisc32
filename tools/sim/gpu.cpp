@@ -57,7 +57,7 @@ const GLchar* FRAGMENT_SRC =
     "    float r = texture(u_sampler, v_uv).r;"
     "    color = vec3(r, r, r);"
     "  } else {"
-    "    color = texture(u_sampler, v_uv).rgb;"
+    "    color = texture(u_sampler, v_uv).bgr;"
     "  }"
     "}";
 
