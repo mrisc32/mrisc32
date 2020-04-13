@@ -1040,12 +1040,20 @@ uint32_t cpu_simple_t::run() {
 
         // == VECTOR STATE HANDLING ==
 
+        const uint32_t vector_len = m_regs[REG_VL] & (2 * NUM_VECTOR_ELEMENTS - 1);
         if (is_vector_op) {
           const uint32_t vector_stride =
               op_class_C ? imm15 : (m_regs[reg3] * index_scale_factor(packed_mode));
 
           // Start a new or continue an ongoing vector operartion?
           if (!vector.active) {
+            if (vector_len == 0u) {
+              // Skip this cycle (NOP) if the vector length is zero.
+              vector.active = false;
+              m_regs[REG_PC] = id_in.pc + 4u;
+              continue;
+            }
+
             vector.idx = 0u;
             vector.stride = vector_stride;
             vector.addr_offset = 0u;
@@ -1058,8 +1066,7 @@ uint32_t cpu_simple_t::run() {
         }
 
         // Check if the next cycle will continue a vector loop (i.e. we should stall the IF stage).
-        next_cycle_continues_a_vector_loop =
-            is_vector_op && ((vector.idx + 1) < (m_regs[REG_VL] & (2 * NUM_VECTOR_ELEMENTS - 1)));
+        next_cycle_continues_a_vector_loop = is_vector_op && ((vector.idx + 1) < vector_len);
 
         // == BRANCH HANDLING ==
 
