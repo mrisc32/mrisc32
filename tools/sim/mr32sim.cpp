@@ -206,9 +206,6 @@ int main(const int argc, const char** argv) {
           throw std::runtime_error("Unable to initialize GLFW.");
         }
 
-        // The window should note be resizeable.
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-
         // We want the display to be 24-bit RGB.
         glfwWindowHint(GLFW_RED_BITS, 8);
         glfwWindowHint(GLFW_GREEN_BITS, 8);
@@ -253,6 +250,7 @@ int main(const int argc, const char** argv) {
 
           // Main loop.
           bool simulation_finished = false;
+          uint32_t frame_no = 0;
           while (!glfwWindowShouldClose(window)) {
             // Update the video mode.
             gpu.configure();
@@ -262,6 +260,10 @@ int main(const int argc, const char** argv) {
               glfwSetWindowSize(
                   window, static_cast<int>(window_width), static_cast<int>(window_height));
             }
+
+            // Update the frame number (MC1 compat).
+            ram.store32(0xc0000020, frame_no);
+            frame_no += 1u;
 
             // Get the actual window framebuffer size (note: this is important on systems that use
             // coordinate scaling, such as on macos with retina display).
