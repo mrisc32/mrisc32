@@ -973,7 +973,7 @@ uint32_t cpu_simple_t::run() {
   wb_in_t wb_in = wb_in_t();
 
   try {
-    while (!m_syscalls.terminate()) {
+    while (!m_syscalls.terminate() && !m_terminate_requested) {
       uint32_t next_pc;
       bool next_cycle_continues_a_vector_loop;
 

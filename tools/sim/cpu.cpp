@@ -45,6 +45,11 @@ void cpu_t::reset() {
     std::fill(reg->begin(), reg->end(), 0.0f);
   }
   m_syscalls.clear();
+  m_terminate_requested = false;
+}
+
+void cpu_t::terminate() {
+  m_terminate_requested = true;
 }
 
 void cpu_t::dump_stats() {

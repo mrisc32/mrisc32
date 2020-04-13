@@ -24,6 +24,7 @@
 #include "syscalls.hpp"
 
 #include <array>
+#include <atomic>
 #include <cstdint>
 #include <fstream>
 
@@ -34,6 +35,9 @@ public:
 
   /// @brief Reset the CPU state.
   void reset();
+
+  /// @brief Terminate the CPU execution (can be called from another thread).
+  void terminate();
 
   /// @brief Start running code at a given memory address.
   /// @returns The program return code (the argument to exit()).
@@ -200,6 +204,8 @@ protected:
   uint32_t m_fetched_instr_count;
   uint32_t m_vector_loop_count;
   uint32_t m_total_cycle_count;
+
+  std::atomic_bool m_terminate_requested;
 };
 
 #endif  // SIM_CPU_HPP_

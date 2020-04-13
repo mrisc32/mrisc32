@@ -298,6 +298,8 @@ int main(const int argc, const char** argv) {
       } catch (std::exception& e) {
         std::cerr << "Graphics error: " << e.what() << "\n";
       }
+
+      cpu.terminate();
     }
 #endif  // ENABLE_GUI
 
