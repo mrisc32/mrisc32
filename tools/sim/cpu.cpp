@@ -26,6 +26,22 @@
 #include <iomanip>
 #include <iostream>
 
+#ifdef __x86_64__
+#include <xmmintrin.h>
+#include <pmmintrin.h>
+#endif  // __x86_64__
+
+namespace {
+
+void configure_fpu() {
+#ifdef __x86_64__
+  _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
+  _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+#endif  // __x86_64__
+}
+
+}  // namespace
+
 cpu_t::cpu_t(ram_t& ram) : m_ram(ram), m_syscalls(ram) {
   if (config_t::instance().trace_enabled()) {
     m_trace_file.open(config_t::instance().trace_file_name(), std::ios::out | std::ios::binary);
@@ -40,12 +56,18 @@ cpu_t::~cpu_t() {
 }
 
 void cpu_t::reset() {
+  // Clear registers.
   std::fill(m_regs.begin(), m_regs.end(), 0u);
   for (auto reg = m_vregs.begin(); reg != m_vregs.end(); ++reg) {
-    std::fill(reg->begin(), reg->end(), 0.0f);
+    std::fill(reg->begin(), reg->end(), 0u);
   }
+
+  // Clear run state.
   m_syscalls.clear();
   m_terminate_requested = false;
+
+  // Configure the host FPU to match MRISC32 behavior.
+  configure_fpu();
 }
 
 void cpu_t::terminate() {
