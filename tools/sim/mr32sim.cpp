@@ -79,16 +79,29 @@ void read_bin_file(const char* file_name,
   }
 }
 
+uint64_t str_to_uint64(const char* str) {
+  // TODO(m): Support hex expressions too.
+  return static_cast<uint64_t>(std::stol(std::string(str)));
+}
+
+uint32_t str_to_uint32(const char* str) {
+  return static_cast<uint32_t>(str_to_uint64(str));
+}
+
 void print_help(const char* prg_name) {
   std::cout << "mr32sim - An MRISC32 CPU simulator\n";
   std::cout << "Usage: " << prg_name << " [options] bin-file\n";
   std::cout << "Options:\n";
-  std::cout << "  -h, --help             Display this information.\n";
-  std::cout << "  -v, --verbose          Print stats.\n";
-  std::cout << "  -g, --gfx              Enable graphics.\n";
-  std::cout << "  -t FILE, --trace FILE  Enable debug trace.\n";
-  std::cout << "  -R N, --ram-size N     Set the RAM size (in bytes).\n";
-  std::cout << "  -A ADDR, --addr ADDR   Set the program (ROM) start address.\n";
+  std::cout << "  -h, --help                       Display this information.\n";
+  std::cout << "  -v, --verbose                    Print stats.\n";
+  std::cout << "  -g, --gfx                        Enable graphics.\n";
+  std::cout << "  -ga ADDR, --gfx-addr ADDR        Set framebuffer address.\n";
+  std::cout << "  -gw WIDTH, --gfx-width WIDTH     Set framebuffer width.\n";
+  std::cout << "  -gh HEIGHT, --gfx-height HEIGHT  Set framebuffer height.\n";
+  std::cout << "  -gd DEPTH, --gfx-depth DEPTH     Set framebuffer depht.\n";
+  std::cout << "  -t FILE, --trace FILE            Enable debug trace.\n";
+  std::cout << "  -R N, --ram-size N               Set the RAM size (in bytes).\n";
+  std::cout << "  -A ADDR, --addr ADDR             Set the program (ROM) start address.\n";
   return;
 }
 }  // namespace
@@ -110,6 +123,34 @@ int main(const int argc, const char** argv) {
           config_t::instance().set_verbose(true);
         } else if ((std::strcmp(argv[k], "-g") == 0) || (std::strcmp(argv[k], "--gfx") == 0)) {
           config_t::instance().set_gfx_enabled(true);
+        } else if ((std::strcmp(argv[k], "-ga") == 0) || (std::strcmp(argv[k], "--gfx-addr") == 0)) {
+          if (k >= (argc - 1)) {
+            std::cerr << "Missing option for " << argv[k] << "\n";
+            print_help(argv[0]);
+            exit(1);
+          }
+          config_t::instance().set_gfx_addr(str_to_uint32(argv[++k]));
+        } else if ((std::strcmp(argv[k], "-gw") == 0) || (std::strcmp(argv[k], "--gfx-width") == 0)) {
+          if (k >= (argc - 1)) {
+            std::cerr << "Missing option for " << argv[k] << "\n";
+            print_help(argv[0]);
+            exit(1);
+          }
+          config_t::instance().set_gfx_width(str_to_uint32(argv[++k]));
+        } else if ((std::strcmp(argv[k], "-gh") == 0) || (std::strcmp(argv[k], "--gfx-height") == 0)) {
+          if (k >= (argc - 1)) {
+            std::cerr << "Missing option for " << argv[k] << "\n";
+            print_help(argv[0]);
+            exit(1);
+          }
+          config_t::instance().set_gfx_height(str_to_uint32(argv[++k]));
+        } else if ((std::strcmp(argv[k], "-gd") == 0) || (std::strcmp(argv[k], "--gfx-depth") == 0)) {
+          if (k >= (argc - 1)) {
+            std::cerr << "Missing option for " << argv[k] << "\n";
+            print_help(argv[0]);
+            exit(1);
+          }
+          config_t::instance().set_gfx_depth(str_to_uint32(argv[++k]));
         } else if ((std::strcmp(argv[k], "-t") == 0) || (std::strcmp(argv[k], "--trace") == 0)) {
           if (k >= (argc - 1)) {
             std::cerr << "Missing option for " << argv[k] << "\n";
@@ -124,17 +165,14 @@ int main(const int argc, const char** argv) {
             print_help(argv[0]);
             exit(1);
           }
-          const auto ram_size_str = std::string(argv[++k]);
-          const auto ram_size = static_cast<uint64_t>(std::stol(ram_size_str));
-          config_t::instance().set_ram_size(ram_size);
+          config_t::instance().set_ram_size(str_to_uint64(argv[++k]));
         } else if ((std::strcmp(argv[k], "-A") == 0) || (std::strcmp(argv[k], "--addr") == 0)) {
           if (k >= (argc - 1)) {
             std::cerr << "Missing option for " << argv[k] << "\n";
             print_help(argv[0]);
             exit(1);
           }
-          const auto bin_addr_str = std::string(argv[++k]);
-          bin_addr = static_cast<uint32_t>(std::stol(bin_addr_str));
+          bin_addr = str_to_uint32(argv[++k]);
           bin_addr_defined = true;
         } else {
           std::cerr << "Error: Unknown option: " << argv[k] << "\n";
