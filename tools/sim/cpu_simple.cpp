@@ -958,7 +958,7 @@ uint32_t cpu_simple_t::cpuid32(const uint32_t a, const uint32_t b) {
   }
 }
 
-uint32_t cpu_simple_t::run() {
+uint32_t cpu_simple_t::run(const int64_t max_cycles) {
   m_syscalls.clear();
   m_regs[REG_PC] = RESET_PC;
   m_fetched_instr_count = 0u;
@@ -2114,6 +2114,9 @@ uint32_t cpu_simple_t::run() {
       }
 
       ++m_total_cycle_count;
+      if (max_cycles >= 0 && static_cast<int64_t>(m_total_cycle_count) >= max_cycles) {
+        m_terminate_requested = true;
+      }
     }
   } catch (std::exception& e) {
     std::string dump("\n");

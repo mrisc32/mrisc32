@@ -33,7 +33,7 @@ public:
   cpu_simple_t(ram_t& ram) : cpu_t(ram) {
   }
 
-  uint32_t run() override;
+  uint32_t run(const int64_t max_cycles) override;
 
 private:
   uint32_t cpuid32(const uint32_t a, const uint32_t b);

@@ -84,6 +84,10 @@ uint64_t str_to_uint64(const char* str) {
   return static_cast<uint64_t>(std::stol(std::string(str)));
 }
 
+int64_t str_to_int64(const char* str) {
+  return static_cast<int64_t>(str_to_uint64(str));
+}
+
 uint32_t str_to_uint32(const char* str) {
   return static_cast<uint32_t>(str_to_uint64(str));
 }
@@ -102,6 +106,7 @@ void print_help(const char* prg_name) {
   std::cout << "  -t FILE, --trace FILE            Enable debug trace.\n";
   std::cout << "  -R N, --ram-size N               Set the RAM size (in bytes).\n";
   std::cout << "  -A ADDR, --addr ADDR             Set the program (ROM) start address.\n";
+  std::cout << "  -c CYCLES, --cycles CYCLES       Maximum number of CPU cycles to simulate.\n";
   return;
 }
 }  // namespace
@@ -111,6 +116,7 @@ int main(const int argc, const char** argv) {
   // TODO(m): Add options for graphics (e.g. framebuffer size).
   const auto* bin_file = static_cast<const char*>(0);
   uint32_t bin_addr = 0u;
+  int64_t max_cycles = -1;
   bool bin_addr_defined = false;
   try {
     for (int k = 1; k < argc; ++k) {
@@ -174,6 +180,13 @@ int main(const int argc, const char** argv) {
           }
           bin_addr = str_to_uint32(argv[++k]);
           bin_addr_defined = true;
+        } else if ((std::strcmp(argv[k], "-c") == 0) || (std::strcmp(argv[k], "--cycles") == 0)) {
+          if (k >= (argc - 1)) {
+            std::cerr << "Missing option for " << argv[k] << "\n";
+            print_help(argv[0]);
+            exit(1);
+          }
+          max_cycles = str_to_int64(argv[++k]);
         } else {
           std::cerr << "Error: Unknown option: " << argv[k] << "\n";
           print_help(argv[0]);
@@ -225,10 +238,10 @@ int main(const int argc, const char** argv) {
     // Run the CPU in a separate thread.
     std::atomic_bool cpu_done(false);
     uint32_t cpu_exit_code = 0u;
-    std::thread cpu_thread([&cpu_exit_code, &cpu, &cpu_done] {
+    std::thread cpu_thread([&cpu_exit_code, &cpu, &cpu_done, max_cycles] {
       try {
         // Run until the program returns.
-        cpu_exit_code = cpu.run();
+        cpu_exit_code = cpu.run(max_cycles);
       } catch (std::exception& e) {
         std::cerr << "Exception in CPU thread: " << e.what() << "\n";
         cpu_exit_code = 1u;

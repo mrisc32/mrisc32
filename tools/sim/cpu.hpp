@@ -40,8 +40,9 @@ public:
   void terminate();
 
   /// @brief Start running code at a given memory address.
+  /// @param max_cycles The maximum number of cycles to simulate (-1 = no limit).
   /// @returns The program return code (the argument to exit()).
-  virtual uint32_t run() = 0;
+  virtual uint32_t run(const int64_t max_cycles) = 0;
 
   /// @brief Dump CPU stats from the last run.
   void dump_stats();
