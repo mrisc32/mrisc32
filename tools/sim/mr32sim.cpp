@@ -222,10 +222,11 @@ int main(const int argc, const char** argv) {
     const uint32_t MMIO_START = 0xc0000000u;
     if (config_t::instance().ram_size() >= (MMIO_START + 64)) {
       ram.store32(MMIO_START + 8, 70000000);     // CPUCLK
-      ram.store32(MMIO_START + 12, 256 * 1024);  // VRAMSIZE
+      ram.store32(MMIO_START + 12, 128 * 1024);  // VRAMSIZE
       ram.store32(MMIO_START + 20, 1920);        // VIDWIDTH
       ram.store32(MMIO_START + 24, 1080);        // VIDHEIGHT
       ram.store32(MMIO_START + 28, 60 * 65536);  // VIDFPS
+      ram.store32(MMIO_START + 40, 4);           // SWITCHES
     }
 
     // Initialize the CPU.
