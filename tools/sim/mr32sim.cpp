@@ -80,8 +80,7 @@ void read_bin_file(const char* file_name,
 }
 
 uint64_t str_to_uint64(const char* str) {
-  // TODO(m): Support hex expressions too.
-  return static_cast<uint64_t>(std::stol(std::string(str)));
+  return static_cast<uint64_t>(std::stoull(std::string(str), nullptr, 0));
 }
 
 int64_t str_to_int64(const char* str) {
