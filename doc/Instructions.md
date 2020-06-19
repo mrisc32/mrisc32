@@ -134,8 +134,7 @@ Note: `ADDPCHI` can be used together with load/store instructions to perform 32-
 |SHUF| x | x |   | dst, src1, src2 | dst <= shuffle(src1, src2) | Shuffle bytes according to the shuffle descriptor in src2 (see [SHUF](SHUF.md)) |
 |CLZ|   | x | x | dst, src1 | dst <= clz(src1) | Count leading zeros |
 |REV|   | x | x | dst, src1 | dst <= rev(src1) | Reverse bit order |
-|PACKB|   | x |   | dst, src1, src2 | dst <=<br>((src1 & 0x00ff0000) << 8) \|<br>((src1 & 0x000000ff) << 16) \|<br>((src2 & 0x00ff0000) >> 8) \|<br>(src2 & 0x000000ff) | Pack four bytes into a word |
-|PACKH|   | x |   | dst, src1, src2 | dst <=<br>((src1 & 0x0000ffff) << 16) \|<br>(src2 & 0x0000ffff) | Pack two half-words into a word |
+|PACK|   | x | x | dst, src1, src2 | dst <=<br>((src1 & 0x0000ffff) << 16) \|<br>(src2 & 0x0000ffff) | Pack two half-words into a word. Use PACK.H to pack four bytes into a word. |
 
 ## Saturating and halving arithmentic instructions
 

@@ -834,13 +834,16 @@ inline uint32_t shuf32(const uint32_t x, const uint32_t idx) {
          (static_cast<uint32_t>(yv[2]) << 16u) | (static_cast<uint32_t>(yv[3]) << 24u);
 }
 
-inline uint32_t packb32(const uint32_t a, const uint32_t b) {
-  return ((a & 0x00ff0000u) << 8u) | ((a & 0x000000ffu) << 16u) | ((b & 0x00ff0000u) >> 8u) |
-         (b & 0x000000ffu);
+inline uint32_t pack32(const uint32_t a, const uint32_t b) {
+  return ((a & 0x0000ffffu) << 16) | (b & 0x0000ffffu);
 }
 
-inline uint32_t packh32(const uint32_t a, const uint32_t b) {
-  return ((a & 0x0000ffffu) << 16) | (b & 0x0000ffffu);
+inline uint32_t pack16x2(const uint32_t a, const uint32_t b) {
+  return ((a & 0x00ff00ffu) << 8u) | (b & 0x00ff00ffu);
+}
+
+inline uint32_t pack8x4(const uint32_t a, const uint32_t b) {
+  return ((a & 0x0f0f0f0fu) << 4u) | (b & 0x0f0f0f0fu);
 }
 
 inline bool float32_isnan(const uint32_t x) {
@@ -1549,11 +1552,17 @@ uint32_t cpu_simple_t::run(const int64_t max_cycles) {
                   ex_result = rev32(ex_in.src_a);
               }
               break;
-            case EX_OP_PACKB:
-              ex_result = packb32(ex_in.src_a, ex_in.src_b);
-              break;
-            case EX_OP_PACKH:
-              ex_result = packh32(ex_in.src_a, ex_in.src_b);
+            case EX_OP_PACK:
+              switch (ex_in.packed_mode) {
+                case PACKED_BYTE:
+                  ex_result = pack8x4(ex_in.src_a, ex_in.src_b);
+                  break;
+                case PACKED_HALF_WORD:
+                  ex_result = pack16x2(ex_in.src_a, ex_in.src_b);
+                  break;
+                default:
+                  ex_result = pack32(ex_in.src_a, ex_in.src_b);
+              }
               break;
 
             case EX_OP_ADDS:
