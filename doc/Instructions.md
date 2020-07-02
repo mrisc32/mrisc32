@@ -28,8 +28,8 @@ The fields of the instruction word are interpreted as follows:
 | Field | Description |
 |---|---|
 | OP | Operation |
-| REG*n* | Register (5 bit identifier) |
 | FUNC | A 6-bit function identifier |
+| REG*n* | Register (5 bit identifier) |
 | IMM | Immediate value |
 | VM | Vector mode (2-bit):<br>00: scalar <= op(scalar,scalar)<br>10: vector <= op(vector,scalar)<br>11: vector <= op(vector,vector)<br>01: vector <= op(vector,fold(vector)) |
 | V | Vector mode (1-bit):<br>0: scalar <= op(scalar[,scalar])<br>1: vector <= op(vector[,scalar]) |
@@ -135,6 +135,8 @@ Note: `ADDPCHI` can be used together with load/store instructions to perform 32-
 |CLZ|   | x | x | dst, src1 | dst <= clz(src1) | Count leading zeros |
 |REV|   | x | x | dst, src1 | dst <= rev(src1) | Reverse bit order |
 |PACK|   | x | x | dst, src1, src2 | dst <=<br>((src1 & 0x0000ffff) << 16) \|<br>(src2 & 0x0000ffff) | Pack two half-words into a word. Use PACK.H to pack four bytes into a word. |
+|PACKS|   | x | x | dst, src1, src2 | dst <=<br>(saturate(src1) << 16) \|<br>saturate(src2) | Pack two half-words into a word, with signed saturation. Use PACKS.H to pack four bytes into a word. |
+|PACKSU|   | x | x | dst, src1, src2 | dst <=<br>(saturate(src1) << 16) \|<br>saturate(src2) | Pack two half-words into a word, with unsigned saturation. Use PACKSU.H to pack four bytes into a word. |
 
 ## Saturating and halving arithmentic instructions
 

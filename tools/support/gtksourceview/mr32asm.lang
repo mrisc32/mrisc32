@@ -135,7 +135,9 @@
       <keyword>rev(\.b|\.h)?(/f)?</keyword>
 
       <keyword>shuf</keyword>
-      <keyword>pack(\.b|\.h)?</keyword>
+      <keyword>pack(\.b|\.h)?(/f)?</keyword>
+      <keyword>packs(\.b|\.h)?(/f)?</keyword>
+      <keyword>packsu(\.b|\.h)?(/f)?</keyword>
 
       <keyword>addpchi</keyword>
 

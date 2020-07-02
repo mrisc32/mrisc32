@@ -241,6 +241,10 @@ inline uint32_t saturate8(const int16_t x) {
   return (x > 0x007f) ? 0x7fu : ((x < -0x0080) ? 0x80u : (static_cast<uint32_t>(x) & 0x00ffu));
 }
 
+inline uint32_t saturate4(const int8_t x) {
+  return (x > 0x07) ? 0x7u : ((x < -0x08) ? 0x8u : (static_cast<uint32_t>(x) & 0x0fu));
+}
+
 inline uint32_t saturateu32(const uint64_t x) {
   return (x > UINT64_C(0x8000000000000000))
              ? 0x00000000u
@@ -253,6 +257,18 @@ inline uint32_t saturateu16(const uint32_t x) {
 
 inline uint32_t saturateu8(const uint16_t x) {
   return (x > 0x8000u) ? 0x00u : ((x > 0x00ffu) ? 0xffu : static_cast<uint32_t>(x));
+}
+
+inline uint32_t saturateu16_no_uf(const uint32_t x) {
+  return (x > 0x0000ffffu) ? 0xffffu : static_cast<uint32_t>(x);
+}
+
+inline uint32_t saturateu8_no_uf(const uint16_t x) {
+  return (x > 0x00ffu) ? 0xffu : static_cast<uint32_t>(x);
+}
+
+inline uint32_t saturateu4_no_uf(const uint8_t x) {
+  return (x > 0x0fu) ? 0xfu : static_cast<uint32_t>(x);
 }
 
 inline uint32_t saturating_op_32(const uint32_t a,
@@ -844,6 +860,56 @@ inline uint32_t pack16x2(const uint32_t a, const uint32_t b) {
 
 inline uint32_t pack8x4(const uint32_t a, const uint32_t b) {
   return ((a & 0x0f0f0f0fu) << 4u) | (b & 0x0f0f0f0fu);
+}
+
+inline uint32_t packs32(const uint32_t a, const uint32_t b) {
+  return pack32(saturate16(static_cast<int32_t>(a)), saturate16(static_cast<int32_t>(b)));
+}
+
+inline uint32_t packs16x2(const uint32_t a, const uint32_t b) {
+  const auto a1 = saturate8(static_cast<int16_t>(a >> 16));
+  const auto a0 = saturate8(static_cast<int16_t>(a));
+  const auto b1 = saturate8(static_cast<int16_t>(b >> 16));
+  const auto b0 = saturate8(static_cast<int16_t>(b));
+  return (a1 << 24) | (a0 << 8) | (b1 << 16) | b0;
+}
+
+inline uint32_t packs8x4(const uint32_t a, const uint32_t b) {
+  const auto a3 = saturate4(static_cast<int8_t>(a >> 24));
+  const auto a2 = saturate4(static_cast<int8_t>(a >> 16));
+  const auto a1 = saturate4(static_cast<int8_t>(a >> 8));
+  const auto a0 = saturate4(static_cast<int8_t>(a));
+  const auto b3 = saturate4(static_cast<int8_t>(b >> 24));
+  const auto b2 = saturate4(static_cast<int8_t>(b >> 16));
+  const auto b1 = saturate4(static_cast<int8_t>(b >> 8));
+  const auto b0 = saturate4(static_cast<int8_t>(b));
+  return (a3 << 28) | (a2 << 20) | (a1 << 12) | (a0 << 4) | (b3 << 24) | (b2 << 16) | (b1 << 8) |
+         b0;
+}
+
+inline uint32_t packsu32(const uint32_t a, const uint32_t b) {
+  return pack32(saturateu16_no_uf(a), saturateu16_no_uf(b));
+}
+
+inline uint32_t packsu16x2(const uint32_t a, const uint32_t b) {
+  const auto a1 = saturateu8_no_uf(static_cast<uint16_t>(a >> 16));
+  const auto a0 = saturateu8_no_uf(static_cast<uint16_t>(a));
+  const auto b1 = saturateu8_no_uf(static_cast<uint16_t>(b >> 16));
+  const auto b0 = saturateu8_no_uf(static_cast<uint16_t>(b));
+  return (a1 << 24) | (a0 << 8) | (b1 << 16) | b0;
+}
+
+inline uint32_t packsu8x4(const uint32_t a, const uint32_t b) {
+  const auto a3 = saturateu4_no_uf(static_cast<uint8_t>(a >> 24));
+  const auto a2 = saturateu4_no_uf(static_cast<uint8_t>(a >> 16));
+  const auto a1 = saturateu4_no_uf(static_cast<uint8_t>(a >> 8));
+  const auto a0 = saturateu4_no_uf(static_cast<uint8_t>(a));
+  const auto b3 = saturateu4_no_uf(static_cast<uint8_t>(b >> 24));
+  const auto b2 = saturateu4_no_uf(static_cast<uint8_t>(b >> 16));
+  const auto b1 = saturateu4_no_uf(static_cast<uint8_t>(b >> 8));
+  const auto b0 = saturateu4_no_uf(static_cast<uint8_t>(b));
+  return (a3 << 28) | (a2 << 20) | (a1 << 12) | (a0 << 4) | (b3 << 24) | (b2 << 16) | (b1 << 8) |
+         b0;
 }
 
 inline bool float32_isnan(const uint32_t x) {
@@ -1562,6 +1628,30 @@ uint32_t cpu_simple_t::run(const int64_t max_cycles) {
                   break;
                 default:
                   ex_result = pack32(ex_in.src_a, ex_in.src_b);
+              }
+              break;
+            case EX_OP_PACKS:
+              switch (ex_in.packed_mode) {
+                case PACKED_BYTE:
+                  ex_result = packs8x4(ex_in.src_a, ex_in.src_b);
+                  break;
+                case PACKED_HALF_WORD:
+                  ex_result = packs16x2(ex_in.src_a, ex_in.src_b);
+                  break;
+                default:
+                  ex_result = packs32(ex_in.src_a, ex_in.src_b);
+              }
+              break;
+            case EX_OP_PACKSU:
+              switch (ex_in.packed_mode) {
+                case PACKED_BYTE:
+                  ex_result = packsu8x4(ex_in.src_a, ex_in.src_b);
+                  break;
+                case PACKED_HALF_WORD:
+                  ex_result = packsu16x2(ex_in.src_a, ex_in.src_b);
+                  break;
+                default:
+                  ex_result = packsu32(ex_in.src_a, ex_in.src_b);
               }
               break;
 
