@@ -141,10 +141,6 @@
 
       <keyword>addpchi</keyword>
 
-      <!-- Misc. -->
-      <keyword>gete</keyword>
-      <keyword>getm</keyword>
-
       <!-- Load / store -->
       <keyword>ldb</keyword>
       <keyword>ldh</keyword>
@@ -181,25 +177,26 @@
       <keyword>rem(\.b|\.h)?(/f)?</keyword>
       <keyword>remu(\.b|\.h)?(/f)?</keyword>
 
-      <!-- Floating point -->
+      <!-- Floating-point -->
+      <keyword>fmax(\.b|\.h)?(/f)?</keyword>
+      <keyword>fmin(\.b|\.h)?(/f)?</keyword>
+      <keyword>fseq(\.b|\.h)?(/f)?</keyword>
+      <keyword>fsne(\.b|\.h)?(/f)?</keyword>
+      <keyword>fslt(\.b|\.h)?(/f)?</keyword>
+      <keyword>fsle(\.b|\.h)?(/f)?</keyword>
+      <keyword>fsnan(\.b|\.h)?(/f)?</keyword>
       <keyword>itof(\.b|\.h)?(/f)?</keyword>
       <keyword>utof(\.b|\.h)?(/f)?</keyword>
       <keyword>ftoi(\.b|\.h)?(/f)?</keyword>
       <keyword>ftou(\.b|\.h)?(/f)?</keyword>
       <keyword>ftoir(\.b|\.h)?(/f)?</keyword>
       <keyword>ftour(\.b|\.h)?(/f)?</keyword>
+      <keyword>fpack(\.h)?(/f)?</keyword>
       <keyword>fadd(\.b|\.h)?(/f)?</keyword>
-      <keyword>fdiv(\.b|\.h)?(/f)?</keyword>
-      <keyword>fmax(\.b|\.h)?(/f)?</keyword>
-      <keyword>fmin(\.b|\.h)?(/f)?</keyword>
-      <keyword>fmul(\.b|\.h)?(/f)?</keyword>
-      <keyword>fseq(\.b|\.h)?(/f)?</keyword>
-      <keyword>fsle(\.b|\.h)?(/f)?</keyword>
-      <keyword>fslt(\.b|\.h)?(/f)?</keyword>
-      <keyword>fsnan(\.b|\.h)?(/f)?</keyword>
-      <keyword>fsne(\.b|\.h)?(/f)?</keyword>
-      <keyword>fsqrt(\.b|\.h)?(/f)?</keyword>
       <keyword>fsub(\.b|\.h)?(/f)?</keyword>
+      <keyword>fmul(\.b|\.h)?(/f)?</keyword>
+      <keyword>fdiv(\.b|\.h)?(/f)?</keyword>
+      <keyword>fsqrt(\.b|\.h)?(/f)?</keyword>
 
       <!-- Aliases -->
       <keyword>b</keyword>

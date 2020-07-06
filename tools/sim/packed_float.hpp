@@ -52,6 +52,10 @@ public:
     m_values[1] = x.m_values[1];
   }
 
+  static inline f16x2_t from_f32x2(const float a, const float b) {
+    return f16x2_t(a, b);
+  }
+
   static inline f16x2_t itof(const uint32_t x, const uint32_t scale) {
     return f16x2_t(i16_to_f32(x & 0x0000ffffu, scale), i16_to_f32((x >> 16) & 0x0000ffffu, scale));
   }
@@ -239,6 +243,8 @@ private:
     return sign | (static_cast<uint32_t>(exp) << 10) | (significand & 0x3ffu);
   }
 
+  friend class f8x4_t;
+
   float m_values[2];
 };
 
@@ -296,6 +302,10 @@ public:
     m_values[1] = x.m_values[1];
     m_values[2] = x.m_values[2];
     m_values[3] = x.m_values[3];
+  }
+
+  static inline f8x4_t from_f16x4(const f16x2_t a, const f16x2_t b) {
+    return f8x4_t(a.m_values[0], b.m_values[0], a.m_values[1], b.m_values[1]);
   }
 
   static inline f8x4_t itof(const uint32_t x, const uint32_t scale) {

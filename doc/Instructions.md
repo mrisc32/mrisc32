@@ -164,16 +164,16 @@ Note: `ADDPCHI` can be used together with load/store instructions to perform 32-
 |REM|   | x | x | dst, src1, src2 | dst <= src1 % src2 | Remainder (signed) |
 |REMU|   | x | x | dst, src1, src2 | dst <= src1 % src2 | Remainder (unsigned) |
 
-## Floating point instructions
+## Floating-point instructions
 
 | Mnemonic | I | V | P | Operands | Operation | Description |
 |---|---|---|---|---|---|---|
-|FMIN|   | x | x | dst, src1, src2 | dst <= min(src1, src2) | Floating point minimum value |
-|FMAX|   | x | x | dst, src1, src2 | dst <= max(src1, src2) | Floating point maximum value |
-|FSEQ|   | x | x | dst, src1, src2 | dst <= (src1 == src2) ? 0xffffffff : 0 | Set if equal (floating point) |
-|FSNE|   | x | x | dst, src1, src2 | dst <= (src1 != src2) ? 0xffffffff : 0 | Set if not equal (floating point) |
-|FSLT|   | x | x | dst, src1, src2 | dst <= (src1 < src2) ? 0xffffffff : 0 | Set if less than (floating point) |
-|FSLE|   | x | x | dst, src1, src2 | dst <= (src1 <= src2) ? 0xffffffff : 0 | Set if less than or equal (floating point) |
+|FMIN|   | x | x | dst, src1, src2 | dst <= min(src1, src2) | Floating-point minimum value |
+|FMAX|   | x | x | dst, src1, src2 | dst <= max(src1, src2) | Floating-point maximum value |
+|FSEQ|   | x | x | dst, src1, src2 | dst <= (src1 == src2) ? 0xffffffff : 0 | Set if equal (floating-point) |
+|FSNE|   | x | x | dst, src1, src2 | dst <= (src1 != src2) ? 0xffffffff : 0 | Set if not equal (floating-point) |
+|FSLT|   | x | x | dst, src1, src2 | dst <= (src1 < src2) ? 0xffffffff : 0 | Set if less than (floating-point) |
+|FSLE|   | x | x | dst, src1, src2 | dst <= (src1 <= src2) ? 0xffffffff : 0 | Set if less than or equal (floating-point) |
 |FSNAN|   | x | x | dst, src1, src2 | dst <= (isNaN(src1) \|\| isNaN(src2)) ? 0xffffffff : 0 | Set if Not-a-Number |
 |ITOF|   | x | x | dst, src1, src2 | dst <= ((float)src1) * 2^-src2 | Cast signed integer to float with exponent offset |
 |UTOF|   | x | x | dst, src1, src2 | dst <= ((float)src1) * 2^-src2 | Cast unsigned integer to float with exponent offset |
@@ -181,11 +181,12 @@ Note: `ADDPCHI` can be used together with load/store instructions to perform 32-
 |FTOU|   | x | x | dst, src1, src2 | dst <= (unsigned)(src1 * 2^src2) | Cast float to unsigned integer with exponent offset |
 |FTOIR|  | x | x | dst, src1, src2 | dst <= (int)round(src1 * 2^src2) | Round float to signed integer with exponent offset |
 |FTOUR|  | x | x | dst, src1, src2 | dst <= (unsigned)round(src1 * 2^src2) | Round float to unsigned integer with exponent offset |
-|FADD|   | x | x | dst, src1, src2 | dst <= src1 + src2 | Floating point addition |
-|FSUB|   | x | x | dst, src1, src2 | dst <= src1 - src2 | Floating point subtraction |
-|FMUL|   | x | x | dst, src1, src2 | dst <= src1 * src2 | Floating point multiplication |
-|FDIV|   | x | x | dst, src1, src2 | dst <= src1 / src2 | Floating point division |
-|FSQRT|   | x | x | dst, src1 | dst <= sqrt(src1) | Floating point square root |
+|FPACK|   | x | x | dst, src1, src2 | dst <= ((float16)src1) << 16 \| (float16)src2 | Reduce precision and pack two floating-point values into a word. Use FPACK.H to pack four floating-point values. |
+|FADD|   | x | x | dst, src1, src2 | dst <= src1 + src2 | Floating-point addition |
+|FSUB|   | x | x | dst, src1, src2 | dst <= src1 - src2 | Floating-point subtraction |
+|FMUL|   | x | x | dst, src1, src2 | dst <= src1 * src2 | Floating-point multiplication |
+|FDIV|   | x | x | dst, src1, src2 | dst <= src1 / src2 | Floating-point division |
+|FSQRT|   | x | x | dst, src1 | dst <= sqrt(src1) | Floating-point square root |
 
 ## Vector instructions
 
@@ -219,8 +220,7 @@ Note that immediate operands are not supported for packed operations.
 ## Planned instructions
 
 * Move scalar registers to/from vector register elements.
-* Conversion and packing/unpacking of different floating point representations (32-bit, 2x16-bit, 4x8-bit).
-* More floating point instructions (round, ...?).
+* More floating-point instructions (round, ...?).
 * Interrupt / supervisor mode instructions (move to/from user registers, return from interrupt, ...).
 * Control instructions/registers (cache control, interrupt masks, status flags, ...).
 * Load Linked (ll) and Store Conditional (sc) for atomic operations.

@@ -139,6 +139,7 @@ protected:
   static const uint32_t EX_OP_FTOU = 0x6bu;
   static const uint32_t EX_OP_FTOIR = 0x6cu;
   static const uint32_t EX_OP_FTOUR = 0x6du;
+  static const uint32_t EX_OP_FPACK = 0x6eu;
 
   static const uint32_t EX_OP_FADD = 0x70u;
   static const uint32_t EX_OP_FSUB = 0x71u;

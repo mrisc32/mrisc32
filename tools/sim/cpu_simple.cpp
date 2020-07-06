@@ -672,6 +672,14 @@ inline uint32_t remu8x4(const uint32_t a, const uint32_t b) {
   return c3 | c2 | c1 | c0;
 }
 
+inline uint32_t fpack32(const uint32_t a, const uint32_t b) {
+  return f16x2_t::from_f32x2(a, b).packf();
+}
+
+inline uint32_t fpack16x2(const uint32_t a, const uint32_t b) {
+  return f8x4_t::from_f16x4(f16x2_t(a), f16x2_t(b)).packf();
+}
+
 inline uint32_t fadd32(const uint32_t a, const uint32_t b) {
   return as_u32(as_f32(a) + as_f32(b));
 }
@@ -1988,6 +1996,18 @@ uint32_t cpu_simple_t::run(const int64_t max_cycles) {
                   break;
                 default:
                   ex_result = ftour32(ex_in.src_a, ex_in.src_b);
+              }
+              break;
+            case EX_OP_FPACK:
+              switch (ex_in.packed_mode) {
+                case PACKED_BYTE:
+                  // Nothing to do here!
+                  break;
+                case PACKED_HALF_WORD:
+                  ex_result = fpack16x2(ex_in.src_a, ex_in.src_b);
+                  break;
+                default:
+                  ex_result = fpack32(ex_in.src_a, ex_in.src_b);
               }
               break;
             case EX_OP_FADD:
