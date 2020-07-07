@@ -2126,17 +2126,31 @@ uint32_t cpu_simple_t::run(const int64_t max_cycles) {
                   });
               }
               break;
-            case EX_OP_FSNAN:
+            case EX_OP_FSUNORD:
               switch (ex_in.packed_mode) {
                 case PACKED_BYTE:
-                  ex_result = f8x4_t(ex_in.src_a).fsnan(f8x4_t(ex_in.src_b));
+                  ex_result = f8x4_t(ex_in.src_a).fsunord(f8x4_t(ex_in.src_b));
                   break;
                 case PACKED_HALF_WORD:
-                  ex_result = f16x2_t(ex_in.src_a).fsnan(f16x2_t(ex_in.src_b));
+                  ex_result = f16x2_t(ex_in.src_a).fsunord(f16x2_t(ex_in.src_b));
                   break;
                 default:
                   ex_result = set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) {
                     return float32_isnan(a) || float32_isnan(b);
+                  });
+              }
+              break;
+            case EX_OP_FSORD:
+              switch (ex_in.packed_mode) {
+                case PACKED_BYTE:
+                  ex_result = f8x4_t(ex_in.src_a).fsord(f8x4_t(ex_in.src_b));
+                  break;
+                case PACKED_HALF_WORD:
+                  ex_result = f16x2_t(ex_in.src_a).fsord(f16x2_t(ex_in.src_b));
+                  break;
+                default:
+                  ex_result = set32(ex_in.src_a, ex_in.src_b, [](uint32_t a, uint32_t b) {
+                    return !float32_isnan(a) && !float32_isnan(b);
                   });
               }
               break;

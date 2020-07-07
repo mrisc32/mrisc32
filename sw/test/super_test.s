@@ -752,8 +752,8 @@ test_fpu:
     fsle    s5, s13, s14
     fsle    s6, s14, s13
     fsle    s7, s13, s13
-    fsnan   s8, s12, s13
-    fsnan   s9, s12, s15
+    fsunord s8, s12, s13
+    fsunord s9, s12, s15
 
     ; Store results.
     stw     s1, s25, #40

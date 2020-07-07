@@ -174,7 +174,8 @@ Note: `ADDPCHI` can be used together with load/store instructions to perform 32-
 |FSNE|   | x | x | dst, src1, src2 | dst <= (src1 != src2) ? 0xffffffff : 0 | Set if not equal (floating-point) |
 |FSLT|   | x | x | dst, src1, src2 | dst <= (src1 < src2) ? 0xffffffff : 0 | Set if less than (floating-point) |
 |FSLE|   | x | x | dst, src1, src2 | dst <= (src1 <= src2) ? 0xffffffff : 0 | Set if less than or equal (floating-point) |
-|FSNAN|   | x | x | dst, src1, src2 | dst <= (isNaN(src1) \|\| isNaN(src2)) ? 0xffffffff : 0 | Set if Not-a-Number |
+|FSUNORD|   | x | x | dst, src1, src2 | dst <= (isNaN(src1) \|\| isNaN(src2)) ? 0xffffffff : 0 | Set if unordered (NaN) |
+|FSORD|   | x | x | dst, src1, src2 | dst <= (!isNaN(src1) && !isNaN(src2)) ? 0xffffffff : 0 | Set if ordered |
 |ITOF|   | x | x | dst, src1, src2 | dst <= ((float)src1) * 2^-src2 | Cast signed integer to float with exponent offset |
 |UTOF|   | x | x | dst, src1, src2 | dst <= ((float)src1) * 2^-src2 | Cast unsigned integer to float with exponent offset |
 |FTOI|   | x | x | dst, src1, src2 | dst <= (int)(src1 * 2^src2) | Cast float to signed integer with exponent offset |

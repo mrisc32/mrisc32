@@ -150,9 +150,14 @@ public:
            ((m_values[1] <= y.m_values[1]) ? 0xffff0000u : 0u);
   }
 
-  inline uint32_t fsnan(const f16x2_t& y) {
+  inline uint32_t fsunord(const f16x2_t& y) {
     return ((std::isnan(m_values[0]) || std::isnan(y.m_values[0])) ? 0x0000ffffu : 0u) |
            ((std::isnan(m_values[1]) || std::isnan(y.m_values[1])) ? 0xffff0000u : 0u);
+  }
+
+  inline uint32_t fsord(const f16x2_t& y) {
+    return ((!std::isnan(m_values[0]) && !std::isnan(y.m_values[0])) ? 0x0000ffffu : 0u) |
+           ((!std::isnan(m_values[1]) && !std::isnan(y.m_values[1])) ? 0xffff0000u : 0u);
   }
 
 private:
@@ -438,11 +443,18 @@ public:
            ((m_values[3] <= y.m_values[3]) ? 0xff000000u : 0u);
   }
 
-  inline uint32_t fsnan(const f8x4_t& y) {
+  inline uint32_t fsunord(const f8x4_t& y) {
     return ((std::isnan(m_values[0]) || std::isnan(y.m_values[0])) ? 0x000000ffu : 0u) |
            ((std::isnan(m_values[1]) || std::isnan(y.m_values[1])) ? 0x0000ff00u : 0u) |
            ((std::isnan(m_values[2]) || std::isnan(y.m_values[2])) ? 0x00ff0000u : 0u) |
            ((std::isnan(m_values[3]) || std::isnan(y.m_values[3])) ? 0xff000000u : 0u);
+  }
+
+  inline uint32_t fsord(const f8x4_t& y) {
+    return ((!std::isnan(m_values[0]) && !std::isnan(y.m_values[0])) ? 0x000000ffu : 0u) |
+           ((!std::isnan(m_values[1]) && !std::isnan(y.m_values[1])) ? 0x0000ff00u : 0u) |
+           ((!std::isnan(m_values[2]) && !std::isnan(y.m_values[2])) ? 0x00ff0000u : 0u) |
+           ((!std::isnan(m_values[3]) && !std::isnan(y.m_values[3])) ? 0xff000000u : 0u);
   }
 
 private:

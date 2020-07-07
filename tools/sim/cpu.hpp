@@ -131,7 +131,8 @@ protected:
   static const uint32_t EX_OP_FSNE = 0x63u;
   static const uint32_t EX_OP_FSLT = 0x64u;
   static const uint32_t EX_OP_FSLE = 0x65u;
-  static const uint32_t EX_OP_FSNAN = 0x66u;
+  static const uint32_t EX_OP_FSUNORD = 0x66u;
+  static const uint32_t EX_OP_FSORD = 0x67u;
 
   static const uint32_t EX_OP_ITOF = 0x68u;
   static const uint32_t EX_OP_UTOF = 0x69u;
