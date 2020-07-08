@@ -9,11 +9,18 @@ The MRISC32 approach to Single Instruction Multiple Data (SIMD) operation is ver
 * There are vector,vector and vector,scalar versions of most integer and floating point operations.
 * Vector loads and stores can either be stride-based or gather-scatter (see [addressing modes](AddressingModes.md) for more details).
 * Folding operations are provided for doing horizontal vector operations (e.g. sum, min/max).
+
+Planned (not yet implemented):
 * Each vector register has a Register Length (RL) state.
   - Writing to a register updates the Register Length to the operation Vector Length.
   - Elements with an index >= RL are zero.
   - Clearing all Register Lengths to zero reduces stack overhead.
-
+* Each vector register has a Register Mask (RM) state.
+  - The Register Mask can have three possible values:
+    - 0 (zero): All elements are zero (`0x00000000`).
+    - -1 (set): All elements are minus one (`0xffffffff`).
+    - +1: At least one element is non-zero and at least one element is non-minus-one.
+  - The Register Mask is suitable as a branch condition, e.g. in combination with `S[cc]` instructions with vector operands.
 
 ## Motivation
 
@@ -48,7 +55,7 @@ Assuming that the arguments (c, a, b, n) are in registers S1, S2, S3 and S4 (acc
 abs_diff:
   bz      s4, #done    ; n == 0, nothing to do
 
-  ldhio   s12, #0x7fffffff
+  ldi     s12, #0x7fffffff
 
   ldi     s11, #0
 loop:
@@ -57,8 +64,8 @@ loop:
   ldw     s9, s2, s11  ; s9  = a
   ldw     s10, s3, s11 ; s10 = b
   fsub    s9, s9, s10  ; s9  = a - b
-  and     s9, s9, s12  ; s9  = abs(a - b) (i.e. clear the sign bit)
-  stw     s9, s1, s11  ; c   = abs(a - b)
+  and     s9, s9, s12  ; s9  = fabs(a - b) (i.e. clear the sign bit)
+  stw     s9, s1, s11  ; c   = fabs(a - b)
 
   add     s11, s11, #4 ; Increment the array offset
   bgt     s4, #loop
@@ -71,41 +78,44 @@ done:
 
 ```
 abs_diff:
-  add     sp, sp, #-4
-  stw     vl, sp, #0
-
   bz      s4, #done    ; n == 0, nothing to do
 
-  ldhio   s10, #0x7fffffff
-
   ; Prepare the vector operation
-  cpuid   s11, z, z    ; s11 is the max number of vector elements
-  lsl     s12, s11, #2 ; s12 is the memory increment per vector operation
+  mov     s5, vl       ; Preserve VL
+  cpuid   s6, z, z     ; s6 is the max number of vector elements
+
+  ldi     s7, #0x7fffffff
 
 loop:
-  min     vl, s4, s11  ; vl = min(s4, s11)
+  min     vl, s4, s6   ; vl = min(s4, s6)
+  sub     s4, s4, vl   ; Decrement the loop counter
 
-  sub     s4, s4, s11  ; Decrement the loop counter
+  ldw     v1, s2, #4   ; v1 = a
+  ldw     v2, s3, #4   ; v2 = b
+  fsub    v1, v1, v2   ; v1 = a - b
+  and     v1, v1, s7   ; v1 = fabs(a - b) (i.e. clear the sign bit)
+  stw     v1, s1, #4   ; c  = fabs(a - b)
 
-  ldw     v9, s2, #4   ; v9  = a
-  ldw     v10, s3, #4  ; v10 = b
-  fsub    v9, v9, v10  ; v9  = a - b
-  and     v9, v9, s10  ; v9  = abs(a - b) (i.e. clear the sign bit)
-  stw     v9, s1, #4   ; c   = abs(a - b)
-
-  add     s1, s1, s12  ; Increment the memory pointers
-  add     s2, s2, s12
-  add     s3, s3, s12
+  ldea    s1, s1, vl*4 ; Increment the memory pointers
+  ldea    s2, s2, vl*4
+  ldea    s3, s3, vl*4
   bgt     s4, #loop
 
+  mov     vl, s5       ; Restore VL
+
 done:
-  ldw     vl, sp, #0
-  add     sp, sp, #4
   j       lr
 ```
 
-Notice that the same instructions are used in both cases, only with vector operands for the vector version. Also notice that it is easy to mix scalar and vector operands for vector operations.
-
+Notice that:
+* The same instructions are used in both cases, only with vector operands for the vector version.
+* It is easy to mix scalar and vector operands for vector operations.
+* The loop overhead is actually lower in the vector version, since fewer loop iterations are required:
+  * Scalar version: 3 instructions / array element.
+  * Vector version: 6/16 = 0.375 instructions / array element (for a machine with 16 elements per vector register).
+* Any data dependency latencies in the scalar version (e.g. due to memory loads and the FPU pipeline) have vanished in the vector version.
+  * Each vector instruction will iterate over several cycles, allowing the first vector elements to be produced before the next instruction starts executing.
+  * Typically, an `M` elements wide, `N` stages long pipeline machine will have at least `M * N` elements per vector register.
 
 ## Implementations
 
