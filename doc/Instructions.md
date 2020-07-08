@@ -182,11 +182,13 @@ Note: `ADDPCHI` can be used together with load/store instructions to perform 32-
 |FTOU|   | x | x | dst, src1, src2 | dst <= (unsigned)(src1 * 2^src2) | Cast float to unsigned integer with exponent offset |
 |FTOIR|  | x | x | dst, src1, src2 | dst <= (int)round(src1 * 2^src2) | Round float to signed integer with exponent offset |
 |FTOUR|  | x | x | dst, src1, src2 | dst <= (unsigned)round(src1 * 2^src2) | Round float to unsigned integer with exponent offset |
-|FPACK|   | x | x | dst, src1, src2 | dst <= ((float16)src1) << 16 \| (float16)src2 | Reduce precision and pack two floating-point values into a word. Use FPACK.H to pack four floating-point values. |
+|FPACK|   | x | x | dst, src1, src2 | dst[1] <= (float16)src1<br>dst[0] <= (float16)src2 | Reduce precision and pack two floating-point values into a word. Use FPACK.H to pack four floating-point values. |
 |FADD|   | x | x | dst, src1, src2 | dst <= src1 + src2 | Floating-point addition |
 |FSUB|   | x | x | dst, src1, src2 | dst <= src1 - src2 | Floating-point subtraction |
 |FMUL|   | x | x | dst, src1, src2 | dst <= src1 * src2 | Floating-point multiplication |
 |FDIV|   | x | x | dst, src1, src2 | dst <= src1 / src2 | Floating-point division |
+|FUNPL|   | x | x | dst, src1 | dst <= (float)src1[0] | Unpack low half-precision floating-point value. Use FUNPL.H to unpack two quarter-precision floating-point values. |
+|FUNPH|   | x | x | dst, src1 | dst <= (float)src1[1] | Unpack high half-precision floating-point value. Use FUNPH.H to unpack two quarter-precision floating-point values. |
 |FSQRT|   | x | x | dst, src1 | dst <= sqrt(src1) | Floating-point square root |
 
 ## Vector instructions

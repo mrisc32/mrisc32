@@ -197,6 +197,8 @@
       <keyword>fsub(\.b|\.h)?(/f)?</keyword>
       <keyword>fmul(\.b|\.h)?(/f)?</keyword>
       <keyword>fdiv(\.b|\.h)?(/f)?</keyword>
+      <keyword>funpl(\.h)?(/f)?</keyword>
+      <keyword>funph(\.h)?(/f)?</keyword>
       <keyword>fsqrt(\.b|\.h)?(/f)?</keyword>
 
       <!-- Aliases -->

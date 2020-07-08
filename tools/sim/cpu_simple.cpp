@@ -1236,7 +1236,7 @@ uint32_t cpu_simple_t::run(const int64_t max_cycles) {
         } else if (op_class_A && ((iword & 0x000001f0u) != 0x00000000u)) {
           ex_op = iword & 0x0000007fu;
         } else if (op_class_B) {
-          ex_op = iword & 0x00007e7fu;
+          ex_op = ((iword >> 1) & 0x00003f00u) | (iword & 0x0000007fu);
         } else if (op_class_C && ((iword & 0xc0000000u) != 0x00000000u)) {
           ex_op = iword >> 26u;
         } else if (op_class_D) {
@@ -2058,18 +2058,6 @@ uint32_t cpu_simple_t::run(const int64_t max_cycles) {
                   ex_result = fdiv32(ex_in.src_a, ex_in.src_b);
               }
               break;
-            case EX_OP_FSQRT:
-              switch (ex_in.packed_mode) {
-                case PACKED_BYTE:
-                  ex_result = fsqrt8x4(ex_in.src_a, ex_in.src_b);
-                  break;
-                case PACKED_HALF_WORD:
-                  ex_result = fsqrt16x2(ex_in.src_a, ex_in.src_b);
-                  break;
-                default:
-                  ex_result = fsqrt32(ex_in.src_a, ex_in.src_b);
-              }
-              break;
             case EX_OP_FSEQ:
               switch (ex_in.packed_mode) {
                 case PACKED_BYTE:
@@ -2176,6 +2164,44 @@ uint32_t cpu_simple_t::run(const int64_t max_cycles) {
                   break;
                 default:
                   ex_result = fmax32(ex_in.src_a, ex_in.src_b);
+              }
+              break;
+            case EX_OP_FUNPL:
+              switch (ex_in.packed_mode) {
+                case PACKED_BYTE:
+                  // Nothing to do here.
+                  break;
+                case PACKED_HALF_WORD:
+                  ex_result =
+                      f16x2_t::from_f32x2(f8x4_t(ex_in.src_a)[0], f8x4_t(ex_in.src_a)[2]).packf();
+                  break;
+                default:
+                  ex_result = as_u32(f16x2_t(ex_in.src_a)[0]);
+              }
+              break;
+            case EX_OP_FUNPH:
+              switch (ex_in.packed_mode) {
+                case PACKED_BYTE:
+                  // Nothing to do here.
+                  break;
+                case PACKED_HALF_WORD:
+                  ex_result =
+                      f16x2_t::from_f32x2(f8x4_t(ex_in.src_a)[1], f8x4_t(ex_in.src_a)[3]).packf();
+                  break;
+                default:
+                  ex_result = as_u32(f16x2_t(ex_in.src_a)[1]);
+              }
+              break;
+            case EX_OP_FSQRT:
+              switch (ex_in.packed_mode) {
+                case PACKED_BYTE:
+                  ex_result = fsqrt8x4(ex_in.src_a, ex_in.src_b);
+                  break;
+                case PACKED_HALF_WORD:
+                  ex_result = fsqrt16x2(ex_in.src_a, ex_in.src_b);
+                  break;
+                default:
+                  ex_result = fsqrt32(ex_in.src_a, ex_in.src_b);
               }
               break;
           }

@@ -84,6 +84,10 @@ public:
     return f32_to_u16r(m_values[0], scale) | (f32_to_u16r(m_values[1], scale) << 16);
   }
 
+  inline float operator[](const int k) const {
+    return m_values[k];
+  }
+
   inline f16x2_t& operator=(const f16x2_t& x) {
     m_values[0] = x.m_values[0];
     m_values[1] = x.m_values[1];
@@ -248,8 +252,6 @@ private:
     return sign | (static_cast<uint32_t>(exp) << 10) | (significand & 0x3ffu);
   }
 
-  friend class f8x4_t;
-
   float m_values[2];
 };
 
@@ -310,7 +312,7 @@ public:
   }
 
   static inline f8x4_t from_f16x4(const f16x2_t a, const f16x2_t b) {
-    return f8x4_t(a.m_values[0], b.m_values[0], a.m_values[1], b.m_values[1]);
+    return f8x4_t(a[0], b[0], a[1], b[1]);
   }
 
   static inline f8x4_t itof(const uint32_t x, const uint32_t scale) {
@@ -350,6 +352,10 @@ public:
   inline uint32_t packur(const uint32_t scale) const {
     return f32_to_u8r(m_values[0], scale) | (f32_to_u8r(m_values[1], scale) << 8) |
            (f32_to_u8r(m_values[2], scale) << 16) | (f32_to_u8r(m_values[3], scale) << 24);
+  }
+
+  inline float operator[](const int k) const {
+    return m_values[k];
   }
 
   inline f8x4_t& operator=(const f8x4_t& x) {
