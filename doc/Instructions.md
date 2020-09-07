@@ -13,9 +13,9 @@ An instruction is encoded as a 32-bit word. There are four different formats: A,
       3             2               1
      |1| | | | | | |4| | | | | | | |6| | | | | | | |8| | | | | | | |0|
      +-----------+---------+---------+---+---------+---+-------------+
- A:  |0 0 0 0 0 0|REG1     |REG2     |VM |REG3     |PM |OP (7b)      |
+ A:  |0 0 0 0 0 0|REG1     |REG2     |VM |REG3     |F  |OP (7b)      |
      +-----------+---------+---------+-+-+---------+---+---------+---+
- B:  |0 0 0 0 0 0|REG1     |REG2     |V|FUNC (6b)  |PM |1 1 1 1 1|OP |
+ B:  |0 0 0 0 0 0|REG1     |REG2     |V|FUNC (6b)  |F  |1 1 1 1 1|OP |
      +-----------+---------+---------+-+-----------+---+---------+---+
  C:  |OP (6b)    |REG1     |REG2     |V|IMM (15b)                    |
      +---+-------+---------+---------+-+-----------------------------+
@@ -33,16 +33,19 @@ The fields of the instruction word are interpreted as follows:
 | IMM | Immediate value |
 | VM | Vector mode (2-bit):<br>00: scalar <= op(scalar,scalar)<br>10: vector <= op(vector,scalar)<br>11: vector <= op(vector,vector)<br>01: vector <= op(vector,fold(vector)) |
 | V | Vector mode (1-bit):<br>0: scalar <= op(scalar[,scalar])<br>1: vector <= op(vector[,scalar]) |
-| PM | Packed mode / Index scale (see below) |
+| F | Flavor (see below) |
 
-The interpretation of the PM field depends on the instruction type. For load/store instrcutions it is interpreted as an *Index scale* (a multiplication factor for the 3rd operand), and for all other instructions it is interpreted as a *Packed mode* descriptor:
+The interpretation of the F field depends on the instruction type:
+* For load/store instrcutions it is interpreted as an *Index scale* (a multiplication factor for the 3rd operand).
+* For the SEL instrcution it is interpreted as an *operand order* modifier.
+* For all other instructions it is interpreted as a *Packed mode* descriptor.
 
-| PM | Packed mode | Index scale |
-|---|---|---|
-| 00 | None (1 x 32 bits) | *1 |
-| 01 | Byte (4 x 8 bits) | *2 |
-| 10 | Half-word (2 x 16 bits) | *4 |
-| 11 | (reserved) | *8 |
+| F | Packed mode | Index scale | SEL mode |
+|---|---|---|---|
+| 00 | None (1 x 32 bits) | *1 | c <= (a & c) \| (b & ~c) |
+| 01 | Byte (4 x 8 bits) | *2 | c <= (b & c) \| (a & ~c) |
+| 10 | Half-word (2 x 16 bits) | *4 | c <= (c & a) \| (b & ~a) |
+| 11 | (reserved) | *8 | c <= (b & a) \| (c & ~a) |
 
 Note that most C type instructions are immediate operand versions of corresponding A type instructions. For instance the A type instruction `ADD reg1, reg2, reg3` has a corresponding C type instruction `ADD reg1, reg2, #imm`.
 
@@ -132,6 +135,7 @@ Note: `ADDPCHI` can be used together with load/store instructions to perform 32-
 |LSL| x | x | x | dst, src1, src2 | dst <= src1 << src2 | Logic shift left |
 |LSR| x | x | x | dst, src1, src2 | dst <= src1 >> src2 (unsigned) | Logic shift right |
 |SHUF| x | x |   | dst, src1, src2 | dst <= shuffle(src1, src2) | Shuffle bytes according to the shuffle descriptor in src2 (see [SHUF](SHUF.md)) |
+|SEL| x | x |   | dst, src1, src2 | dst <= (src1 & dst) \| (src2 & ~dst) | Bitwise select (there are three other variants for handling different operand orders) |
 |CLZ|   | x | x | dst, src1 | dst <= clz(src1) | Count leading zeros |
 |REV|   | x | x | dst, src1 | dst <= rev(src1) | Reverse bit order |
 |PACK|   | x | x | dst, src1, src2 | dst <=<br>((src1 & 0x0000ffff) << 16) \|<br>(src2 & 0x0000ffff) | Pack two half-words into a word. Use PACK.H to pack four bytes into a word. |

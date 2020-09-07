@@ -1210,8 +1210,13 @@ uint32_t cpu_simple_t::run(const int64_t max_cycles) {
         // Is this ADDPCHI?
         const bool is_addpchi = ((iword & 0xfc000000u) == 0xf4000000u);
 
+        // Is this a three-source-operand instruction?
+        const bool is_sel =
+            ((iword & 0xfc00007fu) == 0x00000025u) || ((iword & 0xfc000000u) == 0x94000000u);
+        const bool is_three_src_op = is_mem_store || is_sel;
+
         // Should we use reg1 as a source (special case)?
-        const bool reg1_is_src = is_mem_store || is_branch;
+        const bool reg1_is_src = is_three_src_op || is_branch;
 
         // Should we use reg2 as a source?
         const bool reg2_is_src = op_class_A || op_class_B || op_class_C;
@@ -1220,7 +1225,7 @@ uint32_t cpu_simple_t::run(const int64_t max_cycles) {
         const bool reg3_is_src = op_class_A;
 
         // Should we use reg1 as a destination?
-        const bool reg1_is_dst = !reg1_is_src;
+        const bool reg1_is_dst = !(is_mem_store || is_branch);
 
         // Determine the source & destination register numbers (zero for none).
         const uint32_t src_reg_a =
@@ -1612,6 +1617,22 @@ uint32_t cpu_simple_t::run(const int64_t max_cycles) {
                   break;
                 default:
                   ex_result = clz32(ex_in.src_a);
+              }
+              break;
+            case EX_OP_SEL:
+              switch (ex_in.packed_mode) {
+                default:
+                  ex_result = sel32(ex_in.src_a, ex_in.src_b, ex_in.src_c);
+                  break;
+                case 1:
+                  ex_result = sel32(ex_in.src_b, ex_in.src_a, ex_in.src_c);
+                  break;
+                case 2:
+                  ex_result = sel32(ex_in.src_c, ex_in.src_b, ex_in.src_a);
+                  break;
+                case 3:
+                  ex_result = sel32(ex_in.src_b, ex_in.src_c, ex_in.src_a);
+                  break;
               }
               break;
             case EX_OP_REV:

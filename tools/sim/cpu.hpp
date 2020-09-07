@@ -101,6 +101,7 @@ protected:
   static const uint32_t EX_OP_LSL = 0x22u;
   static const uint32_t EX_OP_LSR = 0x23u;
   static const uint32_t EX_OP_SHUF = 0x24u;
+  static const uint32_t EX_OP_SEL = 0x25u;
 
   static const uint32_t EX_OP_PACK = 0x30u;
   static const uint32_t EX_OP_PACKS = 0x31u;

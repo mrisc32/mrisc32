@@ -23,7 +23,5 @@
 | Floating point absolute value | ldhio tmp,#0x7fffffff<br>and rd,ra,tmp |
 | Floating point compare and branch | fs[cond] tmp,ra,rb<br>bs tmp,#branch\_target |
 | Load simple floating point immediate (21 most significant bits) | ldhi/ldhio |
-| Bitwise select (1): rd <= (ra & rc) \| (rb & ~rc) | xor rd,ra,rb<br>and rd,rd,rc<br>xor rd,rd,rb |
 | Conditional addition | s[cond] re,ra,rb<br>and re,rc,re<br>add re,rd,re |
 
-1: Bitwise select can be used for conditional assignments of integer and floating point scalars, vectors and packed data types, and can be used in conjunction with regular s[cc] compare instructions (to generate a selection bit mask).

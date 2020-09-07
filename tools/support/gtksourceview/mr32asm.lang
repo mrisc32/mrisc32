@@ -135,6 +135,7 @@
       <keyword>rev(\.b|\.h)?(/f)?</keyword>
 
       <keyword>shuf</keyword>
+      <keyword>sel(_1|_2|_3)?(/f)?</keyword>
       <keyword>pack(\.b|\.h)?(/f)?</keyword>
       <keyword>packs(\.b|\.h)?(/f)?</keyword>
       <keyword>packsu(\.b|\.h)?(/f)?</keyword>
