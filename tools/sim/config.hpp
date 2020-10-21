@@ -74,6 +74,14 @@ public:
     m_gfx_addr = x;
   }
 
+  uint32_t gfx_pal_addr() const {
+    return m_gfx_pal_addr;
+  }
+
+  void set_gfx_pal_addr(const uint32_t x) {
+    m_gfx_pal_addr = x;
+  }
+
   uint32_t gfx_width() const {
     return m_gfx_width;
   }
@@ -107,6 +115,7 @@ private:
   static const bool DEFAULT_VERBOSE = false;
   static const bool DEFAULT_GFX_ENABLED = false;
   static const uint32_t DEFAULT_GFX_ADDR = 0x4003d480u;  // Start of MC1 VCON framebuffer.
+  static const uint32_t DEFAULT_GFX_PAL_ADDR = 0x12345678u;
   static const uint32_t DEFAULT_GFX_WIDTH = 320u;
   static const uint32_t DEFAULT_GFX_HEIGHT = 180u;
   static const uint32_t DEFAULT_GFX_DEPTH = 1u;
@@ -117,6 +126,7 @@ private:
   bool m_verbose = DEFAULT_VERBOSE;
   bool m_gfx_enabled = DEFAULT_GFX_ENABLED;
   uint32_t m_gfx_addr = DEFAULT_GFX_ADDR;
+  uint32_t m_gfx_pal_addr = DEFAULT_GFX_PAL_ADDR;
   uint32_t m_gfx_width = DEFAULT_GFX_WIDTH;
   uint32_t m_gfx_height = DEFAULT_GFX_HEIGHT;
   uint32_t m_gfx_depth = DEFAULT_GFX_DEPTH;

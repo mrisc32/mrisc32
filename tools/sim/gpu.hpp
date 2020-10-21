@@ -65,8 +65,10 @@ private:
   ram_t& m_ram;
 
   std::vector<uint8_t> m_conv_buffer;
+  std::vector<uint8_t> m_default_palette;
 
   uint32_t m_gfx_ram_start = 0u;
+  uint32_t m_gfx_pal_start = 0u;
   uint32_t m_width = 0u;
   uint32_t m_height = 0u;
   uint32_t m_depth = 0u;
@@ -79,10 +81,12 @@ private:
 
   GLuint m_program = 0u;
   GLuint m_fb_tex = 0u;
+  GLuint m_pal_tex = 0u;
   GLuint m_vertex_array = 0u;
   GLuint m_vertex_buffer = 0u;
   GLint m_resolution_uniform = 0;
-  GLint m_sampler_uniform = 0;
+  GLint m_fb_sampler_uniform = 0;
+  GLint m_pal_sampler_uniform = 0;
   GLint m_monochrome_uniform = 0;
 };
 

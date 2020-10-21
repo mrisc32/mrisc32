@@ -99,6 +99,7 @@ void print_help(const char* prg_name) {
   std::cout << "  -v, --verbose                    Print stats.\n";
   std::cout << "  -g, --gfx                        Enable graphics.\n";
   std::cout << "  -ga ADDR, --gfx-addr ADDR        Set framebuffer address.\n";
+  std::cout << "  -gp ADDR, --gfx-palette ADDR     Set palette address.\n";
   std::cout << "  -gw WIDTH, --gfx-width WIDTH     Set framebuffer width.\n";
   std::cout << "  -gh HEIGHT, --gfx-height HEIGHT  Set framebuffer height.\n";
   std::cout << "  -gd DEPTH, --gfx-depth DEPTH     Set framebuffer depht.\n";
@@ -135,6 +136,13 @@ int main(const int argc, const char** argv) {
             exit(1);
           }
           config_t::instance().set_gfx_addr(str_to_uint32(argv[++k]));
+        } else if ((std::strcmp(argv[k], "-gp") == 0) || (std::strcmp(argv[k], "--gfx-palette") == 0)) {
+          if (k >= (argc - 1)) {
+            std::cerr << "Missing option for " << argv[k] << "\n";
+            print_help(argv[0]);
+            exit(1);
+          }
+          config_t::instance().set_gfx_pal_addr(str_to_uint32(argv[++k]));
         } else if ((std::strcmp(argv[k], "-gw") == 0) || (std::strcmp(argv[k], "--gfx-width") == 0)) {
           if (k >= (argc - 1)) {
             std::cerr << "Missing option for " << argv[k] << "\n";

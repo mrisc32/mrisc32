@@ -33,6 +33,7 @@ const uint32_t MMIO_GPU_WIDTH = MMIO_GPU_BASE + 4u;      // Width of the framebu
 const uint32_t MMIO_GPU_HEIGHT = MMIO_GPU_BASE + 8u;     // Height of the framebuffer (in pixels).
 const uint32_t MMIO_GPU_DEPTH = MMIO_GPU_BASE + 12u;     // Number of bits per pixel.
 const uint32_t MMIO_GPU_FRAME_NO = MMIO_GPU_BASE + 32u;  // Current frame number (32 bits).
+const uint32_t MMIO_GPU_PAL_ADDR = MMIO_GPU_BASE + 36u;  // Start of the palette memory area.
 
 const GLchar* VERTEX_SRC =
     "#version 150\n"
@@ -47,17 +48,18 @@ const GLchar* VERTEX_SRC =
 
 const GLchar* FRAGMENT_SRC =
     "#version 150\n"
-    "uniform sampler2DRect u_sampler;"
+    "uniform sampler2DRect u_fb_sampler;"
+    "uniform sampler2D u_pal_sampler;"
     "uniform bool u_monochrome;"
     "in vec2 v_uv;"
     "out vec3 color;"
     "void main(void)"
     "{"
     "  if (u_monochrome) {"
-    "    float r = texture(u_sampler, v_uv).r;"
-    "    color = vec3(r, r, r);"
+    "    float m = texture(u_fb_sampler, v_uv).r;"
+    "    color = texture(u_pal_sampler, vec2(m, 1.0)).bgr;"
     "  } else {"
-    "    color = texture(u_sampler, v_uv).bgr;"
+    "    color = texture(u_fb_sampler, v_uv).bgr;"
     "  }"
     "}";
 
@@ -129,6 +131,14 @@ gpu_t::gpu_t(ram_t& ram) : m_ram(ram) {
 
   // Configure the GPU.
   configure();
+
+  // Initialize the default palette.
+  m_default_palette.resize(256 * 4);
+  for (int i = 0; i < 256; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      m_default_palette[i * 4 + j] = i;
+    }
+  }
 }
 
 uint32_t gpu_t::mem32_or_default(const uint32_t addr, const uint32_t default_value) {
@@ -185,7 +195,8 @@ void gpu_t::compile_shader() {
     }
   }
   m_resolution_uniform = glGetUniformLocation(m_program, "u_resolution");
-  m_sampler_uniform = glGetUniformLocation(m_program, "u_sampler");
+  m_fb_sampler_uniform = glGetUniformLocation(m_program, "u_fb_sampler");
+  m_pal_sampler_uniform = glGetUniformLocation(m_program, "u_pal_sampler");
   m_monochrome_uniform = glGetUniformLocation(m_program, "u_monochrome");
   check_gl_error();
 }
@@ -198,6 +209,10 @@ void gpu_t::cleanup() {
   if (m_fb_tex != 0u) {
     glDeleteTextures(1, &m_fb_tex);
     m_fb_tex = 0u;
+  }
+  if (m_pal_tex != 0u) {
+    glDeleteTextures(1, &m_pal_tex);
+    m_pal_tex = 0u;
   }
   if (m_vertex_array != 0u) {
     glDeleteVertexArrays(1, &m_vertex_array);
@@ -212,6 +227,7 @@ void gpu_t::cleanup() {
 void gpu_t::configure() {
   // Update framebuffer parameters.
   m_gfx_ram_start = mem32_or_default(MMIO_GPU_ADDR, config_t::instance().gfx_addr());
+  m_gfx_pal_start = mem32_or_default(MMIO_GPU_PAL_ADDR, config_t::instance().gfx_pal_addr());
   const auto width = mem32_or_default(MMIO_GPU_WIDTH, config_t::instance().gfx_width());
   const auto height = mem32_or_default(MMIO_GPU_HEIGHT, config_t::instance().gfx_height());
   const auto depth = mem32_or_default(MMIO_GPU_DEPTH, config_t::instance().gfx_depth());
@@ -262,11 +278,12 @@ void gpu_t::configure() {
   // Make sure that we can use the current GFX configuration.
   check_gfx_config();
 
-  // Create the texture.
+  // Create the framebuffer texture.
   if (m_fb_tex != 0u) {
     glDeleteTextures(1, &m_fb_tex);
   }
   glGenTextures(1, &m_fb_tex);
+  glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_RECTANGLE, m_fb_tex);
   glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -283,6 +300,30 @@ void gpu_t::configure() {
                m_tex_type,
                nullptr);
   check_gl_error();
+
+  // Create the palette texture.
+  if (m_pal_tex != 0u) {
+    glDeleteTextures(1, &m_pal_tex);
+  }
+  glGenTextures(1, &m_pal_tex);
+  glActiveTexture(GL_TEXTURE1);
+  glBindTexture(GL_TEXTURE_2D, m_pal_tex);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+  glTexImage2D(GL_TEXTURE_2D,
+               0,
+               GL_RGBA,
+               256,
+               1,
+               0,
+               GL_BGRA,
+               GL_UNSIGNED_BYTE,
+               nullptr);
+  check_gl_error();
+
 }
 
 void gpu_t::paint(const int actual_fb_width, const int actual_fb_height) {
@@ -311,6 +352,21 @@ void gpu_t::paint(const int actual_fb_width, const int actual_fb_height) {
     pixel_buffer = &m_conv_buffer[0];
   }
 
+  // Analyze the palette.
+  const auto* palette_buffer = &m_ram.at(m_gfx_pal_start);
+  {
+    bool defined_palette = false;
+    for (int i = 0; i < 256 * 4; ++i) {
+      if (palette_buffer[i] != 0) {
+        defined_palette = true;
+        break;
+      }
+    }
+    if (!defined_palette) {
+      palette_buffer = m_default_palette.data();
+    }
+  }
+
   // Upload the frame buffer from ram to the framebuffer texture.
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_RECTANGLE, m_fb_tex);
@@ -325,10 +381,25 @@ void gpu_t::paint(const int actual_fb_width, const int actual_fb_height) {
                   pixel_buffer);
   check_gl_error();
 
+  // Upload the palette buffer from ram to the palette texture.
+  glActiveTexture(GL_TEXTURE1);
+  glBindTexture(GL_TEXTURE_2D, m_pal_tex);
+  glTexSubImage2D(GL_TEXTURE_2D,
+                  0,
+                  0,
+                  0,
+                  256,
+                  1,
+                  GL_BGRA,
+                  GL_UNSIGNED_BYTE,
+                  palette_buffer);
+  check_gl_error();
+
   // Set up the shader.
   glUseProgram(m_program);
   glUniform2f(m_resolution_uniform, static_cast<GLfloat>(m_width), static_cast<GLfloat>(m_height));
-  glUniform1i(m_sampler_uniform, 0);
+  glUniform1i(m_fb_sampler_uniform, 0);
+  glUniform1i(m_pal_sampler_uniform, 1);
   glUniform1i(m_monochrome_uniform, m_bits_per_pixel <= 8 ? 1 : 0);
   check_gl_error();
 
