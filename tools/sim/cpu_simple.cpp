@@ -154,7 +154,7 @@ inline uint32_t sel32(const uint32_t a, const uint32_t b, const uint32_t mask) {
 }
 
 inline uint32_t asr32(const uint32_t a, const uint32_t b) {
-  return static_cast<uint32_t>(static_cast<int32_t>(a) >> static_cast<int32_t>(b));
+  return static_cast<uint32_t>(static_cast<int32_t>(a) >> (b & 31));
 }
 
 inline uint32_t asr16x2(const uint32_t a, const uint32_t b) {
@@ -178,7 +178,7 @@ inline uint32_t asr8x4(const uint32_t a, const uint32_t b) {
 }
 
 inline uint32_t lsl32(const uint32_t a, const uint32_t b) {
-  return a << b;
+  return a << (b & 31);
 }
 
 inline uint32_t lsl16x2(const uint32_t a, const uint32_t b) {
@@ -202,7 +202,7 @@ inline uint32_t lsl8x4(const uint32_t a, const uint32_t b) {
 }
 
 inline uint32_t lsr32(const uint32_t a, const uint32_t b) {
-  return a >> b;
+  return a >> (b & 31);
 }
 
 inline uint32_t lsr16x2(const uint32_t a, const uint32_t b) {
