@@ -39,6 +39,259 @@
 #include <thread>
 
 namespace {
+// MC1 keyboard scancodes.
+// clang-format off
+#define KB_A                0x01c
+#define KB_B                0x032
+#define KB_C                0x021
+#define KB_D                0x023
+#define KB_E                0x024
+#define KB_F                0x02b
+#define KB_G                0x034
+#define KB_H                0x033
+#define KB_I                0x043
+#define KB_J                0x03b
+#define KB_K                0x042
+#define KB_L                0x04b
+#define KB_M                0x03a
+#define KB_N                0x031
+#define KB_O                0x044
+#define KB_P                0x04d
+#define KB_Q                0x015
+#define KB_R                0x02d
+#define KB_S                0x01b
+#define KB_T                0x02c
+#define KB_U                0x03c
+#define KB_V                0x02a
+#define KB_W                0x01d
+#define KB_X                0x022
+#define KB_Y                0x035
+#define KB_Z                0x01a
+#define KB_0                0x045
+#define KB_1                0x016
+#define KB_2                0x01e
+#define KB_3                0x026
+#define KB_4                0x025
+#define KB_5                0x02e
+#define KB_6                0x036
+#define KB_7                0x03d
+#define KB_8                0x03e
+#define KB_9                0x046
+
+#define KB_SPACE            0x029
+#define KB_BACKSPACE        0x066
+#define KB_TAB              0x00d
+#define KB_LSHIFT           0x012
+#define KB_LCTRL            0x014
+#define KB_LALT             0x011
+#define KB_LMETA            0x11f
+#define KB_RSHIFT           0x059
+#define KB_RCTRL            0x114
+#define KB_RALT             0x111
+#define KB_RMETA            0x127
+#define KB_ENTER            0x05a
+#define KB_ESC              0x076
+#define KB_F1               0x005
+#define KB_F2               0x006
+#define KB_F3               0x004
+#define KB_F4               0x00c
+#define KB_F5               0x003
+#define KB_F6               0x00b
+#define KB_F7               0x083
+#define KB_F8               0x00a
+#define KB_F9               0x001
+#define KB_F10              0x009
+#define KB_F11              0x078
+#define KB_F12              0x007
+
+#define KB_INSERT           0x170
+#define KB_HOME             0x16c
+#define KB_DEL              0x171
+#define KB_END              0x169
+#define KB_PGUP             0x17d
+#define KB_PGDN             0x17a
+#define KB_UP               0x175
+#define KB_LEFT             0x16b
+#define KB_DOWN             0x172
+#define KB_RIGHT            0x174
+
+#define KB_KP_0             0x070
+#define KB_KP_1             0x069
+#define KB_KP_2             0x072
+#define KB_KP_3             0x07a
+#define KB_KP_4             0x06b
+#define KB_KP_5             0x073
+#define KB_KP_6             0x074
+#define KB_KP_7             0x06c
+#define KB_KP_8             0x075
+#define KB_KP_9             0x07d
+#define KB_KP_PERIOD        0x071
+#define KB_KP_PLUS          0x079
+#define KB_KP_MINUS         0x07b
+#define KB_KP_MUL           0x07c
+#define KB_KP_DIV           0x06d
+#define KB_KP_ENTER         0x06e
+
+#define KB_ACPI_POWER       0x137
+#define KB_ACPI_SLEEP       0x13f
+#define KB_ACPI_WAKE        0x15e
+
+#define KB_MM_NEXT_TRACK    0x14d
+#define KB_MM_PREV_TRACK    0x115
+#define KB_MM_STOP          0x13b
+#define KB_MM_PLAY_PAUSE    0x134
+#define KB_MM_MUTE          0x123
+#define KB_MM_VOL_UP        0x132
+#define KB_MM_VOL_DOWN      0x121
+#define KB_MM_MEDIA_SEL     0x150
+#define KB_MM_EMAIL         0x148
+#define KB_MM_CALCULATOR    0x12b
+#define KB_MM_MY_COMPUTER   0x140
+
+#define KB_WWW_SEARCH       0x110
+#define KB_WWW_HOME         0x13a
+#define KB_WWW_BACK         0x138
+#define KB_WWW_FOWRARD      0x130
+#define KB_WWW_STOP         0x128
+#define KB_WWW_REFRESH      0x120
+#define KB_WWW_FAVORITES    0x118
+// clang-format on
+
+ram_t* s_ram;
+
+#ifdef ENABLE_GUI
+uint32_t s_key_event_count;
+
+uint32_t translate_key(int glfw_key) {
+  // TODO(m): Add all the keys...
+  switch (glfw_key) {
+    // clang-format off
+    case GLFW_KEY_A:             return KB_A;
+    case GLFW_KEY_B:             return KB_B;
+    case GLFW_KEY_C:             return KB_C;
+    case GLFW_KEY_D:             return KB_D;
+    case GLFW_KEY_E:             return KB_E;
+    case GLFW_KEY_F:             return KB_F;
+    case GLFW_KEY_G:             return KB_G;
+    case GLFW_KEY_H:             return KB_H;
+    case GLFW_KEY_I:             return KB_I;
+    case GLFW_KEY_J:             return KB_J;
+    case GLFW_KEY_K:             return KB_K;
+    case GLFW_KEY_L:             return KB_L;
+    case GLFW_KEY_M:             return KB_M;
+    case GLFW_KEY_N:             return KB_N;
+    case GLFW_KEY_O:             return KB_O;
+    case GLFW_KEY_P:             return KB_P;
+    case GLFW_KEY_Q:             return KB_Q;
+    case GLFW_KEY_R:             return KB_R;
+    case GLFW_KEY_S:             return KB_S;
+    case GLFW_KEY_T:             return KB_T;
+    case GLFW_KEY_U:             return KB_U;
+    case GLFW_KEY_V:             return KB_V;
+    case GLFW_KEY_W:             return KB_W;
+    case GLFW_KEY_X:             return KB_X;
+    case GLFW_KEY_Y:             return KB_Y;
+    case GLFW_KEY_Z:             return KB_Z;
+    case GLFW_KEY_0:             return KB_0;
+    case GLFW_KEY_1:             return KB_1;
+    case GLFW_KEY_2:             return KB_2;
+    case GLFW_KEY_3:             return KB_3;
+    case GLFW_KEY_4:             return KB_4;
+    case GLFW_KEY_5:             return KB_5;
+    case GLFW_KEY_6:             return KB_6;
+    case GLFW_KEY_7:             return KB_7;
+    case GLFW_KEY_8:             return KB_8;
+    case GLFW_KEY_9:             return KB_9;
+    case GLFW_KEY_SPACE:         return KB_SPACE;
+    case GLFW_KEY_BACKSPACE:     return KB_BACKSPACE;
+    case GLFW_KEY_TAB:           return KB_TAB;
+    case GLFW_KEY_LEFT_SHIFT:    return KB_LSHIFT;
+    case GLFW_KEY_LEFT_CONTROL:  return KB_LCTRL;
+    case GLFW_KEY_LEFT_ALT:      return KB_LALT;
+    case GLFW_KEY_LEFT_SUPER:    return KB_LMETA;
+    case GLFW_KEY_RIGHT_SHIFT:   return KB_RSHIFT;
+    case GLFW_KEY_RIGHT_CONTROL: return KB_RCTRL;
+    case GLFW_KEY_RIGHT_ALT:     return KB_RALT;
+    case GLFW_KEY_RIGHT_SUPER:   return KB_RMETA;
+    case GLFW_KEY_ENTER:         return KB_ENTER;
+    case GLFW_KEY_ESCAPE:        return KB_ESC;
+    case GLFW_KEY_F1:            return KB_F1;
+    case GLFW_KEY_F2:            return KB_F2;
+    case GLFW_KEY_F3:            return KB_F3;
+    case GLFW_KEY_F4:            return KB_F4;
+    case GLFW_KEY_F5:            return KB_F5;
+    case GLFW_KEY_F6:            return KB_F6;
+    case GLFW_KEY_F7:            return KB_F7;
+    case GLFW_KEY_F8:            return KB_F8;
+    case GLFW_KEY_F9:            return KB_F9;
+    case GLFW_KEY_F10:           return KB_F10;
+    case GLFW_KEY_F11:           return KB_F11;
+    case GLFW_KEY_F12:           return KB_F12;
+    case GLFW_KEY_INSERT:        return KB_INSERT;
+    case GLFW_KEY_HOME:          return KB_HOME;
+    case GLFW_KEY_DELETE:        return KB_DEL;
+    case GLFW_KEY_END:           return KB_END;
+    case GLFW_KEY_PAGE_UP:       return KB_PGUP;
+    case GLFW_KEY_PAGE_DOWN:     return KB_PGDN;
+    case GLFW_KEY_UP:            return KB_UP;
+    case GLFW_KEY_LEFT:          return KB_LEFT;
+    case GLFW_KEY_DOWN:          return KB_DOWN;
+    case GLFW_KEY_RIGHT:         return KB_RIGHT;
+    case GLFW_KEY_KP_0:          return KB_KP_0;
+    case GLFW_KEY_KP_1:          return KB_KP_1;
+    case GLFW_KEY_KP_2:          return KB_KP_2;
+    case GLFW_KEY_KP_3:          return KB_KP_3;
+    case GLFW_KEY_KP_4:          return KB_KP_4;
+    case GLFW_KEY_KP_5:          return KB_KP_5;
+    case GLFW_KEY_KP_6:          return KB_KP_6;
+    case GLFW_KEY_KP_7:          return KB_KP_7;
+    case GLFW_KEY_KP_8:          return KB_KP_8;
+    case GLFW_KEY_KP_9:          return KB_KP_9;
+    case GLFW_KEY_KP_DECIMAL:    return KB_KP_PERIOD;
+    case GLFW_KEY_KP_ADD:        return KB_KP_PLUS;
+    case GLFW_KEY_KP_SUBTRACT:   return KB_KP_MINUS;
+    case GLFW_KEY_KP_MULTIPLY:   return KB_KP_MUL;
+    case GLFW_KEY_KP_DIVIDE:     return KB_KP_DIV;
+    case GLFW_KEY_KP_ENTER:      return KB_KP_ENTER;
+    // clang-format on
+
+    default:
+      return 0;
+  }
+}
+
+void keyhandler(GLFWwindow* window, int key, int scancode, int action, int mods) {
+  // Unused.
+  (void)window;
+  (void)scancode;
+  (void)mods;
+
+  // Emulate the MC1 keyboard event MMIO interface:
+  //  Bits 0-15:  Event counter.
+  //  Bits 16-24: Keycode.
+  //  Bit  31:    1 = release, 0 = press.
+
+  auto keycode = (translate_key(key) << 16) | (s_key_event_count & 0xffffu);
+  ++s_key_event_count;
+
+  if (action == GLFW_RELEASE)
+    keycode |= 0x80000000u;
+
+  s_ram->store32(0xc0000030, keycode);
+}
+
+void mousehandler(GLFWwindow* window, double x, double y) {
+  // Unused.
+  (void)window;
+
+  // Emulate the MC1 mouse position MMIO interface:
+  //  Bits 0-15:  x coordinate
+  //  Bits 16-31: y coordinate
+  auto mousepos = (static_cast<uint32_t>(x) & 0xffffu) | (static_cast<uint32_t>(y) << 16);
+  s_ram->store32(0xc0000034, mousepos);
+}
+#endif  // ENABLE_GUI
+
 void read_bin_file(const char* file_name,
                    ram_t& ram,
                    const bool override_addr,
@@ -221,6 +474,7 @@ int main(const int argc, const char** argv) {
   try {
     // Initialize the RAM.
     ram_t ram(config_t::instance().ram_size());
+    s_ram = &ram;
 
     // Load the program file into RAM.
     read_bin_file(bin_file, ram, bin_addr_defined, bin_addr);
@@ -301,6 +555,10 @@ int main(const int argc, const char** argv) {
             std::cerr << "OpenGL version: " << GLVersion.major << "." << GLVersion.minor << "\n";
           }
 
+          // Set up event handlers.
+          glfwSetKeyCallback(window, keyhandler);
+          glfwSetCursorPosCallback(window, mousehandler);
+
           // Init the "GPU".
           gpu_t gpu(ram);
 
@@ -341,11 +599,6 @@ int main(const int argc, const char** argv) {
             if (cpu_done && !simulation_finished) {
               glfwSetWindowTitle(window, "MRISC32 Simulator - Finished");
               simulation_finished = true;
-            }
-
-            // ESC pressed?
-            if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-              glfwSetWindowShouldClose(window, GLFW_TRUE);
             }
           }
 
