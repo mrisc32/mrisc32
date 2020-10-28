@@ -297,8 +297,6 @@ int adaptive_window_scale(GLFWwindow* window, int width, int height) {
   if (monitor) {
     const auto* vmode = glfwGetVideoMode(monitor);
     if (vmode) {
-      std::cout << "Video mode: " << vmode->width << "x" << vmode->height << "@"
-                << vmode->refreshRate << "Hz" << std::endl;
       const auto scale_x = 0.75 * static_cast<double>(vmode->width) / static_cast<double>(width);
       const auto scale_y = 0.75 * static_cast<double>(vmode->height) / static_cast<double>(height);
       const auto scale = static_cast<int>(floor(std::min(scale_x, scale_y)));
@@ -375,6 +373,7 @@ void print_help(const char* prg_name) {
   std::cout << "  -gw WIDTH, --gfx-width WIDTH     Set framebuffer width.\n";
   std::cout << "  -gh HEIGHT, --gfx-height HEIGHT  Set framebuffer height.\n";
   std::cout << "  -gd DEPTH, --gfx-depth DEPTH     Set framebuffer depht.\n";
+  std::cout << "  -nc, --no-auto-close             Don't auto-close window on exit().\n";
   std::cout << "  -t FILE, --trace FILE            Enable debug trace.\n";
   std::cout << "  -R N, --ram-size N               Set the RAM size (in bytes).\n";
   std::cout << "  -A ADDR, --addr ADDR             Set the program (ROM) start address.\n";
@@ -436,6 +435,8 @@ int main(const int argc, const char** argv) {
             exit(1);
           }
           config_t::instance().set_gfx_depth(str_to_uint32(argv[++k]));
+        } else if ((std::strcmp(argv[k], "-nc") == 0) || (std::strcmp(argv[k], "--no-auto-close") == 0)) {
+          config_t::instance().set_auto_close(false);
         } else if ((std::strcmp(argv[k], "-t") == 0) || (std::strcmp(argv[k], "--trace") == 0)) {
           if (k >= (argc - 1)) {
             std::cerr << "Missing option for " << argv[k] << "\n";
@@ -619,7 +620,11 @@ int main(const int argc, const char** argv) {
 
             // Simulation finished?
             if (cpu_done && !simulation_finished) {
-              glfwSetWindowTitle(window, "MRISC32 Simulator - Finished");
+              if (config_t::instance().auto_close()) {
+                glfwSetWindowShouldClose(window, GLFW_TRUE);
+              } else {
+                glfwSetWindowTitle(window, "MRISC32 Simulator - *Finished*");
+              }
               simulation_finished = true;
             }
           }

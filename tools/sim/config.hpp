@@ -106,6 +106,14 @@ public:
     m_gfx_depth = x;
   }
 
+  bool auto_close() const {
+    return m_auto_close;
+  }
+
+  void set_auto_close(const bool x) {
+    m_auto_close = x;
+  }
+
 private:
   config_t() {}
 
@@ -119,6 +127,7 @@ private:
   static const uint32_t DEFAULT_GFX_WIDTH = 320u;
   static const uint32_t DEFAULT_GFX_HEIGHT = 180u;
   static const uint32_t DEFAULT_GFX_DEPTH = 1u;
+  static const bool DEFAULT_AUTO_CLOSE = true;
 
   uint64_t m_ram_size = DEFAULT_RAM_SIZE;
   bool m_trace_enabled = DEFAULT_TRACE_ENABLED;
@@ -130,6 +139,7 @@ private:
   uint32_t m_gfx_width = DEFAULT_GFX_WIDTH;
   uint32_t m_gfx_height = DEFAULT_GFX_HEIGHT;
   uint32_t m_gfx_depth = DEFAULT_GFX_DEPTH;
+  bool m_auto_close = DEFAULT_AUTO_CLOSE;
 };
 
 #endif  // SIM_CONFIG_HPP_
