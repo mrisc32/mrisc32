@@ -29,6 +29,7 @@
 #endif
 
 #include <atomic>
+#include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -290,6 +291,24 @@ void mousehandler(GLFWwindow* window, double x, double y) {
   auto mousepos = (static_cast<uint32_t>(x) & 0xffffu) | (static_cast<uint32_t>(y) << 16);
   s_ram->store32(0xc0000034, mousepos);
 }
+
+int adaptive_window_scale(GLFWwindow* window, int width, int height) {
+  auto* monitor = window ? glfwGetWindowMonitor(window) : glfwGetPrimaryMonitor();
+  if (monitor) {
+    const auto* vmode = glfwGetVideoMode(monitor);
+    if (vmode) {
+      std::cout << "Video mode: " << vmode->width << "x" << vmode->height << "@"
+                << vmode->refreshRate << "Hz" << std::endl;
+      const auto scale_x = 0.75 * static_cast<double>(vmode->width) / static_cast<double>(width);
+      const auto scale_y = 0.75 * static_cast<double>(vmode->height) / static_cast<double>(height);
+      const auto scale = static_cast<int>(floor(std::min(scale_x, scale_y)));
+      if (scale > 1) {
+        return scale;
+      }
+    }
+  }
+  return 1;
+}
 #endif  // ENABLE_GUI
 
 void read_bin_file(const char* file_name,
@@ -537,8 +556,9 @@ int main(const int argc, const char** argv) {
         // Create a GLFW window.
         auto window_width = config_t::instance().gfx_width();
         auto window_height = config_t::instance().gfx_height();
-        auto* window = glfwCreateWindow(static_cast<int>(window_width),
-                                        static_cast<int>(window_height),
+        auto window_scale = adaptive_window_scale(nullptr, window_width, window_height);
+        auto* window = glfwCreateWindow(static_cast<int>(window_width) * window_scale,
+                                        static_cast<int>(window_height) * window_scale,
                                         "MRISC32 Simulator",
                                         nullptr,
                                         nullptr);
@@ -574,8 +594,10 @@ int main(const int argc, const char** argv) {
             if (window_width != gpu.width() || window_height != gpu.height()) {
               window_width = gpu.width();
               window_height = gpu.height();
-              glfwSetWindowSize(
-                  window, static_cast<int>(window_width), static_cast<int>(window_height));
+              window_scale = adaptive_window_scale(window, window_width, window_height);
+              glfwSetWindowSize(window,
+                                static_cast<int>(window_width) * window_scale,
+                                static_cast<int>(window_height) * window_scale);
             }
 
             // Update the frame number (MC1 compat).
