@@ -32,7 +32,7 @@ public:
   }
 
   void set_ram_size(const uint64_t x) {
-    m_ram_size = std::min(x, 4294967296u);
+    m_ram_size = std::min(x, static_cast<uint64_t>(4294967296u));
   }
 
   bool trace_enabled() const {

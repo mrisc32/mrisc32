@@ -162,6 +162,17 @@ void syscalls_t::stat_to_ram(struct stat& buf, uint32_t addr) {
   m_ram.store16(addr + 12, buf.st_gid);
   m_ram.store16(addr + 14, buf.st_rdev);
   m_ram.store32(addr + 16, buf.st_size);
+#ifdef __APPLE__
+  m_ram.store32(addr + 20, static_cast<uint32_t>(buf.st_atimespec.tv_sec));
+  m_ram.store32(addr + 24, static_cast<uint32_t>(buf.st_atimespec.tv_sec >> 32));
+  m_ram.store32(addr + 28, static_cast<uint32_t>(buf.st_atimespec.tv_nsec));
+  m_ram.store32(addr + 32, static_cast<uint32_t>(buf.st_mtimespec.tv_sec));
+  m_ram.store32(addr + 36, static_cast<uint32_t>(buf.st_mtimespec.tv_sec >> 32));
+  m_ram.store32(addr + 40, static_cast<uint32_t>(buf.st_mtimespec.tv_nsec));
+  m_ram.store32(addr + 44, static_cast<uint32_t>(buf.st_ctimespec.tv_sec));
+  m_ram.store32(addr + 48, static_cast<uint32_t>(buf.st_ctimespec.tv_sec >> 32));
+  m_ram.store32(addr + 52, static_cast<uint32_t>(buf.st_ctimespec.tv_nsec));
+#else
   m_ram.store32(addr + 20, static_cast<uint32_t>(buf.st_atim.tv_sec));
   m_ram.store32(addr + 24, static_cast<uint32_t>(buf.st_atim.tv_sec >> 32));
   m_ram.store32(addr + 28, buf.st_atim.tv_nsec);
@@ -171,6 +182,7 @@ void syscalls_t::stat_to_ram(struct stat& buf, uint32_t addr) {
   m_ram.store32(addr + 44, static_cast<uint32_t>(buf.st_ctim.tv_sec));
   m_ram.store32(addr + 48, static_cast<uint32_t>(buf.st_ctim.tv_sec >> 32));
   m_ram.store32(addr + 52, buf.st_ctim.tv_nsec);
+#endif
   m_ram.store32(addr + 56, buf.st_blksize);
   m_ram.store32(addr + 60, buf.st_blocks);
 }
