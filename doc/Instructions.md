@@ -6,7 +6,7 @@ An instruction is encoded as a 32-bit word. There are four different formats: A,
 |---|---|---|
 | A | 124 | Reg, Reg, Reg |
 | B | 256 | Reg, Reg |
-| C | 47 | Reg, Reg, 15-bit immediate |
+| C | 47 | Reg, Reg, 14-bit immediate |
 | D | 15 | Reg, 21-bit immediate |
 
 ```
@@ -16,9 +16,9 @@ An instruction is encoded as a 32-bit word. There are four different formats: A,
  A:  |0 0 0 0 0 0|REG1     |REG2     |VM |REG3     |F  |OP (7b)      |
      +-----------+---------+---------+-+-+---------+---+---------+---+
  B:  |0 0 0 0 0 0|REG1     |REG2     |V|FUNC (6b)  |F  |1 1 1 1 1|OP |
-     +-----------+---------+---------+-+-----------+---+---------+---+
- C:  |OP (6b)    |REG1     |REG2     |V|IMM (15b)                    |
-     +---+-------+---------+---------+-+-----------------------------+
+     +-----------+---------+---------+-+-+---------+---+---------+---+
+ C:  |OP (6b)    |REG1     |REG2     |V|H|IMM (14b)                  |
+     +---+-------+---------+---------+-+-+---------------------------+
  D:  |1 1|OP (4b)|REG1     |IMM (21b)                                |
      +---+-------+---------+-----------------------------------------+
 ```
@@ -31,11 +31,18 @@ The fields of the instruction word are interpreted as follows:
 | FUNC | A 6-bit function identifier |
 | REG*n* | Register (5 bit identifier) |
 | IMM | Immediate value |
+| H | High (1) or low (0) immediate value |
 | VM | Vector mode (2-bit):<br>00: scalar <= op(scalar,scalar)<br>10: vector <= op(vector,scalar)<br>11: vector <= op(vector,vector)<br>01: vector <= op(vector,fold(vector)) |
 | V | Vector mode (1-bit):<br>0: scalar <= op(scalar[,scalar])<br>1: vector <= op(vector[,scalar]) |
 | F | Flavor (see below) |
 
+The immediate value for format C instructions is interpreted as follows:
+
+* If `H=0`, the value is the 32-bit sign extend version of `IMM`.
+* If `H=1`, the value is `IMM << 18`, with the 18 lowest bits equal to the least significant bit of `IMM`.
+
 The interpretation of the F field depends on the instruction type:
+
 * For load/store instrcutions it is interpreted as an *Index scale* (a multiplication factor for the 3rd operand).
 * For the SEL instrcution it is interpreted as an *operand order* modifier.
 * For all other instructions it is interpreted as a *Packed mode* descriptor.

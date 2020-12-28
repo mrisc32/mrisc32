@@ -53,58 +53,54 @@ Assuming that the arguments (c, a, b, n) are in registers S1, S2, S3 and S4 (acc
 
 ```
 abs_diff:
-  bz      s4, #done    ; n == 0, nothing to do
+  bz      s4, #done            ; n == 0? (nothing to do)
 
-  ldi     s12, #0x7fffffff
-
-  ldi     s11, #0
+  ldi     s5, #0
 loop:
-  add     s4, s4, #-1  ; Decrement the loop counter
+  add     s4, s4, #-1          ; Decrement the loop counter
 
-  ldw     s9, s2, s11  ; s9  = a
-  ldw     s10, s3, s11 ; s10 = b
-  fsub    s9, s9, s10  ; s9  = a - b
-  and     s9, s9, s12  ; s9  = fabs(a - b) (i.e. clear the sign bit)
-  stw     s9, s1, s11  ; c   = fabs(a - b)
+  ldw     s6, s2, s5*4         ; s6 = a
+  ldw     s7, s3, s5*4         ; s7 = b
+  fsub    s6, s6, s7           ; s6 = a - b
+  and     s6, s6, #0x7fffffff  ; s6 = fabs(a - b) (i.e. clear the sign bit)
+  stw     s6, s1, s5*4         ; c  = fabs(a - b)
 
-  add     s11, s11, #4 ; Increment the array offset
+  add     s5, s5, #1           ; Increment the array offset
   bgt     s4, #loop
 
 done:
-  j       lr
+  ret
 ```
 
 ...or using vector operations as:
 
 ```
 abs_diff:
-  bz      s4, #done    ; n == 0, nothing to do
+  bz      s4, #done            ; n == 0? (nothing to do)
 
   ; Prepare the vector operation
-  mov     s5, vl       ; Preserve VL
-  cpuid   s6, z, z     ; s6 is the max number of vector elements
-
-  ldi     s7, #0x7fffffff
+  mov     s5, vl               ; Preserve VL
+  cpuid   s6, z, z             ; s6 is the max number of vector elements
 
 loop:
-  min     vl, s4, s6   ; vl = min(s4, s6)
-  sub     s4, s4, vl   ; Decrement the loop counter
+  min     vl, s4, s6           ; vl = min(s4, s6)
+  sub     s4, s4, vl           ; Decrement the loop counter
 
-  ldw     v1, s2, #4   ; v1 = a
-  ldw     v2, s3, #4   ; v2 = b
-  fsub    v1, v1, v2   ; v1 = a - b
-  and     v1, v1, s7   ; v1 = fabs(a - b) (i.e. clear the sign bit)
-  stw     v1, s1, #4   ; c  = fabs(a - b)
+  ldw     v1, s2, #4           ; v1 = a
+  ldw     v2, s3, #4           ; v2 = b
+  fsub    v1, v1, v2           ; v1 = a - b
+  and     v1, v1, #0x7fffffff  ; v1 = fabs(a - b) (i.e. clear the sign bit)
+  stw     v1, s1, #4           ; c  = fabs(a - b)
 
-  ldea    s1, s1, vl*4 ; Increment the memory pointers
+  ldea    s1, s1, vl*4         ; Increment the memory pointers
   ldea    s2, s2, vl*4
   ldea    s3, s3, vl*4
   bgt     s4, #loop
 
-  mov     vl, s5       ; Restore VL
+  mov     vl, s5               ; Restore VL
 
 done:
-  j       lr
+  ret
 ```
 
 Notice that:

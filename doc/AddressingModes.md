@@ -2,7 +2,7 @@
 
 The MRISC32 is a [load/store architecture](https://en.wikipedia.org/wiki/Load/store_architecture), and has a limited but powerful set of addressing modes.
 
-Note that the program counter (PC) can be used as a source operand, so PC-relative addressing is possible for all scalar load and store operations. For extending the PC-relative range beyond ±16 KiB (using a regular 15-bit immediate offset), use an extra `addpchi` instruction to form a full 32-bit offset.
+Note that the program counter (PC) can be used as a source operand, so PC-relative addressing is possible for all scalar load and store operations. For extending the PC-relative range beyond ±8 KiB (using a regular 14-bit immediate offset), use an extra `addpchi` instruction to form a full 32-bit offset.
 
 ## Scalar load/store
 
@@ -11,7 +11,7 @@ There are four different addressing modes for loads and stores to/from scalar re
 1. Base register plus immediate offset.
    - `Sd <= MEM[Sa + imm]`
    - `Sd => MEM[Sa + imm]`
-   - `imm` is a signed 15-bit offset (±16 KiB).
+   - `imm` is a signed 14-bit offset (±8 KiB).
 2. Base register plus register offset.
    - `Sd <= MEM[Sa + Sb * scale]`
    - `Sd => MEM[Sa + Sb * scale]`
@@ -31,7 +31,7 @@ There are five different addressing modes for loads and stores to/from vector re
 1. Base register plus immediate stride.
    - `Vd[k] <= MEM[Sa + imm * k]`
    - `Vd[k] => MEM[Sa + imm * k]`
-   - `imm` is a signed 15-bit stride value.
+   - `imm` is a signed 14-bit stride value.
 2. Base register plus register stride.
    - `Vd[k] <= MEM[Sa + Sb * scale * k]`
    - `Vd[k] => MEM[Sa + Sb * scale * k]`
@@ -42,7 +42,7 @@ There are five different addressing modes for loads and stores to/from vector re
    - `scale` can be 1 (default), 2, 4 or 8.
 4. Load effective address - immediate stride (load only).
    - `Vd[k] <= Sa + imm * k`
-   - `imm` is a signed 15-bit stride value.
+   - `imm` is a signed 14-bit stride value.
 5. Load effective address - register stride (load only).
    - `Vd[k] <= Sa + Sb * scale * k`
    - `scale` can be 1 (default), 2, 4 or 8.
