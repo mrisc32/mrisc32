@@ -144,6 +144,7 @@ Note: `ADDPCHI` can be used together with load/store instructions to perform 32-
 |SHUF| x | x |   | dst, src1, src2 | dst <= shuffle(src1, src2) | Shuffle bytes according to the shuffle descriptor in src2 (see [SHUF](SHUF.md)) |
 |SEL| x | x |   | dst, src1, src2 | dst <= (src1 & dst) \| (src2 & ~dst) | Bitwise select (there are three other variants for handling different operand orders) |
 |CLZ|   | x | x | dst, src1 | dst <= clz(src1) | Count leading zeros |
+|POPCNT|   | x | x | dst, src1 | dst <= popcnt(src1) | Count number of bits set to 1 in src1 |
 |REV|   | x | x | dst, src1 | dst <= rev(src1) | Reverse bit order |
 |PACK|   | x | x | dst, src1, src2 | dst <=<br>((src1 & 0x0000ffff) << 16) \|<br>(src2 & 0x0000ffff) | Pack two half-words into a word. Use PACK.H to pack four bytes into a word. |
 |PACKS|   | x | x | dst, src1, src2 | dst <=<br>(saturate(src1) << 16) \|<br>saturate(src2) | Pack two half-words into a word, with signed saturation. Use PACKS.H to pack four bytes into a word. |

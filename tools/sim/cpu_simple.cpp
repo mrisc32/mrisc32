@@ -797,6 +797,27 @@ inline uint32_t clz8x4(const uint32_t x) {
          (clz32((x << 16u) | 0x00800000u) << 8u) | (clz32((x << 24u) | 0x00800000u));
 }
 
+inline uint32_t popcnt32(const uint32_t x) {
+#if defined(__GNUC__) || defined(__clang__)
+  return static_cast<uint32_t>(__builtin_popcount(x));
+#else
+  uint32_t count = 0u;
+  for (int i = 0; i < 32; ++i)
+    if (x & (0x80000000u >> i)) == 1u)
+      ++count;
+  return count;
+#endif
+}
+
+inline uint32_t popcnt16x2(const uint32_t x) {
+  return (popcnt32(x & 0xffff0000u) << 16u) | popcnt32(x & 0x0000ffffu);
+}
+
+inline uint32_t popcnt8x4(const uint32_t x) {
+  return (popcnt32(x & 0xff000000u) << 24u) | (popcnt32(x & 0x00ff0000u) << 16u) |
+         (popcnt32(x & 0x0000ff00u) << 8u) | popcnt32(x & 0x000000ffu);
+}
+
 inline uint32_t rev32(const uint32_t x) {
   return ((x >> 31u) & 0x00000001u) | ((x >> 29u) & 0x00000002u) | ((x >> 27u) & 0x00000004u) |
          ((x >> 25u) & 0x00000008u) | ((x >> 23u) & 0x00000010u) | ((x >> 21u) & 0x00000020u) |
@@ -1617,18 +1638,6 @@ uint32_t cpu_simple_t::run(const int64_t max_cycles) {
             case EX_OP_SHUF:
               ex_result = shuf32(ex_in.src_a, ex_in.src_b);
               break;
-            case EX_OP_CLZ:
-              switch (ex_in.packed_mode) {
-                case PACKED_BYTE:
-                  ex_result = clz8x4(ex_in.src_a);
-                  break;
-                case PACKED_HALF_WORD:
-                  ex_result = clz16x2(ex_in.src_a);
-                  break;
-                default:
-                  ex_result = clz32(ex_in.src_a);
-              }
-              break;
             case EX_OP_SEL:
               switch (ex_in.packed_mode) {
                 default:
@@ -1643,6 +1652,30 @@ uint32_t cpu_simple_t::run(const int64_t max_cycles) {
                 case 3:
                   ex_result = sel32(ex_in.src_b, ex_in.src_c, ex_in.src_a);
                   break;
+              }
+              break;
+            case EX_OP_CLZ:
+              switch (ex_in.packed_mode) {
+                case PACKED_BYTE:
+                  ex_result = clz8x4(ex_in.src_a);
+                  break;
+                case PACKED_HALF_WORD:
+                  ex_result = clz16x2(ex_in.src_a);
+                  break;
+                default:
+                  ex_result = clz32(ex_in.src_a);
+              }
+              break;
+            case EX_OP_POPCNT:
+              switch (ex_in.packed_mode) {
+                case PACKED_BYTE:
+                  ex_result = popcnt8x4(ex_in.src_a);
+                  break;
+                case PACKED_HALF_WORD:
+                  ex_result = popcnt16x2(ex_in.src_a);
+                  break;
+                default:
+                  ex_result = popcnt32(ex_in.src_a);
               }
               break;
             case EX_OP_REV:

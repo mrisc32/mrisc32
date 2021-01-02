@@ -150,7 +150,8 @@ protected:
 
   // Two-operand type B operations.
   static const uint32_t EX_OP_CLZ = 0x007cu;
-  static const uint32_t EX_OP_REV = 0x017cu;
+  static const uint32_t EX_OP_POPCNT = 0x017cu;
+  static const uint32_t EX_OP_REV = 0x027cu;
 
   static const uint32_t EX_OP_FUNPL = 0x007du;
   static const uint32_t EX_OP_FUNPH = 0x017du;

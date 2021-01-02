@@ -132,6 +132,7 @@
       <keyword>sltu(\.b|\.h)?(/f)?</keyword>
 
       <keyword>clz(\.b|\.h)?(/f)?</keyword>
+      <keyword>popcnt(\.b|\.h)?(/f)?</keyword>
       <keyword>rev(\.b|\.h)?(/f)?</keyword>
 
       <keyword>shuf</keyword>
