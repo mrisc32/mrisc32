@@ -1,0 +1,51 @@
+% -*- mode: latex; tab-width: 2; indent-tabs-mode: nil; -*-
+%------------------------------------------------------------------------------
+% MRISC32 ISA Manual - Top level tex file.
+%
+% This work is licensed under the Creative Commons Attribution-ShareAlike 4.0
+% International License. To view a copy of this license, visit
+% http://creativecommons.org/licenses/by-sa/4.0/ or send a letter to
+% Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+%------------------------------------------------------------------------------
+
+\documentclass[oneside,twocolumn,10pt]{book}
+
+% Fix copy/pasting of ligatures in Acrobat
+\input{glyphtounicode.tex}
+\pdfgentounicode=1 %
+
+\input{preamble}
+
+\newcommand{\specrev}{\mbox{2021-{\em draft}}}
+\newcommand{\specmonthyear}{\mbox{January 2021}}
+
+\date{}
+
+\begin{document}
+
+% Title page
+\input{title}
+
+% Preface
+\frontmatter
+\input{preface}
+
+% Table of contents
+{\hypersetup{linktoc=all,hidelinks}
+\tableofcontents
+}
+
+% Chapters
+\mainmatter
+\input{introduction}
+\input{registers}
+\input{instructions}
+
+% Appendix
+\appendix
+
+% Bibliography
+\bibliographystyle{plain}
+\bibliography{manual}
+
+\end{document}

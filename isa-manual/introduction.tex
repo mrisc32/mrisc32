@@ -1,0 +1,118 @@
+% -*- mode: latex; tab-width: 2; indent-tabs-mode: nil; -*-
+%------------------------------------------------------------------------------
+% MRISC32 ISA Manual - Introduction.
+%
+% This work is licensed under the Creative Commons Attribution-ShareAlike 4.0
+% International License. To view a copy of this license, visit
+% http://creativecommons.org/licenses/by-sa/4.0/ or send a letter to
+% Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+%------------------------------------------------------------------------------
+
+\chapter{Introduction}
+
+\section{Overview}
+
+MRISC32 is an open and free instruction set architecture (ISA).
+
+The MRISC32 ISA supports a subset of the 2008 IEEE-754 floating-point
+standard~\cite{ieee754-2008}.
+
+\section{Notation}
+
+\tbd
+
+\section{Assembler syntax}
+
+\tbd
+
+\section{Instruction formats}
+
+All instructions are encoded in 32 bits. There are four different encoding
+formats, A, B, C and D, that mainly differ in the number and kinds of
+instruction operands.
+
+The field names that are used in the instruction format descriptions are listed
+in the table below:
+
+\begin{tabular}{|l|l|}
+  \hline
+  \textbf{Name} & \textbf{Description} \\
+  \hline
+  OP & Operation \\
+  \hline
+  FN & Function (extended operation) \\
+  \hline
+  R1 & Destination/source register number (0-31) \\
+  \hline
+  R2 & Source register number (0-31) \\
+  \hline
+  R3 & Source register number (0-31) \\
+  \hline
+  IM & Immediate value \\
+  \hline
+  V  & Vector Mode \\
+  \hline
+  T  & Type \\
+  \hline
+  H  & Immediate Hi/Lo flag \\
+  \hline
+\end{tabular}
+
+\todo{Describe the fields in more detail.}
+
+\subsection{Format A}
+
+\begin{bytefield}{32}
+  \bitheader{0,7,9,14,16,21,26,31} \\
+  \bitboxes*{1}{000000} &
+  \bitbox{5}{R1} &
+  \bitbox{5}{R2} &
+  \bitbox{2}{V} &
+  \bitbox{5}{R3} &
+  \bitbox{2}{T} &
+  \bitbox{7}{OP}
+\end{bytefield}
+
+\todo{Describe the general use of format A instructions.}
+
+\subsection{Format B}
+
+\begin{bytefield}{32}
+  \bitheader{0,2,7,9,15,16,21,26,31} \\
+  \bitboxes*{1}{000000} &
+  \bitbox{5}{R1} &
+  \bitbox{5}{R2} &
+  \bitbox{1}{V} &
+  \bitbox{6}{FN} &
+  \bitbox{2}{T} &
+  \bitboxes*{1}{11111} &
+  \bitbox{2}{OP}
+\end{bytefield}
+
+\todo{Describe the general use of format B instructions.}
+
+\subsection{Format C}
+
+\begin{bytefield}{32}
+  \bitheader{0,14,15,16,21,26,31} \\
+  \bitbox{6}{OP} &
+  \bitbox{5}{R1} &
+  \bitbox{5}{R2} &
+  \bitbox{1}{V} &
+  \bitbox{1}{H} &
+  \bitbox{14}{IM}
+\end{bytefield}
+
+\todo{Describe the general use of format C instructions.}
+
+\subsection{Format D}
+
+\begin{bytefield}{32}
+  \bitheader{0,21,26,30,31} \\
+  \bitboxes*{1}{11} &
+  \bitbox{4}{OP} &
+  \bitbox{5}{R1} &
+  \bitbox{21}{IM}
+\end{bytefield}
+
+\todo{Describe the general use of format D instructions.}

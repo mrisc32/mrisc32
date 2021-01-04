@@ -1,0 +1,69 @@
+% -*- mode: latex; tab-width: 2; indent-tabs-mode: nil; -*-
+%------------------------------------------------------------------------------
+% MRISC32 ISA Manual - Document preamble (package includes, commands etc).
+%
+% This work is licensed under the Creative Commons Attribution-ShareAlike 4.0
+% International License. To view a copy of this license, visit
+% http://creativecommons.org/licenses/by-sa/4.0/ or send a letter to
+% Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+%------------------------------------------------------------------------------
+
+% Package includes.
+
+\usepackage{graphicx}
+\usepackage[export]{adjustbox}
+\usepackage{geometry}
+\usepackage[svgnames]{xcolor}
+\usepackage[endianness=big]{bytefield}
+\usepackage[colorlinks,citecolor=Navy,linkcolor=Navy]{hyperref}
+\usepackage{listings}
+
+% Setup style.
+
+\renewcommand{\familydefault}{\sfdefault}
+
+\setlength{\topmargin}{-0.5in}
+\setlength{\textheight}{9in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\evensidemargin}{0in}
+\setlength{\textwidth}{6.5in}
+
+\pagestyle{myheadings}
+\setlength{\parindent}{0in}
+\setlength{\parskip}{10pt}
+\sloppy
+\raggedbottom
+\clubpenalty=10000
+\widowpenalty=10000
+
+% Setup common bytefield options (optimized for 32-bit words).
+
+\bytefieldsetup{
+  boxformatting={\centering\footnotesize},
+  bitwidth=6.8pt,
+  rightcurly=.,
+  rightcurlyspace=-1pt
+}
+
+% Setup common lstlisting options for pseudo code.
+
+\lstdefinestyle{pseudocode}{
+  basicstyle=\ttfamily\small,
+  mathescape=true,
+  literate=
+         {=}{$\leftarrow{}$}{1}
+         {==}{$={}$}{1}
+}
+
+% Setup common lstlisting options for assembler.
+
+\lstdefinestyle{assembler}{
+  basicstyle=\ttfamily\small
+}
+
+% Useful commands.
+
+\definecolor{warncol}{rgb}{0.7,0,0}
+\newcommand{\tbd}{{\textbf{\textcolor{warncol}{TBD}}}}
+\newcommand{\todo}[1]{{\textbf{\textcolor{warncol}{TODO}} \emph{#1}}}
+\newcommand{\fixme}[1]{{\textbf{\textcolor{warncol}{FIXME}} \emph{#1}}}
