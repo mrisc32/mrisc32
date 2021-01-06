@@ -30,7 +30,7 @@ def read_db(file_name):
 
 
 def get_packs(meta, fmt):
-    if fmt == "A" and meta["tMode"] == "P":
+    if fmt in ["A", "B"] and meta["tMode"] == "P":
         return ["", ".B", ".H"]
     return [""]
 
@@ -47,7 +47,7 @@ def get_vecs(meta, fmt):
         vecs.extend(meta["vModes"])
     elif fmt == "B":
         vecs = ["SS"]
-        vecs.extend(s[:2] for s in meta["vModes"])
+        vecs.extend(meta["vModes"])
     elif fmt == "C":
         vecs = ["SSS"]
         vecs.append(meta["vModes"][0])
@@ -115,7 +115,22 @@ def db_to_markdown(db, sort_alphabetically):
 
 
 def encoding_to_tex(meta):
-    result = "\\begin{bytefield}{32}\n  \\bitheader{0,7,9,14,15,16,21,26,31} \\\\\n"
+    result = "\\begin{bytefield}{32}\n"
+
+    # Determine the minimum set of bit limits (for a pretty \bitheader).
+    field_limits = set()
+    for fmt in meta["fmts"]:
+        if fmt == "A":
+            field_limits.update({0,7,9,14,16,21,26,31})
+        elif fmt == "B":
+            field_limits.update({0,7,9,15,16,21,26,31})
+        elif fmt == "C":
+            field_limits.update({0,14,15,16,21,26,31})
+        elif fmt == "D":
+            field_limits.update({0,21,26,30,31})
+    bitheader = ",".join([str(x) for x in field_limits])
+    result += f" \\bitheader{{{bitheader}}} \\\\\n"
+
     for fmt in meta["fmts"]:
         result += f" \\begin{{rightwordgroup}}{{{fmt}}}\n"
         if fmt == "A":
@@ -127,7 +142,13 @@ def encoding_to_tex(meta):
             result += "  \\bitbox{2}{T} &\n"
             result += f"  \\bitboxes*{{1}}{{{meta['op']:07b}}}\n"
         elif fmt == "B":
-            pass  # TODO(m): Implement me - requires meta['fn'].
+            result += "  \\bitboxes*{1}{000000} &\n"
+            result += "  \\bitbox{5}{R1} &\n"
+            result += "  \\bitbox{5}{R2} &\n"
+            result += "  \\bitbox{1}{V} &\n"
+            result += f"  \\bitboxes*{{1}}{{{meta['fn']:06b}}}\n"
+            result += "  \\bitbox{2}{T} &\n"
+            result += f"  \\bitboxes*{{1}}{{{meta['op']:07b}}}\n"
         elif fmt == "C":
             result += f"  \\bitboxes*{{1}}{{{meta['op']:06b}}} &\n"
             result += "  \\bitbox{5}{R1} &\n"

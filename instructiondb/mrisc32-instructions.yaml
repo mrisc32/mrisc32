@@ -55,6 +55,14 @@ templates:
     fold: true
     asm: "{n}{t} {d}, {a}, {b}"
 
+  # Regular format B instructions.
+  type5: &type5
+    fmts: [B]
+    tMode: P
+    vModes: [VV]
+    fold: false
+    asm: "{n}{t} {d}, {a}"
+
 instructions:
   Load and store:
     LDB:
@@ -494,6 +502,24 @@ instructions:
         lower half of the destination operand.
       op: 110
 
+    FUNPL:
+      <<: *type5
+      descr: >
+        Unpack the low half of a packed floating-point pair. The preicison of
+        the unpacked source floating-point value is doubled and stored in the
+        destination operand.
+      op: 125
+      fn: 0
+
+    FUNPH:
+      <<: *type5
+      descr: >
+        Unpack the high half of a packed floating-point pair. The preicison of
+        the unpacked source floating-point value is doubled and stored in the
+        destination operand.
+      op: 125
+      fn: 1
+
   # TODO(m): Find better categories for these instructions.
   Other:
     SHUF:
@@ -527,3 +553,24 @@ instructions:
 
         TODO: Describe this in detail.
       op: 50
+
+    CLZ:
+      <<: *type5
+      descr: >
+        Count the number of leading zero bits in the source operand.
+      op: 124
+      fn: 0
+
+    POPCNT:
+      <<: *type5
+      descr: >
+        Count the number of non-zero bits in the source operand.
+      op: 124
+      fn: 1
+
+    REV:
+      <<: *type5
+      descr: >
+        Reverse the bits of the source operand.
+      op: 124
+      fn: 2
