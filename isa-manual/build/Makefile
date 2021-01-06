@@ -10,11 +10,11 @@
 
 srcdir = ..
 
-docs = manual
+docs = mrisc32-instruction-set-manual
 pdfs = $(addsuffix .pdf, $(docs))
 
 srcs = $(wildcard $(srcdir)/*.tex) instructions.tex
-bibs = $(srcdir)/manual.bib
+bibs = $(srcdir)/mrisc32-instruction-set-manual.bib
 figs = mrisc32-logo.pdf
 
 PDFLATEX := TEXINPUTS=$(srcdir): pdflatex -interaction=nonstopmode -halt-on-error
