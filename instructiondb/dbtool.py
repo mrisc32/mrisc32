@@ -181,6 +181,7 @@ def db_to_tex(db, sort_alphabetically):
     for category, insns in db.items():
         result += f"\\section{{{category}}}\n\n"
         result += insns_to_tex(insns, sort_alphabetically)
+        result += "\\clearpage\n\n"
     return result
 
 

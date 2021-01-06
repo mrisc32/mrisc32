@@ -172,53 +172,6 @@ instructions:
       # The source operands are reversed for SUB.
       asm: "{n}{t} {d}, {b}, {a}"
 
-    SEQ:
-      <<: *type3
-      descr: >
-        Compare two integer operands, and set all bits of the result to 1 if
-        the operands are equal, otherwise set all bits of the result to 0.
-      op: 23
-
-    SNE:
-      <<: *type3
-      descr: >
-        Compare two integer operands, and set all bits of the result to 1 if
-        the operands are not equal, otherwise set all bits of the result to
-        0.
-      op: 24
-
-    SLT:
-      <<: *type3
-      descr: >
-        Compare two signed integer operands, and set all bits of the result
-        to 1 if the first operand is less than the second operand, otherwise
-        set all bits of the result to 0.
-      op: 25
-
-    SLTU:
-      <<: *type3
-      descr: >
-        Compare two unsigned integer operands, and set all bits of the result
-        to 1 if the first operand is less than the second operand, otherwise
-        set all bits of the result to 0.
-      op: 26
-
-    SLE:
-      <<: *type3
-      descr: >
-        Compare two signed integer operands, and set all bits of the result
-        to 1 if the first operand is less than or equal to the second
-        operand, otherwise set all bits of the result to 0.
-      op: 27
-
-    SLEU:
-      <<: *type3
-      descr: >
-        Compare two unsigned integer operands, and set all bits of the result
-        to 1 if the first operand is less than or equal to the second
-        operand, otherwise set all bits of the result to 0.
-      op: 28
-
     MIN:
       <<: *type3
       descr: >
@@ -298,6 +251,54 @@ instructions:
         Compute the modulo of two unsigned integer operands.
       op: 71
 
+  Integer comparison:
+    SEQ:
+      <<: *type3
+      descr: >
+        Compare two integer operands, and set all bits of the result to 1 if
+        the operands are equal, otherwise set all bits of the result to 0.
+      op: 23
+
+    SNE:
+      <<: *type3
+      descr: >
+        Compare two integer operands, and set all bits of the result to 1 if
+        the operands are not equal, otherwise set all bits of the result to
+        0.
+      op: 24
+
+    SLT:
+      <<: *type3
+      descr: >
+        Compare two signed integer operands, and set all bits of the result
+        to 1 if the first operand is less than the second operand, otherwise
+        set all bits of the result to 0.
+      op: 25
+
+    SLTU:
+      <<: *type3
+      descr: >
+        Compare two unsigned integer operands, and set all bits of the result
+        to 1 if the first operand is less than the second operand, otherwise
+        set all bits of the result to 0.
+      op: 26
+
+    SLE:
+      <<: *type3
+      descr: >
+        Compare two signed integer operands, and set all bits of the result
+        to 1 if the first operand is less than or equal to the second
+        operand, otherwise set all bits of the result to 0.
+      op: 27
+
+    SLEU:
+      <<: *type3
+      descr: >
+        Compare two unsigned integer operands, and set all bits of the result
+        to 1 if the first operand is less than or equal to the second
+        operand, otherwise set all bits of the result to 0.
+      op: 28
+
   Saturating and halving arithmetic:
     ADDS:
       <<: *type4
@@ -347,6 +348,152 @@ instructions:
         Compute the half difference of two unsigned integer operands.
       op: 63
 
+  Floating-point arithmetic:
+    FMIN:
+      <<: *type4
+      descr: >
+        Return the minimum value of two floating-point operands.
+      op: 96
+
+    FMAX:
+      <<: *type4
+      descr: >
+        Return the maximum value of two floating-point operands.
+      op: 97
+
+    FADD:
+      <<: *type4
+      descr: >
+        Compute the sum of two floating-point operands.
+      op: 112
+
+    FSUB:
+      <<: *type4
+      descr: >
+        Compute the difference of two floating-point operands.
+      op: 113
+
+    FMUL:
+      <<: *type4
+      descr: >
+        Compute the product of two floating-point operands.
+      op: 114
+
+    FDIV:
+      <<: *type4
+      descr: >
+        Compute the quotient of two floating-point operands.
+      op: 115
+
+  Floating-point comparison:
+    FSEQ:
+      <<: *type4
+      descr: >
+        Compare two floating-point operands, and set all bits of the result to
+        1 if the first operand is equal to the second operand, otherwise set
+        all bits of the result to 0.
+      op: 98
+
+    FSNE:
+      <<: *type4
+      descr: >
+        Compare two floating-point operands, and set all bits of the result to
+        1 if the first operand is not equal to the second operand, otherwise
+        set all bits of the result to 0.
+      op: 99
+
+    FSLT:
+      <<: *type4
+      descr: >
+        Compare two floating-point operands, and set all bits of the result to
+        1 if the first operand is less than the second operand, otherwise set
+        all bits of the result to 0.
+      op: 100
+
+    FSLE:
+      <<: *type4
+      descr: >
+        Compare two floating-point operands, and set all bits of the result to
+        1 if the first operand is less than or equal to the second operand,
+        otherwise set all bits of the result to 0.
+      op: 101
+
+    FSUNORD:
+      <<: *type4
+      descr: >
+        Set all bits of the result to 1 if any of the source operands are
+        undordered (i.e. NaN), otherwise set all bits of the result to 0.
+      op: 102
+
+    FSORD:
+      <<: *type4
+      descr: >
+        Set all bits of the result to 1 if both of the source operands are
+        ordered (i.e. non-NaN), otherwise set all bits of the result to 0.
+      op: 103
+
+  Floating-point conversion:
+    ITOF:
+      <<: *type4
+      descr: >
+        Convert a signed integer value to a floating-point value. The exponent
+        of the resulting floating-point value is subtracted by the integer
+        offset provided by the second source operand before storing the final
+        floating-point value in the destination operand.
+      op: 104
+
+    UTOF:
+      <<: *type4
+      descr: >
+        Convert an unsigned integer value to a floating-point value. The
+        exponent of the resulting floating-point value is subtracted by the
+        integer offset provided by the second source operand before storing the
+        final floating-point value in the destination operand.
+      op: 105
+
+    FTOI:
+      <<: *type4
+      descr: >
+        Convert a floating-point value to a signed integer value, without
+        rounding. The integer offset provided by the second source operand is
+        added to the floating-point exponent before the conversion.
+      op: 106
+
+    FTOU:
+      <<: *type4
+      descr: >
+        Convert a floating-point value to an unsigned integer value, without
+        rounding. The integer offset provided by the second source operand is
+        added to the floating-point exponent before the conversion.
+      op: 107
+
+    FTOIR:
+      <<: *type4
+      descr: >
+        Convert a floating-point value to a signed integer value, with
+        rounding. The integer offset provided by the second source operand is
+        added to the floating-point exponent before the conversion.
+      op: 108
+
+    FTOUR:
+      <<: *type4
+      descr: >
+        Convert a floating-point value to an unsigned integer value, with
+        rounding. The integer offset provided by the second source operand is
+        added to the floating-point exponent before the conversion.
+      op: 109
+
+    FPACK:
+      <<: *type4
+      descr: >
+        Convert and pack two floating-point operands into a single operand.
+
+        The precision of the two source operands are halved. The first source
+        operand is packed and stored in the upper half of the destination
+        operand, and the second source operand is packed and stored in the
+        lower half of the destination operand.
+      op: 110
+
   # TODO(m): Find better categories for these instructions.
   Other:
     SHUF:
@@ -380,4 +527,3 @@ instructions:
 
         TODO: Describe this in detail.
       op: 50
-
