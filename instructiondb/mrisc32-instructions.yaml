@@ -220,6 +220,110 @@ instructions:
         Return the maximum value of two unsigned integer operands.
       op: 32
 
+    MULQ:
+      <<: *type4
+      descr: >
+        Compute the product of two fixed point operands.
+
+        TODO: Describe this in detail.
+      op: 64
+
+    MUL:
+      <<: *type4
+      descr: >
+        Compute the product of two integer operands.
+      op: 65
+
+    MULHI:
+      <<: *type4
+      descr: >
+        Compute the upper part of the product of two signed integer operands.
+
+        TODO: Describe this in detail.
+      op: 66
+
+    MULHIU:
+      <<: *type4
+      descr: >
+        Compute the upper part of the product of two unsigned integer
+        operands.
+
+        TODO: Describe this in detail.
+      op: 67
+
+    DIV:
+      <<: *type4
+      descr: >
+        Compute the quotient of two signed integer operands.
+      op: 68
+
+    DIVU:
+      <<: *type4
+      descr: >
+        Compute the quotient of two unsigned integer operands.
+      op: 69
+
+    REM:
+      <<: *type4
+      descr: >
+        Compute the modulo of two signed integer operands.
+      op: 70
+
+    REMU:
+      <<: *type4
+      descr: >
+        Compute the modulo of two unsigned integer operands.
+      op: 71
+
+  Saturating and halving arithmetic:
+    ADDS:
+      <<: *type4
+      descr: >
+        Compute the saturated sum of two signed integer operands.
+      op: 56
+
+    ADDSU:
+      <<: *type4
+      descr: >
+        Compute the saturated sum of two unsigned integer operands.
+      op: 57
+
+    ADDH:
+      <<: *type4
+      descr: >
+        Compute the half sum of two signed integer operands.
+      op: 58
+
+    ADDHU:
+      <<: *type4
+      descr: >
+        Compute the half sum of two unsigned integer operands.
+      op: 59
+
+    SUBS:
+      <<: *type4
+      descr: >
+        Compute the saturated difference of two signed integer operands.
+      op: 60
+
+    SUBSU:
+      <<: *type4
+      descr: >
+        Compute the saturated difference of two unsigned integer operands.
+      op: 61
+
+    SUBH:
+      <<: *type4
+      descr: >
+        Compute the half difference of two signed integer operands.
+      op: 62
+
+    SUBHU:
+      <<: *type4
+      descr: >
+        Compute the half difference of two unsigned integer operands.
+      op: 63
+
   # TODO(m): Find better categories for these instructions.
   Other:
     SHUF:
