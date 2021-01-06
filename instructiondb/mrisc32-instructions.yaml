@@ -1,0 +1,256 @@
+---
+templates:
+  # Load/Store instructions.
+  type1: &type1
+    fmts: [A, C]
+    tMode: S
+    vModes: [VSS, VSV]
+    fold: true
+    asm: "{n}{t} {d}, {a}, {b}"
+
+  # Bitwise operations (format A + C without packed support).
+  type2: &type2
+    fmts: [A, C]
+    tMode: N
+    vModes: [VVS, VVV]
+    fold: true
+    asm: "{n}{t} {d}, {a}, {b}"
+
+  # Regular format A + C instructions.
+  type3: &type3
+    fmts: [A, C]
+    tMode: P
+    vModes: [VVS, VVV]
+    fold: true
+    asm: "{n}{t} {d}, {a}, {b}"
+
+  # Regular format A instructions.
+  type4: &type4
+    fmts: [A]
+    tMode: P
+    vModes: [VVS, VVV]
+    fold: true
+    asm: "{n}{t} {d}, {a}, {b}"
+
+instructions:
+  Load and store:
+    LDB:
+      <<: *type1
+      descr: >
+        Load and sign extend a byte (8 bits).
+      op: 1
+
+    LDH:
+      <<: *type1
+      descr: >
+        Load and sign extend a half-word (16 bits).
+      op: 2
+
+    LDW:
+      <<: *type1
+      descr: >
+        Load a word (32 bits).
+      op: 3
+
+    LDUB:
+      <<: *type1
+      descr: >
+        Load and zero extend a byte (8 bits).
+      op: 5
+
+    LDUH:
+      <<: *type1
+      descr: >
+        Load and zero extend a half-word (16 bits).
+      op: 6
+
+    LDEA:
+      <<: *type1
+      descr: >
+        Load effective address.
+      op: 7
+
+  Bitwise logic:
+    OR:
+      <<: *type2
+      descr: >
+        Compute the bitwise or of two integer operands.
+      op: 16
+
+    NOR:
+      <<: *type2
+      descr: >
+        Compute the bitwise inverse or of two integer operands.
+      op: 17
+
+    AND:
+      <<: *type2
+      descr: >
+        Compute the bitwise and of two integer operands.
+      op: 18
+
+    BIC:
+      <<: *type2
+      descr: >
+        Compute the bitwise clear of two integer operands.
+      op: 19
+
+    XOR:
+      <<: *type2
+      descr: >
+        Compute the bitwise exclusive or of two integer operands.
+      op: 20
+
+    ASR:
+      <<: *type3
+      descr: >
+        Arithmetically shift an integer operand to the right the number of
+        bit positions given by another integer operand. Only the lowest five
+        bits of the shift operand are used.
+      op: 33
+
+    LSL:
+      <<: *type3
+      descr: >
+        Logically shift an integer operand to the left the number of bit
+        positions given by another integer operand. Only the lowest five
+        bits of the shift operand are used.
+      op: 34
+
+    LSR:
+      <<: *type3
+      descr: >
+        Logically shift an integer operand to the right the number of bit
+        positions given by another integer operand. Only the lowest five
+        bits of the shift operand are used.
+      op: 35
+
+    SEL:
+      <<: *type3
+      descr: >
+        Bitwise select.
+
+        TODO: Describe this in detail.
+      op: 36
+      tMode: S  # SEL uses a special kind of interpretation of the T field.
+
+  Integer arithmetic:
+    ADD:
+      <<: *type3
+      descr: >
+        Compute the sum of two integer operands.
+      op: 21
+
+    SUB:
+      <<: *type3
+      descr: >
+        Compute the difference of two integer operands.
+      op: 22
+      # The source operands are reversed for SUB.
+      asm: "{n}{t} {d}, {b}, {a}"
+
+    SEQ:
+      <<: *type3
+      descr: >
+        Compare two integer operands, and set all bits of the result to 1 if
+        the operands are equal, otherwise set all bits of the result to 0.
+      op: 23
+
+    SNE:
+      <<: *type3
+      descr: >
+        Compare two integer operands, and set all bits of the result to 1 if
+        the operands are not equal, otherwise set all bits of the result to
+        0.
+      op: 24
+
+    SLT:
+      <<: *type3
+      descr: >
+        Compare two signed integer operands, and set all bits of the result
+        to 1 if the first operand is less than the second operand, otherwise
+        set all bits of the result to 0.
+      op: 25
+
+    SLTU:
+      <<: *type3
+      descr: >
+        Compare two unsigned integer operands, and set all bits of the result
+        to 1 if the first operand is less than the second operand, otherwise
+        set all bits of the result to 0.
+      op: 26
+
+    SLE:
+      <<: *type3
+      descr: >
+        Compare two signed integer operands, and set all bits of the result
+        to 1 if the first operand is less than or equal to the second
+        operand, otherwise set all bits of the result to 0.
+      op: 27
+
+    SLEU:
+      <<: *type3
+      descr: >
+        Compare two unsigned integer operands, and set all bits of the result
+        to 1 if the first operand is less than or equal to the second
+        operand, otherwise set all bits of the result to 0.
+      op: 28
+
+    MIN:
+      <<: *type3
+      descr: >
+        Return the minimum value of two signed integer operands.
+      op: 29
+
+    MAX:
+      <<: *type3
+      descr: >
+        Return the maximum value of two signed integer operands.
+      op: 30
+
+    MINU:
+      <<: *type3
+      descr: >
+        Return the minimum value of two unsigned integer operands.
+      op: 31
+
+    MAXU:
+      <<: *type3
+      descr: >
+        Return the maximum value of two unsigned integer operands.
+      op: 32
+
+  # TODO(m): Find better categories for these instructions.
+  Other:
+    SHUF:
+      <<: *type2
+      descr: >
+        Shuffle bytes.
+
+        TODO: Describe this in detail.
+      op: 36
+
+    PACK:
+      <<: *type4
+      descr: >
+        Pack the lower parts of two integer operands.
+
+        TODO: Describe this in detail.
+      op: 48
+
+    PACKS:
+      <<: *type4
+      descr: >
+        Saturate and pack the lower parts of two signed integer operands.
+
+        TODO: Describe this in detail.
+      op: 49
+
+    PACKSU:
+      <<: *type4
+      descr: >
+        Saturate and pack the lower parts of two unsigned integer operands.
+
+        TODO: Describe this in detail.
+      op: 50
+
