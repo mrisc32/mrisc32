@@ -127,7 +127,7 @@ def encoding_to_tex(meta):
         elif fmt == "C":
             field_limits.update({0,14,15,16,21,26,31})
         elif fmt == "D":
-            field_limits.update({0,21,26,30,31})
+            field_limits.update({0,21,26,31})
     bitheader = ",".join([str(x) for x in field_limits])
     result += f" \\bitheader{{{bitheader}}} \\\\\n"
 
@@ -157,7 +157,9 @@ def encoding_to_tex(meta):
             result += "  \\bitbox{1}{H} &\n"
             result += "  \\bitbox{14}{IM}\n"
         elif fmt == "D":
-            pass  # TODO(m): Implement me.
+            result += f"  \\bitboxes*{{1}}{{{(48+meta['op']):06b}}}\n"
+            result += "  \\bitbox{5}{R1} &\n"
+            result += "  \\bitbox{21}{IM}\n"
         result += f" \\end{{rightwordgroup}} \\\\\n"
     return result + "\\end{bytefield}\n\n"
 

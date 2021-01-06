@@ -63,6 +63,14 @@ templates:
     fold: false
     asm: "{n}{t} {d}, {a}"
 
+  # Regular format D instructions.
+  type6: &type6
+    fmts: [D]
+    tMode: N
+    vModes: []
+    fold: false
+    asm: "{n} {a}, {b}"
+
 instructions:
   Load and store:
     LDB:
@@ -306,6 +314,96 @@ instructions:
         to 1 if the first operand is less than or equal to the second
         operand, otherwise set all bits of the result to 0.
       op: 28
+
+  Branch:
+    BZ:
+      <<: *type6
+      descr: >
+        Branch to the PC-relative target if all bits of the first source
+        operand are zero.
+
+        TODO: Document how the PC-relative address is calculated.
+      op: 0
+
+    BNZ:
+      <<: *type6
+      descr: >
+        Branch to the PC-relative target if at least one of bits of the first
+        source operand is non-zero.
+
+        TODO: Document how the PC-relative address is calculated.
+      op: 1
+
+    BS:
+      <<: *type6
+      descr: >
+        Branch to the PC-relative target if all bits of the first source
+        operand are non-zero.
+
+        TODO: Document how the PC-relative address is calculated.
+      op: 2
+
+    BNS:
+      <<: *type6
+      descr: >
+        Branch to the PC-relative target if at least one of bits of the first
+        source operand is zero.
+
+        TODO: Document how the PC-relative address is calculated.
+      op: 3
+
+    BLT:
+      <<: *type6
+      descr: >
+        Branch to the PC-relative target if the first source operand is a
+        signed integer value that is less than zero.
+
+        TODO: Document how the PC-relative address is calculated.
+      op: 4
+
+    BGE:
+      <<: *type6
+      descr: >
+        Branch to the PC-relative target if the first source operand is a
+        signed integer value that is greater than or equal to zero.
+
+        TODO: Document how the PC-relative address is calculated.
+      op: 5
+
+    BLE:
+      <<: *type6
+      descr: >
+        Branch to the PC-relative target if the first source operand is a
+        signed integer value that is less than or equal to zero.
+
+        TODO: Document how the PC-relative address is calculated.
+      op: 6
+
+    BGT:
+      <<: *type6
+      descr: >
+        Branch to the PC-relative target if the first source operand is a
+        signed integer value that is greater than zero.
+
+        TODO: Document how the PC-relative address is calculated.
+      op: 7
+
+    J:
+      <<: *type6
+      descr: >
+        Jump to the target address that is formed by computing the sum of the
+        register operand and the sign-extended immediate value multiplied by
+        four.
+      op: 8
+
+    JL:
+      <<: *type6
+      descr: >
+        Jump and link. The current value of PC plus four is stored in the LR
+        register, and the new PC is set the target address that is formed by
+        computing the sum of the register operand and the sign-extended
+        immediate value multiplied by four.
+      op: 9
 
   Saturating and halving arithmetic:
     ADDS:
