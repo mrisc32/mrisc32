@@ -171,7 +171,7 @@ def encoding_to_tex(meta):
             result += "  \\bitbox{1}{H} &\n"
             result += "  \\bitbox{14}{IM}\n"
         elif fmt == "D":
-            result += f"  \\bitboxes*{{1}}{{{(48+meta['op']):06b}}}\n"
+            result += f"  \\bitboxes*{{1}}{{{(meta['op']):06b}}}\n"
             result += "  \\bitbox{5}{Ra} &\n"
             result += "  \\bitbox{21}{IM}\n"
         result += f" \\end{{rightwordgroup}} \\\\\n"

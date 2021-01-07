@@ -63,8 +63,17 @@ templates:
     fold: false
     asmOperands: "{1}, {2}"
 
-  # Branch instructions (format D).
+  # Regular format D instructions.
   type6: &type6
+    fmts: [D]
+    tMode: N
+    vModes: []
+    fold: false
+    asmOperands: "{1}, {2}"
+
+  # Branch instructions (format D).
+  type7: &type7
+    <<: *type6
     fmts: [D]
     tMode: N
     vModes: []
@@ -112,6 +121,28 @@ instructions:
         constructing strides. For instance LDEA V1,Z,#3 will assign the
         vector [0,3,6,9,...] to register V1.
       op: 7
+
+  Load immediate:
+    LDLI:
+      <<: *type6
+      descr: >
+        Load low immediate value.
+      op: 58
+      asmOperands: "{1}, #ext21(IM)"
+
+    LDHI:
+      <<: *type6
+      descr: >
+        Load high immediate value.
+      op: 59
+      asmOperands: "{1}, #ext21hi(IM)"
+
+    LDHIO:
+      <<: *type6
+      descr: >
+        Load high immediate value with low ones.
+      op: 60
+      asmOperands: "{1}, #ext21hio(IM)"
 
   Bitwise logic:
     OR:
@@ -321,79 +352,79 @@ instructions:
 
   Branch:
     BZ:
-      <<: *type6
+      <<: *type7
       descr: >
         Branch to the PC-relative target if all bits of the first source
         operand are zero.
       todo: >
         Document how the PC-relative address is calculated.
-      op: 0
+      op: 48
 
     BNZ:
-      <<: *type6
+      <<: *type7
       descr: >
         Branch to the PC-relative target if at least one of bits of the first
         source operand is non-zero.
       todo: >
         Document how the PC-relative address is calculated.
-      op: 1
+      op: 49
 
     BS:
-      <<: *type6
+      <<: *type7
       descr: >
         Branch to the PC-relative target if all bits of the first source
         operand are non-zero.
       todo: >
         Document how the PC-relative address is calculated.
-      op: 2
+      op: 50
 
     BNS:
-      <<: *type6
+      <<: *type7
       descr: >
         Branch to the PC-relative target if at least one of bits of the first
         source operand is zero.
       todo: >
         Document how the PC-relative address is calculated.
-      op: 3
+      op: 51
 
     BLT:
-      <<: *type6
+      <<: *type7
       descr: >
         Branch to the PC-relative target if the first source operand is a
         signed integer value that is less than zero.
       todo: >
         Document how the PC-relative address is calculated.
-      op: 4
+      op: 52
 
     BGE:
-      <<: *type6
+      <<: *type7
       descr: >
         Branch to the PC-relative target if the first source operand is a
         signed integer value that is greater than or equal to zero.
       todo: >
         Document how the PC-relative address is calculated.
-      op: 5
+      op: 53
 
     BLE:
-      <<: *type6
+      <<: *type7
       descr: >
         Branch to the PC-relative target if the first source operand is a
         signed integer value that is less than or equal to zero.
       todo: >
         Document how the PC-relative address is calculated.
-      op: 6
+      op: 54
 
     BGT:
-      <<: *type6
+      <<: *type7
       descr: >
         Branch to the PC-relative target if the first source operand is a
         signed integer value that is greater than zero.
       todo: >
         Document how the PC-relative address is calculated.
-      op: 7
+      op: 55
 
     J:
-      <<: *type6
+      <<: *type7
       descr: >
         Jump to the target address that is formed by computing the sum of the
         register operand and the sign-extended immediate value multiplied by
@@ -401,10 +432,10 @@ instructions:
       note: >
         PC is a valid register operand, in which case a PC-relative branch is
         performed.
-      op: 8
+      op: 56
 
     JL:
-      <<: *type6
+      <<: *type7
       descr: >
         Jump and link. The current value of PC plus four is stored in the LR
         register, and the new PC is set to the target address that is formed by
@@ -413,7 +444,7 @@ instructions:
       note: >
         PC is a valid register operand, in which case a PC-relative branch is
         performed.
-      op: 9
+      op: 57
 
   Saturating and halving arithmetic:
     ADDS:
@@ -682,3 +713,15 @@ instructions:
         Reverse the bits of the source operand.
       op: 124
       fn: 2
+
+    ADDPCHI:
+      <<: *type6
+      descr: >
+        Compute the sum of the current PC and and immediate operand that is
+        shifted to the left 11 steps before the addition.
+      note: >
+        This instruction can be used in combination with several instructions
+        that take an immediate operand in order to form a full 32-bit
+        PC-relative offset. Examples of such instructions are ADD, LDW and JL.
+      op: 61
+      asmOperands: "{1}, #ext21hi(IM)"
