@@ -42,23 +42,89 @@ in the table below:
   \hline
   FN & Function (extended operation) \\
   \hline
+  V  & Vector Mode \\
+  \hline
+  T  & Type \\
+  \hline
   Ra & Destination/source register number (0-31) \\
   \hline
   Rb & Source register number (0-31) \\
   \hline
   Rc & Source register number (0-31) \\
   \hline
-  IM & Immediate value \\
-  \hline
-  V  & Vector Mode \\
-  \hline
-  T  & Type \\
-  \hline
   H  & Immediate Hi/Lo flag \\
+  \hline
+  IM & Immediate value \\
   \hline
 \end{tabular}
 
-\todo{Describe the fields in more detail.}
+Not all field types appear in all instruction formats.
+
+The OP field in combination with the FN field (where applicable) is the main
+identification of the instruction, and dictates what operation the instruction
+shall perform.
+
+The V field defines the scalar/vector configuration of the operands. The
+scalar/vector operand configuration is a two-bit identifier. When only one bit
+is provided by the V field, that bit is used as the most significant bit of the
+identifier, and the least significant bit is implicitly zero.
+
+Operand types (S for scalar, V for vector) for each operand positions relates
+to the V identifier as follows (note that load/store instructions always
+interpret the second operand - i.e. the base address - as a scalar):
+
+\begin{tabular}{|l|l|l|}
+  \hline
+  \textbf{V} & \textbf{Default} & \textbf{Load/store} \\
+  \hline
+  00 & S,S[,S] & S,S,S \\
+  \hline
+  10 & V,V[,S] & V,S,S \\
+  \hline
+  11 & V,V,V & V,S,V \\
+  \hline
+  01 & V,V,fold(V) & V,S,fold(V) \\
+  \hline
+\end{tabular}
+
+The register fields Ra, Rb and Rc refer to one scalar or vector register each,
+according to the OP and V fields. For instance if a register operand refers to
+a vector register, and the corresponding R-field has the value 21, then the
+register operand is V21.
+
+The first register operand, Ra, can be a source or a destination register
+depending on the instruction, while Rb and Rc are always source registers.
+
+The T field further defines the instruction. For most instructions it defines
+the packed data type that is to be used (for packed operations). For load/store
+instructions it defines a scaling factor for the register offset operand (i.e.
+the third operand):
+
+\begin{tabular}{|l|l|l|}
+  \hline
+  \textbf{T} & \textbf{Default} & \textbf{Load/store} \\
+  \hline
+  00 & One 32-bit word & *1 \\
+  \hline
+  01 & Four 8-bit bytes & *2 \\
+  \hline
+  10 & Two 16-bit half-words & *4 \\
+  \hline
+  11 & (reserved) & *8 \\
+  \hline
+\end{tabular}
+
+The IM field provides an immediate value. The size of the IM field depends on
+the instruction format, and the interpretation of the field further depends on
+the OP and the H fields.
+
+The H field describes how to interpret a 14-bit IM field:
+\begin{itemize}
+  \item When H=0, the IM value is sign-extended to 32 bits.
+  \item When H=1, the IM value is shifted to the left 18 position, and the
+        least significant bit of the IM field is duplicated to the 18 least
+        significant bits of the final immediate value.
+\end{itemize}
 
 \subsection{Format A}
 
@@ -73,7 +139,8 @@ in the table below:
   \bitbox{7}{OP}
 \end{bytefield}
 
-\todo{Describe the general use of format A instructions.}
+Format A instructions are used for instructions that require three register
+operands, and support both vector and packed operations.
 
 \subsection{Format B}
 
@@ -89,7 +156,9 @@ in the table below:
   \bitbox{2}{OP}
 \end{bytefield}
 
-\todo{Describe the general use of format B instructions.}
+Format B instructions are used for instructions that only require two register
+operands (for instance unary operations). Both vector and packed operations are
+supported.
 
 \subsection{Format C}
 
@@ -103,7 +172,12 @@ in the table below:
   \bitbox{14}{IM}
 \end{bytefield}
 
-\todo{Describe the general use of format C instructions.}
+Format C instructions are used for instructions that require two register
+operands and one immediate operand. Vector operations are supported (but not
+packed operations).
+
+In general each format C instruction has a corresponding format A encoding with
+the same value of the OP field.
 
 \subsection{Format D}
 
@@ -115,4 +189,5 @@ in the table below:
   \bitbox{21}{IM}
 \end{bytefield}
 
-\todo{Describe the general use of format D instructions.}
+Format D is used for instructions that need to be able to express large
+immediate values.
