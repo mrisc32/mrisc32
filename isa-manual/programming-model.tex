@@ -1,6 +1,6 @@
 % -*- mode: latex; tab-width: 2; indent-tabs-mode: nil; -*-
 %------------------------------------------------------------------------------
-% MRISC32 ISA Manual - Preface.
+% MRISC32 ISA Manual - Programming model.
 %
 % This work is licensed under the Creative Commons Attribution-ShareAlike 4.0
 % International License. To view a copy of this license, visit
@@ -8,7 +8,7 @@
 % Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 %------------------------------------------------------------------------------
 
-\chapter{Registers}
+\chapter{Programming model}
 
 \section{Scalar registers}
 
@@ -74,7 +74,7 @@ that they are used as follows:
 There are 32 vector registers: VZ, V1, V2, \dots, V30, V31.
 
 Each register, V$k$, consists of $N$ 32-bit elements, where $N$ is
-implementation defined:
+implementation defined ($N$ must be a power of two, and at least 16):
 
 \begin{bytefield}{32}
   \bitheader{0,31} \\
@@ -88,9 +88,23 @@ implementation defined:
   \wordbox{1}{V$k[N-1]$}
 \end{bytefield}
 
-$N$ must be a power of two, and at least 16.
-
 \subsection{The VZ register}
 
 VZ is a read-only register with all vector elements set to zero. Writing to the
 VZ register has no effect.
+
+\section{Memory addressing}
+
+\tbd
+
+\section{Vector operation}
+
+\tbd
+
+\section{Packed data operation}
+
+\tbd
+
+\section{Exceptions}
+
+\tbd
