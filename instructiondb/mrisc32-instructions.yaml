@@ -660,7 +660,19 @@ instructions:
       fn: 1
 
   # TODO(m): Find better categories for these instructions.
-  Other:
+  Miscellaneous:
+    CPUID:
+      descr: >
+        Query CPU properties.
+      todo: >
+        Describe this in detail.
+      op: 0
+      fmts: [A]
+      tMode: N
+      vModes: [VVS, VVV]
+      fold: true
+      asmOperands: "{1}, {2}, {3}"
+
     SHUF:
       <<: *type2
       descr: >
