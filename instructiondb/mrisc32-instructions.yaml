@@ -26,10 +26,10 @@ templates:
   # Load/Store instructions.
   type1: &type1
     fmts: [A, C]
-    tMode: S
+    tMode: X
     vModes: [VSS, VSV]
     fold: true
-    asm: "{n}{t} {d}, {a}, {b}"
+    asmOperands: "{1}, {2}, {3}"
 
   # Bitwise operations (format A + C without packed support).
   type2: &type2
@@ -37,7 +37,7 @@ templates:
     tMode: N
     vModes: [VVS, VVV]
     fold: true
-    asm: "{n}{t} {d}, {a}, {b}"
+    asmOperands: "{1}, {2}, {3}"
 
   # Regular format A + C instructions.
   type3: &type3
@@ -45,7 +45,7 @@ templates:
     tMode: P
     vModes: [VVS, VVV]
     fold: true
-    asm: "{n}{t} {d}, {a}, {b}"
+    asmOperands: "{1}, {2}, {3}"
 
   # Regular format A instructions.
   type4: &type4
@@ -53,7 +53,7 @@ templates:
     tMode: P
     vModes: [VVS, VVV]
     fold: true
-    asm: "{n}{t} {d}, {a}, {b}"
+    asmOperands: "{1}, {2}, {3}"
 
   # Regular format B instructions.
   type5: &type5
@@ -61,15 +61,15 @@ templates:
     tMode: P
     vModes: [VV]
     fold: false
-    asm: "{n}{t} {d}, {a}"
+    asmOperands: "{1}, {2}"
 
-  # Regular format D instructions.
+  # Branch instructions (format D).
   type6: &type6
     fmts: [D]
     tMode: N
     vModes: []
     fold: false
-    asm: "{n} {a}, {b}"
+    asmOperands: "{1}, #target"
 
 instructions:
   Load and store:
@@ -186,7 +186,7 @@ instructions:
         Compute the difference of two integer operands.
       op: 22
       # The source operands are reversed for SUB.
-      asm: "{n}{t} {d}, {b}, {a}"
+      asmOperands: "{1}, {3}, {2}"
 
     MIN:
       <<: *type3

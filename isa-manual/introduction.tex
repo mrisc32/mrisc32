@@ -42,11 +42,11 @@ in the table below:
   \hline
   FN & Function (extended operation) \\
   \hline
-  R1 & Destination/source register number (0-31) \\
+  Ra & Destination/source register number (0-31) \\
   \hline
-  R2 & Source register number (0-31) \\
+  Rb & Source register number (0-31) \\
   \hline
-  R3 & Source register number (0-31) \\
+  Rc & Source register number (0-31) \\
   \hline
   IM & Immediate value \\
   \hline
@@ -65,10 +65,10 @@ in the table below:
 \begin{bytefield}{32}
   \bitheader{0,7,9,14,16,21,26,31} \\
   \bitboxes*{1}{000000} &
-  \bitbox{5}{R1} &
-  \bitbox{5}{R2} &
+  \bitbox{5}{Ra} &
+  \bitbox{5}{Rb} &
   \bitbox{2}{V} &
-  \bitbox{5}{R3} &
+  \bitbox{5}{Rc} &
   \bitbox{2}{T} &
   \bitbox{7}{OP}
 \end{bytefield}
@@ -80,8 +80,8 @@ in the table below:
 \begin{bytefield}{32}
   \bitheader{0,2,7,9,15,16,21,26,31} \\
   \bitboxes*{1}{000000} &
-  \bitbox{5}{R1} &
-  \bitbox{5}{R2} &
+  \bitbox{5}{Ra} &
+  \bitbox{5}{Rb} &
   \bitbox{1}{V} &
   \bitbox{6}{FN} &
   \bitbox{2}{T} &
@@ -96,8 +96,8 @@ in the table below:
 \begin{bytefield}{32}
   \bitheader{0,14,15,16,21,26,31} \\
   \bitbox{6}{OP} &
-  \bitbox{5}{R1} &
-  \bitbox{5}{R2} &
+  \bitbox{5}{Ra} &
+  \bitbox{5}{Rb} &
   \bitbox{1}{V} &
   \bitbox{1}{H} &
   \bitbox{14}{IM}
@@ -111,7 +111,7 @@ in the table below:
   \bitheader{0,21,26,30,31} \\
   \bitboxes*{1}{11} &
   \bitbox{4}{OP} &
-  \bitbox{5}{R1} &
+  \bitbox{5}{Ra} &
   \bitbox{21}{IM}
 \end{bytefield}
 

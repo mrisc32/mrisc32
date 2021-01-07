@@ -36,8 +36,14 @@ def get_packs(meta, fmt):
 
 
 def get_scales(meta, fmt):
-    if fmt == "A" and meta["tMode"] == "S":
+    if fmt == "A" and meta["tMode"] == "X":
         return ["", "*2", "*4", "*8"]
+    return [""]
+
+
+def get_sel_modes(meta, fmt):
+    if fmt == "A" and meta["tMode"] == "S":
+        return ["", "_1", "_2", "_3"]
     return [""]
 
 
@@ -64,7 +70,7 @@ def get_folds(meta, vec):
 
 def get_args(vec, fmt):
     result = []
-    suffixes = "cab"
+    suffixes = "abc"
     i = 0
     for c in vec:
         result += [f"{c}{suffixes[i]}"]
@@ -74,6 +80,13 @@ def get_args(vec, fmt):
     elif fmt == "D":
         result = result[:-1] + ["#ext21(IM)"]
 
+    return result
+
+
+def format_args(meta, args):
+    result = meta["asmOperands"]
+    for i in range(len(args)):
+        result = result.replace(f"{{{i+1}}}", args[i])
     return result
 
 
@@ -87,10 +100,11 @@ def gen_asm(name, meta):
             for fold in get_folds(meta, vec):
                 for pack in get_packs(meta, fmt):
                     for scale in get_scales(meta, fmt):
-                        s = f"{name}{pack}{fold} "
-                        s += " " * max(0, (8 - len(s)))
-                        s += ", ".join(args) + scale
-                        result += f"  {s}\n"
+                        for sel_mode in get_sel_modes(meta, fmt):
+                            s = f"{name}{sel_mode}{pack}{fold} "
+                            s += " " * max(0, (8 - len(s)))
+                            s += format_args(meta, args) + scale
+                            result += f"  {s}\n"
 
     return result
 
@@ -135,30 +149,30 @@ def encoding_to_tex(meta):
         result += f" \\begin{{rightwordgroup}}{{{fmt}}}\n"
         if fmt == "A":
             result += "  \\bitboxes*{1}{000000} &\n"
-            result += "  \\bitbox{5}{R1} &\n"
-            result += "  \\bitbox{5}{R2} &\n"
+            result += "  \\bitbox{5}{Ra} &\n"
+            result += "  \\bitbox{5}{Rb} &\n"
             result += "  \\bitbox{2}{V} &\n"
-            result += "  \\bitbox{5}{R3} &\n"
+            result += "  \\bitbox{5}{Rc} &\n"
             result += "  \\bitbox{2}{T} &\n"
             result += f"  \\bitboxes*{{1}}{{{meta['op']:07b}}}\n"
         elif fmt == "B":
             result += "  \\bitboxes*{1}{000000} &\n"
-            result += "  \\bitbox{5}{R1} &\n"
-            result += "  \\bitbox{5}{R2} &\n"
+            result += "  \\bitbox{5}{Ra} &\n"
+            result += "  \\bitbox{5}{Rb} &\n"
             result += "  \\bitbox{1}{V} &\n"
             result += f"  \\bitboxes*{{1}}{{{meta['fn']:06b}}}\n"
             result += "  \\bitbox{2}{T} &\n"
             result += f"  \\bitboxes*{{1}}{{{meta['op']:07b}}}\n"
         elif fmt == "C":
             result += f"  \\bitboxes*{{1}}{{{meta['op']:06b}}} &\n"
-            result += "  \\bitbox{5}{R1} &\n"
-            result += "  \\bitbox{5}{R2} &\n"
+            result += "  \\bitbox{5}{Ra} &\n"
+            result += "  \\bitbox{5}{Rb} &\n"
             result += "  \\bitbox{1}{V} &\n"
             result += "  \\bitbox{1}{H} &\n"
             result += "  \\bitbox{14}{IM}\n"
         elif fmt == "D":
             result += f"  \\bitboxes*{{1}}{{{(48+meta['op']):06b}}}\n"
-            result += "  \\bitbox{5}{R1} &\n"
+            result += "  \\bitbox{5}{Ra} &\n"
             result += "  \\bitbox{21}{IM}\n"
         result += f" \\end{{rightwordgroup}} \\\\\n"
     return result + "\\end{bytefield}\n\n"
