@@ -107,6 +107,10 @@ instructions:
       <<: *type1
       descr: >
         Load effective address.
+      note: >
+        When the target operand is a vector register, LDEA can be used for
+        constructing strides. For instance LDEA V1,Z,#3 will assign the
+        vector [0,3,6,9,...] to register V1.
       op: 7
 
   Bitwise logic:
@@ -168,8 +172,8 @@ instructions:
       <<: *type3
       descr: >
         Bitwise select.
-
-        TODO: Describe this in detail.
+      todo: >
+        Describe this in detail.
       op: 36
       tMode: S  # SEL uses a special kind of interpretation of the T field.
 
@@ -216,8 +220,8 @@ instructions:
       <<: *type4
       descr: >
         Compute the product of two fixed point operands.
-
-        TODO: Describe this in detail.
+      todo: >
+        Describe this in detail.
       op: 64
 
     MUL:
@@ -230,8 +234,8 @@ instructions:
       <<: *type4
       descr: >
         Compute the upper part of the product of two signed integer operands.
-
-        TODO: Describe this in detail.
+      todo: >
+        Describe this in detail.
       op: 66
 
     MULHIU:
@@ -239,8 +243,8 @@ instructions:
       descr: >
         Compute the upper part of the product of two unsigned integer
         operands.
-
-        TODO: Describe this in detail.
+      todo: >
+        Describe this in detail.
       op: 67
 
     DIV:
@@ -321,8 +325,8 @@ instructions:
       descr: >
         Branch to the PC-relative target if all bits of the first source
         operand are zero.
-
-        TODO: Document how the PC-relative address is calculated.
+      todo: >
+        Document how the PC-relative address is calculated.
       op: 0
 
     BNZ:
@@ -330,8 +334,8 @@ instructions:
       descr: >
         Branch to the PC-relative target if at least one of bits of the first
         source operand is non-zero.
-
-        TODO: Document how the PC-relative address is calculated.
+      todo: >
+        Document how the PC-relative address is calculated.
       op: 1
 
     BS:
@@ -339,8 +343,8 @@ instructions:
       descr: >
         Branch to the PC-relative target if all bits of the first source
         operand are non-zero.
-
-        TODO: Document how the PC-relative address is calculated.
+      todo: >
+        Document how the PC-relative address is calculated.
       op: 2
 
     BNS:
@@ -348,8 +352,8 @@ instructions:
       descr: >
         Branch to the PC-relative target if at least one of bits of the first
         source operand is zero.
-
-        TODO: Document how the PC-relative address is calculated.
+      todo: >
+        Document how the PC-relative address is calculated.
       op: 3
 
     BLT:
@@ -357,8 +361,8 @@ instructions:
       descr: >
         Branch to the PC-relative target if the first source operand is a
         signed integer value that is less than zero.
-
-        TODO: Document how the PC-relative address is calculated.
+      todo: >
+        Document how the PC-relative address is calculated.
       op: 4
 
     BGE:
@@ -366,8 +370,8 @@ instructions:
       descr: >
         Branch to the PC-relative target if the first source operand is a
         signed integer value that is greater than or equal to zero.
-
-        TODO: Document how the PC-relative address is calculated.
+      todo: >
+        Document how the PC-relative address is calculated.
       op: 5
 
     BLE:
@@ -375,8 +379,8 @@ instructions:
       descr: >
         Branch to the PC-relative target if the first source operand is a
         signed integer value that is less than or equal to zero.
-
-        TODO: Document how the PC-relative address is calculated.
+      todo: >
+        Document how the PC-relative address is calculated.
       op: 6
 
     BGT:
@@ -384,8 +388,8 @@ instructions:
       descr: >
         Branch to the PC-relative target if the first source operand is a
         signed integer value that is greater than zero.
-
-        TODO: Document how the PC-relative address is calculated.
+      todo: >
+        Document how the PC-relative address is calculated.
       op: 7
 
     J:
@@ -394,15 +398,21 @@ instructions:
         Jump to the target address that is formed by computing the sum of the
         register operand and the sign-extended immediate value multiplied by
         four.
+      note: >
+        PC is a valid register operand, in which case a PC-relative branch is
+        performed.
       op: 8
 
     JL:
       <<: *type6
       descr: >
         Jump and link. The current value of PC plus four is stored in the LR
-        register, and the new PC is set the target address that is formed by
+        register, and the new PC is set to the target address that is formed by
         computing the sum of the register operand and the sign-extended
         immediate value multiplied by four.
+      note: >
+        PC is a valid register operand, in which case a PC-relative branch is
+        performed.
       op: 9
 
   Saturating and halving arithmetic:
@@ -624,32 +634,32 @@ instructions:
       <<: *type2
       descr: >
         Shuffle bytes.
-
-        TODO: Describe this in detail.
+      todo: >
+        Describe this in detail.
       op: 36
 
     PACK:
       <<: *type4
       descr: >
         Pack the lower parts of two integer operands.
-
-        TODO: Describe this in detail.
+      todo: >
+        Describe this in detail.
       op: 48
 
     PACKS:
       <<: *type4
       descr: >
         Saturate and pack the lower parts of two signed integer operands.
-
-        TODO: Describe this in detail.
+      todo: >
+        Describe this in detail.
       op: 49
 
     PACKSU:
       <<: *type4
       descr: >
         Saturate and pack the lower parts of two unsigned integer operands.
-
-        TODO: Describe this in detail.
+      todo: >
+        Describe this in detail.
       op: 50
 
     CLZ:

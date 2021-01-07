@@ -178,15 +178,44 @@ def encoding_to_tex(meta):
     return result + "\\end{bytefield}\n\n"
 
 
-def descr_to_tex(meta):
-    paragraphs = meta["descr"].split("\n")
+def escape_tex(s):
+    s = s.replace("\\", "\\textbackslash ")
+    s = s.replace("~", "\\textasciitilde ")
+    s = s.replace("^", "\\textasciicircum ")
+    s = s.replace("...", "\\ldots ")
+    for c in "&%$#_{}":
+        s = s.replace(c, f"\\{c}")
+    return s
+
+
+def text_to_tex(s):
+    paragraphs = s.split("\n")
     result = ""
     for par in paragraphs:
-        if par.startswith("TODO: "):
-            result += f"\\todo{{{par.replace('TODO: ', '')}}}\n\n"
-        else:
-            result += f"{par}\n\n"
+        par = escape_tex(par)
+        if par:
+            if result:
+                result += "\n\n"
+            result += par
     return result
+
+
+def descr_to_tex(meta):
+    if not "descr" in meta:
+        return ""
+    return text_to_tex(meta["descr"]) + "\n\n"
+
+
+def note_to_tex(meta):
+    if not "note" in meta:
+        return ""
+    return "\\begin{notebox}\n" + text_to_tex(meta["note"]) + "\n\\end{notebox}\n\n"
+
+
+def todo_to_tex(meta):
+    if not "todo" in meta:
+        return ""
+    return "\\begin{todobox}\n" + text_to_tex(meta["todo"]) + "\n\\end{todobox}\n\n"
 
 
 def insns_to_tex(insns, sort_alphabetically):
@@ -196,8 +225,10 @@ def insns_to_tex(insns, sort_alphabetically):
         meta = insns[insn]
         result += f"\\subsection{{{insn}}}\n\n"
         result += descr_to_tex(meta)
+        result += todo_to_tex(meta)
         result += encoding_to_tex(meta)
         result += f"\\begin{{lstlisting}}[style=assembler]\n{gen_asm(insn, meta)}\\end{{lstlisting}}\n\n"
+        result += note_to_tex(meta)
     return result
 
 

@@ -17,6 +17,7 @@
 \usepackage[endianness=big]{bytefield}
 \usepackage[colorlinks,citecolor=Navy,linkcolor=Navy]{hyperref}
 \usepackage{listings}
+\usepackage{mdframed}
 
 % Setup style.
 
@@ -63,7 +64,34 @@
 
 % Useful commands.
 
+\definecolor{infocol}{rgb}{0.3,0.3,0.7}
 \definecolor{warncol}{rgb}{0.7,0,0}
+
+\newmdenv[
+  fontcolor=darkgray,
+  linewidth=1.2pt,
+  topline=false,
+  bottomline=false,
+  rightline=false,
+  skipabove=\topsep,
+  skipbelow=\topsep
+]{mymdenv}
+
+\newenvironment{infobox}[1]
+{\begin{mymdenv}[linecolor=infocol]\noindent\textcolor{infocol}{\textbf{#1}}\par}
+{\end{mymdenv}}
+
+\newenvironment{warnbox}[1]
+{\begin{mymdenv}[linecolor=warncol]\noindent\textcolor{warncol}{\textbf{#1}}\par\begin{itshape}}
+{\end{itshape}\end{mymdenv}}
+
+\newenvironment{notebox}
+{\begin{infobox}{Note}}
+{\end{infobox}}
+
+\newenvironment{todobox}
+{\begin{warnbox}{TODO}}
+{\end{warnbox}}
+
 \newcommand{\tbd}{{\textbf{\textcolor{warncol}{TBD}}}}
-\newcommand{\todo}[1]{{\textbf{\textcolor{warncol}{TODO}} \emph{#1}}}
-\newcommand{\fixme}[1]{{\textbf{\textcolor{warncol}{FIXME}} \emph{#1}}}
+\newcommand{\todo}[1]{{\begin{todobox}#1\end{todobox}}}
