@@ -1,0 +1,107 @@
+---
+name: Build ISA Manual
+
+on:
+  push:
+    branches:
+      - master
+    #paths:
+    #  - 'instructiondb/**'
+    #  - 'isa-manual/**'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8.6
+
+      - name: Setup pyyaml
+        uses: BSFishy/pip-action@v1
+        with:
+          packages: |
+            pyyaml
+
+      # TODO(m): This is quite time consuming. Consider trimming this down
+      # or using a pre-baked texlive image such as
+      # https://github.com/xu-cheng/texlive-action.
+      - name: Setup texlive
+        run: |
+          sudo apt update
+          sudo apt install -y texlive-full inkscape
+
+      - name: Build ISA manual
+        run: |
+          cd isa-manual/build
+          make
+
+      - name: Upload
+        uses: actions/upload-artifact@v1
+        with:
+          path: isa-manual/build/mrisc32-instruction-set-manual.pdf
+          name: mrisc32-instruction-set-manual.pdf
+
+  release:
+      if: contains(github.ref, 'heads/master')
+      runs-on: ubuntu-latest
+      needs: build
+
+      steps:
+        - name: Create Release
+          id: create_release
+          uses: actions/create-release@v1
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          with:
+            tag_name: latest
+            release_name: Latest
+            draft: false
+            prerelease: false
+
+        - name: Store Release url
+          run: |
+            echo "${{ steps.create_release.outputs.upload_url }}" > ./upload_url
+
+        - uses: actions/upload-artifact@v1
+          with:
+            path: ./upload_url
+            name: upload_url
+
+  publish:
+      if: contains(github.ref, 'heads/master')
+      runs-on: ubuntu-latest
+      needs: release
+
+      steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v1
+        with:
+          name: mrisc32-instruction-set-manual.pdf
+          path: ./
+
+      - name: Download URL
+        uses: actions/download-artifact@v1
+        with:
+          name: upload_url
+          path: ./
+      - id: set_upload_url
+        run: |
+          upload_url=`cat ./upload_url`
+          echo ::set-output name=upload_url::$upload_url
+      - name: Upload to Release
+        id: upload_to_release
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.set_upload_url.outputs.upload_url }}
+          asset_path: mrisc32-instruction-set-manual.pdf
+          asset_name: mrisc32-instruction-set-manual.pdf
+          asset_content_type: application/pdf
