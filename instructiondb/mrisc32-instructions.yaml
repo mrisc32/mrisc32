@@ -639,6 +639,8 @@ instructions:
         operand is packed and stored in the upper half of the destination
         operand, and the second source operand is packed and stored in the
         lower half of the destination operand.
+      todo: >
+        The packed byte (.B) variant is undefined and should not be listed.
       op: 110
 
     FUNPL:
