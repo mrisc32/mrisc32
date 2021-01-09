@@ -363,8 +363,8 @@ instructions:
     BNZ:
       <<: *type7
       descr: >
-        Branch to the PC-relative target if at least one of bits of the first
-        source operand is non-zero.
+        Branch to the PC-relative target if at least one of the bits of the
+        first source operand is non-zero.
       todo: >
         Document how the PC-relative address is calculated.
       op: 49
@@ -381,8 +381,8 @@ instructions:
     BNS:
       <<: *type7
       descr: >
-        Branch to the PC-relative target if at least one of bits of the first
-        source operand is zero.
+        Branch to the PC-relative target if at least one of the bits of the
+        first source operand is zero.
       todo: >
         Document how the PC-relative address is calculated.
       op: 51
