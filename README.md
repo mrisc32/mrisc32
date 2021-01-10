@@ -53,33 +53,10 @@ Note: There is no support for 64-bit floating point operations (that is left for
 
 # Documentation
 
+* The latest [MRISC32 Instruction Set Manual](https://github.com/mrisc32/mrisc32/releases/latest) (PDF)
 * [Instructions](doc/Instructions.md)
 * [Registers](doc/Registers.md)
 * [Addressing modes](doc/AddressingModes.md)
 * [Vector design](doc/VectorDesign.md)
 * [Packed operations](doc/PackedOperations.md)
 * [Common constructs](doc/CommonConstructs.md)
-
-
-# Tools
-
-There are a few tools that aid software development for MRISC32. See [Tools](tools/README.md).
-
-
-# Hardware/HDL
-
-A single issue, in-order CPU is currently under development: [MRISC32-A1](https://github.com/mrisc32/mrisc32-a1).
-
-
-# Goals
-
-* Keep things simple - both the ISA and the architecture.
-* The ISA should map well to a [classic RISC pipeline](https://en.wikipedia.org/wiki/Classic_RISC_pipeline).
-* The ISA should scale from small embedded to larger superscalar implementations.
-* The CPU should be easy to implement in an FPGA.
-* Create a simple baseline scalar CPU that actually works, and then experiment with optimizations.
-
-## Non-goals
-
-* Don't support multiple word sizes or running modes. If a 64-bit CPU is required, create a new ISA and recompile your software.
-* Don't be extensible at the cost of more complicated IF/ID stages.

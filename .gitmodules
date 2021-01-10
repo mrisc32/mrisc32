@@ -1,3 +1,0 @@
-[submodule "sw/lib/selftest"]
-	path = sw/lib/selftest
-	url = git@github.com:mrisc32/mrisc32-selftest.git
