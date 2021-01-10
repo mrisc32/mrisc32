@@ -29,7 +29,7 @@ clean:
 	rm -rf $(pdfs) *.aux *.log *.bbl *.blg *.toc *.out *.pdf *.tex *~ \#*
 
 mrisc32-logo.pdf: $(srcdir)/../doc/mrisc32-logo.svg
-	inkscape -D -z --file=$< --export-pdf=$@
+	cairosvg $< -o $@
 
 instructions.tex: $(srcdir)/../instructiondb/mrisc32-instructions.yaml $(DBTOOL)
 	$(DBTOOL) --format tex --sort -o $@ $<

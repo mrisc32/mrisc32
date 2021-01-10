@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -26,13 +26,10 @@ jobs:
           packages: |
             pyyaml
 
-      # TODO(m): This is quite time consuming. Consider trimming this down
-      # or using a pre-baked texlive image such as
-      # https://github.com/xu-cheng/texlive-action.
       - name: Setup texlive
         run: |
           sudo apt update
-          sudo apt install -y texlive-full inkscape
+          sudo apt install -y texlive texlive-latex-extra texlive-science cairosvg
 
       - name: Build ISA manual
         run: |
@@ -47,7 +44,7 @@ jobs:
 
   release:
       if: contains(github.ref, 'tags/v')
-      runs-on: ubuntu-latest
+      runs-on: ubuntu-20.04
       needs: build
 
       steps:
@@ -73,7 +70,7 @@ jobs:
 
   publish:
       if: contains(github.ref, 'tags/v')
-      runs-on: ubuntu-latest
+      runs-on: ubuntu-20.04
       needs: release
 
       steps:
