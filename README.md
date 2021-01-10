@@ -53,7 +53,7 @@ Note: There is no support for 64-bit floating point operations (that is left for
 
 # Documentation
 
-* The latest [MRISC32 Instruction Set Manual](https://github.com/mrisc32/mrisc32/releases/latest) (PDF)
+* The latest [MRISC32 Instruction Set Manual](https://github.com/mrisc32/mrisc32/releases/latest) (PDF download)
 * [Instructions](doc/Instructions.md)
 * [Registers](doc/Registers.md)
 * [Addressing modes](doc/AddressingModes.md)

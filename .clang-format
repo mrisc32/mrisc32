@@ -1,9 +1,0 @@
----
-Language: Cpp
-BasedOnStyle: Chromium
-AccessModifierOffset: -2
-AllowShortFunctionsOnASingleLine: None
-BinPackArguments: false
-ColumnLimit: 100
-...
-
