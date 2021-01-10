@@ -127,6 +127,8 @@ instructions:
       <<: *type6
       descr: >
         Load low immediate value.
+      pseudo: |
+        a = int(IM)
       op: 58
       asmOperands: "{1}, #ext21(IM)"
 
@@ -134,6 +136,8 @@ instructions:
       <<: *type6
       descr: >
         Load high immediate value.
+      pseudo: |
+        a = int(IM) << 11
       op: 59
       asmOperands: "{1}, #ext21hi(IM)"
 
@@ -141,6 +145,10 @@ instructions:
       <<: *type6
       descr: >
         Load high immediate value with low ones.
+      pseudo: |
+        a = int(IM) << 11
+        for k in 0 to 10
+          a<k> = IM<0>
       op: 60
       asmOperands: "{1}, #ext21hio(IM)"
 
@@ -149,54 +157,70 @@ instructions:
       <<: *type2
       descr: >
         Compute the bitwise or of two integer operands.
+      pseudo: |
+        a = b | c
       op: 16
 
     NOR:
       <<: *type2
       descr: >
         Compute the bitwise inverse or of two integer operands.
+      pseudo: |
+        a = ~(b | c)
       op: 17
 
     AND:
       <<: *type2
       descr: >
         Compute the bitwise and of two integer operands.
+      pseudo: |
+        a = b & c
       op: 18
 
     BIC:
       <<: *type2
       descr: >
         Compute the bitwise clear of two integer operands.
+      pseudo: |
+        a = b & ~c
       op: 19
 
     XOR:
       <<: *type2
       descr: >
         Compute the bitwise exclusive or of two integer operands.
+      pseudo: |
+        a = b ^ c
       op: 20
 
     ASR:
       <<: *type3
       descr: >
         Arithmetically shift an integer operand to the right the number of
-        bit positions given by another integer operand. Only the lowest five
-        bits of the shift operand are used.
+        bit positions given by another integer operand. Only the lowest
+        log2(bits) bits of the shift operand are used.
+      pseudo: |
+        a = int(b) >> uint(c & ones(log2(bits)))
       op: 33
 
     LSL:
       <<: *type3
       descr: >
         Logically shift an integer operand to the left the number of bit
-        positions given by another integer operand. Only the lowest five
+        positions given by another integer operand. Only the lowest log2(bits)
         bits of the shift operand are used.
+      pseudo: |
+        a = uint(b) << uint(c & ones(log2(bits)))
       op: 34
 
     LSR:
       <<: *type3
       descr: >
         Logically shift an integer operand to the right the number of bit
-        positions given by another integer operand. Only the lowest five
+        positions given by another integer operand. Only the lowest log2(bits)
         bits of the shift operand are used.
+      pseudo: |
+        a = uint(b) >> uint(c & ones(log2(bits)))
       op: 35
 
     SEL:
@@ -205,6 +229,15 @@ instructions:
         Bitwise select.
       todo: >
         Describe this in detail.
+      pseudo: |
+        if T == 00 then
+          a = (b & a) | (c & ~a)
+        else if T == 01 then
+          a = (c & a) | (b & ~a)
+        else if T == 10 then
+          a = (a & b) | (c & ~b)
+        else if T == 11 then
+          a = (c & b) | (a & ~b)
       op: 36
       tMode: S  # SEL uses a special kind of interpretation of the T field.
 
@@ -213,6 +246,8 @@ instructions:
       <<: *type3
       descr: >
         Compute the sum of two integer operands.
+      pseudo: |
+        a = int(b) + int(c)
       op: 21
 
     SUB:
@@ -220,31 +255,52 @@ instructions:
       descr: >
         Compute the difference of two integer operands.
       op: 22
+      pseudo: |
+        a = int(c) - int(b)
       # The source operands are reversed for SUB.
       asmOperands: "{1}, {3}, {2}"
+      note: >
+        The instruction actually subtracts the first source operand from the
+        second source operand. However, in the assembler syntax the order of
+        the source operands is reversed compared to how the operands are
+        encoded in the instruction word, in order to make the assembler syntax
+        more natural.
+
+        The advantage is that it is possible to subtract a register operand
+        from an immediate operand (subtracting an immediate operand from a
+        register operand can be implemented with the ADD instruction, using a
+        negated immediate operand).
 
     MIN:
       <<: *type3
       descr: >
         Return the minimum value of two signed integer operands.
+      pseudo: |
+        a = min(int(b), int(c))
       op: 29
 
     MAX:
       <<: *type3
       descr: >
         Return the maximum value of two signed integer operands.
+      pseudo: |
+        a = max(int(b), int(c))
       op: 30
 
     MINU:
       <<: *type3
       descr: >
         Return the minimum value of two unsigned integer operands.
+      pseudo: |
+        a = min(uint(b), uint(c))
       op: 31
 
     MAXU:
       <<: *type3
       descr: >
         Return the maximum value of two unsigned integer operands.
+      pseudo: |
+        a = max(uint(b), uint(c))
       op: 32
 
     MULQ:
@@ -259,12 +315,16 @@ instructions:
       <<: *type4
       descr: >
         Compute the product of two integer operands.
+      pseudo: |
+        a = int(b) * int(c)
       op: 65
 
     MULHI:
       <<: *type4
       descr: >
         Compute the upper part of the product of two signed integer operands.
+      pseudo: |
+        a = (int(b) * int(c)) >> bits
       todo: >
         Describe this in detail.
       op: 66
@@ -274,6 +334,8 @@ instructions:
       descr: >
         Compute the upper part of the product of two unsigned integer
         operands.
+      pseudo: |
+        a = (uint(b) * uint(c)) >> bits
       todo: >
         Describe this in detail.
       op: 67
@@ -282,24 +344,32 @@ instructions:
       <<: *type4
       descr: >
         Compute the quotient of two signed integer operands.
+      pseudo: |
+        a = int(b) / int(c)
       op: 68
 
     DIVU:
       <<: *type4
       descr: >
         Compute the quotient of two unsigned integer operands.
+      pseudo: |
+        a = uint(b) / uint(c)
       op: 69
 
     REM:
       <<: *type4
       descr: >
         Compute the modulo of two signed integer operands.
+      pseudo: |
+        a = int(b) % int(c)
       op: 70
 
     REMU:
       <<: *type4
       descr: >
         Compute the modulo of two unsigned integer operands.
+      pseudo: |
+        a = uint(b) % uint(c)
       op: 71
 
   Integer comparison:
@@ -308,6 +378,11 @@ instructions:
       descr: >
         Compare two integer operands, and set all bits of the result to 1 if
         the operands are equal, otherwise set all bits of the result to 0.
+      pseudo: |
+        if b == c then
+          a = ones(bits)
+        else
+          a = zeros(bits)
       op: 23
 
     SNE:
@@ -316,6 +391,11 @@ instructions:
         Compare two integer operands, and set all bits of the result to 1 if
         the operands are not equal, otherwise set all bits of the result to
         0.
+      pseudo: |
+        if b != c then
+          a = ones(bits)
+        else
+          a = zeros(bits)
       op: 24
 
     SLT:
@@ -324,6 +404,11 @@ instructions:
         Compare two signed integer operands, and set all bits of the result
         to 1 if the first operand is less than the second operand, otherwise
         set all bits of the result to 0.
+      pseudo: |
+        if int(b) < int(c) then
+          a = ones(bits)
+        else
+          a = zeros(bits)
       op: 25
 
     SLTU:
@@ -332,6 +417,11 @@ instructions:
         Compare two unsigned integer operands, and set all bits of the result
         to 1 if the first operand is less than the second operand, otherwise
         set all bits of the result to 0.
+      pseudo: |
+        if uint(b) < uint(c) then
+          a = ones(bits)
+        else
+          a = zeros(bits)
       op: 26
 
     SLE:
@@ -340,6 +430,11 @@ instructions:
         Compare two signed integer operands, and set all bits of the result
         to 1 if the first operand is less than or equal to the second
         operand, otherwise set all bits of the result to 0.
+      pseudo: |
+        if int(b) <= int(c) then
+          a = ones(bits)
+        else
+          a = zeros(bits)
       op: 27
 
     SLEU:
@@ -348,6 +443,11 @@ instructions:
         Compare two unsigned integer operands, and set all bits of the result
         to 1 if the first operand is less than or equal to the second
         operand, otherwise set all bits of the result to 0.
+      pseudo: |
+        if uint(b) <= uint(c) then
+          a = ones(bits)
+        else
+          a = zeros(bits)
       op: 28
 
   Branch:
@@ -356,8 +456,9 @@ instructions:
       descr: >
         Branch to the PC-relative target if all bits of the first source
         operand are zero.
-      todo: >
-        Document how the PC-relative address is calculated.
+      pseudo: |
+        if a == zeros(32) then
+          PC = PC + int(IM)*4
       op: 48
 
     BNZ:
@@ -365,8 +466,9 @@ instructions:
       descr: >
         Branch to the PC-relative target if at least one of the bits of the
         first source operand is non-zero.
-      todo: >
-        Document how the PC-relative address is calculated.
+      pseudo: |
+        if a != zeros(32) then
+          PC = PC + int(IM)*4
       op: 49
 
     BS:
@@ -374,8 +476,9 @@ instructions:
       descr: >
         Branch to the PC-relative target if all bits of the first source
         operand are non-zero.
-      todo: >
-        Document how the PC-relative address is calculated.
+      pseudo: |
+        if a == ones(32) then
+          PC = PC + int(IM)*4
       op: 50
 
     BNS:
@@ -383,8 +486,9 @@ instructions:
       descr: >
         Branch to the PC-relative target if at least one of the bits of the
         first source operand is zero.
-      todo: >
-        Document how the PC-relative address is calculated.
+      pseudo: |
+        if a != ones(32) then
+          PC = PC + int(IM)*4
       op: 51
 
     BLT:
@@ -392,8 +496,9 @@ instructions:
       descr: >
         Branch to the PC-relative target if the first source operand is a
         signed integer value that is less than zero.
-      todo: >
-        Document how the PC-relative address is calculated.
+      pseudo: |
+        if int(a) < 0 then
+          PC = PC + int(IM)*4
       op: 52
 
     BGE:
@@ -401,8 +506,9 @@ instructions:
       descr: >
         Branch to the PC-relative target if the first source operand is a
         signed integer value that is greater than or equal to zero.
-      todo: >
-        Document how the PC-relative address is calculated.
+      pseudo: |
+        if int(a) >= 0 then
+          PC = PC + int(IM)*4
       op: 53
 
     BLE:
@@ -410,8 +516,9 @@ instructions:
       descr: >
         Branch to the PC-relative target if the first source operand is a
         signed integer value that is less than or equal to zero.
-      todo: >
-        Document how the PC-relative address is calculated.
+      pseudo: |
+        if int(a) <= 0 then
+          PC = PC + int(IM)*4
       op: 54
 
     BGT:
@@ -419,8 +526,9 @@ instructions:
       descr: >
         Branch to the PC-relative target if the first source operand is a
         signed integer value that is greater than zero.
-      todo: >
-        Document how the PC-relative address is calculated.
+      pseudo: |
+        if int(a) > 0 then
+          PC = PC + int(IM)*4
       op: 55
 
     J:
@@ -429,9 +537,17 @@ instructions:
         Jump to the target address that is formed by computing the sum of the
         register operand and the sign-extended immediate value multiplied by
         four.
+      pseudo: |
+        PC = int(a) + int(IM)*4
       note: >
-        PC is a valid register operand, in which case a PC-relative branch is
-        performed.
+        If the register operand is PC, a PC-relative branch with an effective
+        range of +/-4MiB is performed.
+
+        If the register operand is Z, an absolute branch is performed.
+
+        If the register operand is LR and the immediate value is zero, the
+        operation will return the program flow to the caller (RET is an alias
+        for J LR, #0).
       op: 56
 
     JL:
@@ -441,9 +557,13 @@ instructions:
         register, and the new PC is set to the target address that is formed by
         computing the sum of the register operand and the sign-extended
         immediate value multiplied by four.
+      pseudo: |
+        LR = int(PC) + 4
+        PC = int(a) + int(IM)*4
       note: >
-        PC is a valid register operand, in which case a PC-relative branch is
-        performed.
+        If the register operand is PC, a PC-relative branch is performed.
+
+        If the register operand is Z, an absolute branch is performed.
       op: 57
 
   Saturating and halving arithmetic:
@@ -500,36 +620,48 @@ instructions:
       <<: *type4
       descr: >
         Return the minimum value of two floating-point operands.
+      pseudo: |
+        a = min(float(b), float(c))
       op: 96
 
     FMAX:
       <<: *type4
       descr: >
         Return the maximum value of two floating-point operands.
+      pseudo: |
+        a = max(float(b), float(c))
       op: 97
 
     FADD:
       <<: *type4
       descr: >
         Compute the sum of two floating-point operands.
+      pseudo: |
+        a = float(b) + float(c)
       op: 112
 
     FSUB:
       <<: *type4
       descr: >
         Compute the difference of two floating-point operands.
+      pseudo: |
+        a = float(b) - float(c)
       op: 113
 
     FMUL:
       <<: *type4
       descr: >
         Compute the product of two floating-point operands.
+      pseudo: |
+        a = float(b) * float(c)
       op: 114
 
     FDIV:
       <<: *type4
       descr: >
         Compute the quotient of two floating-point operands.
+      pseudo: |
+        a = float(b) / float(c)
       op: 115
 
   Floating-point comparison:
@@ -539,6 +671,11 @@ instructions:
         Compare two floating-point operands, and set all bits of the result to
         1 if the first operand is equal to the second operand, otherwise set
         all bits of the result to 0.
+      pseudo: |
+        if float(b) == float(c) then
+          a = ones(bits)
+        else
+          a = zeros(bits)
       op: 98
 
     FSNE:
@@ -547,6 +684,11 @@ instructions:
         Compare two floating-point operands, and set all bits of the result to
         1 if the first operand is not equal to the second operand, otherwise
         set all bits of the result to 0.
+      pseudo: |
+        if float(b) != float(c) then
+          a = ones(bits)
+        else
+          a = zeros(bits)
       op: 99
 
     FSLT:
@@ -555,6 +697,11 @@ instructions:
         Compare two floating-point operands, and set all bits of the result to
         1 if the first operand is less than the second operand, otherwise set
         all bits of the result to 0.
+      pseudo: |
+        if float(b) < float(c) then
+          a = ones(bits)
+        else
+          a = zeros(bits)
       op: 100
 
     FSLE:
@@ -563,6 +710,11 @@ instructions:
         Compare two floating-point operands, and set all bits of the result to
         1 if the first operand is less than or equal to the second operand,
         otherwise set all bits of the result to 0.
+      pseudo: |
+        if float(b) <= float(c) then
+          a = ones(bits)
+        else
+          a = zeros(bits)
       op: 101
 
     FSUNORD:
@@ -570,6 +722,11 @@ instructions:
       descr: >
         Set all bits of the result to 1 if any of the source operands are
         undordered (i.e. NaN), otherwise set all bits of the result to 0.
+      pseudo: |
+        if isnan(b) || isnan(c) then
+          a = ones(bits)
+        else
+          a = zeros(bits)
       op: 102
 
     FSORD:
@@ -577,6 +734,11 @@ instructions:
       descr: >
         Set all bits of the result to 1 if both of the source operands are
         ordered (i.e. non-NaN), otherwise set all bits of the result to 0.
+      pseudo: |
+        if !isnan(b) && !isnan(c) then
+          a = ones(bits)
+        else
+          a = zeros(bits)
       op: 103
 
   Floating-point conversion:
@@ -687,8 +849,8 @@ instructions:
       <<: *type4
       descr: >
         Pack the lower parts of two integer operands.
-      todo: >
-        Describe this in detail.
+      pseudo: |
+        a = (b << (bits/2)) | (c & ones(bits/2))
       op: 48
 
     PACKS:
@@ -711,6 +873,12 @@ instructions:
       <<: *type5
       descr: >
         Count the number of leading zero bits in the source operand.
+      pseudo: |
+        a = 0
+        for k in bits-1 downto 0
+          if b<k> == 1 then
+            break
+          a = int(a) + 1
       op: 124
       fn: 0
 
@@ -718,6 +886,11 @@ instructions:
       <<: *type5
       descr: >
         Count the number of non-zero bits in the source operand.
+      pseudo: |
+        a = 0
+        for k in 0 to bits-1
+          if b<k> == 1 then
+            a = int(a) + 1
       op: 124
       fn: 1
 
@@ -725,6 +898,9 @@ instructions:
       <<: *type5
       descr: >
         Reverse the bits of the source operand.
+      pseudo: |
+        for k in 0 to bits-1
+          a<bits-1-k> = b<k>
       op: 124
       fn: 2
 
@@ -733,9 +909,11 @@ instructions:
       descr: >
         Compute the sum of the current PC and and immediate operand that is
         shifted to the left 11 steps before the addition.
+      pseudo: |
+        a = int(PC) + (int(IM) << 11)
       note: >
         This instruction can be used in combination with several instructions
         that take an immediate operand in order to form a full 32-bit
         PC-relative offset. Examples of such instructions are ADD, LDW and JL.
       op: 61
-      asmOperands: "{1}, #ext21hi(IM)"
+      asmOperands: "{1}, #target@pchi"

@@ -185,6 +185,7 @@ def escape_tex(s):
     s = s.replace("...", "\\ldots ")
     for c in "&%$#_{}":
         s = s.replace(c, f"\\{c}")
+    s = s.replace("+/-", "$\\pm$")
     return s
 
 
@@ -218,6 +219,18 @@ def todo_to_tex(meta):
     return "\\begin{todobox}\n" + text_to_tex(meta["todo"]) + "\n\\end{todobox}\n\n"
 
 
+def asm_to_tex(insn, meta):
+    return f"\\begin{{lstlisting}}[style=assembler]\n{gen_asm(insn, meta)}\\end{{lstlisting}}\n\n"
+
+
+def pseudo_to_tex(meta):
+    if not "pseudo" in meta:
+        return ""
+    result = "\\begin{lstlisting}[style=pseudocode]\n"
+    result += meta["pseudo"]
+    return result + "\\end{lstlisting}\n\n"
+
+
 def insns_to_tex(insns, sort_alphabetically):
     result = ""
     insn_list = sorted(insns) if sort_alphabetically else list(insns)
@@ -227,7 +240,8 @@ def insns_to_tex(insns, sort_alphabetically):
         result += descr_to_tex(meta)
         result += todo_to_tex(meta)
         result += encoding_to_tex(meta)
-        result += f"\\begin{{lstlisting}}[style=assembler]\n{gen_asm(insn, meta)}\\end{{lstlisting}}\n\n"
+        result += pseudo_to_tex(meta)
+        result += asm_to_tex(insn, meta)
         result += note_to_tex(meta)
     return result
 

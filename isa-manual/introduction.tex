@@ -24,7 +24,7 @@ The following data types are recognized:
 
 \begin{tabular}{|l|l|p{140pt}|}
   \hline
-  \textbf{Name} & \textbf{Size} & \textbf{Description} \\
+  \textbf{Name} & \textbf{Size} & \textbf{Meaning} \\
   \hline
   int8 & 8 & Signed 8-bit integer \\
   \hline
@@ -58,18 +58,123 @@ The following data types are recognized:
 
 \tbd
 
+\section{Pseudocode syntax}
+
+The operation that an instruction performs is described using pseudocode.
+
+\subsection{Pseudocode scope}
+
+The pseudocode for each instruction shall be regarded as a function that is
+executed for each chunk of each element of the operation.
+
+For a scalar operation, there is only a single element.
+
+For a vector operation, the number of elements is dictated by the vector
+operation.
+
+The number of chunks and the size of each chunk is dictated by the packed
+operation mode.
+
+\todo{Come up with a better name than "chunk"?}
+
+\begin{todobox}
+Describe different types that are used in the pseudocode, such as
+"bit vector", "integer", "unsigned integer" and "float"?
+\end{todobox}
+
+\subsection{Notation}
+
+The following notation is use in the pseudocode that describes the operation
+of an instruction:
+
+\begin{tabular}{lp{170pt}}
+\textbf{Notation} & \textbf{Meaning} \\
+a & 1st instruction operand \\
+b & 2nd instruction operand \\
+c & 3rd instruction operand \\
+IM & IM field of the instruction word \\
+T & T field of the instruction word \\
+bits & Chunk size, in bits \\
+$\leftarrow$ & Assignment \\
++ & Addition \\
+- & Subtraction \\
+$\times$ & Multiplication \\
+/ & Division \\
+\% & Reminder of integer division \\
+$=$ & Equal \\
+$\neq$ & Not equal \\
+$\leq$ & Less than or equal \\
+$\geq$ & Greater than or equal \\
+$\neg$ & Logical not \\
+$\wedge$ & Logical or \\
+$\vee$ & Logical and \\
+\textasciitilde & Bitwise not \\
+$|$ & Bitwise or \\
+\& & Bitwise and \\
+\textasciicircum & Bitwise xor \\
+$<<$ & Bit shift left \\
+$>>$ & Bit shift right (preserve sign bit for signed integer types) \\
+ones(N) & Bit vector of N 1-bits \\
+zeros(N) & Bit vector of N 0-bits \\
+int(x) & Interpret bit vector x as a two's complement signed integer \\
+uint(x) & Interpret bit vector x as an unsigned integer \\
+float(x) & Interpret bit vector x as a floating-point number \\
+log$_{2}$(x) & Binary logarithm of x \\
+max(x,y) & Maximum value of x and y \\
+min(x,y) & Minimum value of x and y \\
+\end{tabular}
+
 \section{Instruction formats}
 
 All instructions are encoded in 32 bits. There are four different encoding
 formats, A, B, C and D, that mainly differ in the number and kinds of
 instruction operands.
 
+\begin{bytefield}{32}
+  \bitheader{0,2,7,9,14,15,16,21,26,31} \\
+  \begin{rightwordgroup}{A}
+    \bitboxes*{1}{000000} &
+    \bitbox{5}{Ra} &
+    \bitbox{5}{Rb} &
+    \bitbox{2}{V} &
+    \bitbox{5}{Rc} &
+    \bitbox{2}{T} &
+    \bitbox{7}{OP}
+  \end{rightwordgroup} \\
+  \begin{rightwordgroup}{B}
+    \bitboxes*{1}{000000} &
+    \bitbox{5}{Ra} &
+    \bitbox{5}{Rb} &
+    \bitbox{1}{V} &
+    \bitbox{6}{FN} &
+    \bitbox{2}{T} &
+    \bitboxes*{1}{11111} &
+    \bitbox{2}{OP}
+  \end{rightwordgroup} \\
+  \begin{rightwordgroup}{C}
+    \bitbox{6}{OP} &
+    \bitbox{5}{Ra} &
+    \bitbox{5}{Rb} &
+    \bitbox{1}{V} &
+    \bitbox{1}{H} &
+    \bitbox{14}{IM}
+  \end{rightwordgroup} \\
+  \begin{rightwordgroup}{D}
+    \bitboxes*{1}{11} &
+    \bitbox{4}{OP} &
+    \bitbox{5}{Ra} &
+    \bitbox{21}{IM}
+  \end{rightwordgroup}
+\end{bytefield}
+
+\subsection{Instruction word fields}
+
 The field names that are used in the instruction format descriptions are listed
 in the table below:
 
 \begin{tabular}{|l|l|}
   \hline
-  \textbf{Name} & \textbf{Description} \\
+  \textbf{Name} & \textbf{Meaning} \\
   \hline
   OP & Operation \\
   \hline
@@ -161,49 +266,16 @@ The H field describes how to interpret a 14-bit IM field:
 
 \subsection{Format A}
 
-\begin{bytefield}{32}
-  \bitheader{0,7,9,14,16,21,26,31} \\
-  \bitboxes*{1}{000000} &
-  \bitbox{5}{Ra} &
-  \bitbox{5}{Rb} &
-  \bitbox{2}{V} &
-  \bitbox{5}{Rc} &
-  \bitbox{2}{T} &
-  \bitbox{7}{OP}
-\end{bytefield}
-
 Format A instructions are used for instructions that require three register
 operands, and support both vector and packed operations.
 
 \subsection{Format B}
-
-\begin{bytefield}{32}
-  \bitheader{0,2,7,9,15,16,21,26,31} \\
-  \bitboxes*{1}{000000} &
-  \bitbox{5}{Ra} &
-  \bitbox{5}{Rb} &
-  \bitbox{1}{V} &
-  \bitbox{6}{FN} &
-  \bitbox{2}{T} &
-  \bitboxes*{1}{11111} &
-  \bitbox{2}{OP}
-\end{bytefield}
 
 Format B instructions are used for instructions that only require two register
 operands (for instance unary operations). Both vector and packed operations are
 supported.
 
 \subsection{Format C}
-
-\begin{bytefield}{32}
-  \bitheader{0,14,15,16,21,26,31} \\
-  \bitbox{6}{OP} &
-  \bitbox{5}{Ra} &
-  \bitbox{5}{Rb} &
-  \bitbox{1}{V} &
-  \bitbox{1}{H} &
-  \bitbox{14}{IM}
-\end{bytefield}
 
 Format C instructions are used for instructions that require two register
 operands and one immediate operand. Vector operations are supported (but not
@@ -213,14 +285,6 @@ In general each format C instruction has a corresponding format A encoding with
 the same value of the OP field.
 
 \subsection{Format D}
-
-\begin{bytefield}{32}
-  \bitheader{0,21,26,30,31} \\
-  \bitboxes*{1}{11} &
-  \bitbox{4}{OP} &
-  \bitbox{5}{Ra} &
-  \bitbox{21}{IM}
-\end{bytefield}
 
 Format D is used for instructions that need to be able to express large
 immediate values.
