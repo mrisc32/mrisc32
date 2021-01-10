@@ -43,59 +43,59 @@ jobs:
           name: mrisc32-instruction-set-manual.pdf
 
   release:
-      if: contains(github.ref, 'tags/v')
-      runs-on: ubuntu-20.04
-      needs: build
+    if: contains(github.ref, 'tags/v')
+    runs-on: ubuntu-20.04
+    needs: build
 
-      steps:
-        - name: Create Release
-          id: create_release
-          uses: actions/create-release@v1
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          with:
-            tag_name: ${{ github.ref }}
-            release_name: Release ${{ github.ref }}
-            draft: false
-            prerelease: false
-
-        - name: Store Release url
-          run: |
-            echo "${{ steps.create_release.outputs.upload_url }}" > ./upload_url
-
-        - uses: actions/upload-artifact@v1
-          with:
-            path: ./upload_url
-            name: upload_url
-
-  publish:
-      if: contains(github.ref, 'tags/v')
-      runs-on: ubuntu-20.04
-      needs: release
-
-      steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v1
-        with:
-          name: mrisc32-instruction-set-manual.pdf
-          path: ./
-
-      - name: Download URL
-        uses: actions/download-artifact@v1
-        with:
-          name: upload_url
-          path: ./
-      - id: set_upload_url
-        run: |
-          upload_url=`cat ./upload_url`
-          echo ::set-output name=upload_url::$upload_url
-      - name: Upload to Release
-        id: upload_to_release
-        uses: actions/upload-release-asset@v1.0.1
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.set_upload_url.outputs.upload_url }}
-          asset_path: mrisc32-instruction-set-manual.pdf
-          asset_name: mrisc32-instruction-set-manual.pdf
-          asset_content_type: application/pdf
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Store Release url
+        run: |
+          echo "${{ steps.create_release.outputs.upload_url }}" > ./upload_url
+
+      - uses: actions/upload-artifact@v1
+        with:
+          path: ./upload_url
+          name: upload_url
+
+  publish:
+    if: contains(github.ref, 'tags/v')
+    runs-on: ubuntu-20.04
+    needs: release
+
+    steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v1
+      with:
+        name: mrisc32-instruction-set-manual.pdf
+        path: ./
+
+    - name: Download URL
+      uses: actions/download-artifact@v1
+      with:
+        name: upload_url
+        path: ./
+    - id: set_upload_url
+      run: |
+        upload_url=`cat ./upload_url`
+        echo ::set-output name=upload_url::$upload_url
+    - name: Upload to Release
+      id: upload_to_release
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.set_upload_url.outputs.upload_url }}
+        asset_path: mrisc32-instruction-set-manual.pdf
+        asset_name: mrisc32-instruction-set-manual.pdf
+        asset_content_type: application/pdf
