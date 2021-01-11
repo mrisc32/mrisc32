@@ -1,0 +1,51 @@
+% -*- mode: latex; tab-width: 2; indent-tabs-mode: nil; -*-
+%------------------------------------------------------------------------------
+% MRISC32 ISA Manual - Examples.
+%
+% This work is licensed under the Creative Commons Attribution-ShareAlike 4.0
+% International License. To view a copy of this license, visit
+% http://creativecommons.org/licenses/by-sa/4.0/ or send a letter to
+% Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+%------------------------------------------------------------------------------
+
+% We do assembler examples in single-column mode to better fit the code.
+\onecolumn
+
+\chapter{Examples}
+
+\section{Vector operation}
+
+\subsection{saxpy}
+
+\begin{lstlisting}[style=assembler]
+; void saxpy(size_t n, const float a, const float *x, float *y)
+; {
+;   for (size_t i = 0; i < n; i++)
+;     y[i] = a * x[i] + y[i];
+; }
+;
+; Register arguments:
+;   s1 - n
+;   s2 - a
+;   s3 - x
+;   s4 - y
+
+saxpy:
+    bz    s1, 2f
+    cpuid s5, z, z
+1:
+    minu  vl, s5, s1
+    sub   s1, s1, vl
+    ldw   v1, s3, #4
+    ldw   v2, s4, #4
+    fmul  v1, v1, s2
+    fadd  v1, v1, v2
+    stw   v1, s4, #4
+    ldea  s3, s3, vl*4
+    ldea  s4, s4, vl*4
+    bnz   s1, 1b
+2:
+    ret
+\end{lstlisting}
+
+\twocolumn

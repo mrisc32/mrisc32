@@ -10,6 +10,26 @@
 
 \chapter{Programming model}
 
+\section{Architecture profiles}
+
+\begin{todobox}
+Describe the base ISA and extensions, i.e. roughly:
+
+\begin{itemize}
+  \item Support for vector operations.
+  \item Support for packed operations.
+  \item Support for floating-point operations.
+  \item Support for saturating and halving arithmetic.
+\end{itemize}
+
+We should also define 2-4 profiles that an implementation must comply to (to
+minimize fragmentation). This is more to convey the intent of the ISA than
+anything else.
+
+We also need to document which instructions are not part of the base ISA,
+e.g. by tagging them in the instruction database.
+\end{todobox}
+
 \section{Scalar registers}
 
 There are 32 scalar registers, each 32 bits wide.
@@ -93,10 +113,6 @@ implementation defined ($N$ must be a power of two, and at least 16):
 VZ is a read-only register with all vector elements set to zero. Writing to the
 VZ register has no effect.
 
-\section{Memory addressing}
-
-\tbd
-
 \section{Vector operation}
 
 \tbd
@@ -109,6 +125,10 @@ VZ register has no effect.
 
 The MRISC32 ISA supports a subset of the 2008 IEEE-754 floating-point
 standard~\cite{ieee754-2008}.
+
+\tbd
+
+\section{Memory addressing}
 
 \tbd
 

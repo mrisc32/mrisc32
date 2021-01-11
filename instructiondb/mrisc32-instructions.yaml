@@ -86,41 +86,112 @@ instructions:
       <<: *type1
       descr: >
         Load and sign extend a byte (8 bits).
+      pseudo: |
+        if V == 10 then
+          adr = int(b) + int(c) * i * scale
+        else
+          adr = int(b) + int(c) * scale
+        a = int(MEM[adr,1])
       op: 1
 
     LDH:
       <<: *type1
       descr: >
         Load and sign extend a half-word (16 bits).
+      pseudo: |
+        if V == 10 then
+          adr = int(b) + int(c) * i * scale
+        else
+          adr = int(b) + int(c) * scale
+        a = int(MEM[adr,2])
       op: 2
 
     LDW:
       <<: *type1
       descr: >
         Load a word (32 bits).
+      pseudo: |
+        if V == 10 then
+          adr = int(b) + int(c) * i * scale
+        else
+          adr = int(b) + int(c) * scale
+        a = int(MEM[adr,4])
       op: 3
 
     LDUB:
       <<: *type1
       descr: >
         Load and zero extend a byte (8 bits).
+      pseudo: |
+        if V == 10 then
+          adr = int(b) + int(c) * i * scale
+        else
+          adr = int(b) + int(c) * scale
+        a = uint(MEM[adr,1])
       op: 5
 
     LDUH:
       <<: *type1
       descr: >
         Load and zero extend a half-word (16 bits).
+      pseudo: |
+        if V == 10 then
+          adr = int(b) + int(c) * i * scale
+        else
+          adr = int(b) + int(c) * scale
+        a = uint(MEM[adr,2])
       op: 6
 
     LDEA:
       <<: *type1
       descr: >
         Load effective address.
+      pseudo: |
+        if V == 10 then
+          a = int(b) + int(c) * i * scale
+        else
+          a = int(b) + int(c) * scale
       note: >
         When the target operand is a vector register, LDEA can be used for
         constructing strides. For instance LDEA V1,Z,#3 will assign the
         vector [0,3,6,9,...] to register V1.
       op: 7
+
+    STB:
+      <<: *type1
+      descr: >
+        Store a byte (8 bits).
+      pseudo: |
+        if V == 10 then
+          adr = int(b) + int(c) * i * scale
+        else
+          adr = int(b) + int(c) * scale
+        MEM[adr,1] = a
+      op: 9
+
+    STH:
+      <<: *type1
+      descr: >
+        Store a half-word (16 bits).
+      pseudo: |
+        if V == 10 then
+          adr = int(b) + int(c) * i * scale
+        else
+          adr = int(b) + int(c) * scale
+        MEM[adr,2] = a
+      op: 10
+
+    STW:
+      <<: *type1
+      descr: >
+        Store a word (32 bits).
+      pseudo: |
+        if V == 10 then
+          adr = int(b) + int(c) * i * scale
+        else
+          adr = int(b) + int(c) * scale
+        MEM[adr,4] = a
+      op: 11
 
   Load immediate:
     LDLI:
@@ -146,9 +217,7 @@ instructions:
       descr: >
         Load high immediate value with low ones.
       pseudo: |
-        a = int(IM) << 11
-        for k in 0 to 10
-          a<k> = IM<0>
+        a = (int(IM) << 11) | ones(11)
       op: 60
       asmOperands: "{1}, #ext21hio(IM)"
 
@@ -200,7 +269,7 @@ instructions:
         bit positions given by another integer operand. Only the lowest
         log2(bits) bits of the shift operand are used.
       pseudo: |
-        a = int(b) >> uint(c & ones(log2(bits)))
+        a = int(b) >> int(c & ones(log2(bits)))
       op: 33
 
     LSL:
@@ -210,7 +279,7 @@ instructions:
         positions given by another integer operand. Only the lowest log2(bits)
         bits of the shift operand are used.
       pseudo: |
-        a = uint(b) << uint(c & ones(log2(bits)))
+        a = uint(b) << int(c & ones(log2(bits)))
       op: 34
 
     LSR:
@@ -220,15 +289,13 @@ instructions:
         positions given by another integer operand. Only the lowest log2(bits)
         bits of the shift operand are used.
       pseudo: |
-        a = uint(b) >> uint(c & ones(log2(bits)))
+        a = uint(b) >> int(c & ones(log2(bits)))
       op: 35
 
     SEL:
       <<: *type3
       descr: >
         Bitwise select.
-      todo: >
-        Describe this in detail.
       pseudo: |
         if T == 00 then
           a = (b & a) | (c & ~a)
@@ -307,8 +374,8 @@ instructions:
       <<: *type4
       descr: >
         Compute the product of two fixed point operands.
-      todo: >
-        Describe this in detail.
+      pseudo: |
+        a = (int(b) * int(c)) >> (bits-1)
       op: 64
 
     MUL:
@@ -325,8 +392,6 @@ instructions:
         Compute the upper part of the product of two signed integer operands.
       pseudo: |
         a = (int(b) * int(c)) >> bits
-      todo: >
-        Describe this in detail.
       op: 66
 
     MULHIU:
@@ -336,8 +401,6 @@ instructions:
         operands.
       pseudo: |
         a = (uint(b) * uint(c)) >> bits
-      todo: >
-        Describe this in detail.
       op: 67
 
     DIV:
@@ -541,9 +604,13 @@ instructions:
         PC = int(a) + int(IM)*4
       note: >
         If the register operand is PC, a PC-relative branch with an effective
-        range of +/-4MiB is performed.
+        range of +/-4MiB is performed. To extend the range to the full address
+        space, use J in combination with a preceding ADDPCHI.
 
         If the register operand is Z, an absolute branch is performed.
+        Possible target addresses are 0x00000000 to 0x003FFFFC and 0xFFC00000
+        to 0xFFFFFFFC. To extend the range to the full address space, use J in
+        combination with a preceding LDHI.
 
         If the register operand is LR and the immediate value is zero, the
         operation will return the program flow to the caller (RET is an alias
@@ -558,12 +625,18 @@ instructions:
         computing the sum of the register operand and the sign-extended
         immediate value multiplied by four.
       pseudo: |
+        adr = int(a) + int(IM)*4
         LR = int(PC) + 4
-        PC = int(a) + int(IM)*4
+        PC = adr
       note: >
-        If the register operand is PC, a PC-relative branch is performed.
+        If the register operand is PC, a PC-relative branch with an effective
+        range of +/-4MiB is performed. To extend the range to the full address
+        space, use JL in combination with a preceding ADDPCHI.
 
         If the register operand is Z, an absolute branch is performed.
+        Possible target addresses are 0x00000000 to 0x003FFFFC and 0xFFC00000
+        to 0xFFFFFFFC. To extend the range to the full address space, use JL
+        in combination with a preceding LDHI.
       op: 57
 
   Saturating and halving arithmetic:
@@ -571,48 +644,64 @@ instructions:
       <<: *type4
       descr: >
         Compute the saturated sum of two signed integer operands.
+      pseudo: |
+        a = sat(int(b) + int(c), bits)
       op: 56
 
     ADDSU:
       <<: *type4
       descr: >
         Compute the saturated sum of two unsigned integer operands.
+      pseudo: |
+        a = satu(uint(b) + uint(c), bits)
       op: 57
 
     ADDH:
       <<: *type4
       descr: >
         Compute the half sum of two signed integer operands.
+      pseudo: |
+        a = (int(b) + int(c)) >> 1
       op: 58
 
     ADDHU:
       <<: *type4
       descr: >
         Compute the half sum of two unsigned integer operands.
+      pseudo: |
+        a = (uint(b) + uint(c)) >> 1
       op: 59
 
     SUBS:
       <<: *type4
       descr: >
         Compute the saturated difference of two signed integer operands.
+      pseudo: |
+        a = sat(int(b) - int(c), bits)
       op: 60
 
     SUBSU:
       <<: *type4
       descr: >
         Compute the saturated difference of two unsigned integer operands.
+      pseudo: |
+        a = satu(uint(b) - uint(c), bits)
       op: 61
 
     SUBH:
       <<: *type4
       descr: >
         Compute the half difference of two signed integer operands.
+      pseudo: |
+        a = (int(b) - int(c)) >> 1
       op: 62
 
     SUBHU:
       <<: *type4
       descr: >
         Compute the half difference of two unsigned integer operands.
+      pseudo: |
+        a = (uint(b) - uint(c)) >> 1
       op: 63
 
   Floating-point arithmetic:
@@ -749,6 +838,7 @@ instructions:
         of the resulting floating-point value is subtracted by the integer
         offset provided by the second source operand before storing the final
         floating-point value in the destination operand.
+      todo: Define pseudocode.
       op: 104
 
     UTOF:
@@ -758,6 +848,7 @@ instructions:
         exponent of the resulting floating-point value is subtracted by the
         integer offset provided by the second source operand before storing the
         final floating-point value in the destination operand.
+      todo: Define pseudocode.
       op: 105
 
     FTOI:
@@ -766,6 +857,7 @@ instructions:
         Convert a floating-point value to a signed integer value, without
         rounding. The integer offset provided by the second source operand is
         added to the floating-point exponent before the conversion.
+      todo: Define pseudocode.
       op: 106
 
     FTOU:
@@ -774,6 +866,7 @@ instructions:
         Convert a floating-point value to an unsigned integer value, without
         rounding. The integer offset provided by the second source operand is
         added to the floating-point exponent before the conversion.
+      todo: Define pseudocode.
       op: 107
 
     FTOIR:
@@ -782,6 +875,7 @@ instructions:
         Convert a floating-point value to a signed integer value, with
         rounding. The integer offset provided by the second source operand is
         added to the floating-point exponent before the conversion.
+      todo: Define pseudocode.
       op: 108
 
     FTOUR:
@@ -790,6 +884,7 @@ instructions:
         Convert a floating-point value to an unsigned integer value, with
         rounding. The integer offset provided by the second source operand is
         added to the floating-point exponent before the conversion.
+      todo: Define pseudocode.
       op: 109
 
     FPACK:
@@ -802,6 +897,8 @@ instructions:
         operand, and the second source operand is packed and stored in the
         lower half of the destination operand.
       todo: >
+        Define pseudocode.
+
         The packed byte (.B) variant is undefined and should not be listed.
       op: 110
 
@@ -811,6 +908,7 @@ instructions:
         Unpack the low half of a packed floating-point pair. The preicison of
         the unpacked source floating-point value is doubled and stored in the
         destination operand.
+      todo: Define pseudocode.
       op: 125
       fn: 0
 
@@ -820,6 +918,7 @@ instructions:
         Unpack the high half of a packed floating-point pair. The preicison of
         the unpacked source floating-point value is doubled and stored in the
         destination operand.
+      todo: Define pseudocode.
       op: 125
       fn: 1
 
@@ -828,8 +927,7 @@ instructions:
     CPUID:
       descr: >
         Query CPU properties.
-      todo: >
-        Describe this in detail.
+      todo: Define pseudocode.
       op: 0
       fmts: [A]
       tMode: N
@@ -841,8 +939,7 @@ instructions:
       <<: *type2
       descr: >
         Shuffle bytes.
-      todo: >
-        Describe this in detail.
+      todo: Define pseudocode.
       op: 36
 
     PACK:
@@ -857,16 +954,20 @@ instructions:
       <<: *type4
       descr: >
         Saturate and pack the lower parts of two signed integer operands.
-      todo: >
-        Describe this in detail.
+      pseudo: |
+        hi = sat(int(b), bits/2) & ones(bits/2)
+        lo = sat(int(c), bits/2) & ones(bits/2)
+        a = (hi << (bits/2)) | lo
       op: 49
 
     PACKSU:
       <<: *type4
       descr: >
         Saturate and pack the lower parts of two unsigned integer operands.
-      todo: >
-        Describe this in detail.
+      pseudo: |
+        hi = satu(uint(b), bits/2)
+        lo = satu(uint(c), bits/2)
+        a = (hi << (bits/2)) | lo
       op: 50
 
     CLZ:

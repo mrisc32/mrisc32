@@ -14,49 +14,161 @@
 
 MRISC32 is an open and free instruction set architecture (ISA).
 
-\section{Notation}
+It is a RISC style load-store vector architecture that is designed to be
+suitable for a wide range of performance levels.
 
-\tbd
+\todo{Add wording about goals.}
 
 \section{Data types}
 
-The following data types are recognized:
+\subsection{Size types}
+
+The following types define a size without mandating any particular
+interpretation of the data:
+
+\begin{tabular}{|l|l|}
+  \hline
+  \textbf{Name} & \textbf{Size} \\
+  \hline
+  word & 32 bits \\
+  \hline
+  half-word & 16 bits \\
+  \hline
+  byte & 8 bits \\
+  \hline
+\end{tabular}
+
+\subsection{Integer types}
+
+Signed integer types are represented in two's complement form.
 
 \begin{tabular}{|l|l|p{140pt}|}
   \hline
   \textbf{Name} & \textbf{Size} & \textbf{Meaning} \\
   \hline
-  int8 & 8 & Signed 8-bit integer \\
+  int32 & 32 & Signed 32-bit integer \\
   \hline
-  uint8 & 8 & Unsigned 8-bit integer \\
+  uint32 & 32 & Unsigned 32-bit integer \\
   \hline
   int16 & 16 & Signed 16-bit integer \\
   \hline
   uint16 & 16 & Unsigned 16-bit integer \\
   \hline
-  int32 & 32 & Signed 32-bit integer \\
+  int8 & 8 & Signed 8-bit integer \\
   \hline
-  uint32 & 32 & Unsigned 32-bit integer \\
-  \hline
-  Q7 & 8 & Signed fixed point number with 7 fractional bits \\
-  \hline
-  Q15 & 16 & Signed fixed point number with 15 fractional bits \\
-  \hline
-  Q31 & 32 & Signed fixed point number with 31 fractional bits \\
-  \hline
-  float8 & 8 & Quarter precision binary floating-point number \\
-  \hline
-  float16 & 16 & Half precision binary floating-point number \\
-  \hline
-  float32 & 32 & Single precision binary floating-point number \\
+  uint8 & 8 & Unsigned 8-bit integer \\
   \hline
 \end{tabular}
 
-\todo{Document each data type in more detail.}
+\subsection{Fixed point types}
 
-\section{Assembler syntax}
+For some operations the fixed point Q number format is used, in which the most
+significant bit is the integer/sign bit, and the rest of the bits are the
+fractional bits.
 
-\tbd
+\subsubsection{Q31}
+
+Q31 is a 32-bit signed fixed point number with 31 fractional bits.
+
+The value of a Q31 number is obtained by interpreting the bit vector as a two's
+complement signed integer multiplied by $2^{-31}$.
+
+\begin{bytefield}{32}
+  \bitheader{0,30,31} \\
+  \bitbox{1}{I} &
+  \bitbox{31}{F}
+\end{bytefield}
+
+\subsubsection{Q15}
+
+Q15 is a 16-bit signed fixed point number with 15 fractional bits.
+
+The value of a Q15 number is obtained by interpreting the bit vector as a two's
+complement signed integer multiplied by $2^{-15}$.
+
+\begin{bytefield}{16}
+  \bitheader{0,14,15} \\
+  \bitbox{1}{I} &
+  \bitbox{15}{F}
+\end{bytefield}
+
+\subsubsection{Q7}
+
+Q7 is an 8-bit signed fixed point number with 7 fractional bits.
+
+The value of a Q7 number is obtained by interpreting the bit vector as a two's
+complement signed integer multiplied by $2^{-7}$.
+
+\begin{bytefield}{8}
+  \bitheader{0,6,7} \\
+  \bitbox{1}{I} &
+  \bitbox{7}{F}
+\end{bytefield}
+
+\subsection{Floating-point types}
+
+\begin{tabular}{|l|l|p{140pt}|}
+  \hline
+  \textbf{Name} & \textbf{Size} & \textbf{Meaning} \\
+  \hline
+  float32 & 32 & Single precision binary floating-point number \\
+  \hline
+  float16 & 16 & Half precision binary floating-point number \\
+  \hline
+  float8 & 8 & Quarter precision binary floating-point number \\
+  \hline
+\end{tabular}
+
+\subsubsection{float32}
+
+The float32 type uses one sign bit (S), eight exponent bits (E) and 23
+fractional bits (F)\footnote{The float32 type uses the same format and interpretation as IEEE 754-2008 binary32}.
+
+The significand has an implicit leading bit (to the left of the binary point)
+with value 1, giving 24 effective significand bits.
+
+The exponent bias is 127.
+
+\begin{bytefield}{32}
+  \bitheader{0,23,30,31} \\
+  \bitbox{1}{S} &
+  \bitbox{8}{E} &
+  \bitbox{23}{F}
+\end{bytefield}
+
+\subsubsection{float16}
+
+The float16 type uses one sign bit (S), five exponent bits (E) and ten
+fractional bits (F)\footnote{The float16 type uses the same format and interpretation as IEEE 754-2008 binary16}.
+
+The significand has an implicit leading bit (to the left of the binary point)
+with value 1, giving eleven effective significand bits.
+
+The exponent bias is 15.
+
+\begin{bytefield}{16}
+  \bitheader{0,10,14,15} \\
+  \bitbox{1}{S} &
+  \bitbox{5}{E} &
+  \bitbox{10}{F}
+\end{bytefield}
+
+\subsubsection{float8}
+
+The float8 type uses one sign bit (S), four exponent bits (E) and three
+fractional bits (F).
+
+The significand has an implicit leading bit (to the left of the binary point)
+with value 1, giving four effective significand bits.
+
+The exponent bias is 7.
+
+\begin{bytefield}{8}
+  \bitheader{0,3,6,7} \\
+  \bitbox{1}{S} &
+  \bitbox{4}{E} &
+  \bitbox{3}{F}
+\end{bytefield}
 
 \section{Pseudocode syntax}
 
@@ -75,32 +187,37 @@ operation.
 The number of chunks and the size of each chunk is dictated by the packed
 operation mode.
 
-\todo{Come up with a better name than "chunk"?}
-
 \begin{todobox}
 Describe different types that are used in the pseudocode, such as
 "bit vector", "integer", "unsigned integer" and "float"?
+
+Come up with a better name than "chunk"?
 \end{todobox}
 
 \subsection{Notation}
 
-The following notation is use in the pseudocode that describes the operation
+The following notation is used in the pseudocode that describes the operation
 of an instruction:
 
 \begin{tabular}{lp{170pt}}
 \textbf{Notation} & \textbf{Meaning} \\
+x<$k$> & Bit $k$ of bit vector x \\
+MEM[x,N] & $N$ consecutive bytes in memory starting at address $x$, interpreted as an $8\times N$-bit vector with little endian storage \\
 a & 1st instruction operand \\
 b & 2nd instruction operand \\
 c & 3rd instruction operand \\
 IM & IM field of the instruction word \\
 T & T field of the instruction word \\
+V & Vector mode (two bits) \\
 bits & Chunk size, in bits \\
+scale & Scale factor according to the T field (1 for format C instructions) \\
+i & Vector element number \\
 $\leftarrow$ & Assignment \\
 + & Addition \\
 - & Subtraction \\
 $\times$ & Multiplication \\
 / & Division \\
-\% & Reminder of integer division \\
+\% & Remainder of integer division \\
 $=$ & Equal \\
 $\neq$ & Not equal \\
 $\leq$ & Less than or equal \\
@@ -113,16 +230,23 @@ $|$ & Bitwise or \\
 \& & Bitwise and \\
 \textasciicircum & Bitwise xor \\
 $<<$ & Bit shift left \\
-$>>$ & Bit shift right (preserve sign bit for signed integer types) \\
-ones(N) & Bit vector of N 1-bits \\
-zeros(N) & Bit vector of N 0-bits \\
-int(x) & Interpret bit vector x as a two's complement signed integer \\
-uint(x) & Interpret bit vector x as an unsigned integer \\
-float(x) & Interpret bit vector x as a floating-point number \\
-log$_{2}$(x) & Binary logarithm of x \\
-max(x,y) & Maximum value of x and y \\
-min(x,y) & Minimum value of x and y \\
+$>>$ & Bit shift right (preserve sign for signed integer types) \\
+ones(N) & Bit vector of $N$ 1-bits \\
+zeros(N) & Bit vector of $N$ 0-bits \\
+int(x) & Interpret bit vector $x$ as a two's complement signed integer \\
+uint(x) & Interpret bit vector $x$ as an unsigned integer \\
+float(x) & Interpret bit vector $x$ as a floating-point number \\
+log$_{2}$(x) & Binary logarithm of $x$ \\
+max(x,y) & Maximum value of $x$ and $y$ \\
+min(x,y) & Minimum value of $x$ and $y$ \\
+sat(x,N) & Saturate integer $x$ to the range $[-2^{N-1},2^{N-1})$ \\
+satu(x,N) & Saturate integer $x$ to the range $[0,2^{N})$ \\
+isnan(x) & True if $x$ is not a number (NaN) \\
 \end{tabular}
+
+\section{Assembler syntax}
+
+\tbd
 
 \section{Instruction formats}
 

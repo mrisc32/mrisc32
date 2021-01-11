@@ -90,22 +90,48 @@ def format_args(meta, args):
     return result
 
 
-def gen_asm(name, meta):
-    result = ""
+def get_v_bits(vec, fold):
+    if vec in ["VVV", "VSV"]:
+      return "01" if fold else "11"
+    elif vec in ["VVS", "VV", "VSS"]:
+      return "10"
+    else:
+      return "00"
 
+
+def get_t_bits(pack, scale, sel_mode):
+    if pack == ".B" or scale == "*2" or sel_mode == "_1":
+        return "01"
+    elif pack == ".H" or scale == "*4" or sel_mode == "_2":
+        return "10"
+    elif scale == "*8" or sel_mode == "_3":
+        return "11"
+    else:
+      return "00"
+
+
+def gen_asm(name, meta):
+    result = []
     for fmt in meta["fmts"]:
-        result += f"{fmt}:\n"
         for vec in get_vecs(meta, fmt):
             args = get_args(vec, fmt)
             for fold in get_folds(meta, vec):
+                v = get_v_bits(vec, fold)
                 for pack in get_packs(meta, fmt):
                     for scale in get_scales(meta, fmt):
                         for sel_mode in get_sel_modes(meta, fmt):
+                            t = get_t_bits(pack, scale, sel_mode)
                             s = f"{name}{sel_mode}{pack}{fold} "
                             s += " " * max(0, (8 - len(s)))
                             s += format_args(meta, args) + scale
-                            result += f"  {s}\n"
+                            result.append({"fmt": fmt, "v": v, "t": t, "asm": s})
+    return result
 
+
+def asm_to_markdown(insn, meta):
+    result = ""
+    for form in gen_asm(insn, meta):
+        result += f"{form['asm']}\n"
     return result
 
 
@@ -135,13 +161,13 @@ def encoding_to_tex(meta):
     field_limits = set()
     for fmt in meta["fmts"]:
         if fmt == "A":
-            field_limits.update({0,7,9,14,16,21,26,31})
+            field_limits.update({0, 7, 9, 14, 16, 21, 26, 31})
         elif fmt == "B":
-            field_limits.update({0,7,9,15,16,21,26,31})
+            field_limits.update({0, 7, 9, 15, 16, 21, 26, 31})
         elif fmt == "C":
-            field_limits.update({0,14,15,16,21,26,31})
+            field_limits.update({0, 14, 15, 16, 21, 26, 31})
         elif fmt == "D":
-            field_limits.update({0,21,26,31})
+            field_limits.update({0, 21, 26, 31})
     bitheader = ",".join([str(x) for x in field_limits])
     result += f" \\bitheader{{{bitheader}}} \\\\\n"
 
@@ -219,8 +245,42 @@ def todo_to_tex(meta):
     return "\\begin{todobox}\n" + text_to_tex(meta["todo"]) + "\n\\end{todobox}\n\n"
 
 
+def has_multiple_values(asm_forms, field):
+    v = asm_forms[0][field]
+    for form in asm_forms:
+        if form[field] != v:
+            return True
+    return False
+
+
 def asm_to_tex(insn, meta):
-    return f"\\begin{{lstlisting}}[style=assembler]\n{gen_asm(insn, meta)}\\end{{lstlisting}}\n\n"
+    asm_forms = gen_asm(insn, meta)
+    show_fmt = has_multiple_values(asm_forms, "fmt")
+    show_v = has_multiple_values(asm_forms, "v")
+    show_t = has_multiple_values(asm_forms, "t")
+    num_extra_columns = (1 if show_fmt else 0) +  (1 if show_v else 0) +  (1 if show_t else 0)
+
+    result = "\\begin{tabular}{" + ("l|" * num_extra_columns) + "l}\n"
+    result += " "
+    if show_fmt:
+      result += "\\scriptsize \\textbf{Fmt} & "
+    if show_v:
+      result += "\\scriptsize \\textbf{V} & "
+    if show_t:
+      result += "\\scriptsize \\textbf{T} & "
+    result += "\\scriptsize \\textbf{Assembler} \\\\\n"
+    result += "\\hline\n"
+    for form in asm_forms:
+        if show_fmt:
+            result += f"{{\\scriptsize {form['fmt']}}} & "
+        if show_v:
+            result += f"{{\\scriptsize {form['v']}}} & "
+        if show_t:
+            result += f"{{\\scriptsize {form['t']}}} & "
+        result += "\\begin{lstlisting}[style=assembler]\n"
+        result += f"{form['asm']}\n"
+        result += "\\end{lstlisting}\\\\\n"
+    return result + "\\end{tabular}\n\n"
 
 
 def pseudo_to_tex(meta):
