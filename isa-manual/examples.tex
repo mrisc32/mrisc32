@@ -51,4 +51,68 @@ saxpy:
     ret
 \end{lstlisting}
 
+\subsection{Linear interpolation}
+
+Linear interpolation can be implemented using vector gather load. Here is an
+example of one-dimensional floating-point interpolation.
+
+\begin{lstlisting}[style=assembler]
+; void lerp(size_t n, const float t0, const float dt, const float *x, float *y)
+; {
+;   float t = t0;
+;   for (size_t i = 0; i < n; i++)
+;   {
+;     int k = (int)t;
+;     float w = t - (float)k;
+;     y[i] = x[k] + w * (x[k+1] - x[k]);
+;     t += dt;
+;   }
+; }
+;
+; Register arguments:
+;   s1 - n
+;   s2 - t0
+;   s3 - dt
+;   s4 - x
+;   s5 - y
+
+lerp:
+    bz    s1, 2f        ; Nothing to do?
+
+    cpuid s6, z, z      ; Query maximum vector length
+    mov   vl, s6
+
+    add   s8, s4, #4    ; s8 = &x[1]
+    itof  s7, s6, z
+
+    ldea  v1, z, #1
+    itof  v1, v1, z
+    fmul  v1, v1, s3    ; v1 = dt * [0.0, 1.0, 2.0, ...]
+
+    fmul  s7, s3, s7    ; s7 = dt * maximum vector length
+1:
+    minu  vl, s6, s1    ; Define the operation vector length
+    sub   s1, s1, vl    ; Decrement loop counter
+
+    ftoi  v2, v1, z     ; v2 = integer indexes (k)
+    itof  v3, v2, z
+    fsub  v3, v1, v3    ; v3 = interpolation weight (w)
+
+    ldw   v4, s4, v2*4  ; Load x[k]
+    ldw   v5, s8, v2*4  ; Load x[k+1]
+
+    fsub  v5, v5, v4
+    fmul  v5, v5, v3
+    fadd  v5, v4, v5    ; v5 = x[k] + w * (x[k+1] - x[k])
+
+    stw   v5, s5, #4    ; Store y (element stride = 4 bytes)
+
+    ldea  s5, s5, vl*4  ; Increment address (y)
+    fadd  v1, v1, s7    ; Increment t
+    bnz   s1, 1b
+2:
+    ret
+\end{lstlisting}
+
+
 \twocolumn
