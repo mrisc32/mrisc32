@@ -44,8 +44,8 @@ saxpy:
     fmul  v1, v1, s2    ; x * a
     fadd  v1, v1, v2    ; + y
     stw   v1, s4, #4    ; Store y
-    ldea  s3, s3, vl*4  ; Increment array pointers
-    ldea  s4, s4, vl*4  ; Increment array pointers
+    ldea  s3, s3, vl*4  ; Increment address (x)
+    ldea  s4, s4, vl*4  ; Increment address (y)
     bnz   s1, 1b
 2:
     ret
@@ -114,5 +114,37 @@ lerp:
     ret
 \end{lstlisting}
 
+\subsection{Reverse bytes}
+
+\begin{lstlisting}[style=assembler]
+; void revbytes(size_t n, const float *x, float *y)
+; {
+;   for (size_t i = 0; i < n; i++)
+;     y[n-1-i] = x[i];
+; }
+;
+; Register arguments:
+;   s1 - n
+;   s2 - x
+;   s3 - y
+
+revbytes:
+    bz    s1, 2f        ; Nothing to do?
+    add   s4, s1, #-4
+    add   s3, s3, s4    ; s3 = &y[n-4]
+    cpuid s4, z, z      ; Query the maximum vector length
+    lsl   s5, s4, #2    ; s5 = 4 * max vector length
+1:
+    minu  vl, s4, s1    ; Define the operation vector length
+    sub   s1, s1, vl    ; Decrement loop counter
+    ldw   v1, s2, #4    ; Load x (element stride = 4 bytes)
+    shuf  v1, v1, #0b000001010011  ; Reverse bytes of each word
+    stw   v1, s3, #-4   ; Store y (element stride = -4 bytes)
+    add   s2, s2, s5    ; Increment address (x)
+    sub   s3, s3, s5    ; Decrement address (y)
+    bnz   s1, 1b
+2:
+    ret
+\end{lstlisting}
 
 \twocolumn
