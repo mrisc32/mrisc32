@@ -68,7 +68,7 @@ LR is the link register, which contains the return address for subroutines.
 
 \subsection{The PC register}
 
-The PC is a read-only register that contains the memory address of the current
+PC is a read-only register that contains the memory address of the current
 instruction. Writing to the PC register has no effect.
 
 \subsection{FP, TP and SP}
@@ -91,7 +91,30 @@ that they are used as follows:
 
 \section{Vector registers}
 
-There are 32 vector registers: VZ, V1, V2, \dots, V30, V31.
+There are 32 vector registers:
+
+\begin{tabular}{|l|l|}
+  \hline
+  \textbf{Vector reg. no} & \textbf{Name} \\
+  \hline
+  0 & VZ \\
+  \hline
+  1 & V1 \\
+  \hline
+  2 & V2 \\
+  \hline
+  3 & V3 \\
+  \hline
+  4 & V4 \\
+  \hline
+  \multicolumn{2}{c}{$\vdots$} \\
+  \hline
+  30 & V30 \\
+  \hline
+  31 & V31 \\
+  \hline
+\end{tabular}
+
 
 Each register, V$k$, consists of $N$ 32-bit elements, where $N$ is
 implementation defined ($N$ must be a power of two, and at least 16):
@@ -113,20 +136,86 @@ implementation defined ($N$ must be a power of two, and at least 16):
 VZ is a read-only register with all vector elements set to zero. Writing to the
 VZ register has no effect.
 
-\section{Vector operation}
-
-\tbd
-
-\section{Packed data operation}
-
-\tbd
-
 \section{Floating-point operation}
 
 The MRISC32 ISA supports a subset of the 2008 IEEE-754 floating-point
 standard~\cite{ieee754-2008}.
 
 \tbd
+
+\section{Vector operation}
+
+\begin{todobox}
+Describe how vector operations process elements of vector registers.
+
+Describe how VL affects vector operations.
+
+Describe how folding works.
+\end{todobox}
+
+\section{Packed data operation}
+\label{sec:packed_data_operation}
+
+Many instructions have the ability to operate on several individual sub-parts
+of the source and destination elements. These sub-parts are referred to as
+chunks.
+
+A single 32-bit element may be split up into one, two or four chunks, as follows:
+
+\begin{bytefield}{32}
+  \bitheader{0,8,16,24,31} \\
+  \begin{rightwordgroup}{}
+    \bitbox{32}{word}
+  \end{rightwordgroup} \\
+  \begin{rightwordgroup}{H}
+    \bitbox{16}{half-word} &
+   \bitbox{16}{half-word}
+  \end{rightwordgroup} \\
+  \begin{rightwordgroup}{B}
+    \bitbox{8}{byte} &
+    \bitbox{8}{byte} &
+    \bitbox{8}{byte} &
+    \bitbox{8}{byte}
+  \end{rightwordgroup}
+\end{bytefield}
+
+\subsection{Word mode}
+
+In word mode, which is the defult, each element is processed as a single
+32-bit chunk.
+
+\subsection{Half-word mode}
+
+In half-word mode each element is processed as two individual 16-bit chunks in
+parallel.
+
+In assembly language, half-word mode is indicated by appending the suffix .H
+to the instruction mnemonic.
+
+\subsection{Byte mode}
+
+In byte mode each element is processed as four individual 8-bit chunks in
+parallel.
+
+In assembly language, byte mode is indicated by appending the suffix .B to the
+instruction mnemonic.
+
+\subsection{Packed floating-point operation}
+
+For floating-point instructions, using packed operating modes implies using
+floating-point precisions lower than single precision:
+
+\begin{tabular}{|l|l|}
+  \hline
+  \textbf{Mode} & \textbf{Precision} \\
+  \hline
+  word & Single precision floating-point \\
+  \hline
+  half-word & Half precision floating-point \\
+  \hline
+  byte & Quarter precision floating-point \\
+  \hline
+\end{tabular}
 
 \section{Memory addressing}
 

@@ -358,9 +358,10 @@ The first register operand, Ra, can be a source or a destination register
 depending on the instruction, while Rb and Rc are always source registers.
 
 The T field further defines the instruction. For most instructions it defines
-the packed data type that is to be used (for packed operations). For load/store
-instructions it defines a scaling factor for the register offset operand (i.e.
-the third operand):
+the packed data type that is to be used (see
+section~\ref{sec:packed_data_operation}). For load/store instructions it
+defines a scaling factor for the register offset operand (i.e. the third
+operand):
 
 \begin{tabular}{|l|l|l|}
   \hline
