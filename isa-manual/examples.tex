@@ -122,7 +122,7 @@ storing the words), in combination with reversing the bytes of each individual
 word using the SHUF instruction.
 
 \begin{lstlisting}[style=assembler]
-; void revbytes(size_t n, const float *x, float *y)
+; void revbytes(size_t n, const uint8_t *x, uint8_t *y)
 ; {
 ;   for (size_t i = 0; i < n; i++)
 ;     y[n-1-i] = x[i];
@@ -132,11 +132,15 @@ word using the SHUF instruction.
 ;   s1 - n
 ;   s2 - x
 ;   s3 - y
+;
+; Assumptions:
+;   n is a multiple of 4
 
 revbytes:
     bz    s1, 2f        ; Nothing to do?
     add   s4, s1, #-4
     add   s3, s3, s4    ; s3 = &y[n-4]
+    lsr   s1, s1, #2    ; s1 = number of words
     cpuid s4, z, z      ; Query the maximum vector length
     lsl   s5, s4, #2    ; s5 = 4 * max vector length
 1:
