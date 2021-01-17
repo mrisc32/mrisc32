@@ -116,6 +116,11 @@ lerp:
 
 \subsection{Reverse bytes}
 
+Reversing a byte array (e.g. for horizontal mirroring of an image) can be
+achieved by copying 32-bit words in reverse order (using a negative stride when
+storing the words), in combination with reversing the bytes of each individual
+word using the SHUF instruction.
+
 \begin{lstlisting}[style=assembler]
 ; void revbytes(size_t n, const float *x, float *y)
 ; {
