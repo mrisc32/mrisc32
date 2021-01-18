@@ -938,8 +938,47 @@ instructions:
     SHUF:
       <<: *type2
       descr: >
-        Shuffle bytes.
-      todo: Define pseudocode.
+        Shuffle bytes with optional zero- or sign-extension.
+
+        The bytes of the second operand are shuffled according to the 13-bit
+        control word in the third operand, and the result is stored in the
+        the first operand.
+
+        Bit 12 of the control word determines the sign mode: 1 = sign fill,
+        0 = zero fill.
+
+        Bits 0-1 give the source byte index for destination byte 0, and
+        bit 2 gives the fill mode (0 = verbatim copy, 1 = fill).
+
+        Likewise, bits 3-5 define destination byte 1, bits 6-8 define
+        destination byte 2 and bits 9-11 define destination byte 3.
+
+        When the fill mode is 0, the source byte is copied to the destination
+        byte. When the fill mode is 1, the destination byte is filled with the
+        most significant bit of the source byte if the sign mode is 1, or zeros
+        if the sign mode is 0.
+
+        Note: Byte 0 is the least significant byte (bits 0-7) and byte 3 is the
+        most significant byte (bits 24-31).
+      pseudo: |
+        sign = c<12>
+        for k in 0 to 3
+          fill = c<k*3+2>
+          idx = uint(c<k*3+1:k*3>)
+          byte = b<8*idx+7:8*idx>
+          if fill == 1 then
+            if sign & byte<7> == 1 then
+              byte = ones(8)
+            else
+              byte = zeros(8)
+          a<8*k+7:8*k> = byte
+      note: >
+        The instruction can be used for several different common tasks, such as
+        zero- and sign-extension of integer bytes and half-words, unpacking of
+        byte-aligend fields within a word, applying byte masks (e.g. bitwise
+        and with 0x00ff00ff) and/or changing the byte order (e.g. for
+        conversion between big and little endian formats or different RGBA
+        color formats).
       op: 36
 
     PACK:
