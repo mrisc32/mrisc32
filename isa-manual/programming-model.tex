@@ -12,23 +12,44 @@
 
 \section{Architecture profiles}
 
-\begin{todobox}
-Describe the base ISA and extensions, i.e. roughly:
+The MRISC32 instruction set architecture consists of a mandatory base
+architecture, plus the following optional architecture modules:
 
 \begin{itemize}
-  \item Support for vector operations.
-  \item Support for packed operations.
-  \item Support for floating-point operations.
-  \item Support for saturating and halving arithmetic.
+  \item Vector operation module (VM)
+  \item Packed operation module (PM)
+  \item Floating-point module (FM)
+  \item Saturating and halving arithmetic module (SM)
 \end{itemize}
 
-We should also define 2-4 profiles that an implementation must comply to (to
-minimize fragmentation). This is more to convey the intent of the ISA than
-anything else.
+\begin{todobox}
+  We should perhaps define 3-4 profiles that an implementation must comply to
+  (to minimize fragmentation). This is more to convey the intent of the ISA
+  than anything else.
 
-We also need to document which instructions are not part of the base ISA,
-e.g. by tagging them in the instruction database.
+  We also need to document which instructions are not part of the base
+  architecture, e.g. by tagging with FM, SM, etc. in the instruction database.
 \end{todobox}
+
+\subsection{Base architecture}
+
+\tbd
+
+\subsection{Vector operation module}
+
+\tbd
+
+\subsection{Packed operation module}
+
+\tbd
+
+\subsection{Floating-point module}
+
+\tbd
+
+\subsection{Saturating and halving arithmetic module}
+
+\tbd
 
 \section{Scalar registers}
 
