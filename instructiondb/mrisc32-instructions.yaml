@@ -1044,11 +1044,7 @@ instructions:
         Compute the sum of the current PC and and immediate operand that is
         shifted to the left 11 steps before the addition.
       pseudo: |
-        if IM<0> == 1 then
-          tmp = (int(IM) << 11) | ones(11)
-        else
-          tmp = int(IM) << 11
-        a = int(PC) + tmp
+        a = int(PC) + (int(IM) << 11)
       note: >
         This instruction can be used in combination with several instructions
         that take an immediate operand in order to form a full 32-bit
