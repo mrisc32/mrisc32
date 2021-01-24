@@ -57,7 +57,7 @@ def get_vecs(meta, fmt):
     elif fmt == "C":
         vecs = ["SSS"]
         vecs.append(meta["vModes"][0])
-    elif fmt == "D":
+    elif fmt in ["D", "E"]:
         vecs = ["SS"]
     return vecs
 
@@ -79,6 +79,8 @@ def get_args(vec, fmt):
         result = result[:-1] + ["#ext14(H,IM)"]
     elif fmt == "D":
         result = result[:-1] + ["#ext21(IM)"]
+    elif fmt == "E":
+        result = result[:-1] + ["#ext18(IM)"]
 
     return result
 
@@ -168,6 +170,8 @@ def encoding_to_tex(meta):
             field_limits.update({0, 14, 15, 16, 21, 26, 31})
         elif fmt == "D":
             field_limits.update({0, 21, 26, 31})
+        elif fmt == "E":
+            field_limits.update({0, 18, 21, 26, 31})
     bitheader = ",".join([str(x) for x in field_limits])
     result += f" \\bitheader{{{bitheader}}} \\\\\n"
 
@@ -197,9 +201,14 @@ def encoding_to_tex(meta):
             result += "  \\bitbox{1}{H} &\n"
             result += "  \\bitbox{14}{IM}\n"
         elif fmt == "D":
-            result += f"  \\bitboxes*{{1}}{{{(meta['op']):06b}}}\n"
+            result += f"  \\bitboxes*{{1}}{{110{(meta['op']):03b}}}\n"
             result += "  \\bitbox{5}{Ra} &\n"
             result += "  \\bitbox{21}{IM}\n"
+        elif fmt == "E":
+            result += "  \\bitboxes*{1}{110111}\n"
+            result += "  \\bitbox{5}{Ra} &\n"
+            result += f"  \\bitboxes*{{1}}{{{(meta['op']):03b}}}\n"
+            result += "  \\bitbox{18}{IM}\n"
         result += f" \\end{{rightwordgroup}} \\\\\n"
     return result + "\\end{bytefield}\n\n"
 

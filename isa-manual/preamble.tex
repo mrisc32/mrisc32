@@ -71,6 +71,15 @@
   basicstyle=\ttfamily\footnotesize
 }
 
+% Create an itemize environment with custom formatting.
+
+\newenvironment{bulletitems}
+{\begin{itemize}
+  \setlength{\itemsep}{0pt}
+  \setlength{\parskip}{0pt}
+  \setlength{\parsep}{0pt}}
+{\end{itemize}}
+
 % Useful commands.
 
 \definecolor{infocol}{rgb}{0.3,0.3,0.7}

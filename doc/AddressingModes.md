@@ -54,15 +54,19 @@ All conditional branch instructions (BZ, BNZ, BS, BNS, BLT, BGE, BLE, BGT) use a
 
 `PC <= PC + imm * 4`
 
-...where `imm` is a 21-bit signed value.
+...where `imm` is an 18-bit signed value.
 
-The jump instructions (J, JL) use a scalar register as the base address (as usual, pc can be used as the base address):
+The jump instructions (J, JL) use a scalar register as the base address (as usual, PC can be used as the base address):
 
 `PC <= Sa + imm * 4`
 
+...where `imm` is a 21-bit signed value.
+
 ### Branch ranges
 
-Using a single instruction, the branch offset is ±4 MiB. For conditional branches this is the maximum range, but for unconditional branches it's possible to extend the range to the full 32-bit address space with just one extra instruction.
+The branch offset range for conditional branches is ±512 KiB.
+
+Using a single instruction, the branch offset range for unconditional branches is ±4 MiB. It is possible to extend the range of unconditional branches to the full 32-bit address space with just one extra instruction.
 
 For a jump to an absolute address, use `ldhi` followed by a `j`/`jl` instruction, e.g:
 
@@ -74,9 +78,11 @@ For a jump to an absolute address, use `ldhi` followed by a `j`/`jl` instruction
 For a jump to a PC-relative address, use `addpchi` followed by a `j`/`jl` instruction, e.g:
 
 ```
-    addpchi s10, #0x12345000    ; s10 = pc + 0x12345000
-    j       s10, #0x00000678    ; Jump to pc + 0x12345678
+    addpchi lr, #0x12345000     ; lr = pc + 0x12345000
+    jl      lr, #0x00000678     ; Jump to pc + 0x12345678
 ```
+
+Note: In the previous example we used the `lr` register as a temporary scratch register, which is both safe and recommended for linking jumps, since `jl` overwrites `lr` anyway.
 
 You can also use the `z` register as the base address to jump to an absolute address in the range `0x00000000`..`0x003ffffc` or `0xffc00000`..`0xfffffffc`, in a single instruction, e.g:
 
@@ -84,10 +90,8 @@ You can also use the `z` register as the base address to jump to an absolute add
     jl      z, #0x00345678    ; Jump (and link) to 0x00345678
 ```
 
-| Jump type | Range (1 instr.) | Rang (2 instr.) |
+| Jump type | Range (1 instr.) | Range (2 instr.) |
 |---|---|---|
-| Cond. branch | PC ±4 MiB | - |
+| Cond. branch | PC ±512 KiB | - |
 | Uncond. branch | PC ±4 MiB | PC ±2 GiB |
 | Absolute jump | Base ±4 MiB | 4 GiB |
-
-

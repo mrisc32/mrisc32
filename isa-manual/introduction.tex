@@ -258,12 +258,12 @@ isnan(x) & True if $x$ is not a number (NaN) \\
 
 \section{Instruction formats}
 
-All instructions are encoded in 32 bits. There are four different encoding
-formats, A, B, C and D, that mainly differ in the number and kinds of
+All instructions are encoded in 32 bits. There are five different encoding
+formats, A, B, C, D and E, that mainly differ in the number and kinds of
 instruction operands.
 
 \begin{bytefield}{32}
-  \bitheader{0,2,7,9,14,15,16,21,26,31} \\
+  \bitheader{0,2,7,9,14,15,16,18,21,26,29,31} \\
   \begin{rightwordgroup}{A}
     \bitboxes*{1}{000000} &
     \bitbox{5}{Ra} &
@@ -292,10 +292,16 @@ instruction operands.
     \bitbox{14}{IM}
   \end{rightwordgroup} \\
   \begin{rightwordgroup}{D}
-    \bitboxes*{1}{11} &
-    \bitbox{4}{OP} &
+    \bitboxes*{1}{110} &
+    \bitbox{3}{OP} &
     \bitbox{5}{Ra} &
     \bitbox{21}{IM}
+  \end{rightwordgroup} \\
+  \begin{rightwordgroup}{E}
+    \bitboxes*{1}{110111} &
+    \bitbox{5}{Ra} &
+    \bitbox{3}{OP}
+    \bitbox{18}{IM}
   \end{rightwordgroup}
 \end{bytefield}
 
@@ -390,23 +396,28 @@ the instruction format, and the interpretation of the field further depends on
 the OP and the H fields.
 
 The H field describes how to interpret a 14-bit IM field:
-\begin{itemize}
+
+\begin{bulletitems}
   \item When H=0, the IM value is sign-extended to 32 bits.
   \item When H=1, the IM value is shifted to the left 18 position, and the
         least significant bit of the IM field is duplicated to the 18 least
         significant bits of the final immediate value.
-\end{itemize}
+\end{bulletitems}
 
 \subsection{Format A}
 
 Format A instructions are used for instructions that require three register
 operands, and support both vector and packed operations.
 
+Format A can encode 124 major instructions (OP~$\in~[0,123]$).
+
 \subsection{Format B}
 
 Format B instructions are used for instructions that only require two register
 operands (for instance unary operations). Both vector and packed operations are
 supported.
+
+Format B can encode 256 major instructions (OP~$\in~[0,3]$, FN~$\in~[0,63]$).
 
 \subsection{Format C}
 
@@ -415,9 +426,25 @@ operands and one immediate operand. Vector operations are supported (but not
 packed operations).
 
 In general each format C instruction has a corresponding format A encoding with
-the same value of the OP field.
+the same value of the OP field. For instance, the instruction ADD exists in
+both format A and format C encodings.
+
+Format C can encode 47 major instructions (OP~$\in~[1,47]$).
 
 \subsection{Format D}
 
 Format D is used for instructions that need to be able to express large
 immediate values.
+
+Format D can encode 7 major instructions (OP~$\in~[0,6]$).
+
+\subsection{Format E}
+
+Format E is used for conditional branch instructions.
+
+Format E can encode 8 major instructions (OP~$\in~[0,7]$).
+
+\subsection{Future encodings}
+
+Encodings with the four most significant bits set to $1110$ or $1111$ are
+reserved for future extensions.
