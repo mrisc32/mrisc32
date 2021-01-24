@@ -52,4 +52,4 @@ This is a open and free 32-bit RISC/Vector instruction set architecture ([ISA](h
   - Single instruction conversion between floating-point and fixed point.
   - Saturating and halving addition and subtraction.
 
-Note: There is no support for 64-bit floating-point operations (that is left for a 64-bit version of the ISA).
+Note: There is no support for 64-bit floating-point operations (that is left for a [64-bit version of the ISA](https://github.com/mbitsnbites/mrisc64)).
