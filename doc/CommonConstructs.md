@@ -13,7 +13,7 @@
 | Sign-extend byte to word | shuf rd,ra,#0x1920 |
 | Sign-extend halfword to word | shuf rd,ra,#0x1b48 |
 | Swap high and low halfwords | shuf rd,ra,#0x021a |
-| Invert all bits | nor rd,ra,ra |
+| Invert all bits (NOT) | xor rd,ra,#-1 |
 | Compare and branch | s[cond] tmp,ra,rb<br>bs tmp,#branch\_target<br>*(or alternatively)*<br>sub tmp,ra,rb<br>b[cond] tmp,#branch\_target |
 | Return from subroutine | j lr,#0 |
 | Push to stack | add sp,sp,#-N<br>stw ra1,sp,#0<br>stw ra2,sp,#4<br>... |
@@ -24,4 +24,5 @@
 | Floating point compare and branch | fs[cond] tmp,ra,rb<br>bs tmp,#branch\_target |
 | Load simple floating point immediate (21 most significant bits) | ldhi/ldhio |
 | Conditional addition | s[cond] re,ra,rb<br>and re,rc,re<br>add re,rd,re |
+| Generic conditional (e.g. division) | s[cond] re,ra,rb<br>div rf,rc,rd<br>sel re,rf,rc |
 
