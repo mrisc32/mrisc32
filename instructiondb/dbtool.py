@@ -41,6 +41,12 @@ def get_scales(meta, fmt):
     return [""]
 
 
+def get_bit_modes(meta, fmt):
+    if fmt == "A" and meta["tMode"] == "B":
+        return ["", "_PN", "_NP", "_NN"]
+    return [""]
+
+
 def get_sel_modes(meta, fmt):
     if fmt == "A" and meta["tMode"] == "S":
         return ["", "_1", "_2", "_3"]
@@ -101,12 +107,12 @@ def get_v_bits(vec, fold):
       return "00"
 
 
-def get_t_bits(pack, scale, sel_mode):
-    if pack == ".B" or scale == "*2" or sel_mode == "_1":
+def get_t_bits(pack, scale, bit_mode, sel_mode):
+    if pack == ".B" or scale == "*2" or bit_mode == "_PN" or sel_mode == "_1":
         return "01"
-    elif pack == ".H" or scale == "*4" or sel_mode == "_2":
+    elif pack == ".H" or scale == "*4" or bit_mode == "_NP" or sel_mode == "_2":
         return "10"
-    elif scale == "*8" or sel_mode == "_3":
+    elif scale == "*8" or bit_mode == "_NN" or sel_mode == "_3":
         return "11"
     else:
       return "00"
@@ -121,12 +127,13 @@ def gen_asm(name, meta):
                 v = get_v_bits(vec, fold)
                 for pack in get_packs(meta, fmt):
                     for scale in get_scales(meta, fmt):
-                        for sel_mode in get_sel_modes(meta, fmt):
-                            t = get_t_bits(pack, scale, sel_mode)
-                            s = f"{name}{sel_mode}{pack}{fold} "
-                            s += " " * max(0, (8 - len(s)))
-                            s += format_args(meta, args) + scale
-                            result.append({"fmt": fmt, "v": v, "t": t, "asm": s})
+                        for bit_mode in get_bit_modes(meta, fmt):
+                            for sel_mode in get_sel_modes(meta, fmt):
+                                t = get_t_bits(pack, scale, bit_mode, sel_mode)
+                                s = f"{name}{pack}{bit_mode}{sel_mode}{fold} "
+                                s += " " * max(0, (8 - len(s)))
+                                s += format_args(meta, args) + scale
+                                result.append({"fmt": fmt, "v": v, "t": t, "asm": s})
     return result
 
 

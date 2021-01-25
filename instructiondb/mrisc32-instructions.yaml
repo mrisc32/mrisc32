@@ -31,10 +31,10 @@ templates:
     fold: true
     asmOperands: "{1}, {2}, {3}"
 
-  # Bitwise operations (format A + C without packed support).
+  # Bitwise operations (format A + C with bitwise negation).
   type2: &type2
     fmts: [A, C]
-    tMode: N
+    tMode: B
     vModes: [VVS, VVV]
     fold: true
     asmOperands: "{1}, {2}, {3}"
@@ -244,42 +244,50 @@ instructions:
     OR:
       <<: *type2
       descr: >
-        Compute the bitwise or of two integer operands.
+        Compute the bitwise or of two integer operands, with optional negation
+        of the source operands.
       pseudo: |
-        a = b | c
+        if T == 00 then
+          a = b | c
+        else if T == 01 then
+          a = b | ~c
+        else if T == 10 then
+          a = ~b | c
+        else if T == 11 then
+          a = ~b | ~c
       op: 16
-
-    NOR:
-      <<: *type2
-      descr: >
-        Compute the bitwise inverse or of two integer operands.
-      pseudo: |
-        a = ~(b | c)
-      op: 17
 
     AND:
       <<: *type2
       descr: >
-        Compute the bitwise and of two integer operands.
+        Compute the bitwise and of two integer operands, with optional negation
+        of the source operands.
       pseudo: |
-        a = b & c
-      op: 18
-
-    BIC:
-      <<: *type2
-      descr: >
-        Compute the bitwise clear of two integer operands.
-      pseudo: |
-        a = b & ~c
-      op: 19
+        if T == 00 then
+          a = b & c
+        else if T == 01 then
+          a = b & ~c
+        else if T == 10 then
+          a = ~b & c
+        else if T == 11 then
+          a = ~b & ~c
+      op: 17
 
     XOR:
       <<: *type2
       descr: >
-        Compute the bitwise exclusive or of two integer operands.
+        Compute the bitwise exclusive or of two integer operands, with optional
+        negation of the source operands.
       pseudo: |
-        a = b ^ c
-      op: 20
+        if T == 00 then
+          a = b ^ c
+        else if T == 01 then
+          a = b ^ ~c
+        else if T == 10 then
+          a = ~b ^ c
+        else if T == 11 then
+          a = ~b ^ ~c
+      op: 18
 
     ASR:
       <<: *type3
