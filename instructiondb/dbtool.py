@@ -43,13 +43,13 @@ def get_scales(meta, fmt):
 
 def get_bit_modes(meta, fmt):
     if fmt == "A" and meta["tMode"] == "B":
-        return ["", "_PN", "_NP", "_NN"]
+        return ["", ".PN", ".NP", ".NN"]
     return [""]
 
 
 def get_sel_modes(meta, fmt):
     if fmt == "A" and meta["tMode"] == "S":
-        return ["", "_1", "_2", "_3"]
+        return ["", ".132", ".213", ".231"]
     return [""]
 
 
@@ -108,11 +108,11 @@ def get_v_bits(vec, fold):
 
 
 def get_t_bits(pack, scale, bit_mode, sel_mode):
-    if pack == ".B" or scale == "*2" or bit_mode == "_PN" or sel_mode == "_1":
+    if pack == ".B" or scale == "*2" or bit_mode == ".PN" or sel_mode == ".132":
         return "01"
-    elif pack == ".H" or scale == "*4" or bit_mode == "_NP" or sel_mode == "_2":
+    elif pack == ".H" or scale == "*4" or bit_mode == ".NP" or sel_mode == ".213":
         return "10"
-    elif scale == "*8" or bit_mode == "_NN" or sel_mode == "_3":
+    elif scale == "*8" or bit_mode == ".NN" or sel_mode == ".231":
         return "11"
     else:
       return "00"
