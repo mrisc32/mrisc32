@@ -32,6 +32,8 @@ def read_db(file_name):
 def get_packs(meta, fmt):
     if fmt in ["A", "B"] and meta["tMode"] == "P":
         return ["", ".B", ".H"]
+    if fmt in ["A", "B"] and meta["tMode"] == "PH":
+        return ["", ".H"]
     return [""]
 
 
@@ -69,7 +71,7 @@ def get_vecs(meta, fmt):
 
 
 def get_folds(meta, vec):
-    if len(vec) == 3 and vec[-1] == "V":
+    if meta["fold"] and len(vec) == 3 and vec[-1] == "V":
         return ["", "/F"]
     return [""]
 

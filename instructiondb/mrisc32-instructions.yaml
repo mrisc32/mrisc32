@@ -28,7 +28,7 @@ templates:
     fmts: [A, C]
     tMode: X
     vModes: [VSS, VSV]
-    fold: true
+    fold: false
     asmOperands: "{1}, {2}, {3}"
 
   # Bitwise operations (format A + C with bitwise negation).
@@ -937,10 +937,8 @@ instructions:
         operand is packed and stored in the upper half of the destination
         operand, and the second source operand is packed and stored in the
         lower half of the destination operand.
-      todo: >
-        Define pseudocode.
-
-        The packed byte (.B) variant is undefined and should not be listed.
+      todo: Define pseudocode.
+      tMode: PH  # Only packed half-word is supported
       op: 110
 
     FUNPL:
@@ -950,6 +948,7 @@ instructions:
         the unpacked source floating-point value is doubled and stored in the
         destination operand.
       todo: Define pseudocode.
+      tMode: PH  # Only packed half-word is supported
       op: 125
       fn: 0
 
@@ -960,6 +959,7 @@ instructions:
         the unpacked source floating-point value is doubled and stored in the
         destination operand.
       todo: Define pseudocode.
+      tMode: PH  # Only packed half-word is supported
       op: 125
       fn: 1
 
