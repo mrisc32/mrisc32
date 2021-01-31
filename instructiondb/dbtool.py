@@ -102,11 +102,11 @@ def format_args(meta, args):
 
 def get_v_bits(vec, fold):
     if vec in ["VVV", "VSV"]:
-      return "01" if fold else "11"
+        return "01" if fold else "11"
     elif vec in ["VVS", "VV", "VSS"]:
-      return "10"
+        return "10"
     else:
-      return "00"
+        return "00"
 
 
 def get_t_bits(pack, scale, bit_mode, sel_mode):
@@ -117,7 +117,7 @@ def get_t_bits(pack, scale, bit_mode, sel_mode):
     elif scale == "*8" or bit_mode == ".NN" or sel_mode == ".231":
         return "11"
     else:
-      return "00"
+        return "00"
 
 
 def gen_asm(name, meta):
@@ -136,32 +136,6 @@ def gen_asm(name, meta):
                                 s += " " * max(0, (8 - len(s)))
                                 s += format_args(meta, args) + scale
                                 result.append({"fmt": fmt, "v": v, "t": t, "asm": s})
-    return result
-
-
-def asm_to_markdown(insn, meta):
-    result = ""
-    for form in gen_asm(insn, meta):
-        result += f"{form['asm']}\n"
-    return result
-
-
-def insns_to_markdown(insns, sort_alphabetically):
-    result = ""
-    insn_list = sorted(insns) if sort_alphabetically else list(insns)
-    for insn in insn_list:
-        meta = insns[insn]
-        result += f"### {insn}\n\n"
-        result += meta["descr"].replace("\n", "\n\n")
-        result += f"```\n{gen_asm(insn, meta)}```\n\n"
-    return result
-
-
-def db_to_markdown(db, sort_alphabetically):
-    result = "# Instructions\n\n"
-    for category, insns in db.items():
-        result += f"## {category}\n\n"
-        result += insns_to_markdown(insns, sort_alphabetically)
     return result
 
 
@@ -276,16 +250,18 @@ def asm_to_tex(insn, meta):
     show_fmt = has_multiple_values(asm_forms, "fmt")
     show_v = has_multiple_values(asm_forms, "v")
     show_t = has_multiple_values(asm_forms, "t")
-    num_extra_columns = (1 if show_fmt else 0) +  (1 if show_v else 0) +  (1 if show_t else 0)
+    num_extra_columns = (
+        (1 if show_fmt else 0) + (1 if show_v else 0) + (1 if show_t else 0)
+    )
 
     result = "\\begin{tabular}{" + ("l|" * num_extra_columns) + "l}\n"
     result += " "
     if show_fmt:
-      result += "\\scriptsize \\textbf{Fmt} & "
+        result += "\\scriptsize \\textbf{Fmt} & "
     if show_v:
-      result += "\\scriptsize \\textbf{V} & "
+        result += "\\scriptsize \\textbf{V} & "
     if show_t:
-      result += "\\scriptsize \\textbf{T} & "
+        result += "\\scriptsize \\textbf{T} & "
     result += "\\scriptsize \\textbf{Assembler} \\\\\n"
     result += "\\hline\n"
     for form in asm_forms:
@@ -311,20 +287,21 @@ def pseudo_to_tex(meta):
 
 def insns_to_tex(insns, sort_alphabetically):
     result = ""
-    insn_list = sorted(insns) if sort_alphabetically else list(insns)
-    for insn in insn_list:
-        meta = insns[insn]
-        result += f"\\subsection{{{insn}}}\n\n"
+    name_list = sorted(insns) if sort_alphabetically else list(insns)
+    for name in name_list:
+        meta = insns[name]
+        result += f"\\subsection{{{name}}}\n"
+        result += f"\\label{{insn:{name}}}\n\n"
         result += descr_to_tex(meta)
         result += todo_to_tex(meta)
         result += encoding_to_tex(meta)
         result += pseudo_to_tex(meta)
-        result += asm_to_tex(insn, meta)
+        result += asm_to_tex(name, meta)
         result += note_to_tex(meta)
     return result
 
 
-def db_to_tex(db, sort_alphabetically):
+def to_tex_manual(db, sort_alphabetically):
     result = """% -*- mode: latex; tab-width: 2; indent-tabs-mode: nil; -*-
 %------------------------------------------------------------------------------
 % MRISC32 ISA Manual - Instructions.
@@ -345,13 +322,76 @@ def db_to_tex(db, sort_alphabetically):
     return result
 
 
+def get_short_descr(meta):
+    # TODO(m): We should probably add a short description field to the
+    # instruction database instad of machine-generating one like this.
+    descr = meta["descr"]
+    period_pos = descr.find(".")
+    if period_pos > 0:
+        descr = descr[:period_pos+1]
+    if len(descr) > 100:
+        descr = descr[:100]
+        space_pos = descr.rfind(" ")
+        if space_pos > 0:
+            descr = descr[:space_pos]
+        descr = descr + "..."
+    return descr
+
+
+def to_tex_list(db, sort_alphabetically):
+    result = ""
+
+    # Merge all instructions into a single dictionary.
+    all_insns = {}
+    for category, insns in db.items():
+        all_insns = {**all_insns, **insns}
+    name_list = sorted(all_insns) if sort_alphabetically else list(all_insns)
+
+    # Generate the list.
+    result += "\\begin{tabularx}{\\linewidth}{|l|l|c|c|p{290pt}|}\n"
+    result += "\\toprule\n"
+    result += "\\hline\n"
+    result += "\\textbf{Instruction} & \\textbf{Fmt} & \\textbf{Vec} & \\textbf{Pack} & \\textbf{Description} \\\\\n"
+    result += "\\hline\n"
+    result += "\\midrule\n"
+    result += "\\endfirsthead\n"
+    result += "\\toprule\n"
+    result += "\\hline\n"
+    result += "\\textbf{Instruction} & \\textbf{Fmt} & \\textbf{Vec} & \\textbf{Pack} & \\textbf{Description} \\\\\n"
+    result += "\\hline\n"
+    result += "\\midrule\n"
+    result += "\\endhead\n"
+    result += "\\midrule\n"
+    result += "\\multicolumn{5}{r}{\\footnotesize(continued)}\n"
+    result += "\\endfoot\n"
+    result += "\\bottomrule\n"
+    result += "\\endlastfoot\n"
+    result += "\\hline\n"
+    tick_yes = "\\checkmark"
+    tick_no = " "
+    for name in name_list:
+        meta = all_insns[name]
+        description = get_short_descr(meta)
+        result += f"\\hyperref[insn:{name}]{{{name}}} & "
+        result += f"{','.join(meta['fmts'])} & "
+        result += f"{tick_yes if meta['vModes'] else tick_no} & "
+        result += f"{tick_yes if meta['tMode'] in ['P', 'PH'] else tick_no} & "
+        result += f"{description} \\\\\n"
+        result += "\\hline\n"
+    result += "\\end{tabularx}\n\n"
+    return result
+
+
 def main():
     # Parse command line arguments.
     parser = argparse.ArgumentParser(
         description="Extract information from the MRISC32 insturction database"
     )
     parser.add_argument(
-        "-f", "--format", default="md", help="output format: md, tex (default: md)"
+        "-a",
+        "--artifact",
+        default="manual",
+        help="select artifact: manual, list (default: manual)",
     )
     parser.add_argument("-o", "--output", help="output file")
     parser.add_argument(
@@ -364,12 +404,12 @@ def main():
     db = read_db(args.db)
 
     # Parse the database and generate the output.
-    if args.format == "md":
-        generated = db_to_markdown(db, sort_alphabetically=args.sort)
-    elif args.format == "tex":
-        generated = db_to_tex(db, sort_alphabetically=args.sort)
+    if args.artifact == "manual":
+        generated = to_tex_manual(db, sort_alphabetically=args.sort)
+    elif args.artifact == "list":
+        generated = to_tex_list(db, sort_alphabetically=args.sort)
     else:
-        print(f"***Error: Unsupported output format: {args.format}")
+        print(f"***Error: Unsupported artifact: {args.artifact}")
         sys.exit(1)
 
     # Write or print the generated output.

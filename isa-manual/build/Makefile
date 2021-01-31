@@ -13,7 +13,7 @@ srcdir = ..
 docs = mrisc32-instruction-set-manual
 pdfs = $(addsuffix .pdf, $(docs))
 
-srcs = $(wildcard $(srcdir)/*.tex) instructions.tex
+srcs = $(wildcard $(srcdir)/*.tex) instructions.tex instruction-list.tex
 bibs = $(srcdir)/mrisc32-instruction-set-manual.bib
 figs = mrisc32-logo.pdf
 
@@ -32,7 +32,10 @@ mrisc32-logo.pdf: $(srcdir)/../doc/mrisc32-logo.svg
 	cairosvg $< -o $@
 
 instructions.tex: $(srcdir)/../instructiondb/mrisc32-instructions.yaml $(DBTOOL)
-	$(DBTOOL) --format tex --sort -o $@ $<
+	$(DBTOOL) --artifact manual --sort -o $@ $<
+
+instruction-list.tex: $(srcdir)/../instructiondb/mrisc32-instructions.yaml $(DBTOOL)
+	$(DBTOOL) --artifact list --sort -o $@ $<
 
 $(pdfs): %.pdf: $(srcdir)/%.tex $(srcs) $(figs) $(bibs)
 	$(PDFLATEX) $*

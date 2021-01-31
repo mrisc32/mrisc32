@@ -1,0 +1,27 @@
+% -*- mode: latex; tab-width: 2; indent-tabs-mode: nil; -*-
+%------------------------------------------------------------------------------
+% MRISC32 ISA Manual - Instruction list.
+%
+% This work is licensed under the Creative Commons Attribution-ShareAlike 4.0
+% International License. To view a copy of this license, visit
+% http://creativecommons.org/licenses/by-sa/4.0/ or send a letter to
+% Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+%------------------------------------------------------------------------------
+
+% We do the list in single column mode to better fit the table.
+\onecolumn
+
+\chapter{Alphabetical list of instructions}
+
+This non-normative section lists all the instructions of the MRISC32 ISA.
+
+Legend:
+\begin{bulletitems}
+  \item{\textbf{Fmt} --- Instruction encoding format(s)}
+  \item{\textbf{Vec} --- The instruction support vector operation}
+  \item{\textbf{Pack} --- The instruction support packed operation}
+\end{bulletitems}
+
+\input{build/instruction-list}
+
+\twocolumn
