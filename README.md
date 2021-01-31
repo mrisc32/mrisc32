@@ -1,6 +1,6 @@
 ![MRISC32](doc/mrisc32-logo.png)
 
-This is a open and free 32-bit RISC/Vector instruction set architecture ([ISA](https://en.wikipedia.org/wiki/Instruction_set_architecture)), primarily inspired by the [Cray-1](https://en.wikipedia.org/wiki/Cray-1) and [MIPS](https://en.wikipedia.org/wiki/MIPS_architecture) architectures. The focus is to create a clean, modern ISA that is equally attractive to software, hardware and compiler developers.
+This is an open and free 32-bit RISC/Vector instruction set architecture ([ISA](https://en.wikipedia.org/wiki/Instruction_set_architecture)), primarily inspired by the [Cray-1](https://en.wikipedia.org/wiki/Cray-1) and [MIPS](https://en.wikipedia.org/wiki/MIPS_architecture) architectures. The focus is to create a clean, modern ISA that is equally attractive to software, hardware and compiler developers.
 
 # Documentation
 
@@ -33,7 +33,7 @@ This is a open and free 32-bit RISC/Vector instruction set architecture ([ISA](h
   - Scaled indexed load/store (x1, x2, x4, x8).
   - Gather-scatter and stride-based vector load/store.
   - PC-releative and absolute load/store:
-    - ±16 KiB range with one instruction.
+    - ±8 KiB range with one instruction.
     - Full 32-bit range with two instructions.
   - PC-relative and absolute branch:
     - ±4 MiB range with one instruction.
