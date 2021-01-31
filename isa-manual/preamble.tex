@@ -16,12 +16,19 @@
 \usepackage{geometry}
 \usepackage[svgnames]{xcolor}
 \usepackage[endianness=big]{bytefield}
-\usepackage[colorlinks,citecolor=Navy,linkcolor=Navy]{hyperref}
+\usepackage[colorlinks,citecolor=Navy,linkcolor=Navy,pdftex]{hyperref}
 \usepackage{listings}
 \usepackage{ltablex}
 \usepackage{booktabs}
 \usepackage{mdframed}
 \usepackage{amssymb}
+
+% Set up PDF document properties.
+
+\hypersetup{
+  pdftitle = {MRISC32 Instruction Set Manual},
+  pdfauthor = {Marcus Geelnard}
+}
 
 % Setup style.
 
