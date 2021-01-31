@@ -1,0 +1,82 @@
+% -*- mode: latex; tab-width: 2; indent-tabs-mode: nil; -*-
+%------------------------------------------------------------------------------
+% MRISC32 ISA Manual - Base architecture.
+%
+% This work is licensed under the Creative Commons Attribution-ShareAlike 4.0
+% International License. To view a copy of this license, visit
+% http://creativecommons.org/licenses/by-sa/4.0/ or send a letter to
+% Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+%------------------------------------------------------------------------------
+
+\chapter{Base architecture}
+
+The base architecture is present in all implementations of the MRISC32 ISA. It
+primarily provides scalar integer and control flow instructions, and
+constitutes the minimum requirement for an MRISC32 implementation.
+
+\section{Scalar registers}
+
+There are 32 scalar registers, each 32 bits wide.
+
+\begin{bytefield}{32}
+  \bitheader{0,31} \\
+  \wordbox{1}{Z (S0)} \\
+  \wordbox{1}{S1} \\
+  \wordbox{1}{S2} \\
+  \wordbox[]{1}{$\vdots$} \\[1ex]
+  \wordbox{1}{S24} \\
+  \wordbox{1}{S25} \\
+  \wordbox{1}{FP (S26)} \\
+  \wordbox{1}{TP (S27)} \\
+  \wordbox{1}{SP (S28)} \\
+  \wordbox{1}{VL (S29)} \\
+  \wordbox{1}{LR (S30)} \\
+  \wordbox{1}{PC (S31)}
+\end{bytefield}
+
+\subsection{The Z register}
+
+Z is a read-only register that is always zero. Writing to the Z register has no
+effect.
+
+\subsection{The VL register}
+
+VL is the vector length register, which defines the length of vector
+operations.
+
+\todo{Describe how the VL register affects vector operations.}
+
+\subsection{The LR register}
+
+LR is the link register, which contains the return address for subroutines.
+
+\subsection{The PC register}
+
+PC is a read-only register that contains the memory address of the current
+instruction. Writing to the PC register has no effect.
+
+\subsection{FP, TP and SP}
+
+The scalar registers FP, TP and SP are aliases for S26, S27 and S28,
+respectively. They have no special meaning in hardware, but it is recommended
+that they are used as follows:
+
+\begin{tabular}{|l|l|}
+  \hline
+  \textbf{Name} & \textbf{Description} \\
+  \hline
+  FP & Frame pointer \\
+  \hline
+  TP & Thread pointer (for thread local storage) \\
+  \hline
+  SP & Stack pointer \\
+  \hline
+\end{tabular}
+
+\section{Memory addressing}
+
+\tbd
+
+\section{Exceptions}
+
+\tbd

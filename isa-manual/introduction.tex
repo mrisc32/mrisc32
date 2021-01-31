@@ -256,7 +256,7 @@ isnan(x) & True if $x$ is not a number (NaN) \\
 
 \tbd
 
-\section{Instruction formats}
+\section{Instruction encoding}
 
 All instructions are encoded in 32 bits. There are five different encoding
 formats, A, B, C, D and E, that mainly differ in the number and kinds of
@@ -372,8 +372,7 @@ The first register operand, Ra, can be a source or a destination register
 depending on the instruction, while Rb and Rc are always source registers.
 
 The T field further defines the instruction. For most instructions it defines
-the packed data type that is to be used (see
-section~\ref{sec:packed_data_operation}). For load/store instructions it
+the packed data type that is to be used. For load/store instructions it
 defines a scaling factor for the register offset operand (i.e. the third
 operand):
 
@@ -448,3 +447,24 @@ Format E can encode 8 major instructions (OP~$\in~[0,7]$).
 
 Encodings with the four most significant bits set to $1110$ or $1111$ are
 reserved for future extensions.
+
+\section{Architecture profiles}
+
+The MRISC32 instruction set architecture consists of a mandatory base
+architecture, plus the following optional architecture modules:
+
+\begin{bulletitems}
+  \item Vector operation module (VM)
+  \item Packed operation module (PM)
+  \item Floating-point module (FM)
+  \item Saturating and halving arithmetic module (SM)
+\end{bulletitems}
+
+\begin{todobox}
+  We should perhaps define 3-4 profiles that an implementation must comply to
+  (to minimize fragmentation). This is more to convey the intent of the ISA
+  than anything else.
+
+  We also need to document which instructions are not part of the base
+  architecture, e.g. by tagging with FM, SM, etc. in the instruction database.
+\end{todobox}

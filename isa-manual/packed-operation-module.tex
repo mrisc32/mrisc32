@@ -1,0 +1,84 @@
+% -*- mode: latex; tab-width: 2; indent-tabs-mode: nil; -*-
+%------------------------------------------------------------------------------
+% MRISC32 ISA Manual - Packed operation module.
+%
+% This work is licensed under the Creative Commons Attribution-ShareAlike 4.0
+% International License. To view a copy of this license, visit
+% http://creativecommons.org/licenses/by-sa/4.0/ or send a letter to
+% Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+%------------------------------------------------------------------------------
+
+\chapter{Packed operation module}
+
+The packed operation module adds facilities for parallel operation on packed
+data types. Most instructions are extended with packed operation modes, and a
+few instructions are added that mainly deal with packing and unpacking of data
+of different sizes.
+
+\section{Packed data operation}
+
+Many instructions are extended with the ability to operate on several
+individual sub-parts of the source and destination elements. These sub-parts
+are referred to as chunks.
+
+A single 32-bit element may be split up into one, two or four chunks, as
+follows:
+
+\begin{bytefield}{32}
+  \bitheader{0,8,16,24,31} \\
+  \begin{rightwordgroup}{}
+    \bitbox{32}{word}
+  \end{rightwordgroup} \\
+  \begin{rightwordgroup}{H}
+    \bitbox{16}{half-word} &
+   \bitbox{16}{half-word}
+  \end{rightwordgroup} \\
+  \begin{rightwordgroup}{B}
+    \bitbox{8}{byte} &
+    \bitbox{8}{byte} &
+    \bitbox{8}{byte} &
+    \bitbox{8}{byte}
+  \end{rightwordgroup}
+\end{bytefield}
+
+When a packed operation is performed, all chunks within a 32-bit word are
+processed in parallel. It is not possible to process only a subset of the
+chunks.
+
+\subsection{Word mode}
+
+In word mode, which is the defult, each element is processed as a single
+32-bit chunk.
+
+\subsection{Half-word mode}
+
+In half-word mode each element is processed as two individual 16-bit chunks in
+parallel.
+
+In assembly language, half-word mode is indicated by appending the suffix .H
+to the instruction mnemonic.
+
+\subsection{Byte mode}
+
+In byte mode each element is processed as four individual 8-bit chunks in
+parallel.
+
+In assembly language, byte mode is indicated by appending the suffix .B to the
+instruction mnemonic.
+
+\subsection{Packed floating-point operation}
+
+For floating-point instructions, using packed operating modes implies using
+floating-point precisions lower than single precision:
+
+\begin{tabular}{|l|l|}
+  \hline
+  \textbf{Mode} & \textbf{Precision} \\
+  \hline
+  word & Single precision floating-point \\
+  \hline
+  half-word & Half precision floating-point \\
+  \hline
+  byte & Quarter precision floating-point \\
+  \hline
+\end{tabular}

@@ -1,0 +1,88 @@
+% -*- mode: latex; tab-width: 2; indent-tabs-mode: nil; -*-
+%------------------------------------------------------------------------------
+% MRISC32 ISA Manual - Vector operation module.
+%
+% This work is licensed under the Creative Commons Attribution-ShareAlike 4.0
+% International License. To view a copy of this license, visit
+% http://creativecommons.org/licenses/by-sa/4.0/ or send a letter to
+% Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+%------------------------------------------------------------------------------
+
+\chapter{Vector operation module}
+
+The vector operation module adds facilities for vector processing. A set of
+vector registers is added, and most instructions are extended to support
+processing of vector registers.
+
+\section{Vector registers}
+
+There are 32 vector registers:
+
+\begin{tabular}{|l|l|}
+  \hline
+  \textbf{Vector reg. no} & \textbf{Name} \\
+  \hline
+  0 & VZ \\
+  \hline
+  1 & V1 \\
+  \hline
+  2 & V2 \\
+  \hline
+  3 & V3 \\
+  \hline
+  4 & V4 \\
+  \hline
+  \multicolumn{2}{c}{$\vdots$} \\
+  \hline
+  30 & V30 \\
+  \hline
+  31 & V31 \\
+  \hline
+\end{tabular}
+
+Each register, V$k$, consists of $N$ 32-bit elements, where $N$ is
+implementation defined ($N$ must be a power of two, and at least 16):
+
+\begin{bytefield}{32}
+  \bitheader{0,31} \\
+  \wordbox{1}{V$k[0]$} \\
+  \wordbox{1}{V$k[1]$} \\
+  \wordbox{1}{V$k[2]$} \\
+  \wordbox{1}{V$k[3]$} \\
+  \wordbox{1}{V$k[4]$} \\
+  \wordbox[]{1}{$\vdots$} \\[1ex]
+  \wordbox{1}{V$k[N-2]$} \\
+  \wordbox{1}{V$k[N-1]$}
+\end{bytefield}
+
+\subsection{The VZ register}
+
+VZ is a read-only register with all vector elements set to zero. Writing to the
+VZ register has no effect.
+
+\section{Vector operation}
+
+A vector operation is performed when a source or destination operand of an
+instruction is a vector register.
+
+\begin{todobox}
+  Describe how vector operations process elements of vector registers.
+\end{todobox}
+
+\section{Vector length}
+
+\begin{todobox}
+  Describe how VL affects vector operations.
+
+  Describe how to obtain the maximum vector length for an implementation.
+\end{todobox}
+
+\section{Folding}
+
+Horizontal vector operations (e.g. sum and min/max) are supported by repeated
+folding, where the upper half of one vector source operand is combined with the
+lower half of another vector source operand.
+
+\begin{todobox}
+  Describe how folding works.
+\end{todobox}
