@@ -93,6 +93,7 @@ instructions:
   Load and store:
     LDB:
       <<: *type1
+      name: Load signed byte
       descr: >
         Load and sign extend a byte (8 bits).
       pseudo: |
@@ -105,6 +106,7 @@ instructions:
 
     LDH:
       <<: *type1
+      name: Load signed half-word
       descr: >
         Load and sign extend a half-word (16 bits).
       pseudo: |
@@ -117,6 +119,7 @@ instructions:
 
     LDW:
       <<: *type1
+      name: Load word
       descr: >
         Load a word (32 bits).
       pseudo: |
@@ -129,6 +132,7 @@ instructions:
 
     LDUB:
       <<: *type1
+      name: Load unsigned byte
       descr: >
         Load and zero extend a byte (8 bits).
       pseudo: |
@@ -141,6 +145,7 @@ instructions:
 
     LDUH:
       <<: *type1
+      name: Load unsigned half-word
       descr: >
         Load and zero extend a half-word (16 bits).
       pseudo: |
@@ -153,6 +158,7 @@ instructions:
 
     LDEA:
       <<: *type1
+      name: Load effective address
       descr: >
         Load effective address.
       pseudo: |
@@ -168,6 +174,7 @@ instructions:
 
     STB:
       <<: *type1
+      name: Store byte
       descr: >
         Store a byte (8 bits).
       pseudo: |
@@ -180,6 +187,7 @@ instructions:
 
     STH:
       <<: *type1
+      name: Store half-word
       descr: >
         Store a half-word (16 bits).
       pseudo: |
@@ -192,6 +200,7 @@ instructions:
 
     STW:
       <<: *type1
+      name: Store word
       descr: >
         Store a word (32 bits).
       pseudo: |
@@ -204,6 +213,7 @@ instructions:
 
     LDLI:
       <<: *type6
+      name: Load low immediate
       descr: >
         Load low immediate value.
       pseudo: |
@@ -216,6 +226,7 @@ instructions:
 
     LDHI:
       <<: *type6
+      name: Load high immediate
       descr: >
         Load high immediate value.
       pseudo: |
@@ -243,6 +254,7 @@ instructions:
   Bitwise logic:
     OR:
       <<: *type2
+      name: Bitwise or
       descr: >
         Compute the bitwise or of two integer operands, with optional negation
         of the source operands.
@@ -259,6 +271,7 @@ instructions:
 
     AND:
       <<: *type2
+      name: Bitwise and
       descr: >
         Compute the bitwise and of two integer operands, with optional negation
         of the source operands.
@@ -275,6 +288,7 @@ instructions:
 
     XOR:
       <<: *type2
+      name: Bitwise exclusive or
       descr: >
         Compute the bitwise exclusive or of two integer operands, with optional
         negation of the source operands.
@@ -291,6 +305,7 @@ instructions:
 
     ASR:
       <<: *type3
+      name: Arithmetic shift right
       descr: >
         Arithmetically shift an integer operand to the right the number of
         bit positions given by another integer operand. Only the lowest
@@ -301,6 +316,7 @@ instructions:
 
     LSL:
       <<: *type3
+      name: Logical shift left
       descr: >
         Logically shift an integer operand to the left the number of bit
         positions given by another integer operand. Only the lowest log2(bits)
@@ -311,6 +327,7 @@ instructions:
 
     LSR:
       <<: *type3
+      name: Logical shift right
       descr: >
         Logically shift an integer operand to the right the number of bit
         positions given by another integer operand. Only the lowest log2(bits)
@@ -321,6 +338,7 @@ instructions:
 
     SEL:
       <<: *type3
+      name: Bitwise select
       descr: >
         Bitwise select.
       pseudo: |
@@ -338,6 +356,7 @@ instructions:
   Integer arithmetic:
     ADD:
       <<: *type3
+      name: Add
       descr: >
         Compute the sum of two integer operands.
       pseudo: |
@@ -346,6 +365,7 @@ instructions:
 
     SUB:
       <<: *type3
+      name: Subtract
       descr: >
         Compute the difference of two integer operands.
       op: 22
@@ -367,6 +387,7 @@ instructions:
 
     MIN:
       <<: *type3
+      name: Signed minimum
       descr: >
         Return the minimum value of two signed integer operands.
       pseudo: |
@@ -375,6 +396,7 @@ instructions:
 
     MAX:
       <<: *type3
+      name: Signed maxiumum
       descr: >
         Return the maximum value of two signed integer operands.
       pseudo: |
@@ -383,6 +405,7 @@ instructions:
 
     MINU:
       <<: *type3
+      name: Unsigned minimum
       descr: >
         Return the minimum value of two unsigned integer operands.
       pseudo: |
@@ -391,6 +414,7 @@ instructions:
 
     MAXU:
       <<: *type3
+      name: Unsigned maximum
       descr: >
         Return the maximum value of two unsigned integer operands.
       pseudo: |
@@ -399,6 +423,7 @@ instructions:
 
     MULQ:
       <<: *type4
+      name: Multiply Q-number
       descr: >
         Compute the product of two fixed point operands.
       pseudo: |
@@ -407,6 +432,7 @@ instructions:
 
     MUL:
       <<: *type4
+      name: Multiply
       descr: >
         Compute the product of two integer operands.
       pseudo: |
@@ -415,6 +441,7 @@ instructions:
 
     MULHI:
       <<: *type4
+      name: Signed multiply high
       descr: >
         Compute the upper part of the product of two signed integer operands.
       pseudo: |
@@ -423,6 +450,7 @@ instructions:
 
     MULHIU:
       <<: *type4
+      name: Unsigned multiply high
       descr: >
         Compute the upper part of the product of two unsigned integer
         operands.
@@ -432,6 +460,7 @@ instructions:
 
     DIV:
       <<: *type4
+      name: Signed divide
       descr: >
         Compute the quotient of two signed integer operands.
       pseudo: |
@@ -440,6 +469,7 @@ instructions:
 
     DIVU:
       <<: *type4
+      name: Unsigned divide
       descr: >
         Compute the quotient of two unsigned integer operands.
       pseudo: |
@@ -448,6 +478,7 @@ instructions:
 
     REM:
       <<: *type4
+      name: Signed remainder
       descr: >
         Compute the modulo of two signed integer operands.
       pseudo: |
@@ -456,6 +487,7 @@ instructions:
 
     REMU:
       <<: *type4
+      name: Unsigned remainder
       descr: >
         Compute the modulo of two unsigned integer operands.
       pseudo: |
@@ -464,6 +496,7 @@ instructions:
 
     ADDPCHI:
       <<: *type6
+      name: Add PC high immediate
       descr: >
         Compute the sum of the current PC and and immediate operand that is
         shifted to the left 11 steps before the addition.
@@ -479,6 +512,7 @@ instructions:
   Integer comparison:
     SEQ:
       <<: *type3
+      name: Set if equal
       descr: >
         Compare two integer operands, and set all bits of the result to 1 if
         the operands are equal, otherwise set all bits of the result to 0.
@@ -491,6 +525,7 @@ instructions:
 
     SNE:
       <<: *type3
+      name: Set if not equal
       descr: >
         Compare two integer operands, and set all bits of the result to 1 if
         the operands are not equal, otherwise set all bits of the result to
@@ -504,6 +539,7 @@ instructions:
 
     SLT:
       <<: *type3
+      name: Set if less than
       descr: >
         Compare two signed integer operands, and set all bits of the result
         to 1 if the first operand is less than the second operand, otherwise
@@ -517,6 +553,7 @@ instructions:
 
     SLTU:
       <<: *type3
+      name: Set if less than unsigned
       descr: >
         Compare two unsigned integer operands, and set all bits of the result
         to 1 if the first operand is less than the second operand, otherwise
@@ -530,6 +567,7 @@ instructions:
 
     SLE:
       <<: *type3
+      name: Set if less than or equal
       descr: >
         Compare two signed integer operands, and set all bits of the result
         to 1 if the first operand is less than or equal to the second
@@ -543,6 +581,7 @@ instructions:
 
     SLEU:
       <<: *type3
+      name: Set if less than or equal unsigned
       descr: >
         Compare two unsigned integer operands, and set all bits of the result
         to 1 if the first operand is less than or equal to the second
@@ -557,6 +596,7 @@ instructions:
   Branch:
     BZ:
       <<: *type8
+      name: Branch if zero
       descr: >
         Branch to the PC-relative target if all bits of the first source
         operand are zero.
@@ -567,6 +607,7 @@ instructions:
 
     BNZ:
       <<: *type8
+      name: Branch if not zero
       descr: >
         Branch to the PC-relative target if at least one of the bits of the
         first source operand is non-zero.
@@ -577,6 +618,7 @@ instructions:
 
     BS:
       <<: *type8
+      name: Branch if set
       descr: >
         Branch to the PC-relative target if all bits of the first source
         operand are non-zero.
@@ -587,6 +629,7 @@ instructions:
 
     BNS:
       <<: *type8
+      name: Branch if not set
       descr: >
         Branch to the PC-relative target if at least one of the bits of the
         first source operand is zero.
@@ -597,6 +640,7 @@ instructions:
 
     BLT:
       <<: *type8
+      name: Branch if less than
       descr: >
         Branch to the PC-relative target if the first source operand is a
         signed integer value that is less than zero.
@@ -607,6 +651,7 @@ instructions:
 
     BGE:
       <<: *type8
+      name: Branch if greater than or equal
       descr: >
         Branch to the PC-relative target if the first source operand is a
         signed integer value that is greater than or equal to zero.
@@ -617,6 +662,7 @@ instructions:
 
     BLE:
       <<: *type8
+      name: Branch if less than or equal
       descr: >
         Branch to the PC-relative target if the first source operand is a
         signed integer value that is less than or equal to zero.
@@ -627,6 +673,7 @@ instructions:
 
     BGT:
       <<: *type8
+      name: Branch if greater than
       descr: >
         Branch to the PC-relative target if the first source operand is a
         signed integer value that is greater than zero.
@@ -637,6 +684,7 @@ instructions:
 
     J:
       <<: *type7
+      name: Jump
       descr: >
         Jump to the target address that is formed by computing the sum of the
         register operand and the sign-extended immediate value multiplied by
@@ -660,6 +708,7 @@ instructions:
 
     JL:
       <<: *type7
+      name: Jump and link
       descr: >
         Jump and link. The current value of PC plus four is stored in the LR
         register, and the new PC is set to the target address that is formed by
@@ -683,6 +732,7 @@ instructions:
   Saturating and halving arithmetic:
     ADDS:
       <<: *type4
+      name: Signed add with saturation
       descr: >
         Compute the saturated sum of two signed integer operands.
       pseudo: |
@@ -691,6 +741,7 @@ instructions:
 
     ADDSU:
       <<: *type4
+      name: Unsigned add with saturation
       descr: >
         Compute the saturated sum of two unsigned integer operands.
       pseudo: |
@@ -699,6 +750,7 @@ instructions:
 
     ADDH:
       <<: *type4
+      name: Signed half add
       descr: >
         Compute the half sum of two signed integer operands.
       pseudo: |
@@ -707,6 +759,7 @@ instructions:
 
     ADDHU:
       <<: *type4
+      name: Unsigned half add
       descr: >
         Compute the half sum of two unsigned integer operands.
       pseudo: |
@@ -715,6 +768,7 @@ instructions:
 
     SUBS:
       <<: *type4
+      name: Signed subtract with saturation
       descr: >
         Compute the saturated difference of two signed integer operands.
       pseudo: |
@@ -723,6 +777,7 @@ instructions:
 
     SUBSU:
       <<: *type4
+      name: Unsigned subtract with saturation
       descr: >
         Compute the saturated difference of two unsigned integer operands.
       pseudo: |
@@ -731,6 +786,7 @@ instructions:
 
     SUBH:
       <<: *type4
+      name: Signed half subtract
       descr: >
         Compute the half difference of two signed integer operands.
       pseudo: |
@@ -739,6 +795,7 @@ instructions:
 
     SUBHU:
       <<: *type4
+      name: Unsigned half subtract
       descr: >
         Compute the half difference of two unsigned integer operands.
       pseudo: |
@@ -748,6 +805,7 @@ instructions:
   Floating-point arithmetic:
     FMIN:
       <<: *type4
+      name: Floating-point minimum
       descr: >
         Return the minimum value of two floating-point operands.
       pseudo: |
@@ -756,6 +814,7 @@ instructions:
 
     FMAX:
       <<: *type4
+      name: Floating-point maximum
       descr: >
         Return the maximum value of two floating-point operands.
       pseudo: |
@@ -764,6 +823,7 @@ instructions:
 
     FADD:
       <<: *type4
+      name: Floating-point add
       descr: >
         Compute the sum of two floating-point operands.
       pseudo: |
@@ -772,6 +832,7 @@ instructions:
 
     FSUB:
       <<: *type4
+      name: Floating-point subtract
       descr: >
         Compute the difference of two floating-point operands.
       pseudo: |
@@ -780,6 +841,7 @@ instructions:
 
     FMUL:
       <<: *type4
+      name: Floating-point multiply
       descr: >
         Compute the product of two floating-point operands.
       pseudo: |
@@ -788,6 +850,7 @@ instructions:
 
     FDIV:
       <<: *type4
+      name: Floating-point divide
       descr: >
         Compute the quotient of two floating-point operands.
       pseudo: |
@@ -797,6 +860,7 @@ instructions:
   Floating-point comparison:
     FSEQ:
       <<: *type4
+      name: Floating-point set if equal
       descr: >
         Compare two floating-point operands, and set all bits of the result to
         1 if the first operand is equal to the second operand, otherwise set
@@ -810,6 +874,7 @@ instructions:
 
     FSNE:
       <<: *type4
+      name: Floating-point set if not equal
       descr: >
         Compare two floating-point operands, and set all bits of the result to
         1 if the first operand is not equal to the second operand, otherwise
@@ -823,6 +888,7 @@ instructions:
 
     FSLT:
       <<: *type4
+      name: Floating-point set if less than
       descr: >
         Compare two floating-point operands, and set all bits of the result to
         1 if the first operand is less than the second operand, otherwise set
@@ -836,6 +902,7 @@ instructions:
 
     FSLE:
       <<: *type4
+      name: Floating-point set if less than or equal
       descr: >
         Compare two floating-point operands, and set all bits of the result to
         1 if the first operand is less than or equal to the second operand,
@@ -849,6 +916,7 @@ instructions:
 
     FSUNORD:
       <<: *type4
+      name: Floating-point set if unordered
       descr: >
         Set all bits of the result to 1 if any of the source operands are
         undordered (i.e. NaN), otherwise set all bits of the result to 0.
@@ -861,6 +929,7 @@ instructions:
 
     FSORD:
       <<: *type4
+      name: Floating-point set if ordered
       descr: >
         Set all bits of the result to 1 if both of the source operands are
         ordered (i.e. non-NaN), otherwise set all bits of the result to 0.
@@ -874,6 +943,7 @@ instructions:
   Floating-point conversion:
     ITOF:
       <<: *type4
+      name: Signed integer to floating-point
       descr: >
         Convert a signed integer value to a floating-point value. The exponent
         of the resulting floating-point value is subtracted by the integer
@@ -884,6 +954,7 @@ instructions:
 
     UTOF:
       <<: *type4
+      name: Unsigned integer to floating-point
       descr: >
         Convert an unsigned integer value to a floating-point value. The
         exponent of the resulting floating-point value is subtracted by the
@@ -894,6 +965,7 @@ instructions:
 
     FTOI:
       <<: *type4
+      name: Floating-point to signed integer
       descr: >
         Convert a floating-point value to a signed integer value, without
         rounding. The integer offset provided by the second source operand is
@@ -903,6 +975,7 @@ instructions:
 
     FTOU:
       <<: *type4
+      name: Floating-point to unsigned integer
       descr: >
         Convert a floating-point value to an unsigned integer value, without
         rounding. The integer offset provided by the second source operand is
@@ -912,6 +985,7 @@ instructions:
 
     FTOIR:
       <<: *type4
+      name: Floating-point to signed integer with rounding
       descr: >
         Convert a floating-point value to a signed integer value, with
         rounding. The integer offset provided by the second source operand is
@@ -921,6 +995,7 @@ instructions:
 
     FTOUR:
       <<: *type4
+      name: Floating-point to unsigned integer with rounding
       descr: >
         Convert a floating-point value to an unsigned integer value, with
         rounding. The integer offset provided by the second source operand is
@@ -930,6 +1005,7 @@ instructions:
 
     FPACK:
       <<: *type4
+      name: Floating-point pack
       descr: >
         Convert and pack two floating-point operands into a single operand.
 
@@ -943,6 +1019,7 @@ instructions:
 
     FUNPL:
       <<: *type5
+      name: Floating-point unpack low
       descr: >
         Unpack the low half of a packed floating-point pair. The preicison of
         the unpacked source floating-point value is doubled and stored in the
@@ -954,6 +1031,7 @@ instructions:
 
     FUNPH:
       <<: *type5
+      name: Floating-point unpack high
       descr: >
         Unpack the high half of a packed floating-point pair. The preicison of
         the unpacked source floating-point value is doubled and stored in the
@@ -966,6 +1044,7 @@ instructions:
   # TODO(m): Find better categories for these instructions.
   Miscellaneous:
     CPUID:
+      name: CPU identification
       descr: >
         Query CPU properties.
       todo: Define pseudocode.
@@ -978,6 +1057,7 @@ instructions:
 
     SHUF:
       <<: *type2
+      name: Shuffle bytes
       descr: >
         Shuffle bytes with optional zero- or sign-extension.
 
@@ -1024,6 +1104,7 @@ instructions:
 
     PACK:
       <<: *type4
+      name: Pack
       descr: >
         Pack the lower parts of two integer operands.
       pseudo: |
@@ -1032,6 +1113,7 @@ instructions:
 
     PACKS:
       <<: *type4
+      name: Signed pack with saturation
       descr: >
         Saturate and pack the lower parts of two signed integer operands.
       pseudo: |
@@ -1042,6 +1124,7 @@ instructions:
 
     PACKSU:
       <<: *type4
+      name: Unsigned pack with saturation
       descr: >
         Saturate and pack the lower parts of two unsigned integer operands.
       pseudo: |
@@ -1052,6 +1135,7 @@ instructions:
 
     CLZ:
       <<: *type5
+      name: Count leading zeros
       descr: >
         Count the number of leading zero bits in the source operand.
       pseudo: |
@@ -1065,6 +1149,7 @@ instructions:
 
     POPCNT:
       <<: *type5
+      name: Population count
       descr: >
         Count the number of non-zero bits in the source operand.
       pseudo: |
@@ -1077,6 +1162,7 @@ instructions:
 
     REV:
       <<: *type5
+      name: Reverse bits
       descr: >
         Reverse the bits of the source operand.
       pseudo: |

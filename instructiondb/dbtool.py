@@ -290,7 +290,8 @@ def insns_to_tex(insns, sort_alphabetically):
     name_list = sorted(insns) if sort_alphabetically else list(insns)
     for name in name_list:
         meta = insns[name]
-        result += f"\\subsection{{{name}}}\n"
+        title = f"{name} - {meta['name']}"
+        result += f"\\subsection{{{title}}}\n"
         result += f"\\label{{insn:{name}}}\n\n"
         result += descr_to_tex(meta)
         result += todo_to_tex(meta)
@@ -320,22 +321,6 @@ def to_tex_manual(db, sort_alphabetically):
         result += insns_to_tex(insns, sort_alphabetically)
         result += "\\clearpage\n\n"
     return result
-
-
-def get_short_descr(meta):
-    # TODO(m): We should probably add a short description field to the
-    # instruction database instad of machine-generating one like this.
-    descr = meta["descr"]
-    period_pos = descr.find(".")
-    if period_pos > 0:
-        descr = descr[:period_pos+1]
-    if len(descr) > 100:
-        descr = descr[:100]
-        space_pos = descr.rfind(" ")
-        if space_pos > 0:
-            descr = descr[:space_pos]
-        descr = descr + "..."
-    return descr
 
 
 def to_tex_list(db, sort_alphabetically):
@@ -371,12 +356,11 @@ def to_tex_list(db, sort_alphabetically):
     tick_no = " "
     for name in name_list:
         meta = all_insns[name]
-        description = get_short_descr(meta)
         result += f"\\hyperref[insn:{name}]{{{name}}} & "
         result += f"{','.join(meta['fmts'])} & "
         result += f"{tick_yes if meta['vModes'] else tick_no} & "
         result += f"{tick_yes if meta['tMode'] in ['P', 'PH'] else tick_no} & "
-        result += f"{description} \\\\\n"
+        result += f"{meta['name']} \\\\\n"
         result += "\\hline\n"
     result += "\\end{tabularx}\n\n"
     return result
