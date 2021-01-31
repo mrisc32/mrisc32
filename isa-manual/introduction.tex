@@ -443,10 +443,19 @@ Format E is used for conditional branch instructions.
 
 Format E can encode 8 major instructions (OP~$\in~[0,7]$).
 
-\subsection{Future encodings}
+\subsection{Future extensions and encodings}
+
+The following table lists the actual and maximum number of instructions per
+instruction format:
+
+\input{build/instruction-counts}
 
 Encodings with the four most significant bits set to $1110$ or $1111$ are
-reserved for future extensions.
+reserved for future encoding formats (or for extending the number of possible
+instructions for existing formats).
+
+As can be seen, there is ample room for adding more instructions in future
+versions of the ISA.
 
 \section{Architecture profiles}
 

@@ -328,21 +328,21 @@ def to_tex_list(db, sort_alphabetically):
 
     # Merge all instructions into a single dictionary.
     all_insns = {}
-    for category, insns in db.items():
+    for _, insns in db.items():
         all_insns = {**all_insns, **insns}
     name_list = sorted(all_insns) if sort_alphabetically else list(all_insns)
 
     # Generate the list.
-    result += "\\begin{tabularx}{\\linewidth}{|l|l|c|c|p{290pt}|}\n"
+    result += "\\begin{tabularx}{\\linewidth}{|l|l|c|c|p{220pt}|}\n"
     result += "\\toprule\n"
     result += "\\hline\n"
-    result += "\\textbf{Instruction} & \\textbf{Fmt} & \\textbf{Vec} & \\textbf{Pack} & \\textbf{Description} \\\\\n"
+    result += "\\textbf{Instruction} & \\textbf{Fmt} & \\textbf{Vec} & \\textbf{Pack} & \\textbf{Name} \\\\\n"
     result += "\\hline\n"
     result += "\\midrule\n"
     result += "\\endfirsthead\n"
     result += "\\toprule\n"
     result += "\\hline\n"
-    result += "\\textbf{Instruction} & \\textbf{Fmt} & \\textbf{Vec} & \\textbf{Pack} & \\textbf{Description} \\\\\n"
+    result += "\\textbf{Instruction} & \\textbf{Fmt} & \\textbf{Vec} & \\textbf{Pack} & \\textbf{Name} \\\\\n"
     result += "\\hline\n"
     result += "\\midrule\n"
     result += "\\endhead\n"
@@ -363,6 +363,32 @@ def to_tex_list(db, sort_alphabetically):
         result += f"{meta['name']} \\\\\n"
         result += "\\hline\n"
     result += "\\end{tabularx}\n\n"
+
+    return result
+
+
+def to_tex_instr_counts(db):
+    # Count number of instructions per format.
+    max_counts = {"A": 124, "B": 256, "C": 47, "D": 7, "E": 8}
+    counts = {"A": 0, "B": 0, "C": 0, "D": 0, "E": 0}
+    for _, insns in db.items():
+        for name in insns:
+            meta = insns[name]
+            for fmt in meta['fmts']:
+                counts[fmt] += 1
+
+    # Generate a summary of the number of instructions per encoding format.
+    result = ""
+    result += "\\begin{tabular}{|l|r|r|r|}\n"
+    result += "\\hline\n"
+    result += "\\textbf{Format} & \\textbf{Count} & \\textbf{Max} & \\textbf{Used} \\\\\n"
+    result += "\\hline\n"
+    for fmt in counts:
+        used = 100 * counts[fmt] / max_counts[fmt]
+        result += f"{fmt} & {counts[fmt]} & {max_counts[fmt]} & {used:.0f}\\% \\\\\n"
+        result += "\\hline\n"
+    result += "\\end{tabular}\n\n"
+
     return result
 
 
@@ -375,7 +401,7 @@ def main():
         "-a",
         "--artifact",
         default="manual",
-        help="select artifact: manual, list (default: manual)",
+        help="select artifact: manual, list, counts (default: manual)",
     )
     parser.add_argument("-o", "--output", help="output file")
     parser.add_argument(
@@ -392,6 +418,8 @@ def main():
         generated = to_tex_manual(db, sort_alphabetically=args.sort)
     elif args.artifact == "list":
         generated = to_tex_list(db, sort_alphabetically=args.sort)
+    elif args.artifact == "counts":
+        generated = to_tex_instr_counts(db)
     else:
         print(f"***Error: Unsupported artifact: {args.artifact}")
         sys.exit(1)
