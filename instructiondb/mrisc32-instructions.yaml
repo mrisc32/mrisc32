@@ -1101,6 +1101,7 @@ instructions:
         conversion between big and little endian formats or different RGBA
         color formats).
       op: 36
+      tMode: N  # SHUF does not have any T mode
 
     PACK:
       <<: *type4
