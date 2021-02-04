@@ -252,23 +252,6 @@ instructions:
       asmOperands: "{1}, #ext21hi(IM)"
 
   Bitwise logic:
-    OR:
-      <<: *type2
-      name: Bitwise or
-      descr: >
-        Compute the bitwise or of two integer operands, with optional negation
-        of the source operands.
-      pseudo: |
-        if T == 00 then
-          a = b | c
-        else if T == 01 then
-          a = b | ~c
-        else if T == 10 then
-          a = ~b | c
-        else if T == 11 then
-          a = ~b | ~c
-      op: 16
-
     AND:
       <<: *type2
       name: Bitwise and
@@ -284,6 +267,23 @@ instructions:
           a = ~b & c
         else if T == 11 then
           a = ~b & ~c
+      op: 16
+
+    OR:
+      <<: *type2
+      name: Bitwise or
+      descr: >
+        Compute the bitwise or of two integer operands, with optional negation
+        of the source operands.
+      pseudo: |
+        if T == 00 then
+          a = b | c
+        else if T == 01 then
+          a = b | ~c
+        else if T == 10 then
+          a = ~b | c
+        else if T == 11 then
+          a = ~b | ~c
       op: 17
 
     XOR:
@@ -312,7 +312,7 @@ instructions:
         log2(bits) bits of the shift operand are used.
       pseudo: |
         a = int(b) >> int(c & ones(log2(bits)))
-      op: 33
+      op: 19
 
     LSL:
       <<: *type3
@@ -323,7 +323,7 @@ instructions:
         bits of the shift operand are used.
       pseudo: |
         a = uint(b) << int(c & ones(log2(bits)))
-      op: 34
+      op: 20
 
     LSR:
       <<: *type3
@@ -334,7 +334,7 @@ instructions:
         bits of the shift operand are used.
       pseudo: |
         a = uint(b) >> int(c & ones(log2(bits)))
-      op: 35
+      op: 21
 
     SEL:
       <<: *type3
@@ -350,7 +350,7 @@ instructions:
           a = (a & b) | (c & ~b)
         else if T == 11 then
           a = (c & b) | (a & ~b)
-      op: 36
+      op: 28
       tMode: S  # SEL uses a special kind of interpretation of the T field.
 
   Integer arithmetic:
@@ -361,14 +361,14 @@ instructions:
         Compute the sum of two integer operands.
       pseudo: |
         a = int(b) + int(c)
-      op: 21
+      op: 22
 
     SUB:
       <<: *type3
       name: Subtract
       descr: >
         Compute the difference of two integer operands.
-      op: 22
+      op: 23
       pseudo: |
         a = int(c) - int(b)
       # The source operands are reversed for SUB.
@@ -392,7 +392,7 @@ instructions:
         Return the minimum value of two signed integer operands.
       pseudo: |
         a = min(int(b), int(c))
-      op: 29
+      op: 24
 
     MAX:
       <<: *type3
@@ -401,7 +401,7 @@ instructions:
         Return the maximum value of two signed integer operands.
       pseudo: |
         a = max(int(b), int(c))
-      op: 30
+      op: 25
 
     MINU:
       <<: *type3
@@ -410,7 +410,7 @@ instructions:
         Return the minimum value of two unsigned integer operands.
       pseudo: |
         a = min(uint(b), uint(c))
-      op: 31
+      op: 26
 
     MAXU:
       <<: *type3
@@ -419,16 +419,43 @@ instructions:
         Return the maximum value of two unsigned integer operands.
       pseudo: |
         a = max(uint(b), uint(c))
-      op: 32
+      op: 27
 
-    MULQ:
+    DIV:
       <<: *type4
-      name: Multiply Q-number
+      name: Signed divide
       descr: >
-        Compute the product of two fixed point operands.
+        Compute the quotient of two signed integer operands.
       pseudo: |
-        a = (int(b) * int(c)) >> (bits-1)
-      op: 64
+        a = int(b) / int(c)
+      op: 48
+
+    DIVU:
+      <<: *type4
+      name: Unsigned divide
+      descr: >
+        Compute the quotient of two unsigned integer operands.
+      pseudo: |
+        a = uint(b) / uint(c)
+      op: 49
+
+    REM:
+      <<: *type4
+      name: Signed remainder
+      descr: >
+        Compute the modulo of two signed integer operands.
+      pseudo: |
+        a = int(b) % int(c)
+      op: 50
+
+    REMU:
+      <<: *type4
+      name: Unsigned remainder
+      descr: >
+        Compute the modulo of two unsigned integer operands.
+      pseudo: |
+        a = uint(b) % uint(c)
+      op: 51
 
     MUL:
       <<: *type4
@@ -437,7 +464,7 @@ instructions:
         Compute the product of two integer operands.
       pseudo: |
         a = int(b) * int(c)
-      op: 65
+      op: 52
 
     MULHI:
       <<: *type4
@@ -446,7 +473,7 @@ instructions:
         Compute the upper part of the product of two signed integer operands.
       pseudo: |
         a = (int(b) * int(c)) >> bits
-      op: 66
+      op: 53
 
     MULHIU:
       <<: *type4
@@ -456,43 +483,16 @@ instructions:
         operands.
       pseudo: |
         a = (uint(b) * uint(c)) >> bits
-      op: 67
+      op: 54
 
-    DIV:
+    MULQ:
       <<: *type4
-      name: Signed divide
+      name: Multiply Q-number
       descr: >
-        Compute the quotient of two signed integer operands.
+        Compute the product of two fixed point operands.
       pseudo: |
-        a = int(b) / int(c)
-      op: 68
-
-    DIVU:
-      <<: *type4
-      name: Unsigned divide
-      descr: >
-        Compute the quotient of two unsigned integer operands.
-      pseudo: |
-        a = uint(b) / uint(c)
-      op: 69
-
-    REM:
-      <<: *type4
-      name: Signed remainder
-      descr: >
-        Compute the modulo of two signed integer operands.
-      pseudo: |
-        a = int(b) % int(c)
-      op: 70
-
-    REMU:
-      <<: *type4
-      name: Unsigned remainder
-      descr: >
-        Compute the modulo of two unsigned integer operands.
-      pseudo: |
-        a = uint(b) % uint(c)
-      op: 71
+        a = (int(b) * int(c)) >> (bits-1)
+      op: 55
 
     ADDPCHI:
       <<: *type6
@@ -521,7 +521,7 @@ instructions:
           a = ones(bits)
         else
           a = zeros(bits)
-      op: 23
+      op: 30
 
     SNE:
       <<: *type3
@@ -535,7 +535,7 @@ instructions:
           a = ones(bits)
         else
           a = zeros(bits)
-      op: 24
+      op: 31
 
     SLT:
       <<: *type3
@@ -549,7 +549,7 @@ instructions:
           a = ones(bits)
         else
           a = zeros(bits)
-      op: 25
+      op: 32
 
     SLTU:
       <<: *type3
@@ -563,7 +563,7 @@ instructions:
           a = ones(bits)
         else
           a = zeros(bits)
-      op: 26
+      op: 33
 
     SLE:
       <<: *type3
@@ -577,7 +577,7 @@ instructions:
           a = ones(bits)
         else
           a = zeros(bits)
-      op: 27
+      op: 34
 
     SLEU:
       <<: *type3
@@ -591,7 +591,7 @@ instructions:
           a = ones(bits)
         else
           a = zeros(bits)
-      op: 28
+      op: 35
 
   Branch:
     BZ:
@@ -729,79 +729,6 @@ instructions:
         in combination with a preceding LDHI.
       op: 5
 
-  Saturating and halving arithmetic:
-    ADDS:
-      <<: *type4
-      name: Signed add with saturation
-      descr: >
-        Compute the saturated sum of two signed integer operands.
-      pseudo: |
-        a = sat(int(b) + int(c), bits)
-      op: 56
-
-    ADDSU:
-      <<: *type4
-      name: Unsigned add with saturation
-      descr: >
-        Compute the saturated sum of two unsigned integer operands.
-      pseudo: |
-        a = satu(uint(b) + uint(c), bits)
-      op: 57
-
-    ADDH:
-      <<: *type4
-      name: Signed half add
-      descr: >
-        Compute the half sum of two signed integer operands.
-      pseudo: |
-        a = (int(b) + int(c)) >> 1
-      op: 58
-
-    ADDHU:
-      <<: *type4
-      name: Unsigned half add
-      descr: >
-        Compute the half sum of two unsigned integer operands.
-      pseudo: |
-        a = (uint(b) + uint(c)) >> 1
-      op: 59
-
-    SUBS:
-      <<: *type4
-      name: Signed subtract with saturation
-      descr: >
-        Compute the saturated difference of two signed integer operands.
-      pseudo: |
-        a = sat(int(b) - int(c), bits)
-      op: 60
-
-    SUBSU:
-      <<: *type4
-      name: Unsigned subtract with saturation
-      descr: >
-        Compute the saturated difference of two unsigned integer operands.
-      pseudo: |
-        a = satu(uint(b) - uint(c), bits)
-      op: 61
-
-    SUBH:
-      <<: *type4
-      name: Signed half subtract
-      descr: >
-        Compute the half difference of two signed integer operands.
-      pseudo: |
-        a = (int(b) - int(c)) >> 1
-      op: 62
-
-    SUBHU:
-      <<: *type4
-      name: Unsigned half subtract
-      descr: >
-        Compute the half difference of two unsigned integer operands.
-      pseudo: |
-        a = (uint(b) - uint(c)) >> 1
-      op: 63
-
   Floating-point arithmetic:
     FMIN:
       <<: *type4
@@ -810,7 +737,7 @@ instructions:
         Return the minimum value of two floating-point operands.
       pseudo: |
         a = min(float(b), float(c))
-      op: 96
+      op: 64
 
     FMAX:
       <<: *type4
@@ -819,7 +746,7 @@ instructions:
         Return the maximum value of two floating-point operands.
       pseudo: |
         a = max(float(b), float(c))
-      op: 97
+      op: 65
 
     FADD:
       <<: *type4
@@ -828,7 +755,7 @@ instructions:
         Compute the sum of two floating-point operands.
       pseudo: |
         a = float(b) + float(c)
-      op: 112
+      op: 80
 
     FSUB:
       <<: *type4
@@ -837,7 +764,7 @@ instructions:
         Compute the difference of two floating-point operands.
       pseudo: |
         a = float(b) - float(c)
-      op: 113
+      op: 81
 
     FMUL:
       <<: *type4
@@ -846,7 +773,7 @@ instructions:
         Compute the product of two floating-point operands.
       pseudo: |
         a = float(b) * float(c)
-      op: 114
+      op: 82
 
     FDIV:
       <<: *type4
@@ -855,7 +782,7 @@ instructions:
         Compute the quotient of two floating-point operands.
       pseudo: |
         a = float(b) / float(c)
-      op: 115
+      op: 83
 
   Floating-point comparison:
     FSEQ:
@@ -870,7 +797,7 @@ instructions:
           a = ones(bits)
         else
           a = zeros(bits)
-      op: 98
+      op: 66
 
     FSNE:
       <<: *type4
@@ -884,7 +811,7 @@ instructions:
           a = ones(bits)
         else
           a = zeros(bits)
-      op: 99
+      op: 67
 
     FSLT:
       <<: *type4
@@ -898,7 +825,7 @@ instructions:
           a = ones(bits)
         else
           a = zeros(bits)
-      op: 100
+      op: 68
 
     FSLE:
       <<: *type4
@@ -912,7 +839,7 @@ instructions:
           a = ones(bits)
         else
           a = zeros(bits)
-      op: 101
+      op: 69
 
     FSUNORD:
       <<: *type4
@@ -925,7 +852,7 @@ instructions:
           a = ones(bits)
         else
           a = zeros(bits)
-      op: 102
+      op: 70
 
     FSORD:
       <<: *type4
@@ -938,7 +865,7 @@ instructions:
           a = ones(bits)
         else
           a = zeros(bits)
-      op: 103
+      op: 71
 
   Floating-point conversion:
     ITOF:
@@ -950,7 +877,7 @@ instructions:
         offset provided by the second source operand before storing the final
         floating-point value in the destination operand.
       todo: Define pseudocode.
-      op: 104
+      op: 72
 
     UTOF:
       <<: *type4
@@ -961,7 +888,7 @@ instructions:
         integer offset provided by the second source operand before storing the
         final floating-point value in the destination operand.
       todo: Define pseudocode.
-      op: 105
+      op: 73
 
     FTOI:
       <<: *type4
@@ -971,7 +898,7 @@ instructions:
         rounding. The integer offset provided by the second source operand is
         added to the floating-point exponent before the conversion.
       todo: Define pseudocode.
-      op: 106
+      op: 74
 
     FTOU:
       <<: *type4
@@ -981,7 +908,7 @@ instructions:
         rounding. The integer offset provided by the second source operand is
         added to the floating-point exponent before the conversion.
       todo: Define pseudocode.
-      op: 107
+      op: 75
 
     FTOIR:
       <<: *type4
@@ -991,7 +918,7 @@ instructions:
         rounding. The integer offset provided by the second source operand is
         added to the floating-point exponent before the conversion.
       todo: Define pseudocode.
-      op: 108
+      op: 76
 
     FTOUR:
       <<: *type4
@@ -1001,7 +928,7 @@ instructions:
         rounding. The integer offset provided by the second source operand is
         added to the floating-point exponent before the conversion.
       todo: Define pseudocode.
-      op: 109
+      op: 77
 
     FPACK:
       <<: *type4
@@ -1015,7 +942,7 @@ instructions:
         lower half of the destination operand.
       todo: Define pseudocode.
       tMode: PH  # Only packed half-word is supported
-      op: 110
+      op: 78
 
     FUNPL:
       <<: *type5
@@ -1040,6 +967,80 @@ instructions:
       tMode: PH  # Only packed half-word is supported
       op: 125
       fn: 1
+
+
+  Saturating and halving arithmetic:
+    ADDS:
+      <<: *type4
+      name: Signed add with saturation
+      descr: >
+        Compute the saturated sum of two signed integer operands.
+      pseudo: |
+        a = sat(int(b) + int(c), bits)
+      op: 96
+
+    ADDSU:
+      <<: *type4
+      name: Unsigned add with saturation
+      descr: >
+        Compute the saturated sum of two unsigned integer operands.
+      pseudo: |
+        a = satu(uint(b) + uint(c), bits)
+      op: 97
+
+    ADDH:
+      <<: *type4
+      name: Signed half add
+      descr: >
+        Compute the half sum of two signed integer operands.
+      pseudo: |
+        a = (int(b) + int(c)) >> 1
+      op: 98
+
+    ADDHU:
+      <<: *type4
+      name: Unsigned half add
+      descr: >
+        Compute the half sum of two unsigned integer operands.
+      pseudo: |
+        a = (uint(b) + uint(c)) >> 1
+      op: 99
+
+    SUBS:
+      <<: *type4
+      name: Signed subtract with saturation
+      descr: >
+        Compute the saturated difference of two signed integer operands.
+      pseudo: |
+        a = sat(int(b) - int(c), bits)
+      op: 102
+
+    SUBSU:
+      <<: *type4
+      name: Unsigned subtract with saturation
+      descr: >
+        Compute the saturated difference of two unsigned integer operands.
+      pseudo: |
+        a = satu(uint(b) - uint(c), bits)
+      op: 103
+
+    SUBH:
+      <<: *type4
+      name: Signed half subtract
+      descr: >
+        Compute the half difference of two signed integer operands.
+      pseudo: |
+        a = (int(b) - int(c)) >> 1
+      op: 104
+
+    SUBHU:
+      <<: *type4
+      name: Unsigned half subtract
+      descr: >
+        Compute the half difference of two unsigned integer operands.
+      pseudo: |
+        a = (uint(b) - uint(c)) >> 1
+      op: 105
 
   # TODO(m): Find better categories for these instructions.
   Miscellaneous:
@@ -1100,7 +1101,7 @@ instructions:
         and with 0x00ff00ff) and/or changing the byte order (e.g. for
         conversion between big and little endian formats or different RGBA
         color formats).
-      op: 36
+      op: 29
       tMode: N  # SHUF does not have any T mode
 
     PACK:
@@ -1110,7 +1111,7 @@ instructions:
         Pack the lower parts of two integer operands.
       pseudo: |
         a = (b << (bits/2)) | (c & ones(bits/2))
-      op: 48
+      op: 58
 
     PACKS:
       <<: *type4
@@ -1121,7 +1122,7 @@ instructions:
         hi = sat(int(b), bits/2) & ones(bits/2)
         lo = sat(int(c), bits/2) & ones(bits/2)
         a = (hi << (bits/2)) | lo
-      op: 49
+      op: 59
 
     PACKSU:
       <<: *type4
@@ -1132,7 +1133,18 @@ instructions:
         hi = satu(uint(b), bits/2)
         lo = satu(uint(c), bits/2)
         a = (hi << (bits/2)) | lo
-      op: 50
+      op: 60
+
+    REV:
+      <<: *type5
+      name: Reverse bits
+      descr: >
+        Reverse the bits of the source operand.
+      pseudo: |
+        for k in 0 to bits-1
+          a<bits-1-k> = b<k>
+      op: 124
+      fn: 0
 
     CLZ:
       <<: *type5
@@ -1146,7 +1158,7 @@ instructions:
             break
           a = int(a) + 1
       op: 124
-      fn: 0
+      fn: 1
 
     POPCNT:
       <<: *type5
@@ -1158,16 +1170,5 @@ instructions:
         for k in 0 to bits-1
           if b<k> == 1 then
             a = int(a) + 1
-      op: 124
-      fn: 1
-
-    REV:
-      <<: *type5
-      name: Reverse bits
-      descr: >
-        Reverse the bits of the source operand.
-      pseudo: |
-        for k in 0 to bits-1
-          a<bits-1-k> = b<k>
       op: 124
       fn: 2
