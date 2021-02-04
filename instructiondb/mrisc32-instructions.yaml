@@ -1006,6 +1006,24 @@ instructions:
         a = (uint(b) + uint(c)) >> 1
       op: 99
 
+    ADDHR:
+      <<: *type4
+      name: Signed half add with rounding
+      descr: >
+        Compute the rounded half sum of two signed integer operands.
+      pseudo: |
+        a = (int(b) + int(c) + 1) >> 1
+      op: 100
+
+    ADDHUR:
+      <<: *type4
+      name: Unsigned half add with rounding
+      descr: >
+        Compute the runded half sum of two unsigned integer operands.
+      pseudo: |
+        a = (uint(b) + uint(c) + 1) >> 1
+      op: 101
+
     SUBS:
       <<: *type4
       name: Signed subtract with saturation
@@ -1041,6 +1059,24 @@ instructions:
       pseudo: |
         a = (uint(b) - uint(c)) >> 1
       op: 105
+
+    SUBHR:
+      <<: *type4
+      name: Signed half subtract with rounding
+      descr: >
+        Compute the rounded half difference of two signed integer operands.
+      pseudo: |
+        a = (int(b) - int(c) + 1) >> 1
+      op: 106
+
+    SUBHUR:
+      <<: *type4
+      name: Unsigned half subtract with rounding
+      descr: >
+        Compute the rounded half difference of two unsigned integer operands.
+      pseudo: |
+        a = (uint(b) - uint(c) + 1) >> 1
+      op: 107
 
   # TODO(m): Find better categories for these instructions.
   Miscellaneous:
