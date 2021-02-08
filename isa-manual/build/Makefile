@@ -37,7 +37,7 @@ instruction-counts.tex: $(srcdir)/../instructiondb/mrisc32-instructions.yaml $(D
 	$(DBTOOL) --artifact counts -o $@ $<
 
 instructions.tex: $(srcdir)/../instructiondb/mrisc32-instructions.yaml $(DBTOOL)
-	$(DBTOOL) --artifact manual --sort -o $@ $<
+	$(DBTOOL) --artifact manual -o $@ $<
 
 instruction-list.tex: $(srcdir)/../instructiondb/mrisc32-instructions.yaml $(DBTOOL)
 	$(DBTOOL) --artifact list --sort -o $@ $<

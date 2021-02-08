@@ -1,0 +1,23 @@
+% -*- mode: latex; tab-width: 2; indent-tabs-mode: nil; -*-
+%------------------------------------------------------------------------------
+% MRISC32 ISA Manual - Instructions.
+%
+% This work is licensed under the Creative Commons Attribution-ShareAlike 4.0
+% International License. To view a copy of this license, visit
+% http://creativecommons.org/licenses/by-sa/4.0/ or send a letter to
+% Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+%------------------------------------------------------------------------------
+
+\chapter{Instructions}
+
+This chapter describes all the instructions of the MRISC32 instruction set.
+
+Instruction variants with a .B (packed byte) or .H (packed half-word) mnemonic
+suffix are only available in architectures that implement the Packed operation
+module (\hyperref[module:PM]{PM}).
+
+Instruction variants that include vector register operands are only available
+in architectures that implement the Vector operation module
+(\hyperref[module:VM]{VM}).
+
+\input{build/instructions}

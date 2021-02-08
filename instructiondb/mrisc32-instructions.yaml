@@ -385,41 +385,42 @@ instructions:
         register operand can be implemented with the ADD instruction, using a
         negated immediate operand).
 
-    MIN:
-      <<: *type3
-      name: Signed minimum
+    MUL:
+      <<: *type4
+      name: Multiply
       descr: >
-        Return the minimum value of two signed integer operands.
+        Compute the product of two integer operands.
       pseudo: |
-        a = min(int(b), int(c))
-      op: 24
+        a = int(b) * int(c)
+      op: 52
 
-    MAX:
-      <<: *type3
-      name: Signed maxiumum
+    MULHI:
+      <<: *type4
+      name: Signed multiply high
       descr: >
-        Return the maximum value of two signed integer operands.
+        Compute the upper part of the product of two signed integer operands.
       pseudo: |
-        a = max(int(b), int(c))
-      op: 25
+        a = (int(b) * int(c)) >> bits
+      op: 53
 
-    MINU:
-      <<: *type3
-      name: Unsigned minimum
+    MULHIU:
+      <<: *type4
+      name: Unsigned multiply high
       descr: >
-        Return the minimum value of two unsigned integer operands.
+        Compute the upper part of the product of two unsigned integer
+        operands.
       pseudo: |
-        a = min(uint(b), uint(c))
-      op: 26
+        a = (uint(b) * uint(c)) >> bits
+      op: 54
 
-    MAXU:
-      <<: *type3
-      name: Unsigned maximum
+    MULQ:
+      <<: *type4
+      name: Multiply Q-number
       descr: >
-        Return the maximum value of two unsigned integer operands.
+        Compute the product of two fixed point operands.
       pseudo: |
-        a = max(uint(b), uint(c))
-      op: 27
+        a = (int(b) * int(c)) >> (bits-1)
+      op: 55
 
     DIV:
       <<: *type4
@@ -457,42 +458,41 @@ instructions:
         a = uint(b) % uint(c)
       op: 51
 
-    MUL:
-      <<: *type4
-      name: Multiply
+    MIN:
+      <<: *type3
+      name: Signed minimum
       descr: >
-        Compute the product of two integer operands.
+        Return the minimum value of two signed integer operands.
       pseudo: |
-        a = int(b) * int(c)
-      op: 52
+        a = min(int(b), int(c))
+      op: 24
 
-    MULHI:
-      <<: *type4
-      name: Signed multiply high
+    MAX:
+      <<: *type3
+      name: Signed maxiumum
       descr: >
-        Compute the upper part of the product of two signed integer operands.
+        Return the maximum value of two signed integer operands.
       pseudo: |
-        a = (int(b) * int(c)) >> bits
-      op: 53
+        a = max(int(b), int(c))
+      op: 25
 
-    MULHIU:
-      <<: *type4
-      name: Unsigned multiply high
+    MINU:
+      <<: *type3
+      name: Unsigned minimum
       descr: >
-        Compute the upper part of the product of two unsigned integer
-        operands.
+        Return the minimum value of two unsigned integer operands.
       pseudo: |
-        a = (uint(b) * uint(c)) >> bits
-      op: 54
+        a = min(uint(b), uint(c))
+      op: 26
 
-    MULQ:
-      <<: *type4
-      name: Multiply Q-number
+    MAXU:
+      <<: *type3
+      name: Unsigned maximum
       descr: >
-        Compute the product of two fixed point operands.
+        Return the maximum value of two unsigned integer operands.
       pseudo: |
-        a = (int(b) * int(c)) >> (bits-1)
-      op: 55
+        a = max(uint(b), uint(c))
+      op: 27
 
     ADDPCHI:
       <<: *type6
@@ -730,24 +730,6 @@ instructions:
       op: 5
 
   Floating-point arithmetic:
-    FMIN:
-      <<: *type4
-      name: Floating-point minimum
-      descr: >
-        Return the minimum value of two floating-point operands.
-      pseudo: |
-        a = min(float(b), float(c))
-      op: 64
-
-    FMAX:
-      <<: *type4
-      name: Floating-point maximum
-      descr: >
-        Return the maximum value of two floating-point operands.
-      pseudo: |
-        a = max(float(b), float(c))
-      op: 65
-
     FADD:
       <<: *type4
       name: Floating-point add
@@ -756,6 +738,7 @@ instructions:
       pseudo: |
         a = float(b) + float(c)
       op: 80
+      requires: ["FM"]
 
     FSUB:
       <<: *type4
@@ -765,6 +748,7 @@ instructions:
       pseudo: |
         a = float(b) - float(c)
       op: 81
+      requires: ["FM"]
 
     FMUL:
       <<: *type4
@@ -774,6 +758,7 @@ instructions:
       pseudo: |
         a = float(b) * float(c)
       op: 82
+      requires: ["FM"]
 
     FDIV:
       <<: *type4
@@ -783,6 +768,27 @@ instructions:
       pseudo: |
         a = float(b) / float(c)
       op: 83
+      requires: ["FM"]
+
+    FMIN:
+      <<: *type4
+      name: Floating-point minimum
+      descr: >
+        Return the minimum value of two floating-point operands.
+      pseudo: |
+        a = min(float(b), float(c))
+      op: 64
+      requires: ["FM"]
+
+    FMAX:
+      <<: *type4
+      name: Floating-point maximum
+      descr: >
+        Return the maximum value of two floating-point operands.
+      pseudo: |
+        a = max(float(b), float(c))
+      op: 65
+      requires: ["FM"]
 
   Floating-point comparison:
     FSEQ:
@@ -798,6 +804,7 @@ instructions:
         else
           a = zeros(bits)
       op: 66
+      requires: ["FM"]
 
     FSNE:
       <<: *type4
@@ -812,6 +819,7 @@ instructions:
         else
           a = zeros(bits)
       op: 67
+      requires: ["FM"]
 
     FSLT:
       <<: *type4
@@ -826,6 +834,7 @@ instructions:
         else
           a = zeros(bits)
       op: 68
+      requires: ["FM"]
 
     FSLE:
       <<: *type4
@@ -840,6 +849,7 @@ instructions:
         else
           a = zeros(bits)
       op: 69
+      requires: ["FM"]
 
     FSUNORD:
       <<: *type4
@@ -853,6 +863,7 @@ instructions:
         else
           a = zeros(bits)
       op: 70
+      requires: ["FM"]
 
     FSORD:
       <<: *type4
@@ -866,6 +877,7 @@ instructions:
         else
           a = zeros(bits)
       op: 71
+      requires: ["FM"]
 
   Floating-point conversion:
     ITOF:
@@ -878,6 +890,7 @@ instructions:
         floating-point value in the destination operand.
       todo: Define pseudocode.
       op: 72
+      requires: ["FM"]
 
     UTOF:
       <<: *type4
@@ -889,6 +902,7 @@ instructions:
         final floating-point value in the destination operand.
       todo: Define pseudocode.
       op: 73
+      requires: ["FM"]
 
     FTOI:
       <<: *type4
@@ -899,6 +913,7 @@ instructions:
         added to the floating-point exponent before the conversion.
       todo: Define pseudocode.
       op: 74
+      requires: ["FM"]
 
     FTOU:
       <<: *type4
@@ -909,6 +924,7 @@ instructions:
         added to the floating-point exponent before the conversion.
       todo: Define pseudocode.
       op: 75
+      requires: ["FM"]
 
     FTOIR:
       <<: *type4
@@ -919,6 +935,7 @@ instructions:
         added to the floating-point exponent before the conversion.
       todo: Define pseudocode.
       op: 76
+      requires: ["FM"]
 
     FTOUR:
       <<: *type4
@@ -929,6 +946,7 @@ instructions:
         added to the floating-point exponent before the conversion.
       todo: Define pseudocode.
       op: 77
+      requires: ["FM"]
 
     FPACK:
       <<: *type4
@@ -943,6 +961,7 @@ instructions:
       todo: Define pseudocode.
       tMode: PH  # Only packed half-word is supported
       op: 78
+      requires: ["FM", "PM"]
 
     FUNPL:
       <<: *type5
@@ -955,6 +974,7 @@ instructions:
       tMode: PH  # Only packed half-word is supported
       op: 125
       fn: 0
+      requires: ["FM", "PM"]
 
     FUNPH:
       <<: *type5
@@ -967,6 +987,7 @@ instructions:
       tMode: PH  # Only packed half-word is supported
       op: 125
       fn: 1
+      requires: ["FM", "PM"]
 
 
   Saturating and halving arithmetic:
@@ -978,6 +999,7 @@ instructions:
       pseudo: |
         a = sat(int(b) + int(c), bits)
       op: 96
+      requires: ["SM"]
 
     ADDSU:
       <<: *type4
@@ -987,6 +1009,7 @@ instructions:
       pseudo: |
         a = satu(uint(b) + uint(c), bits)
       op: 97
+      requires: ["SM"]
 
     ADDH:
       <<: *type4
@@ -996,6 +1019,7 @@ instructions:
       pseudo: |
         a = (int(b) + int(c)) >> 1
       op: 98
+      requires: ["SM"]
 
     ADDHU:
       <<: *type4
@@ -1005,6 +1029,7 @@ instructions:
       pseudo: |
         a = (uint(b) + uint(c)) >> 1
       op: 99
+      requires: ["SM"]
 
     ADDHR:
       <<: *type4
@@ -1014,6 +1039,7 @@ instructions:
       pseudo: |
         a = (int(b) + int(c) + 1) >> 1
       op: 100
+      requires: ["SM"]
 
     ADDHUR:
       <<: *type4
@@ -1023,6 +1049,7 @@ instructions:
       pseudo: |
         a = (uint(b) + uint(c) + 1) >> 1
       op: 101
+      requires: ["SM"]
 
     SUBS:
       <<: *type4
@@ -1032,6 +1059,7 @@ instructions:
       pseudo: |
         a = sat(int(b) - int(c), bits)
       op: 102
+      requires: ["SM"]
 
     SUBSU:
       <<: *type4
@@ -1041,6 +1069,7 @@ instructions:
       pseudo: |
         a = satu(uint(b) - uint(c), bits)
       op: 103
+      requires: ["SM"]
 
     SUBH:
       <<: *type4
@@ -1050,6 +1079,7 @@ instructions:
       pseudo: |
         a = (int(b) - int(c)) >> 1
       op: 104
+      requires: ["SM"]
 
     SUBHU:
       <<: *type4
@@ -1059,6 +1089,7 @@ instructions:
       pseudo: |
         a = (uint(b) - uint(c)) >> 1
       op: 105
+      requires: ["SM"]
 
     SUBHR:
       <<: *type4
@@ -1068,6 +1099,7 @@ instructions:
       pseudo: |
         a = (int(b) - int(c) + 1) >> 1
       op: 106
+      requires: ["SM"]
 
     SUBHUR:
       <<: *type4
@@ -1077,6 +1109,31 @@ instructions:
       pseudo: |
         a = (uint(b) - uint(c) + 1) >> 1
       op: 107
+      requires: ["SM"]
+
+    PACKS:
+      <<: *type4
+      name: Signed pack with saturation
+      descr: >
+        Saturate and pack the lower parts of two signed integer operands.
+      pseudo: |
+        hi = sat(int(b), bits/2) & ones(bits/2)
+        lo = sat(int(c), bits/2) & ones(bits/2)
+        a = (hi << (bits/2)) | lo
+      op: 59
+      requires: ["SM", "PM"]
+
+    PACKSU:
+      <<: *type4
+      name: Unsigned pack with saturation
+      descr: >
+        Saturate and pack the lower parts of two unsigned integer operands.
+      pseudo: |
+        hi = satu(uint(b), bits/2)
+        lo = satu(uint(c), bits/2)
+        a = (hi << (bits/2)) | lo
+      op: 60
+      requires: ["SM", "PM"]
 
   # TODO(m): Find better categories for these instructions.
   Miscellaneous:
@@ -1148,28 +1205,7 @@ instructions:
       pseudo: |
         a = (b << (bits/2)) | (c & ones(bits/2))
       op: 58
-
-    PACKS:
-      <<: *type4
-      name: Signed pack with saturation
-      descr: >
-        Saturate and pack the lower parts of two signed integer operands.
-      pseudo: |
-        hi = sat(int(b), bits/2) & ones(bits/2)
-        lo = sat(int(c), bits/2) & ones(bits/2)
-        a = (hi << (bits/2)) | lo
-      op: 59
-
-    PACKSU:
-      <<: *type4
-      name: Unsigned pack with saturation
-      descr: >
-        Saturate and pack the lower parts of two unsigned integer operands.
-      pseudo: |
-        hi = satu(uint(b), bits/2)
-        lo = satu(uint(c), bits/2)
-        a = (hi << (bits/2)) | lo
-      op: 60
+      requires: ["PM"]
 
     REV:
       <<: *type5

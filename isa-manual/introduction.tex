@@ -457,23 +457,14 @@ instructions for existing formats).
 As can be seen, there is ample room for adding more instructions in future
 versions of the ISA.
 
-\section{Architecture profiles}
+\section{Architecture modules}
 
 The MRISC32 instruction set architecture consists of a mandatory base
 architecture, plus the following optional architecture modules:
 
 \begin{bulletitems}
-  \item Vector operation module (VM)
-  \item Packed operation module (PM)
-  \item Floating-point module (FM)
-  \item Saturating and halving arithmetic module (SM)
+  \item Vector operation module (\hyperref[module:VM]{VM})
+  \item Packed operation module (\hyperref[module:PM]{PM})
+  \item Floating-point module (\hyperref[module:FM]{FM})
+  \item Saturating and halving arithmetic module (\hyperref[module:SM]{SM})
 \end{bulletitems}
-
-\begin{todobox}
-  We should perhaps define 3-4 profiles that an implementation must comply to
-  (to minimize fragmentation). This is more to convey the intent of the ISA
-  than anything else.
-
-  We also need to document which instructions are not part of the base
-  architecture, e.g. by tagging with FM, SM, etc. in the instruction database.
-\end{todobox}

@@ -219,6 +219,15 @@ def text_to_tex(s):
     return result
 
 
+def requires_to_tex(meta):
+    if not "requires" in meta:
+        return ""
+    reqs = []
+    for req in meta['requires']:
+        reqs.append(f"\\hyperref[module:{req}]{{{req}}}")
+    return f"\\textbf{{Requires:}} {', '.join(reqs)}\n\n"
+
+
 def descr_to_tex(meta):
     if not "descr" in meta:
         return ""
@@ -293,6 +302,7 @@ def insns_to_tex(insns, sort_alphabetically):
         title = f"{name} - {meta['name']}"
         result += f"\\subsection{{{title}}}\n"
         result += f"\\label{{insn:{name}}}\n\n"
+        result += requires_to_tex(meta)
         result += descr_to_tex(meta)
         result += todo_to_tex(meta)
         result += encoding_to_tex(meta)
@@ -303,19 +313,7 @@ def insns_to_tex(insns, sort_alphabetically):
 
 
 def to_tex_manual(db, sort_alphabetically):
-    result = """% -*- mode: latex; tab-width: 2; indent-tabs-mode: nil; -*-
-%------------------------------------------------------------------------------
-% MRISC32 ISA Manual - Instructions.
-%
-% This work is licensed under the Creative Commons Attribution-ShareAlike 4.0
-% International License. To view a copy of this license, visit
-% http://creativecommons.org/licenses/by-sa/4.0/ or send a letter to
-% Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
-%------------------------------------------------------------------------------
-
-\chapter{Instructions}
-
-"""
+    result = ""
     for category, insns in db.items():
         result += f"\\section{{{category}}}\n\n"
         result += insns_to_tex(insns, sort_alphabetically)
@@ -333,21 +331,21 @@ def to_tex_list(db, sort_alphabetically):
     name_list = sorted(all_insns) if sort_alphabetically else list(all_insns)
 
     # Generate the list.
-    result += "\\begin{tabularx}{\\linewidth}{|l|l|c|c|p{220pt}|}\n"
+    result += "\\begin{tabularx}{\\linewidth}{|l|c|c|c|c|p{200pt}|}\n"
     result += "\\toprule\n"
     result += "\\hline\n"
-    result += "\\textbf{Instruction} & \\textbf{Fmt} & \\textbf{Vec} & \\textbf{Pack} & \\textbf{Name} \\\\\n"
+    result += "\\textbf{Instruction} & \\textbf{Base} & \\textbf{PM} & \\textbf{FM} & \\textbf{SM} & \\textbf{Name} \\\\\n"
     result += "\\hline\n"
     result += "\\midrule\n"
     result += "\\endfirsthead\n"
     result += "\\toprule\n"
     result += "\\hline\n"
-    result += "\\textbf{Instruction} & \\textbf{Fmt} & \\textbf{Vec} & \\textbf{Pack} & \\textbf{Name} \\\\\n"
+    result += "\\textbf{Instruction} & \\textbf{Base} & \\textbf{PM} & \\textbf{FM} & \\textbf{SM} & \\textbf{Name} \\\\\n"
     result += "\\hline\n"
     result += "\\midrule\n"
     result += "\\endhead\n"
     result += "\\midrule\n"
-    result += "\\multicolumn{5}{r}{\\footnotesize(continued)}\n"
+    result += "\\multicolumn{6}{r}{\\footnotesize(continued)}\n"
     result += "\\endfoot\n"
     result += "\\bottomrule\n"
     result += "\\endlastfoot\n"
@@ -357,9 +355,10 @@ def to_tex_list(db, sort_alphabetically):
     for name in name_list:
         meta = all_insns[name]
         result += f"\\hyperref[insn:{name}]{{{name}}} & "
-        result += f"{','.join(meta['fmts'])} & "
-        result += f"{tick_yes if meta['vModes'] else tick_no} & "
-        result += f"{tick_yes if meta['tMode'] in ['P', 'PH'] else tick_no} & "
+        result += f"{tick_no if 'requires' in meta and len(meta['requires']) > 0 else tick_yes} & "
+        result += f"{tick_yes if 'requires' in meta and 'PM' in meta['requires'] else tick_no} & "
+        result += f"{tick_yes if 'requires' in meta and 'FM' in meta['requires'] else tick_no} & "
+        result += f"{tick_yes if 'requires' in meta and 'SM' in meta['requires'] else tick_no} & "
         result += f"{meta['name']} \\\\\n"
         result += "\\hline\n"
     result += "\\end{tabularx}\n\n"
