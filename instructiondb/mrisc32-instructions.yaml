@@ -413,15 +413,6 @@ instructions:
         a = (uint(b) * uint(c)) >> bits
       op: 54
 
-    MULQ:
-      <<: *type4
-      name: Multiply Q-number
-      descr: >
-        Compute the product of two fixed point operands.
-      pseudo: |
-        a = (int(b) * int(c)) >> (bits-1)
-      op: 55
-
     DIV:
       <<: *type4
       name: Signed divide
@@ -1109,6 +1100,27 @@ instructions:
       pseudo: |
         a = (uint(b) - uint(c) + 1) >> 1
       op: 107
+      requires: ["SM"]
+
+    MULQ:
+      <<: *type4
+      name: Multiply Q-numbers
+      descr: >
+        Compute the product of two fixed point operands, with saturation.
+      pseudo: |
+        a = sat((int(b) * int(c)) >> (bits-1), bits)
+      op: 55
+      requires: ["SM"]
+
+    MULQR:
+      <<: *type4
+      name: Multiply Q-numbers with rounding
+      descr: >
+        Compute the rounded product of two fixed point operands, with
+        saturation.
+      pseudo: |
+        a = sat((int(b) * int(c) + 1<<(bits-1)) >> (bits-1), bits)
+      op: 56
       requires: ["SM"]
 
     PACKS:
