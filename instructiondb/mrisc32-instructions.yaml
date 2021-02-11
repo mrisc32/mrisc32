@@ -1108,7 +1108,8 @@ instructions:
       descr: >
         Compute the product of two fixed point operands, with saturation.
       pseudo: |
-        a = sat((int(b) * int(c)) >> (bits-1), bits)
+        prod = int(b) * int(c)
+        a = sat(prod >> (bits-1), bits)
       op: 55
       requires: ["SM"]
 
@@ -1119,7 +1120,8 @@ instructions:
         Compute the rounded product of two fixed point operands, with
         saturation.
       pseudo: |
-        a = sat((int(b) * int(c) + 1<<(bits-1)) >> (bits-1), bits)
+        prod = int(b) * int(c) + 1<<(bits-2)
+        a = sat(prod >> (bits-1), bits)
       op: 56
       requires: ["SM"]
 
