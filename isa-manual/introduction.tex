@@ -237,8 +237,10 @@ $\vee$ & Logical and \\
 $|$ & Bitwise or \\
 \& & Bitwise and \\
 \textasciicircum & Bitwise xor \\
-$<<$ & Bit shift left \\
-$>>$ & Bit shift right (preserve sign for signed integer types) \\
+$>>$ & Zero-fill right-shift \\
+$<<$ & Zero-fill left-shift \\
+$>>_{s}$ & Sticky right-shift (fill with MSB) \\
+$<<_{s}$ & Sticky left-shift (fill with LSB) \\
 ones(N) & Bit vector of $N$ 1-bits \\
 zeros(N) & Bit vector of $N$ 0-bits \\
 int(x) & Interpret bit vector $x$ as a two's complement signed integer \\

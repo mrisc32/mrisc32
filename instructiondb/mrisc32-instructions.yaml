@@ -230,10 +230,7 @@ instructions:
       descr: >
         Load high immediate value.
       pseudo: |
-        if IM<0> == 1 then
-          a = (int(IM) << 11) | ones(11)
-        else
-          a = int(IM) << 11
+        a = int(IM) <<s 11
       note: >
         This instruction can be used in combination with several instructions
         that take an immediate operand in order to form a full 32-bit
@@ -311,7 +308,7 @@ instructions:
         bit positions given by another integer operand. Only the lowest
         log2(bits) bits of the shift operand are used.
       pseudo: |
-        a = int(b) >> int(c & ones(log2(bits)))
+        a = b >>s int(c & ones(log2(bits)))
       op: 19
 
     LSL:
@@ -322,7 +319,7 @@ instructions:
         positions given by another integer operand. Only the lowest log2(bits)
         bits of the shift operand are used.
       pseudo: |
-        a = uint(b) << int(c & ones(log2(bits)))
+        a = b << int(c & ones(log2(bits)))
       op: 20
 
     LSR:
@@ -333,7 +330,7 @@ instructions:
         positions given by another integer operand. Only the lowest log2(bits)
         bits of the shift operand are used.
       pseudo: |
-        a = uint(b) >> int(c & ones(log2(bits)))
+        a = b >> int(c & ones(log2(bits)))
       op: 21
 
     SEL:
@@ -1008,7 +1005,7 @@ instructions:
       descr: >
         Compute the half sum of two signed integer operands.
       pseudo: |
-        a = (int(b) + int(c)) >> 1
+        a = (int(b) + int(c)) >>s 1
       op: 98
       requires: ["SM"]
 
@@ -1028,7 +1025,7 @@ instructions:
       descr: >
         Compute the rounded half sum of two signed integer operands.
       pseudo: |
-        a = (int(b) + int(c) + 1) >> 1
+        a = (int(b) + int(c) + 1) >>s 1
       op: 100
       requires: ["SM"]
 
@@ -1068,7 +1065,7 @@ instructions:
       descr: >
         Compute the half difference of two signed integer operands.
       pseudo: |
-        a = (int(b) - int(c)) >> 1
+        a = (int(b) - int(c)) >>s 1
       op: 104
       requires: ["SM"]
 
@@ -1088,7 +1085,7 @@ instructions:
       descr: >
         Compute the rounded half difference of two signed integer operands.
       pseudo: |
-        a = (int(b) - int(c) + 1) >> 1
+        a = (int(b) - int(c) + 1) >>s 1
       op: 106
       requires: ["SM"]
 
@@ -1109,7 +1106,7 @@ instructions:
         Compute the product of two fixed point operands, with saturation.
       pseudo: |
         prod = int(b) * int(c)
-        a = sat(prod >> (bits-1), bits)
+        a = sat(prod >>s (bits-1), bits)
       op: 55
       requires: ["SM"]
 
@@ -1121,7 +1118,7 @@ instructions:
         saturation.
       pseudo: |
         prod = int(b) * int(c) + 1<<(bits-2)
-        a = sat(prod >> (bits-1), bits)
+        a = sat(prod >>s (bits-1), bits)
       op: 56
       requires: ["SM"]
 
@@ -1147,6 +1144,32 @@ instructions:
         lo = satu(uint(c), bits/2)
         a = (hi << (bits/2)) | lo
       op: 60
+      requires: ["SM", "PM"]
+
+    PACKHIR:
+      <<: *type4
+      name: Signed pack high with rounding
+      descr: >
+        Round and pack the higher parts of two signed integer operands.
+      pseudo: |
+        hi = sat(int(b) + 1<<(bits/2-1), bits)
+        lo = sat(int(c) + 1<<(bits/2-1), bits)
+        a = (hi & ~ones(bits/2)) |
+            (lo >> (bits/2))
+      op: 62
+      requires: ["SM", "PM"]
+
+    PACKHIUR:
+      <<: *type4
+      name: Unsigned pack high with rounding
+      descr: >
+        Round and pack the higher parts of two unsigned integer operands.
+      pseudo: |
+        hi = satu(uint(b) + 1<<(bits/2-1), bits)
+        lo = satu(uint(c) + 1<<(bits/2-1), bits)
+        a = (hi & ~ones(bits/2)) |
+            (lo >> (bits/2))
+      op: 63
       requires: ["SM", "PM"]
 
   # TODO(m): Find better categories for these instructions.
@@ -1217,8 +1240,20 @@ instructions:
       descr: >
         Pack the lower parts of two integer operands.
       pseudo: |
-        a = (b << (bits/2)) | (c & ones(bits/2))
+        a = (b << (bits/2)) |
+            (c & ones(bits/2))
       op: 58
+      requires: ["PM"]
+
+    PACKHI:
+      <<: *type4
+      name: Pack high
+      descr: >
+        Pack the higher parts of two integer operands.
+      pseudo: |
+        a = (b & ~ones(bits/2)) |
+            (c >> (bits/2))
+      op: 61
       requires: ["PM"]
 
     REV:
