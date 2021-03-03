@@ -319,7 +319,14 @@ instructions:
         right instruction.
 
         ASR is a valid assembler alias for EBF.
-      todo: Define pseudocode.
+      pseudo: |
+        o = uint(c & (bits-1))
+        w = uint((c >> log2(bits)) & (bits-1))
+        if w == 0 then
+          w = bits
+        // Note: b is sign-extended up to o+w
+        // bits if o+w > bits.
+        a = int(b<o+w-1:o>)
       op: 19
 
     EBFU:
@@ -341,7 +348,14 @@ instructions:
         instruction.
 
         LSR is a valid assembler alias for EBFU.
-      todo: Define pseudocode.
+      pseudo: |
+        o = uint(c & (bits-1))
+        w = uint((c >> log2(bits)) & (bits-1))
+        if w == 0 then
+          w = bits
+        // Note: b is zero-extended up to o+w
+        // bits if o+w > bits.
+        a = uint(b<o+w-1:o>)
       op: 20
 
     MKBF:
@@ -360,7 +374,12 @@ instructions:
         instruction.
 
         LSL is a valid assembler alias for MKBF.
-      todo: Define pseudocode.
+      pseudo: |
+        o = uint(c & (bits-1))
+        w = uint((c >> log2(bits)) & (bits-1))
+        if w == 0 then
+          w = bits
+        a = (b & ones(w)) << o
       op: 21
 
     SEL:
