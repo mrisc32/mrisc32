@@ -300,37 +300,67 @@ instructions:
           a = ~b ^ ~c
       op: 18
 
-    ASR:
+    EBF:
       <<: *type3
-      name: Arithmetic shift right
+      name: Extract bit field
       descr: >
-        Arithmetically shift an integer operand to the right the number of
-        bit positions given by another integer operand. Only the lowest
-        log2(bits) bits of the shift operand are used.
-      pseudo: |
-        a = b >>s int(c & ones(log2(bits)))
+        Extract a bit field from the first source operand, sign-extend it, and
+        store it in the destination operand. The bit field is defined by the
+        second source operand as follows: the lowest log2(bits) bits describe
+        the offset (0 to bits-1), and the next log2(bits) describe the width
+        (1 to bits).
+
+        If the bit field extends beyond the most significant bit, then the most
+        significant bit of the first source operand is used as the sign bit and
+        is extended in the destination operand.
+      note: >
+        When the bit field width descriptor is all zeros (specifying the full
+        width of the chunk), this instruction operates as an arithmetic shift
+        right instruction.
+
+        ASR is a valid assembler alias for EBF.
+      todo: Define pseudocode.
       op: 19
 
-    LSL:
+    EBFU:
       <<: *type3
-      name: Logical shift left
+      name: Extract bit field unsigned
       descr: >
-        Logically shift an integer operand to the left the number of bit
-        positions given by another integer operand. Only the lowest log2(bits)
-        bits of the shift operand are used.
-      pseudo: |
-        a = b << int(c & ones(log2(bits)))
+        Extract a bit field from the first source operand, zero-extend it, and
+        store it in the destination operand. The bit field is defined by the
+        second source operand as follows: the lowest log2(bits) bits describe
+        the offset (0 to bits-1), and the next log2(bits) describe the width
+        (1 to bits).
+
+        If the bit field extends beyond the most significant bit, then the most
+        significant bit of the first source operand is used as the sign bit and
+        is extended in the destination operand.
+      note: >
+        When the bit field width descriptor is all zeros (specifying the full
+        width of the chunk), this instruction operates as a logic shift right
+        instruction.
+
+        LSR is a valid assembler alias for EBFU.
+      todo: Define pseudocode.
       op: 20
 
-    LSR:
+    MKBF:
       <<: *type3
-      name: Logical shift right
+      name: Make bit field
       descr: >
-        Logically shift an integer operand to the right the number of bit
-        positions given by another integer operand. Only the lowest log2(bits)
-        bits of the shift operand are used.
-      pseudo: |
-        a = b >> int(c & ones(log2(bits)))
+        Extract a bit field from the first source operand, zero-extend it,
+        shift it to the left, and store it in the destination operand.
+
+        The bit field is defined by the second source operand as follows: the
+        lowest log2(bits) bits describe the offset (0 to bits-1), and the next
+        log2(bits) describe the width (1 to bits).
+      note: >
+        When the bit field width descriptor is all zeros (specifying the full
+        width of the chunk), this instruction operates as a logic shift left
+        instruction.
+
+        LSL is a valid assembler alias for MKBF.
+      todo: Define pseudocode.
       op: 21
 
     SEL:
