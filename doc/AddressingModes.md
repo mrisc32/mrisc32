@@ -6,20 +6,24 @@ Note that the program counter (PC) can be used as a source operand, so PC-relati
 
 ## Scalar load/store
 
-There are four different addressing modes for loads and stores to/from scalar registers:
+There are five different addressing modes for loads and stores to/from scalar registers:
 
 1. Base register plus immediate offset.
    - `Sd <= MEM[Sa + imm]`
    - `Sd => MEM[Sa + imm]`
    - `imm` is a signed 14-bit offset (±8 KiB).
-2. Base register plus register offset.
+2. PC plus immediate offset (word size only).
+   - `Sd <= MEM[Sa + imm * 4]`
+   - `Sd => MEM[Sa + imm * 4]`
+   - `imm` is a signed 21-bit offset (±4 MiB).
+3. Base register plus register offset.
    - `Sd <= MEM[Sa + Sb * scale]`
    - `Sd => MEM[Sa + Sb * scale]`
    - `scale` can be 1 (default), 2, 4 or 8.
-3. Immediate (load only).
+4. Immediate (load only).
    - `Sd <= imm`
    - `imm` is a signed 21-bit value that can optionally be shifted left 11 bits with either zero- or one-filled lower 11 bits.
-4. Load effective address (load only).
+5. Load effective address (load only).
    - `Sd <= Sa + Sb * scale`
    - `scale` can be 1 (default), 2, 4 or 8.
 

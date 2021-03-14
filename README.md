@@ -33,7 +33,7 @@ This is an open and free 32-bit RISC/Vector instruction set architecture ([ISA](
   - Scaled indexed load/store (x1, x2, x4, x8).
   - Gather-scatter and stride-based vector load/store.
   - PC-releative and absolute load/store:
-    - ±8 KiB range with one instruction.
+    - Up to ±4 MiB range with one instruction.
     - Full 32-bit range with two instructions.
   - PC-relative and absolute branch:
     - ±4 MiB range with one instruction.
