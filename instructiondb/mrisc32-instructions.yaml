@@ -74,20 +74,19 @@ templates:
   # Unconditional branch instructions (format D).
   type7: &type7
     <<: *type6
-    fmts: [D]
-    tMode: N
-    vModes: []
-    fold: false
     asmOperands: "{1}, #target"
 
   # Conditional branch instructions (format E).
   type8: &type8
     <<: *type6
     fmts: [E]
-    tMode: N
-    vModes: []
-    fold: false
     asmOperands: "{1}, #target"
+
+  # Unconditional branch instructions (format D).
+  type9: &type9
+    <<: *type6
+    fmts: [D]
+    asmOperands: "{1}, #address@pc"
 
 instructions:
   Load and store:
@@ -129,6 +128,17 @@ instructions:
           adr = int(b) + int(c) * scale
         a = int(MEM[adr,4])
       op: 3
+
+    LDWPC:
+      <<: *type9
+      name: Load word PC-relative
+      descr: >
+        Load a word (32 bits) from the address that is formed by adding the
+        21-bit signed immediate, multiplied by four, to the current PC.
+      pseudo: |
+        adr = PC + int(b) * 4
+        a = int(MEM[adr,4])
+      op: 4
 
     LDUB:
       <<: *type1
@@ -211,6 +221,17 @@ instructions:
         MEM[adr,4] = a
       op: 11
 
+    STWPC:
+      <<: *type9
+      name: Store word PC-relative
+      descr: >
+        Store a word (32 bits) to the address that is formed by adding the
+        21-bit signed immediate, multiplied by four, to the current PC.
+      pseudo: |
+        adr = PC + int(b) * 4
+        MEM[adr,4] = a
+      op: 5
+
     LDLI:
       <<: *type6
       name: Load low immediate
@@ -221,7 +242,7 @@ instructions:
       note: >
         With this instruction it is possible to load signed integer values in
         the range [-1048576, 1048575].
-      op: 0
+      op: 2
       asmOperands: "{1}, #ext21(IM)"
 
     LDHI:
@@ -245,7 +266,7 @@ instructions:
         values that can be represented with the 20 most significant bits (i.e.
         sign + exponent + 11 bits of mantissa), such as 1.0 (0x3f800000),
         -255.0 (0xc37f0000) or 0.2071533203125 (0x3e542000).
-      op: 1
+      op: 3
       asmOperands: "{1}, #ext21hi(IM)"
 
   Bitwise logic:
@@ -543,7 +564,7 @@ instructions:
         This instruction can be used in combination with several instructions
         that take an immediate operand in order to form a full 32-bit
         PC-relative offset. Examples of such instructions are ADD, LDW and JL.
-      op: 3
+      op: 6
       asmOperands: "{1}, #target@pchi"
 
   Integer comparison:
@@ -741,7 +762,7 @@ instructions:
         If the register operand is LR and the immediate value is zero, the
         operation will return the program flow to the caller (RET is an alias
         for J LR, #0).
-      op: 4
+      op: 0
 
     JL:
       <<: *type7
@@ -764,7 +785,7 @@ instructions:
         Possible target addresses are 0x00000000 to 0x003FFFFC and 0xFFC00000
         to 0xFFFFFFFC. To extend the range to the full address space, use JL
         in combination with a preceding LDHI.
-      op: 5
+      op: 1
 
   Floating-point arithmetic:
     FADD:
