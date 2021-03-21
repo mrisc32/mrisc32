@@ -2,8 +2,6 @@
 
 The MRISC32 is a [load/store architecture](https://en.wikipedia.org/wiki/Load/store_architecture), and has a limited but powerful set of addressing modes.
 
-Note that the program counter (PC) can be used as a source operand, so PC-relative addressing is possible for all scalar load and store operations. For extending the PC-relative range beyond ±8 KiB (using a regular 14-bit immediate offset), use an extra `addpchi` instruction to form a full 32-bit offset.
-
 ## Scalar load/store
 
 There are five different addressing modes for loads and stores to/from scalar registers:
@@ -60,7 +58,7 @@ All conditional branch instructions (BZ, BNZ, BS, BNS, BLT, BGE, BLE, BGT) use a
 
 ...where `imm` is an 18-bit signed value.
 
-The jump instructions (J, JL) use a scalar register as the base address (as usual, PC can be used as the base address):
+The jump instructions (J, JL) use a scalar register as the base address (also note that PC can be used as the base address for J and JL):
 
 `PC <= Sa + imm * 4`
 

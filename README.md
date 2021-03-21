@@ -16,10 +16,9 @@ This is an open and free 32-bit RISC/Vector instruction set architecture ([ISA](
 * Unified scalar/vector/integer/floating-point ISA.
 * There are two register files:
   - **S0-S31**: 32 scalar registers, each 32 bits wide.
-    - Four registers have special meaning in hardware: Z, PC, LR, VL.
-    - 28 registers are general purpose (of which three are reserved by the ABI: SP, TP, FP).
+    - Three registers have special meaning in hardware: Z, LR, VL.
+    - 29 registers are general purpose (of which three are reserved by the ABI: SP, FP, TP).
     - All registers can be used for all types (integers, addresses and floating-point).
-    - PC is user-visible (for addressing) but read-only (to simplify branching logic).
   - **V0-V31**: 32 vector registers, each with *at least* 16 32-bit elements.
     - All registers can be used for all types (integers, addresses and floating-point).
 * All instructions are 32 bits wide and easy to decode.
@@ -33,7 +32,7 @@ This is an open and free 32-bit RISC/Vector instruction set architecture ([ISA](
   - Scaled indexed load/store (x1, x2, x4, x8).
   - Gather-scatter and stride-based vector load/store.
   - PC-releative and absolute load/store:
-    - Up to ±4 MiB range with one instruction.
+    - ±4 MiB range with one instruction.
     - Full 32-bit range with two instructions.
   - PC-relative and absolute branch:
     - ±4 MiB range with one instruction.

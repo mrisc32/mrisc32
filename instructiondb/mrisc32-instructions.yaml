@@ -747,6 +747,10 @@ instructions:
         Jump to the target address that is formed by computing the sum of the
         register operand and the sign-extended immediate value multiplied by
         four.
+
+        As a special case, the register operand can be the program counter
+        (PC), which is encoded as register number 31. This also means that the
+        VL register can not be used as the register operand.
       pseudo: |
         PC = int(a) + int(IM)*4
       note: >
@@ -772,6 +776,10 @@ instructions:
         register, and the new PC is set to the target address that is formed by
         computing the sum of the register operand and the sign-extended
         immediate value multiplied by four.
+
+        As a special case, the register operand can be the program counter
+        (PC), which is encoded as register number 31. This also means that the
+        VL register can not be used as the register operand.
       pseudo: |
         adr = int(a) + int(IM)*4
         LR = int(PC) + 4
