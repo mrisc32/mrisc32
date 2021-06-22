@@ -13,7 +13,7 @@ srcdir = ..
 docs = mrisc32-instruction-set-manual
 pdfs = $(addsuffix .pdf, $(docs))
 
-generated_tex =  instruction-counts.tex instructions.tex instruction-list.tex
+generated_tex = version.tex instruction-counts.tex instructions.tex instruction-list.tex
 
 srcs = $(wildcard $(srcdir)/*.tex) $(generated_tex)
 bibs = $(srcdir)/mrisc32-instruction-set-manual.bib
@@ -32,6 +32,11 @@ clean:
 
 mrisc32-logo.pdf: $(srcdir)/../doc/mrisc32-logo.svg
 	cairosvg $< -o $@
+
+# TODO(m): Make this more dynamic (only when the version changes).
+.PHONY: version.tex
+version.tex:
+	$(srcdir)/get_version.sh > $@
 
 instruction-counts.tex: $(srcdir)/../instructiondb/mrisc32-instructions.yaml $(DBTOOL)
 	$(DBTOOL) --artifact counts -o $@ $<
