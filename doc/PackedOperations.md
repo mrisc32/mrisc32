@@ -31,13 +31,11 @@ Packed operations are part of the scalar instruction set, and just as other inst
 For instance, the following code (which adds the number seven to 64 bytes in memory) is perfectly valid:
 
 ```
-  ldi    s10, #7
-  shuf   s10, s10, #0  ; s10 = 0x07070707
-
   ldi    vl, #16       ; Vector Length = 16 words, i.e. 64 bytes
-  ldw    v10, s1, #4   ; Load source operands, X, into v10
-  add.b  v10, v10, s10 ; Calculate the byte-wise addition of X and 0x07070707
-  stw    v10, s1, #4   ; Store the result back into memory
+  ldi    r10, #0x07070707
+  ldw    v10, r1, #4   ; Load source operands, X, into v10
+  add.b  v10, v10, r10 ; Calculate the byte-wise addition of X and 0x07070707
+  stw    v10, r1, #4   ; Store the result back into memory
 ```
 
 ## Floating point

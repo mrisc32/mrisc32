@@ -49,24 +49,24 @@ void abs_diff(float* c, const float* a, const float* b, const int n) {
 }
 ```
 
-Assuming that the arguments (c, a, b, n) are in registers S1, S2, S3 and S4 (according to the [calling convention](Registers.md)), this can be implemented using scalar operations as:
+Assuming that the arguments (c, a, b, n) are in registers R1, R2, R3 and R4 (according to the [calling convention](Registers.md)), this can be implemented using scalar operations as:
 
 ```
 abs_diff:
-  bz      s4, #done            ; n == 0? (nothing to do)
+  bz      r4, #done            ; n == 0? (nothing to do)
 
-  ldi     s5, #0
+  ldi     r5, #0
 loop:
-  add     s4, s4, #-1          ; Decrement the loop counter
+  add     r4, r4, #-1          ; Decrement the loop counter
 
-  ldw     s6, s2, s5*4         ; s6 = a
-  ldw     s7, s3, s5*4         ; s7 = b
-  fsub    s6, s6, s7           ; s6 = a - b
-  and     s6, s6, #0x7fffffff  ; s6 = fabs(a - b) (i.e. clear the sign bit)
-  stw     s6, s1, s5*4         ; c  = fabs(a - b)
+  ldw     r6, r2, r5*4         ; r6 = a
+  ldw     r7, r3, r5*4         ; r7 = b
+  fsub    r6, r6, r7           ; r6 = a - b
+  and     r6, r6, #0x7fffffff  ; r6 = fabs(a - b) (i.e. clear the sign bit)
+  stw     r6, r1, r5*4         ; c  = fabs(a - b)
 
-  add     s5, s5, #1           ; Increment the array offset
-  bgt     s4, #loop
+  add     r5, r5, #1           ; Increment the array offset
+  bgt     r4, #loop
 
 done:
   ret
@@ -76,28 +76,28 @@ done:
 
 ```
 abs_diff:
-  bz      s4, #done            ; n == 0? (nothing to do)
+  bz      r4, #done            ; n == 0? (nothing to do)
 
   ; Prepare the vector operation
-  mov     s5, vl               ; Preserve VL
-  cpuid   s6, z, z             ; s6 is the max number of vector elements
+  mov     r5, vl               ; Preserve VL
+  cpuid   r6, z, z             ; r6 is the max number of vector elements
 
 loop:
-  min     vl, s4, s6           ; vl = min(s4, s6)
-  sub     s4, s4, vl           ; Decrement the loop counter
+  min     vl, r4, r6           ; vl = min(r4, r6)
+  sub     r4, r4, vl           ; Decrement the loop counter
 
-  ldw     v1, s2, #4           ; v1 = a
-  ldw     v2, s3, #4           ; v2 = b
+  ldw     v1, r2, #4           ; v1 = a
+  ldw     v2, r3, #4           ; v2 = b
   fsub    v1, v1, v2           ; v1 = a - b
   and     v1, v1, #0x7fffffff  ; v1 = fabs(a - b) (i.e. clear the sign bit)
-  stw     v1, s1, #4           ; c  = fabs(a - b)
+  stw     v1, r1, #4           ; c  = fabs(a - b)
 
-  ldea    s1, s1, vl*4         ; Increment the memory pointers
-  ldea    s2, s2, vl*4
-  ldea    s3, s3, vl*4
-  bgt     s4, #loop
+  ldea    r1, r1, vl*4         ; Increment the memory pointers
+  ldea    r2, r2, vl*4
+  ldea    r3, r3, vl*4
+  bgt     r4, #loop
 
-  mov     vl, s5               ; Restore VL
+  mov     vl, r5               ; Restore VL
 
 done:
   ret

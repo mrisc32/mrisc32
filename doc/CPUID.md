@@ -2,7 +2,7 @@
 
 The `CPUID` instruction provides information about the CPU. The instruction takes two arguments (command and sub-command) and returns the corresponding information in the destination operand.
 
-`CPUID Sd, cmd, subcmd`
+`CPUID Rd, cmd, subcmd`
 
 
 ## 0: Maximum vector length
@@ -11,7 +11,7 @@ The `CPUID` instruction provides information about the CPU. The instruction take
 
 Return the maximum vector length (number of elements).
 
-*Note:* This command is conveniently issued with the `Z` register: `CPUID Sd, Z, Z`.
+*Note:* This command is conveniently issued with the `Z` register: `CPUID Rd, Z, Z`.
 
 
 ### 0:1: GetLog2MaxVectorLength

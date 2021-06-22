@@ -20,17 +20,17 @@ There are 32 user addressable scalar registers, each 32 bits wide.
 
 \begin{bytefield}{32}
   \bitheader{0,31} \\
-  \wordbox{1}{Z (S0)} \\
-  \wordbox{1}{S1} \\
-  \wordbox{1}{S2} \\
+  \wordbox{1}{Z (R0)} \\
+  \wordbox{1}{R1} \\
+  \wordbox{1}{R2} \\
   \wordbox[]{1}{$\vdots$} \\[1ex]
-  \wordbox{1}{S25} \\
-  \wordbox{1}{S26} \\
-  \wordbox{1}{TP (S27)} \\
-  \wordbox{1}{FP (S28)} \\
-  \wordbox{1}{SP (S29)} \\
-  \wordbox{1}{LR (S30)} \\
-  \wordbox{1}{VL (S31)}
+  \wordbox{1}{R25} \\
+  \wordbox{1}{R26} \\
+  \wordbox{1}{TP (R27)} \\
+  \wordbox{1}{FP (R28)} \\
+  \wordbox{1}{SP (R29)} \\
+  \wordbox{1}{LR (R30)} \\
+  \wordbox{1}{VL (R31)}
 \end{bytefield}
 
 \subsection{The Z register}
@@ -55,7 +55,7 @@ register.
 
 \subsection{TP, FP and SP}
 
-The scalar registers TP, FP and SP are aliases for S27, S28 and S29,
+The scalar registers TP, FP and SP are aliases for R27, R28 and R29,
 respectively. They have no special meaning in hardware, but it is recommended
 that they are used as follows:
 

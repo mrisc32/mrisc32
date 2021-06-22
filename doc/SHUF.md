@@ -16,10 +16,10 @@ Whether a sub-byte should be filled or not is controlled by a single bit per sub
 
 Whether a filled sub-byte should be zero- or sign-filled is selected by the sign mode bit (bit 12) in the control word.
 
-As an example, the least significant signed byte of register `S1` can be sign extended to a 32-bit word (stored in `S2`) using the following instruction (details below):
+As an example, the least significant signed byte of register `R1` can be sign extended to a 32-bit word (stored in `R2`) using the following instruction (details below):
 
 ```
-    shuf s2, s1, #0b1100100100000
+    shuf r2, r1, #0b1100100100000
 ```
 
 More examples of different operations are given below.

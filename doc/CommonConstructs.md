@@ -22,7 +22,7 @@
 | Floating point negation | xor rd,ra,#0x80000000<br>*(or alternatively)*<br>fsub rd,z,ra |
 | Floating point absolute value | and rd,ra,#0x7fffffff |
 | Floating point compare and branch | fs[cond] tmp,ra,rb<br>bs tmp,#branch\_target |
-| Load simple floating point immediate (21 most significant bits) | ldhi/ldhio |
+| Load simple floating point immediate (20 most significant bits) | ldhi |
 | Conditional addition | s[cond] re,ra,rb<br>and re,rc,re<br>add re,rd,re |
 | Generic conditional (e.g. division) | s[cond] re,ra,rb<br>div rf,rc,rd<br>sel re,rf,rc |
 

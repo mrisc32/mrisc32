@@ -76,12 +76,16 @@ def get_folds(meta, vec):
     return [""]
 
 
+def get_reg_prefix(scalar_or_vec):
+    return "R" if scalar_or_vec == "S" else "V"
+
+
 def get_args(vec, fmt):
     result = []
     suffixes = "abc"
     i = 0
     for c in vec:
-        result += [f"{c}{suffixes[i]}"]
+        result += [f"{get_reg_prefix(c)}{suffixes[i]}"]
         i += 1
     if fmt == "C":
         result = result[:-1] + ["#ext14(H,IM)"]

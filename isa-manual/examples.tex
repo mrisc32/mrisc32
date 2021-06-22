@@ -28,25 +28,25 @@ aspects of the MRISC32 instruction set architecture.
 ; }
 ;
 ; Register arguments:
-;   s1 - n
-;   s2 - a
-;   s3 - x
-;   s4 - y
+;   r1 - n
+;   r2 - a
+;   r3 - x
+;   r4 - y
 
 saxpy:
-    bz    s1, 2f        ; Nothing to do?
-    cpuid s5, z, z      ; Query the maximum vector length
+    bz    r1, 2f        ; Nothing to do?
+    cpuid r5, z, z      ; Query the maximum vector length
 1:
-    minu  vl, s5, s1    ; Define the operation vector length
-    sub   s1, s1, vl    ; Decrement loop counter
-    ldw   v1, s3, #4    ; Load x (element stride = 4 bytes)
-    ldw   v2, s4, #4    ; Load y
-    fmul  v1, v1, s2    ; x * a
+    minu  vl, r5, r1    ; Define the operation vector length
+    sub   r1, r1, vl    ; Decrement loop counter
+    ldw   v1, r3, #4    ; Load x (element stride = 4 bytes)
+    ldw   v2, r4, #4    ; Load y
+    fmul  v1, v1, r2    ; x * a
     fadd  v1, v1, v2    ; + y
-    stw   v1, s4, #4    ; Store y
-    ldea  s3, s3, vl*4  ; Increment address (x)
-    ldea  s4, s4, vl*4  ; Increment address (y)
-    bnz   s1, 1b
+    stw   v1, r4, #4    ; Store y
+    ldea  r3, r3, vl*4  ; Increment address (x)
+    ldea  r4, r4, vl*4  ; Increment address (y)
+    bnz   r1, 1b
 2:
     ret
 \end{lstlisting}
@@ -70,46 +70,46 @@ example of one-dimensional floating-point interpolation.
 ; }
 ;
 ; Register arguments:
-;   s1 - n
-;   s2 - t0
-;   s3 - dt
-;   s4 - x
-;   s5 - y
+;   r1 - n
+;   r2 - t0
+;   r3 - dt
+;   r4 - x
+;   r5 - y
 
 lerp:
-    bz    s1, 2f        ; Nothing to do?
+    bz    r1, 2f        ; Nothing to do?
 
-    cpuid s6, z, z      ; Query maximum vector length
-    mov   vl, s6
+    cpuid r6, z, z      ; Query maximum vector length
+    mov   vl, r6
 
-    add   s8, s4, #4    ; s8 = &x[1]
-    itof  s7, s6, z
+    add   r8, r4, #4    ; r8 = &x[1]
+    itof  r7, r6, z
 
     ldea  v1, z, #1
     itof  v1, v1, z
-    fmul  v1, v1, s3    ; v1 = dt * [0.0, 1.0, 2.0, ...]
+    fmul  v1, v1, r3    ; v1 = dt * [0.0, 1.0, 2.0, ...]
 
-    fmul  s7, s3, s7    ; s7 = dt * maximum vector length
+    fmul  r7, r3, r7    ; r7 = dt * maximum vector length
 1:
-    minu  vl, s6, s1    ; Define the operation vector length
-    sub   s1, s1, vl    ; Decrement loop counter
+    minu  vl, r6, r1    ; Define the operation vector length
+    sub   r1, r1, vl    ; Decrement loop counter
 
     ftoi  v2, v1, z     ; v2 = integer indexes (k)
     itof  v3, v2, z
     fsub  v3, v1, v3    ; v3 = interpolation weight (w)
 
-    ldw   v4, s4, v2*4  ; Load x[k]
-    ldw   v5, s8, v2*4  ; Load x[k+1]
+    ldw   v4, r4, v2*4  ; Load x[k]
+    ldw   v5, r8, v2*4  ; Load x[k+1]
 
     fsub  v5, v5, v4
     fmul  v5, v5, v3
     fadd  v5, v4, v5    ; v5 = x[k] + w * (x[k+1] - x[k])
 
-    stw   v5, s5, #4    ; Store y (element stride = 4 bytes)
+    stw   v5, r5, #4    ; Store y (element stride = 4 bytes)
 
-    ldea  s5, s5, vl*4  ; Increment address (y)
-    fadd  v1, v1, s7    ; Increment t
-    bnz   s1, 1b
+    ldea  r5, r5, vl*4  ; Increment address (y)
+    fadd  v1, v1, r7    ; Increment t
+    bnz   r1, 1b
 2:
     ret
 \end{lstlisting}
@@ -129,29 +129,29 @@ word using the SHUF instruction.
 ; }
 ;
 ; Register arguments:
-;   s1 - n
-;   s2 - x
-;   s3 - y
+;   r1 - n
+;   r2 - x
+;   r3 - y
 ;
 ; Assumptions:
 ;   n is a multiple of 4
 
 revbytes:
-    bz    s1, 2f        ; Nothing to do?
-    add   s4, s1, #-4
-    add   s3, s3, s4    ; s3 = &y[n-4]
-    lsr   s1, s1, #2    ; s1 = number of words
-    cpuid s4, z, z      ; Query the maximum vector length
-    lsl   s5, s4, #2    ; s5 = 4 * max vector length
+    bz    r1, 2f        ; Nothing to do?
+    add   r4, r1, #-4
+    add   r3, r3, r4    ; r3 = &y[n-4]
+    lsr   r1, r1, #2    ; r1 = number of words
+    cpuid r4, z, z      ; Query the maximum vector length
+    lsl   r5, r4, #2    ; r5 = 4 * max vector length
 1:
-    minu  vl, s4, s1    ; Define the operation vector length
-    sub   s1, s1, vl    ; Decrement loop counter
-    ldw   v1, s2, #4    ; Load x (element stride = 4 bytes)
+    minu  vl, r4, r1    ; Define the operation vector length
+    sub   r1, r1, vl    ; Decrement loop counter
+    ldw   v1, r2, #4    ; Load x (element stride = 4 bytes)
     shuf  v1, v1, #0b000001010011  ; Reverse bytes of each word
-    stw   v1, s3, #-4   ; Store y (element stride = -4 bytes)
-    add   s2, s2, s5    ; Increment address (x)
-    sub   s3, s3, s5    ; Decrement address (y)
-    bnz   s1, 1b
+    stw   v1, r3, #-4   ; Store y (element stride = -4 bytes)
+    add   r2, r2, r5    ; Increment address (x)
+    sub   r3, r3, r5    ; Decrement address (y)
+    bnz   r1, 1b
 2:
     ret
 \end{lstlisting}
