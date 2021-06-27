@@ -80,19 +80,15 @@ def get_reg_prefix(scalar_or_vec):
     return "R" if scalar_or_vec == "S" else "V"
 
 
-def get_args(vec, fmt):
+def get_args(vec, fmt, imm_syntax):
     result = []
     suffixes = "abc"
     i = 0
     for c in vec:
         result += [f"{get_reg_prefix(c)}{suffixes[i]}"]
         i += 1
-    if fmt == "C":
-        result = result[:-1] + ["#ext14(H,IM)"]
-    elif fmt == "D":
-        result = result[:-1] + ["#ext21(IM)"]
-    elif fmt == "E":
-        result = result[:-1] + ["#ext18(IM)"]
+    if fmt in ["C", "D", "E"]:
+        result = result[:-1] + [f"#{imm_syntax}"]
 
     return result
 
@@ -124,11 +120,15 @@ def get_t_bits(pack, scale, bit_mode, sel_mode):
         return "00"
 
 
+def get_imm_syntax(meta):
+    return meta.get("immSyntax", "imm")
+
+
 def gen_asm(name, meta):
     result = []
     for fmt in meta["fmts"]:
         for vec in get_vecs(meta, fmt):
-            args = get_args(vec, fmt)
+            args = get_args(vec, fmt, get_imm_syntax(meta))
             for fold in get_folds(meta, vec):
                 v = get_v_bits(vec, fold)
                 for pack in get_packs(meta, fmt):
