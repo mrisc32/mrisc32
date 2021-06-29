@@ -324,14 +324,23 @@ instructions:
       name: Extract bit field
       descr: >
         Extract a bit field from the first source operand, sign-extend it, and
-        store it in the destination operand. The bit field is defined by the
-        second source operand as follows: the lowest log2(bits) bits describe
-        the offset (0 to bits-1), and the next log2(bits) describe the width
-        (1 to bits).
+        store it in the destination operand. The bit field (offset, width) is
+        defined by the second source operand.
 
-        If the bit field extends beyond the most significant bit, then the most
-        significant bit of the first source operand is used as the sign bit and
-        is extended in the destination operand.
+        In word mode, bits <12:8> of the second source operand describe the bit
+        field width, and bits <4:0> describe the bit field offset.
+
+        In half-word mode, bits <11:8> of the second source operand describe
+        the bit field width, and bits <3:0> describe the bit field offset.
+
+        In byte mode, bits <6:4> of the second source operand describe the bit
+        field width, and bits <2:0> describe the bit field offset.
+
+        If the value of the bit field width descriptor is zero (0), the width
+        is interpreted as being the full width of the chunk.
+
+        The first source operand is sign extended up to the number of bits
+        required by the bit field.
       note: >
         When the bit field width descriptor is all zeros (specifying the full
         width of the chunk), this instruction operates as an arithmetic shift
@@ -340,7 +349,10 @@ instructions:
         ASR is a valid assembler alias for EBF.
       pseudo: |
         o = uint(c & (bits-1))
-        w = uint((c >> log2(bits)) & (bits-1))
+        if bits == 8 then
+          w = uint((c >> 4) & (bits-1))
+        else
+          w = uint((c >> 8) & (bits-1))
         if w == 0 then
           w = bits
         // Note: b is sign-extended up to o+w
@@ -354,14 +366,23 @@ instructions:
       name: Extract bit field unsigned
       descr: >
         Extract a bit field from the first source operand, zero-extend it, and
-        store it in the destination operand. The bit field is defined by the
-        second source operand as follows: the lowest log2(bits) bits describe
-        the offset (0 to bits-1), and the next log2(bits) describe the width
-        (1 to bits).
+        store it in the destination operand. The bit field (offset, width) is
+        defined by the second source operand.
 
-        If the bit field extends beyond the most significant bit, then the most
-        significant bit of the first source operand is used as the sign bit and
-        is extended in the destination operand.
+        In word mode, bits <12:8> of the second source operand describe the bit
+        field width, and bits <4:0> describe the bit field offset.
+
+        In half-word mode, bits <11:8> of the second source operand describe
+        the bit field width, and bits <3:0> describe the bit field offset.
+
+        In byte mode, bits <6:4> of the second source operand describe the bit
+        field width, and bits <2:0> describe the bit field offset.
+
+        If the value of the bit field width descriptor is zero (0), the width
+        is interpreted as being the full width of the chunk.
+
+        The first source operand is zero extended up to the number of bits
+        required by the bit field.
       note: >
         When the bit field width descriptor is all zeros (specifying the full
         width of the chunk), this instruction operates as a logic shift right
@@ -370,7 +391,10 @@ instructions:
         LSR is a valid assembler alias for EBFU.
       pseudo: |
         o = uint(c & (bits-1))
-        w = uint((c >> log2(bits)) & (bits-1))
+        if bits == 8 then
+          w = uint((c >> 4) & (bits-1))
+        else
+          w = uint((c >> 8) & (bits-1))
         if w == 0 then
           w = bits
         // Note: b is zero-extended up to o+w
@@ -386,9 +410,19 @@ instructions:
         Extract a bit field from the first source operand, zero-extend it,
         shift it to the left, and store it in the destination operand.
 
-        The bit field is defined by the second source operand as follows: the
-        lowest log2(bits) bits describe the offset (0 to bits-1), and the next
-        log2(bits) describe the width (1 to bits).
+        The bit field (offset, width) is defined by the second source operand.
+
+        In word mode, bits <12:8> of the second source operand describe the bit
+        field width, and bits <4:0> describe the bit field offset.
+
+        In half-word mode, bits <11:8> of the second source operand describe
+        the bit field width, and bits <3:0> describe the bit field offset.
+
+        In byte mode, bits <6:4> of the second source operand describe the bit
+        field width, and bits <2:0> describe the bit field offset.
+
+        If the value of the bit field width descriptor is zero (0), the width
+        is interpreted as being the full width of the chunk.
       note: >
         When the bit field width descriptor is all zeros (specifying the full
         width of the chunk), this instruction operates as a logic shift left
@@ -397,7 +431,10 @@ instructions:
         LSL is a valid assembler alias for MKBF.
       pseudo: |
         o = uint(c & (bits-1))
-        w = uint((c >> log2(bits)) & (bits-1))
+        if bits == 8 then
+          w = uint((c >> 4) & (bits-1))
+        else
+          w = uint((c >> 8) & (bits-1))
         if w == 0 then
           w = bits
         a = (b & ones(w)) << o
