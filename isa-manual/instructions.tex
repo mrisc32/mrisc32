@@ -13,11 +13,14 @@
 This chapter describes all the instructions of the MRISC32 instruction set.
 
 Instruction variants with a .B (packed byte) or .H (packed half-word) mnemonic
-suffix are only available in architectures that implement the Packed operation
+suffix are only available in implementations that support the Packed operation
 module (\hyperref[module:PM]{PM}).
 
 Instruction variants that include vector register operands are only available
-in architectures that implement the Vector operation module
+in implementations that support the Vector operation module
 (\hyperref[module:VM]{VM}).
+
+For instructions that are not part of the Base architecture, the required
+architecture module (or modules) is indicated in the instruction documentation.
 
 \input{build/instructions}
