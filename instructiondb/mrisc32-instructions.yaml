@@ -30,6 +30,7 @@ templates:
     vModes: [VSS, VSV]
     fold: false
     asmOperands: "{1}, {2}, {3}"
+    immEnc: I15
 
   # Bitwise operations (format A + C with bitwise negation).
   type2: &type2
@@ -38,6 +39,7 @@ templates:
     vModes: [VVS, VVV]
     fold: true
     asmOperands: "{1}, {2}, {3}"
+    immEnc: I15HL
 
   # Regular format A + C instructions.
   type3: &type3
@@ -46,6 +48,7 @@ templates:
     vModes: [VVS, VVV]
     fold: true
     asmOperands: "{1}, {2}, {3}"
+    immEnc: I15HL
 
   # Regular format A instructions.
   type4: &type4
@@ -70,23 +73,27 @@ templates:
     vModes: []
     fold: false
     asmOperands: "{1}, {2}"
+    immEnc: I21
 
   # Unconditional branch instructions (format D).
   type7: &type7
     <<: *type6
     immSyntax: "target"
+    immEnc: I21X4
 
   # Conditional branch instructions (format E).
   type8: &type8
     <<: *type6
     fmts: [E]
     immSyntax: "target"
+    immEnc: I18X4
 
   # Load/store PC-relative (format D).
   type9: &type9
     <<: *type6
     fmts: [D]
     immSyntax: "address@pc"
+    immEnc: I21X4
 
 instructions:
   Load and store:
@@ -238,7 +245,7 @@ instructions:
       descr: >
         Load low immediate value.
       pseudo: |
-        a = int(IM)
+        a = b
       note: >
         With this instruction it is possible to load signed integer values in
         the range [-1048576, 1048575].
@@ -250,7 +257,7 @@ instructions:
       descr: >
         Load high immediate value.
       pseudo: |
-        a = int(IM) <<s 11
+        a = b
       note: >
         This instruction can be used in combination with several instructions
         that take an immediate operand in order to form a full 32-bit
@@ -266,6 +273,7 @@ instructions:
         sign + exponent + 11 bits of mantissa), such as 1.0 (0x3f800000),
         -255.0 (0xc37f0000) or 0.2071533203125 (0x3e542000).
       op: 3
+      immEnc: I21H
 
   Bitwise logic:
     AND:
@@ -594,16 +602,16 @@ instructions:
       <<: *type6
       name: Add PC high immediate
       descr: >
-        Compute the sum of the current PC and and immediate operand that is
-        shifted to the left 11 steps before the addition.
+        Compute the sum of the current PC and and immediate operand.
       pseudo: |
-        a = int(PC) + (int(IM) << 11)
+        a = int(PC) + b
       note: >
         This instruction can be used in combination with several instructions
         that take an immediate operand in order to form a full 32-bit
         PC-relative offset. Examples of such instructions are ADD, LDW and JL.
       op: 6
       immSyntax: "target@pchi"
+      immEnc: I21H
 
   Integer comparison:
     SEQ:
@@ -698,7 +706,7 @@ instructions:
         operand are zero.
       pseudo: |
         if a == zeros(32) then
-          PC = PC + int(IM)*4
+          PC = PC + int(b)
       op: 0
 
     BNZ:
@@ -709,7 +717,7 @@ instructions:
         first source operand is non-zero.
       pseudo: |
         if a != zeros(32) then
-          PC = PC + int(IM)*4
+          PC = PC + int(b)
       op: 1
 
     BS:
@@ -720,7 +728,7 @@ instructions:
         operand are non-zero.
       pseudo: |
         if a == ones(32) then
-          PC = PC + int(IM)*4
+          PC = PC + int(b)
       op: 2
 
     BNS:
@@ -731,7 +739,7 @@ instructions:
         first source operand is zero.
       pseudo: |
         if a != ones(32) then
-          PC = PC + int(IM)*4
+          PC = PC + int(b)
       op: 3
 
     BLT:
@@ -742,7 +750,7 @@ instructions:
         signed integer value that is less than zero.
       pseudo: |
         if int(a) < 0 then
-          PC = PC + int(IM)*4
+          PC = PC + int(b)
       op: 4
 
     BGE:
@@ -753,7 +761,7 @@ instructions:
         signed integer value that is greater than or equal to zero.
       pseudo: |
         if int(a) >= 0 then
-          PC = PC + int(IM)*4
+          PC = PC + int(b)
       op: 5
 
     BLE:
@@ -764,7 +772,7 @@ instructions:
         signed integer value that is less than or equal to zero.
       pseudo: |
         if int(a) <= 0 then
-          PC = PC + int(IM)*4
+          PC = PC + int(b)
       op: 6
 
     BGT:
@@ -775,7 +783,7 @@ instructions:
         signed integer value that is greater than zero.
       pseudo: |
         if int(a) > 0 then
-          PC = PC + int(IM)*4
+          PC = PC + int(b)
       op: 7
 
     J:
@@ -783,14 +791,13 @@ instructions:
       name: Jump
       descr: >
         Jump to the target address that is formed by computing the sum of the
-        register operand and the sign-extended immediate value multiplied by
-        four.
+        register operand and the immediate operand.
 
         As a special case, the register operand can be the program counter
         (PC), which is encoded as register number 31. This also means that the
         VL register can not be used as the register operand.
       pseudo: |
-        PC = int(a) + int(IM)*4
+        PC = int(a) + int(b)
       note: >
         If the register operand is PC, a PC-relative branch with an effective
         range of +/-4MiB is performed. To extend the range to the full address
@@ -812,14 +819,13 @@ instructions:
       descr: >
         Jump and link. The current value of PC plus four is stored in the LR
         register, and the new PC is set to the target address that is formed by
-        computing the sum of the register operand and the sign-extended
-        immediate value multiplied by four.
+        computing the sum of the register operand and immediate operand.
 
         As a special case, the register operand can be the program counter
         (PC), which is encoded as register number 31. This also means that the
         VL register can not be used as the register operand.
       pseudo: |
-        adr = int(a) + int(IM)*4
+        adr = int(a) + int(b)
         LR = int(PC) + 4
         PC = adr
       note: >

@@ -146,6 +146,12 @@ def gen_asm(name, meta):
 def encoding_to_tex(meta):
     result = "\\begin{bytefield}{32}\n"
 
+    # Determine the immediate value encoding format.
+    if "immEnc" in meta:
+        imm_enc = f"\\hyperref[imm:{meta['immEnc']}]{{{meta['immEnc']}}}"
+    else:
+        imm_enc = ""
+
     # Determine the minimum set of bit limits (for a pretty \bitheader).
     field_limits = set()
     for fmt in meta["fmts"]:
@@ -154,7 +160,7 @@ def encoding_to_tex(meta):
         elif fmt == "B":
             field_limits.update({0, 7, 9, 15, 16, 21, 26, 31})
         elif fmt == "C":
-            field_limits.update({0, 14, 15, 16, 21, 26, 31})
+            field_limits.update({0, 15, 16, 21, 26, 31})
         elif fmt == "D":
             field_limits.update({0, 21, 26, 31})
         elif fmt == "E":
@@ -185,17 +191,16 @@ def encoding_to_tex(meta):
             result += "  \\bitbox{5}{Ra} &\n"
             result += "  \\bitbox{5}{Rb} &\n"
             result += "  \\bitbox{1}{V} &\n"
-            result += "  \\bitbox{1}{H} &\n"
-            result += "  \\bitbox{14}{IM}\n"
+            result += f"  \\bitbox{{15}}{{IM [{imm_enc}]}}\n"
         elif fmt == "D":
             result += f"  \\bitboxes*{{1}}{{110{(meta['op']):03b}}}\n"
             result += "  \\bitbox{5}{Ra} &\n"
-            result += "  \\bitbox{21}{IM}\n"
+            result += f"  \\bitbox{{21}}{{IM [{imm_enc}]}}\n"
         elif fmt == "E":
             result += "  \\bitboxes*{1}{110111}\n"
             result += "  \\bitbox{5}{Ra} &\n"
             result += f"  \\bitboxes*{{1}}{{{(meta['op']):03b}}}\n"
-            result += "  \\bitbox{18}{IM}\n"
+            result += f"  \\bitbox{{18}}{{IM [{imm_enc}]}}\n"
         result += f" \\end{{rightwordgroup}} \\\\\n"
     return result + "\\end{bytefield}\n\n"
 
