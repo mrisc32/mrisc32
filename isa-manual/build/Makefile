@@ -33,10 +33,10 @@ clean:
 mrisc32-logo.pdf: $(srcdir)/../doc/mrisc32-logo.svg
 	cairosvg $< -o $@
 
-# TODO(m): Make this more dynamic (only when the version changes).
-.PHONY: version.tex
-version.tex:
-	$(srcdir)/get_version.sh > $@
+# Generate a version file based on the latest Git tag.
+.PHONY: .FORCE-VERSION.TEX
+version.tex: .FORCE-VERSION.TEX
+	$(srcdir)/get_version.sh $@
 
 instruction-counts.tex: $(srcdir)/../instructiondb/mrisc32-instructions.yaml $(DBTOOL)
 	$(DBTOOL) --artifact counts -o $@ $<
