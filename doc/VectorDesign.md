@@ -59,11 +59,11 @@ abs_diff:
 loop:
   add     r4, r4, #-1          ; Decrement the loop counter
 
-  ldw     r6, r2, r5*4         ; r6 = a
-  ldw     r7, r3, r5*4         ; r7 = b
+  ldw     r6, [r2, r5*4]       ; r6 = a
+  ldw     r7, [r3, r5*4]       ; r7 = b
   fsub    r6, r6, r7           ; r6 = a - b
   and     r6, r6, #0x7fffffff  ; r6 = fabs(a - b) (i.e. clear the sign bit)
-  stw     r6, r1, r5*4         ; c  = fabs(a - b)
+  stw     r6, [r1, r5*4]       ; c  = fabs(a - b)
 
   add     r5, r5, #1           ; Increment the array offset
   bgt     r4, #loop
@@ -86,15 +86,15 @@ loop:
   min     vl, r4, r6           ; vl = min(r4, r6)
   sub     r4, r4, vl           ; Decrement the loop counter
 
-  ldw     v1, r2, #4           ; v1 = a
-  ldw     v2, r3, #4           ; v2 = b
+  ldw     v1, [r2, #4]         ; v1 = a
+  ldw     v2, [r3, #4]         ; v2 = b
   fsub    v1, v1, v2           ; v1 = a - b
   and     v1, v1, #0x7fffffff  ; v1 = fabs(a - b) (i.e. clear the sign bit)
-  stw     v1, r1, #4           ; c  = fabs(a - b)
+  stw     v1, [r1, #4]         ; c  = fabs(a - b)
 
-  ldea    r1, r1, vl*4         ; Increment the memory pointers
-  ldea    r2, r2, vl*4
-  ldea    r3, r3, vl*4
+  ldea    r1, [r1, vl*4]       ; Increment the memory pointers
+  ldea    r2, [r2, vl*4]
+  ldea    r3, [r3, vl*4]
   bgt     r4, #loop
 
   mov     vl, r5               ; Restore VL

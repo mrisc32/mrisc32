@@ -3,7 +3,7 @@
 | Problem | Solution |
 |---|---|
 | No operation (NOP) | cpuid z, z, z |
-| Load full 32-bit immediate | ldhi rd,#upper\_21\_bits<br>or rd,rd,#lower\_11\_bits |
+| Load full 32-bit immediate | ldhi rd,#upper\_20\_bits<br>or rd,rd,#lower\_12\_bits |
 | Move register | or rd,z,ra |
 | Negate value | sub rd,z,ra |
 | Integer absolute value | sub rd,z,ra<br>max rd,ra,rd |
@@ -16,8 +16,8 @@
 | Invert all bits (NOT) | xor rd,ra,#-1 |
 | Compare and branch | s[cond] tmp,ra,rb<br>bs tmp,#branch\_target<br>*(or alternatively)*<br>sub tmp,ra,rb<br>b[cond] tmp,#branch\_target |
 | Return from subroutine | j lr,#0 |
-| Push to stack | add sp,sp,#-N<br>stw ra1,sp,#0<br>stw ra2,sp,#4<br>... |
-| Pop from stack | ldw rd1,sp,#0<br>ldw rd2,sp,#4<br>...<br>add sp,sp,#N |
+| Push to stack | add sp,sp,#-N<br>stw ra1,[sp,#0]<br>stw ra2,[sp,#4]<br>... |
+| Pop from stack | ldw rd1,[sp,#0]<br>ldw rd2,[sp,#4]<br>...<br>add sp,sp,#N |
 | 64-bit integer addition: c2:c1 = a2:a1 + b2:b1 | add c1,a1,b1<br>add c2,a2,b2<br>sltu carry,c1,a1<br>sub c2,c2,carry |
 | Floating point negation | xor rd,ra,#0x80000000<br>*(or alternatively)*<br>fsub rd,z,ra |
 | Floating point absolute value | and rd,ra,#0x7fffffff |
