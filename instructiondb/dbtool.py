@@ -93,10 +93,13 @@ def get_args(vec, fmt, imm_syntax):
     return result
 
 
-def format_args(meta, args):
+def format_args(meta, args, scale):
     result = meta["asmOperands"]
     for i in range(len(args)):
-        result = result.replace(f"{{{i+1}}}", args[i])
+        arg = args[i]
+        if i == 2:
+            arg += scale
+        result = result.replace(f"{{{i+1}}}", arg)
     return result
 
 
@@ -138,7 +141,7 @@ def gen_asm(name, meta):
                                 t = get_t_bits(pack, scale, bit_mode, sel_mode)
                                 s = f"{name}{pack}{bit_mode}{sel_mode}{fold} "
                                 s += " " * max(0, (8 - len(s)))
-                                s += format_args(meta, args) + scale
+                                s += format_args(meta, args, scale)
                                 result.append({"fmt": fmt, "v": v, "t": t, "asm": s})
     return result
 

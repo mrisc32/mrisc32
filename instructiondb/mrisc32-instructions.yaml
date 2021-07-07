@@ -29,7 +29,7 @@ templates:
     tMode: X
     vModes: [VSS, VSV]
     fold: false
-    asmOperands: "{1}, {2}, {3}"
+    asmOperands: "{1}, [{2}, {3}]"
     immEnc: I15
 
   # Bitwise operations (format A + C with bitwise negation).
