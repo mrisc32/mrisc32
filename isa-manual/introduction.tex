@@ -468,7 +468,7 @@ depends on the instruction).
   \hline
   C & 15 bits & \hyperref[imm:I15]{I15}, \hyperref[imm:I15HL]{I15HL} \\
   \hline
-  D & 21 bits & \hyperref[imm:I21]{I21}, \hyperref[imm:I21H]{I21H}, \hyperref[imm:I21X4]{I21X4} \\
+  D & 21 bits & \hyperref[imm:I21HL]{I21HL}, \hyperref[imm:I21H]{I21H}, \hyperref[imm:I21X4]{I21X4} \\
   \hline
   E & 18 bits & \hyperref[imm:I18X4]{I18X4} \\
   \hline
@@ -524,23 +524,35 @@ When H=1, the immediate value is expanded into a 32-bit word as follows:
   \bitboxes{1}{LLLLLLLLLLLLLLLLLLL}
 \end{bytefield}
 
-\subsection{I21}
-\label{imm:I21}
+\subsection{I21HL}
+\label{imm:I21HL}
 
-The I21 format is encoded using 21 bits as follows:
+The I21HL format is encoded using 21 bits as follows:
 
 \begin{bytefield}{21}
-  \bitheader{0,20} \\
-  \bitbox{1}{S}
-  \bitbox{20}{Data}
+  \bitheader{0,1,19,20} \\
+  \bitbox{1}{H} &
+  \bitbox{1}{S} &
+  \bitbox{18}{Data}
+  \bitbox{1}{L} &
 \end{bytefield}
 
-The immediate value is expanded into a 32-bit word as follows:
+When H=0, the immediate value is expanded into a 32-bit word as follows:
 
 \begin{bytefield}{32}
-  \bitheader{0,20,31} \\
-  \bitboxes{1}{SSSSSSSSSSSS}
-  \bitbox{20}{Data}
+  \bitheader{0,1,19,31} \\
+  \bitboxes{1}{SSSSSSSSSSSSS}
+  \bitbox{18}{Data}
+  \bitbox{1}{L}
+\end{bytefield}
+
+When H=1, the immediate value is expanded into a 32-bit word as follows:
+
+\begin{bytefield}{32}
+  \bitheader{0,13,31} \\
+  \bitbox{1}{S}
+  \bitbox{18}{Data}
+  \bitboxes{1}{LLLLLLLLLLLLL}
 \end{bytefield}
 
 \subsection{I21H}
@@ -549,17 +561,16 @@ The immediate value is expanded into a 32-bit word as follows:
 The I21H format is encoded using 21 bits as follows:
 
 \begin{bytefield}{21}
-  \bitheader{0,1,20} \\
-  \bitbox{20}{Data}
-  \bitbox{1}{L}
+  \bitheader{0,20} \\
+  \bitbox{21}{Data}
 \end{bytefield}
 
 The immediate value is expanded into a 32-bit word as follows:
 
 \begin{bytefield}{32}
-  \bitheader{0,12,31} \\
-  \bitbox{20}{Data}
-  \bitboxes{1}{LLLLLLLLLLLL}
+  \bitheader{0,11,31} \\
+  \bitbox{21}{Data}
+  \bitboxes{1}{00000000000}
 \end{bytefield}
 
 \subsection{I21X4}
