@@ -246,18 +246,17 @@ instructions:
         a = b
       note: >
         With this instruction it is possible to load signed integer values in
-        the range [-524288, 524287]. It is also possible to load an immediate
-        value that occupies the upper bits of a 32-bit word, as described by
-        the \hyperref[imm:I21HL]{I21HL} immediate encoding.
+        the range [-524288, 524287].
+
+        It is also possible to load an immediate value that occupies the upper
+        bits of a 32-bit word with the lower bits being filled with the LSB of
+        the immediate field, making it suitable for loading values and masks
+        such as 0x7fffffff and 0x8000ffff.
 
         This instruction can be used in combination with several instructions
         that take an immediate operand in order to form a full 32-bit
         value or absolute address. Examples of such instructions are OR, LDW
         and JL.
-
-        Since the least significant bit of IM is shifted into the lowest 12
-        bits of the result, it is also possible to load values and masks such
-        as 0x7fffffff and 0x8000ffff.
 
         Another use of this instruction is to load 32-bit floating-point
         values that can be represented with the 19 most significant bits (i.e.
