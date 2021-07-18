@@ -73,13 +73,12 @@ templates:
     vModes: []
     fold: false
     asmOperands: "{1}, {2}"
-    immEnc: I21
+    immEnc: I21X4
 
   # Unconditional branch instructions (format D).
   type7: &type7
     <<: *type6
     immSyntax: "target"
-    immEnc: I21X4
 
   # Conditional branch instructions (format E).
   type8: &type8
@@ -93,7 +92,6 @@ templates:
     <<: *type6
     fmts: [D]
     immSyntax: "address@pc"
-    immEnc: I21X4
 
 instructions:
   Load and store:
@@ -145,7 +143,7 @@ instructions:
       pseudo: |
         adr = PC + int(b) * 4
         a = int(MEM[adr,4])
-      op: 4
+      op: 2
 
     LDUB:
       <<: *type1
@@ -237,43 +235,36 @@ instructions:
       pseudo: |
         adr = PC + int(b) * 4
         MEM[adr,4] = a
-      op: 5
+      op: 3
 
-    LDLI:
+    LDI:
       <<: *type6
-      name: Load low immediate
+      name: Load immediate
       descr: >
-        Load low immediate value.
+        Load immediate value (low or high bits).
       pseudo: |
         a = b
       note: >
         With this instruction it is possible to load signed integer values in
-        the range [-1048576, 1048575].
-      op: 2
+        the range [-524288, 524287]. It is also possible to load an immediate
+        value that occupies the upper bits of a 32-bit word, as described by
+        the \hyperref[imm:I21HL]{I21HL} immediate encoding.
 
-    LDHI:
-      <<: *type6
-      name: Load high immediate
-      descr: >
-        Load high immediate value.
-      pseudo: |
-        a = b
-      note: >
         This instruction can be used in combination with several instructions
         that take an immediate operand in order to form a full 32-bit
         value or absolute address. Examples of such instructions are OR, LDW
         and JL.
 
-        Since the least significant bit of IM is shifted into the lowest 11
+        Since the least significant bit of IM is shifted into the lowest 12
         bits of the result, it is also possible to load values and masks such
-        as 0x7fffffff and 0x80007fff.
+        as 0x7fffffff and 0x8000ffff.
 
         Another use of this instruction is to load 32-bit floating-point
-        values that can be represented with the 20 most significant bits (i.e.
-        sign + exponent + 11 bits of mantissa), such as 1.0 (0x3f800000),
-        -255.0 (0xc37f0000) or 0.2071533203125 (0x3e542000).
-      op: 3
-      immEnc: I21H
+        values that can be represented with the 19 most significant bits (i.e.
+        sign + exponent + 10 bits of mantissa), such as 1.0 (0x3f800000) or
+        -255.0 (0xc37f0000).
+      op: 6
+      immEnc: I21HL
 
   Bitwise logic:
     AND:
@@ -598,18 +589,28 @@ instructions:
         a = max(uint(b), uint(c))
       op: 27
 
+    ADDPC:
+      <<: *type6
+      name: Add PC and immediate
+      descr: >
+        Compute the sum of the current PC and an immediate operand.
+      pseudo: |
+        a = int(PC) + b
+      op: 4
+      immSyntax: "target@pc"
+
     ADDPCHI:
       <<: *type6
-      name: Add PC high immediate
+      name: Add PC and high immediate
       descr: >
-        Compute the sum of the current PC and and immediate operand.
+        Compute the sum of the current PC and an immediate operand.
       pseudo: |
         a = int(PC) + b
       note: >
         This instruction can be used in combination with several instructions
         that take an immediate operand in order to form a full 32-bit
         PC-relative offset. Examples of such instructions are ADD, LDW and JL.
-      op: 6
+      op: 5
       immSyntax: "target@pchi"
       immEnc: I21H
 
