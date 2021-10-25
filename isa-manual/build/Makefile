@@ -13,7 +13,7 @@ srcdir = ..
 docs = mrisc32-instruction-set-manual
 pdfs = $(addsuffix .pdf, $(docs))
 
-generated_tex = version.tex instruction-counts.tex instructions.tex instruction-list.tex
+generated_tex = version.tex instruction-counts.tex instructions.tex instruction-list.tex opcode-list.tex
 
 srcs = $(wildcard $(srcdir)/*.tex) $(generated_tex)
 bibs = $(srcdir)/mrisc32-instruction-set-manual.bib
@@ -46,6 +46,9 @@ instructions.tex: $(srcdir)/../instructiondb/mrisc32-instructions.yaml $(DBTOOL)
 
 instruction-list.tex: $(srcdir)/../instructiondb/mrisc32-instructions.yaml $(DBTOOL)
 	$(DBTOOL) --artifact list --sort -o $@ $<
+
+opcode-list.tex: $(srcdir)/../instructiondb/mrisc32-instructions.yaml $(DBTOOL)
+	$(DBTOOL) --artifact opcodes -o $@ $<
 
 $(pdfs): %.pdf: $(srcdir)/%.tex $(srcs) $(figs) $(bibs)
 	$(PDFLATEX) $*

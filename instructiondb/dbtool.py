@@ -378,6 +378,96 @@ def to_tex_list(db, sort_alphabetically):
     return result
 
 
+def to_tex_opcodes(db):
+    def to_tex_opcodes_helper(insns, fmt, op_min, op_max, fn_min=0, fn_max=0):
+        result = f"\n\section{{Format {fmt} opcodes}}\n\n"
+
+        has_fn_field = fn_max > fn_min
+        num_columns = 8 if has_fn_field else 7
+
+        table_head = ""
+        table_head += "\\textbf{OP} & "
+        if has_fn_field:
+            table_head += "\\textbf{FN} & "
+        table_head += "\\textbf{Instruction} & "
+        table_head += "\\textbf{Base} & "
+        table_head += "\\textbf{PM} & "
+        table_head += "\\textbf{FM} & "
+        table_head += "\\textbf{SM} & "
+        table_head += "\\textbf{Name} \\\\\n"
+
+        if has_fn_field:
+            result += "\\begin{tabularx}{\\linewidth}{|l|l|l|c|c|c|c|p{175pt}|}\n"
+        else:
+            result += "\\begin{tabularx}{\\linewidth}{|l|l|c|c|c|c|p{200pt}|}\n"
+        result += "\\toprule\n"
+        result += "\\hline\n"
+        result += table_head
+        result += "\\hline\n"
+        result += "\\midrule\n"
+        result += "\\endfirsthead\n"
+        result += "\\toprule\n"
+        result += "\\hline\n"
+        result += table_head
+        result += "\\hline\n"
+        result += "\\midrule\n"
+        result += "\\endhead\n"
+        result += "\\midrule\n"
+        result += f"\\multicolumn{{{num_columns}}}{{r}}{{\\footnotesize(continued)}}\n"
+        result += "\\endfoot\n"
+        result += "\\bottomrule\n"
+        result += "\\endlastfoot\n"
+        result += "\\hline\n"
+        tick_yes = "\\checkmark"
+        tick_no = " "
+
+        # Extract all opcodes for this format.
+        opcode_names = {}
+        for name in insns:
+            meta = insns[name]
+            if fmt in meta["fmts"]:
+                key = (meta["op"], meta.get("fn", 0))
+                opcode_names[key] = name
+
+        # Print all opcodes for this format (including vacant positions)
+        for op in range(op_min, op_max + 1):
+            for fn in range(fn_min, fn_max + 1):
+                result += f"{op} & "
+                if has_fn_field:
+                    result += f"{fn} & "
+                key = (op, fn)
+                if key in opcode_names:
+                    name = opcode_names[key]
+                    meta = insns[name]
+                    result += f"\\hyperref[insn:{name}]{{{name}}} & "
+                    result += f"{tick_no if 'requires' in meta and len(meta['requires']) > 0 else tick_yes} & "
+                    result += f"{tick_yes if 'requires' in meta and 'PM' in meta['requires'] else tick_no} & "
+                    result += f"{tick_yes if 'requires' in meta and 'FM' in meta['requires'] else tick_no} & "
+                    result += f"{tick_yes if 'requires' in meta and 'SM' in meta['requires'] else tick_no} & "
+                    result += f"{meta['name']} \\\\\n"
+                else:
+                    result += f"- & & & & & \\\\\n"
+                result += "\\hline\n"
+        result += "\\end{tabularx}\n\n"
+        return result
+
+    # Merge all instructions into a single dictionary.
+    all_insns = {}
+    for _, insns in db.items():
+        all_insns = {**all_insns, **insns}
+
+    result = ""
+    result += to_tex_opcodes_helper(all_insns, "A", op_min=0, op_max=123)
+    result += to_tex_opcodes_helper(
+        all_insns, "B", op_min=124, op_max=127, fn_min=0, fn_max=63
+    )
+    result += to_tex_opcodes_helper(all_insns, "C", op_min=1, op_max=47)
+    result += to_tex_opcodes_helper(all_insns, "D", op_min=0, op_max=6)
+    result += to_tex_opcodes_helper(all_insns, "E", op_min=0, op_max=7)
+
+    return result
+
+
 def to_tex_instr_counts(db):
     # Count number of instructions per format.
     max_counts = {"A": 124, "B": 256, "C": 47, "D": 7, "E": 8}
@@ -412,7 +502,7 @@ def main():
         "-a",
         "--artifact",
         default="manual",
-        help="select artifact: manual, list, counts (default: manual)",
+        help="select artifact: manual, list, opcodes, counts (default: manual)",
     )
     parser.add_argument("-o", "--output", help="output file")
     parser.add_argument(
@@ -429,6 +519,8 @@ def main():
         generated = to_tex_manual(db, sort_alphabetically=args.sort)
     elif args.artifact == "list":
         generated = to_tex_list(db, sort_alphabetically=args.sort)
+    elif args.artifact == "opcodes":
+        generated = to_tex_opcodes(db)
     elif args.artifact == "counts":
         generated = to_tex_instr_counts(db)
     else:
