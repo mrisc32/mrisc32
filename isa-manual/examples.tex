@@ -16,9 +16,51 @@
 This is a non-normative section that contains programs that exemplify various
 aspects of the MRISC32 instruction set architecture.
 
+\section{Basic operations}
+
+\subsection{Push/pop stack}
+
+\begin{lstlisting}[style=assembler]
+non_leaf_function:
+    ; Push registers r16, r17 and lr onto the stack
+    add   sp, sp, #-12
+    stw   r16, [sp, #0]
+    stw   r17, [sp, #4]
+    stw   lr, [sp, #8]
+
+    ; ...
+
+    ; Pop registers and return from function
+    ldw   lr, [sp, #8]
+    ldw   r17, [sp, #4]
+    ldw   r16, [sp, #0]
+    add   sp, sp, #12
+    ret                     ; Alias for j lr, #0
+\end{lstlisting}
+
+\subsection{Simple loop}
+
+\begin{lstlisting}[style=assembler]
+    ldi   r1, #loop_count   ; r1 holds the loop counter
+loop:
+    ; ...
+    add   r1, r1, #-1       ; Decrement the loop counter
+    bnz   r1, loop          ; Branch if r1 != 0
+\end{lstlisting}
+
+\subsection{Conditional selection}
+
+\begin{lstlisting}[style=assembler]
+    sne   r4, r1, #42
+    sel   r4, r2, r3        ; r4 = (r1 != 42) ? r2 : r3
+\end{lstlisting}
+
 \section{Vector operation}
 
 \subsection{saxpy}
+
+Several BLAS routines, including saxpy, are easily vectorized for the MRISC32
+instruction set.
 
 \begin{lstlisting}[style=assembler]
 ; void saxpy(size_t n, const float a, const float *x, float *y)
@@ -35,9 +77,9 @@ aspects of the MRISC32 instruction set architecture.
 
 saxpy:
     bz    r1, 2f          ; Nothing to do?
-    cpuid r5, z, z        ; Query the maximum vector length
+    cpuid vl, z, z        ; Query the maximum vector length
 1:
-    minu  vl, r5, r1      ; Define the operation vector length
+    minu  vl, vl, r1      ; Define the operation vector length
     sub   r1, r1, vl      ; Decrement loop counter
     ldw   v1, [r3, #4]    ; Load x (element stride = 4 bytes)
     ldw   v2, [r4, #4]    ; Load y
@@ -79,19 +121,18 @@ example of one-dimensional floating-point interpolation.
 lerp:
     bz    r1, 2f          ; Nothing to do?
 
-    cpuid r6, z, z        ; Query maximum vector length
-    mov   vl, r6
+    cpuid vl, z, z        ; Query maximum vector length
 
-    add   r8, r4, #4      ; r8 = &x[1]
-    itof  r7, r6, z
+    add   r6, r4, #4      ; r6 = &x[1]
+    itof  r7, vl, z
 
-    ldea  v1, [z, #1]
+    ldea  v1, [z, #1]     ; v1 = [0, 1, 2, ...]
     itof  v1, v1, z
     fmul  v1, v1, r3      ; v1 = dt * [0.0, 1.0, 2.0, ...]
 
     fmul  r7, r3, r7      ; r7 = dt * maximum vector length
 1:
-    minu  vl, r6, r1      ; Define the operation vector length
+    minu  vl, vl, r1      ; Define the operation vector length
     sub   r1, r1, vl      ; Decrement loop counter
 
     ftoi  v2, v1, z       ; v2 = integer indexes (k)
@@ -99,7 +140,7 @@ lerp:
     fsub  v3, v1, v3      ; v3 = interpolation weight (w)
 
     ldw   v4, [r4, v2*4]  ; Load x[k]
-    ldw   v5, [r8, v2*4]  ; Load x[k+1]
+    ldw   v5, [r6, v2*4]  ; Load x[k+1]
 
     fsub  v5, v5, v4
     fmul  v5, v5, v3
@@ -141,16 +182,16 @@ revbytes:
     add   r4, r1, #-4
     add   r3, r3, r4      ; r3 = &y[n-4]
     lsr   r1, r1, #2      ; r1 = number of words
-    cpuid r4, z, z        ; Query the maximum vector length
-    lsl   r5, r4, #2      ; r5 = 4 * max vector length
+    cpuid vl, z, z        ; Query the maximum vector length
+    lsl   r4, vl, #2      ; r4 = 4 * max vector length
 1:
-    minu  vl, r4, r1      ; Define the operation vector length
+    minu  vl, vl, r1      ; Define the operation vector length
     sub   r1, r1, vl      ; Decrement loop counter
     ldw   v1, [r2, #4]    ; Load x (element stride = 4 bytes)
     shuf  v1, v1, #0b000001010011  ; Reverse bytes of each word
     stw   v1, [r3, #-4]   ; Store y (element stride = -4 bytes)
-    add   r2, r2, r5      ; Increment address (x)
-    sub   r3, r3, r5      ; Decrement address (y)
+    add   r2, r2, r4      ; Increment address (x)
+    sub   r3, r3, r4      ; Decrement address (y)
     bnz   r1, 1b
 2:
     ret
