@@ -395,9 +395,7 @@ instructions:
           w = uint((c >> 8) & (bits-1))
         if w == 0 then
           w = bits
-        // Note: b is zero-extended up to o+w
-        // bits if o+w > bits.
-        a = uint(b<o+w-1:o>)
+        a = (b >> o) & ones(w)
       op: 20
       immSyntax: "<offs:width>"
 
@@ -594,7 +592,7 @@ instructions:
       descr: >
         Compute the sum of the current PC and an immediate operand.
       pseudo: |
-        a = int(PC) + b
+        a = int(PC) + int(b)
       op: 4
       immSyntax: "target@pc"
 
@@ -604,11 +602,11 @@ instructions:
       descr: >
         Compute the sum of the current PC and an immediate operand.
       pseudo: |
-        a = int(PC) + b
+        a = int(PC) + int(b)
       note: >
         This instruction can be used in combination with several instructions
         that take an immediate operand in order to form a full 32-bit
-        PC-relative offset. Examples of such instructions are ADD, LDW and JL.
+        PC-relative offset. Examples of such instructions are ADD, LDH and JL.
       op: 5
       immSyntax: "target@pchi"
       immEnc: I21H
@@ -706,7 +704,7 @@ instructions:
         operand are zero.
       pseudo: |
         if a == zeros(32) then
-          PC = PC + int(b)
+          PC = int(PC) + int(b)
       op: 0
 
     BNZ:
@@ -717,7 +715,7 @@ instructions:
         first source operand is non-zero.
       pseudo: |
         if a != zeros(32) then
-          PC = PC + int(b)
+          PC = int(PC) + int(b)
       op: 1
 
     BS:
@@ -728,7 +726,7 @@ instructions:
         operand are non-zero.
       pseudo: |
         if a == ones(32) then
-          PC = PC + int(b)
+          PC = int(PC) + int(b)
       op: 2
 
     BNS:
@@ -739,7 +737,7 @@ instructions:
         first source operand is zero.
       pseudo: |
         if a != ones(32) then
-          PC = PC + int(b)
+          PC = int(PC) + int(b)
       op: 3
 
     BLT:
@@ -750,7 +748,7 @@ instructions:
         signed integer value that is less than zero.
       pseudo: |
         if int(a) < 0 then
-          PC = PC + int(b)
+          PC = int(PC) + int(b)
       op: 4
 
     BGE:
@@ -761,7 +759,7 @@ instructions:
         signed integer value that is greater than or equal to zero.
       pseudo: |
         if int(a) >= 0 then
-          PC = PC + int(b)
+          PC = int(PC) + int(b)
       op: 5
 
     BLE:
@@ -772,7 +770,7 @@ instructions:
         signed integer value that is less than or equal to zero.
       pseudo: |
         if int(a) <= 0 then
-          PC = PC + int(b)
+          PC = int(PC) + int(b)
       op: 6
 
     BGT:
@@ -783,7 +781,7 @@ instructions:
         signed integer value that is greater than zero.
       pseudo: |
         if int(a) > 0 then
-          PC = PC + int(b)
+          PC = int(PC) + int(b)
       op: 7
 
     J:
@@ -806,7 +804,7 @@ instructions:
         If the register operand is Z, an absolute branch is performed.
         Possible target addresses are 0x00000000 to 0x003FFFFC and 0xFFC00000
         to 0xFFFFFFFC. To extend the range to the full address space, use J in
-        combination with a preceding LDHI.
+        combination with a preceding LDI.
 
         If the register operand is LR and the immediate value is zero, the
         operation will return the program flow to the caller (RET is an alias
@@ -836,7 +834,7 @@ instructions:
         If the register operand is Z, an absolute branch is performed.
         Possible target addresses are 0x00000000 to 0x003FFFFC and 0xFFC00000
         to 0xFFFFFFFC. To extend the range to the full address space, use JL
-        in combination with a preceding LDHI.
+        in combination with a preceding LDI.
       op: 1
 
   Floating-point arithmetic:
