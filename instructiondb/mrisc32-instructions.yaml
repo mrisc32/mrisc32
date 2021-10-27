@@ -1056,48 +1056,6 @@ instructions:
       op: 77
       requires: ["FM"]
 
-    FPACK:
-      <<: *type4
-      name: Floating-point pack
-      descr: >
-        Convert and pack two floating-point operands into a single operand.
-
-        The precision of the two source operands are halved. The first source
-        operand is packed and stored in the upper half of the destination
-        operand, and the second source operand is packed and stored in the
-        lower half of the destination operand.
-      todo: Define pseudocode.
-      tMode: PH  # Only packed half-word is supported
-      op: 78
-      requires: ["FM", "PM"]
-
-    FUNPL:
-      <<: *type5
-      name: Floating-point unpack low
-      descr: >
-        Unpack the low half of a packed floating-point pair. The preicison of
-        the unpacked source floating-point value is doubled and stored in the
-        destination operand.
-      todo: Define pseudocode.
-      tMode: PH  # Only packed half-word is supported
-      op: 125
-      fn: 0
-      requires: ["FM", "PM"]
-
-    FUNPH:
-      <<: *type5
-      name: Floating-point unpack high
-      descr: >
-        Unpack the high half of a packed floating-point pair. The preicison of
-        the unpacked source floating-point value is doubled and stored in the
-        destination operand.
-      todo: Define pseudocode.
-      tMode: PH  # Only packed half-word is supported
-      op: 125
-      fn: 1
-      requires: ["FM", "PM"]
-
-
   Saturating and halving arithmetic:
     ADDS:
       <<: *type4
@@ -1242,6 +1200,29 @@ instructions:
       op: 56
       requires: ["SM"]
 
+  Packing and unpacking:
+    PACK:
+      <<: *type4
+      name: Pack
+      descr: >
+        Pack the lower parts of two integer operands.
+      pseudo: |
+        a = (b << (bits/2)) |
+            (c & ones(bits/2))
+      op: 58
+      requires: ["PM"]
+
+    PACKHI:
+      <<: *type4
+      name: Pack high
+      descr: >
+        Pack the higher parts of two integer operands.
+      pseudo: |
+        a = (b & ~ones(bits/2)) |
+            (c >> (bits/2))
+      op: 61
+      requires: ["PM"]
+
     PACKS:
       <<: *type4
       name: Signed pack with saturation
@@ -1291,6 +1272,47 @@ instructions:
             (lo >> (bits/2))
       op: 63
       requires: ["SM", "PM"]
+
+    FPACK:
+      <<: *type4
+      name: Floating-point pack
+      descr: >
+        Convert and pack two floating-point operands into a single operand.
+
+        The precision of the two source operands are halved. The first source
+        operand is packed and stored in the upper half of the destination
+        operand, and the second source operand is packed and stored in the
+        lower half of the destination operand.
+      todo: Define pseudocode.
+      tMode: PH  # Only packed half-word is supported
+      op: 78
+      requires: ["FM", "PM"]
+
+    FUNPL:
+      <<: *type5
+      name: Floating-point unpack low
+      descr: >
+        Unpack the low half of a packed floating-point pair. The preicison of
+        the unpacked source floating-point value is doubled and stored in the
+        destination operand.
+      todo: Define pseudocode.
+      tMode: PH  # Only packed half-word is supported
+      op: 125
+      fn: 0
+      requires: ["FM", "PM"]
+
+    FUNPH:
+      <<: *type5
+      name: Floating-point unpack high
+      descr: >
+        Unpack the high half of a packed floating-point pair. The preicison of
+        the unpacked source floating-point value is doubled and stored in the
+        destination operand.
+      todo: Define pseudocode.
+      tMode: PH  # Only packed half-word is supported
+      op: 125
+      fn: 1
+      requires: ["FM", "PM"]
 
   # TODO(m): Find better categories for these instructions.
   Miscellaneous:
@@ -1353,28 +1375,6 @@ instructions:
         color formats).
       op: 29
       tMode: N  # SHUF does not have any T mode
-
-    PACK:
-      <<: *type4
-      name: Pack
-      descr: >
-        Pack the lower parts of two integer operands.
-      pseudo: |
-        a = (b << (bits/2)) |
-            (c & ones(bits/2))
-      op: 58
-      requires: ["PM"]
-
-    PACKHI:
-      <<: *type4
-      name: Pack high
-      descr: >
-        Pack the higher parts of two integer operands.
-      pseudo: |
-        a = (b & ~ones(bits/2)) |
-            (c >> (bits/2))
-      op: 61
-      requires: ["PM"]
 
     REV:
       <<: *type5
