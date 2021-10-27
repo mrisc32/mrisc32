@@ -15,7 +15,7 @@
 MRISC32 is an open and free instruction set architecture (ISA).
 
 It is a RISC style load-store vector architecture that is designed to be simple
-yet highly scalable.
+yet powerful and highly scalable.
 
 One of the main features of the instruction set architecture is its
 forward-looking vector functionality that not only integrates well with the
@@ -28,8 +28,9 @@ computing (HPC).
 
 \section{Architecture modules}
 
-The MRISC32 instruction set architecture consists of the mandatory Base
-architecture, plus the following optional architecture modules:
+The MRISC32 instruction set architecture consists of the mandatory
+\hyperref[module:Base]{Base architecture}, plus the following optional
+architecture modules:
 
 \begin{bulletitems}
   \item Vector operation module (\hyperref[module:VM]{VM})
@@ -240,6 +241,15 @@ instruction operands.
   \end{rightwordgroup}
 \end{bytefield}
 
+For format A instructions, the value of the OP field must be in the range
+$0000000_{2}$ to $1111011_{2}$ ($0_{10}$ to $123_{10}$).
+
+For format C instructions, the value of the OP field must be in the range
+$000001_{2}$ to $101111_{2}$ ($1_{10}$ to $47_{10}$).
+
+For format D instructions, the value of the OP field must be in the range
+$000_{2}$ to $110_{2}$ ($0_{10}$ to $6_{10}$).
+
 \subsection{Instruction word fields}
 
 The field names that are used in the instruction format descriptions are listed
@@ -271,7 +281,7 @@ Not all field types appear in all instruction formats.
 
 The OP field in combination with the FN field (where applicable) is the main
 identification of the instruction, and dictates what operation the instruction
-shall perform.
+shall perform. Each OP, FN combination is referred to as a major instruction.
 
 The V field defines the scalar/vector configuration of the operands. The
 scalar/vector operand configuration is a two-bit identifier. When only one bit
@@ -292,14 +302,14 @@ interpret the second operand - i.e. the base address - as a scalar):
   \hline
   11 & V,V,V & V,S,V \\
   \hline
-  01 & V,V,fold(V) & V,S,fold(V) \\
+  01 & V,V,fold(V) & (reserved) \\
   \hline
 \end{tabular}
 
 The register fields Ra, Rb and Rc refer to one scalar or vector register each,
 according to the OP and V fields. For instance if a register operand refers to
-a vector register, and the corresponding R-field has the value 21, then the
-register operand is V21.
+a vector register, and the corresponding R-field has the value $21_{10}$, then
+the register operand is V21.
 
 The first register operand, Ra, can be a source or a destination register
 depending on the instruction, while Rb and Rc are always source registers.

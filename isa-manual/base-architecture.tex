@@ -9,6 +9,7 @@
 %------------------------------------------------------------------------------
 
 \chapter{Base architecture}
+\label{module:Base}
 
 The Base architecture is present in all implementations of the MRISC32 ISA. It
 primarily provides scalar integer and control flow instructions, and
@@ -30,7 +31,7 @@ There are 32 user addressable scalar registers, each 32 bits wide.
   \wordbox{1}{FP (R28)} \\
   \wordbox{1}{SP (R29)} \\
   \wordbox{1}{LR (R30)} \\
-  \wordbox{1}{VL (R31)}
+  \wordbox{1}{VL/PC (R31)}
 \end{bytefield}
 
 \subsection{The Z register}
@@ -52,6 +53,9 @@ is not used by any vector operations.
 If an implementation does not supprot the Vector operation module
 (\hyperref[module:VM]{VM}), the VL register acts as a regular general purpose
 register.
+
+Please note that a select few instructions substitue the program counter for
+R31, which means that those instructions can not access the VL register.
 
 \subsection{TP, FP and SP}
 
@@ -76,9 +80,16 @@ The registers can also be used as general purpose registers.
 \section{The program counter}
 
 The program counter (PC) is an internal register that holds the memory address
-of the current instruction. There are a few instructions that make use of the
-value of the program counter, either directly or indirectly, but other
-instructions can neither read nor alter the program counter.
+of the current instruction.
+
+The only instructions that can alter the PC register are control flow
+instructions (branches and jumps), that implicitly modify the program counter.
+
+A few instructions substitue PC for R31 as a read-only operand, but most
+instructions can not address the PC register explicitly.
+
+Furthermore, a few instructions use the value of the program counter as an
+implicit input operand.
 
 \section{Memory addressing}
 
