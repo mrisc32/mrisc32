@@ -1,0 +1,104 @@
+% -*- mode: latex; tab-width: 2; indent-tabs-mode: nil; -*-
+%------------------------------------------------------------------------------
+% MRISC32 ISA Manual - Application Binary Interface.
+%
+% This work is licensed under the Creative Commons Attribution-ShareAlike 4.0
+% International License. To view a copy of this license, visit
+% http://creativecommons.org/licenses/by-sa/4.0/ or send a letter to
+% Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
+%------------------------------------------------------------------------------
+
+\chapter{Application Binary Interface}
+
+This chapter contains recommendations for platform application binary
+interfaces (ABIs). It is not a complete ABI specification.
+
+\section{Calling convention}
+
+\subsection{Scalar registers}
+
+\begin{tabular}{|c|c|p{120pt}|}
+  \hline
+  \textbf{Register} & \textbf{Alias} & \textbf{Role and rule} \\
+  \hline
+  Z & R0 & Always zero (read only) \\
+  \hline
+  R1-R8 & & Function arguments / results \\
+  \hline
+  R9-R14 & & Temporary registers \\
+  \hline
+  R15 & & Intra-procedure call scratch register / temporary register \\
+  \hline
+  R16-R26 & & Callee-saved registers \\
+  \hline
+  TP & R27 & Thread pointer (callee-saved) \\
+  \hline
+  FP & R28 & Frame pointer (callee-saved) \\
+  \hline
+  SP & R29 & Stack pointer (callee-saved) \\
+  \hline
+  LR & R30 & Link register (callee-saved) \\
+  \hline
+  VL & R31 & Vector length (callee-saved) \\
+  \hline
+\end{tabular}
+
+\todo{Describe each register role.}
+
+\subsection{Vector registers}
+
+\begin{tabular}{|c|c|p{120pt}|}
+  \hline
+  \textbf{Register} & \textbf{Alias} & \textbf{Role and rule} \\
+  \hline
+  VZ & V0 & Always zero (read only) \\
+  \hline
+  V1-V8 & & Function arguments / results \\
+  \hline
+  V9-V15 & & Temporary registers \\
+  \hline
+  V16 - V31 & & Callee-saved registers \\
+  \hline
+\end{tabular}
+
+\todo{Do we really need that many callee-saved vector registers?}
+
+\subsection{Function arguments}
+
+\tbd
+
+\subsection{Function results}
+
+\tbd
+
+\section{Data organization}
+
+\subsection{Endianness}
+
+Data fields are stored in memory using little endian representation. Thus the
+least significant byte of a data field is at the lowest byte address that the
+data field occupies in memory.
+
+\subsection{Alignment}
+
+Data fields that are one, two or four bytes in size shall be aligned to a
+memory address that is divisable by the data field size.
+
+Data fields that are larger than four bytes in size shall be aligned to a
+memory address that is divisable by four.
+
+\begin{tabular}{|l|l|l|}
+  \hline
+  \textbf{Type} & \textbf{Size (bytes)} & \textbf{Alignment (bytes)} \\
+  \hline
+  byte & 1 & 1 \\
+  \hline
+  half-word & 2 & 2 \\
+  \hline
+  word & 4 & 4 \\
+  \hline
+  double-word & 8 & 4 \\
+  \hline
+  quad-word & 16 & 4 \\
+  \hline
+\end{tabular}
