@@ -132,6 +132,28 @@ Expands to:
   ebfu  ra, rb, rc          ; Register
 \end{lstlisting}
 
+\subsection{MOV - Move}
+
+Move value to register.
+
+Syntax:
+\begin{lstlisting}[style=assembler]
+  mov  ra, #value  ; Immediate
+  mov  ra, rb      ; Register
+\end{lstlisting}
+
+Expands to:
+\begin{lstlisting}[style=assembler]
+  or  ra, (v)z, #value  ; Immediate
+  or  ra, (v)z, rb      ; Register
+\end{lstlisting}
+
+\begin{notebox}
+The immediate form of the MOV alias is mostly useful for vector target
+registers. For scalar targer registers the \hyperref[insn:LDI]{LDI} instruction
+is more suitable since it has a wider immediate range.
+\end{notebox}
+
 \subsection{NOP - No operation}
 
 Perform no operation.
