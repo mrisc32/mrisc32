@@ -23,32 +23,20 @@ The main purposes of the instruction aliases are to improve the readability of
 assembler programs and listings, and to make it easier to write assembler
 programs.
 
-\subsection{NOP - No operation}
+\subsection{ASR - Arithmetic shift right}
 
-Perform no operation.
+Shift signed integer to the right.
 
 Syntax:
 \begin{lstlisting}[style=assembler]
-  nop
+  asr  ra, rb, #shift  ; Immediate
+  asr  ra, rb, rc      ; Register
 \end{lstlisting}
 
 Expands to:
 \begin{lstlisting}[style=assembler]
-  cpuid  z, z, z
-\end{lstlisting}
-
-\subsection{RET - Return}
-
-Retrun from a subroutine (jump to the address pointed to by LR).
-
-Syntax:
-\begin{lstlisting}[style=assembler]
-  ret
-\end{lstlisting}
-
-Expands to:
-\begin{lstlisting}[style=assembler]
-  j  lr, #0
+  ebf  ra, rb, #<shift:0>  ; Immediate
+  ebf  ra, rb, rc          ; Register
 \end{lstlisting}
 
 \subsection{B - Branch}
@@ -110,6 +98,66 @@ Expands to:
   ; Absolute
   ldi      lr, #target@hi
   jl       lr, #target@lo
+\end{lstlisting}
+
+\subsection{LSL - Logic shift left}
+
+Shift integer to the left.
+
+Syntax:
+\begin{lstlisting}[style=assembler]
+  lsl  ra, rb, #shift  ; Immediate
+  lsl  ra, rb, rc      ; Register
+\end{lstlisting}
+
+Expands to:
+\begin{lstlisting}[style=assembler]
+  mkbf  ra, rb, #<shift:0>  ; Immediate
+  mkbf  ra, rb, rc          ; Register
+\end{lstlisting}
+
+\subsection{LSR - Logic shift right}
+
+Shift unsigned integer to the right.
+
+Syntax:
+\begin{lstlisting}[style=assembler]
+  lsr  ra, rb, #shift  ; Immediate
+  lsr  ra, rb, rc      ; Register
+\end{lstlisting}
+
+Expands to:
+\begin{lstlisting}[style=assembler]
+  ebfu  ra, rb, #<shift:0>  ; Immediate
+  ebfu  ra, rb, rc          ; Register
+\end{lstlisting}
+
+\subsection{NOP - No operation}
+
+Perform no operation.
+
+Syntax:
+\begin{lstlisting}[style=assembler]
+  nop
+\end{lstlisting}
+
+Expands to:
+\begin{lstlisting}[style=assembler]
+  cpuid  z, z, z
+\end{lstlisting}
+
+\subsection{RET - Return}
+
+Retrun from a subroutine (jump to the address pointed to by LR).
+
+Syntax:
+\begin{lstlisting}[style=assembler]
+  ret
+\end{lstlisting}
+
+Expands to:
+\begin{lstlisting}[style=assembler]
+  j  lr, #0
 \end{lstlisting}
 
 \subsection{TAIL - Tail call}
