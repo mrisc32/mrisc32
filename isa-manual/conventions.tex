@@ -24,6 +24,7 @@ assembler programs and listings, and to make it easier to write assembler
 programs.
 
 \subsection{ASR - Arithmetic shift right}
+\label{insn:ASR}
 
 Shift signed integer to the right.
 
@@ -40,6 +41,7 @@ Expands to:
 \end{lstlisting}
 
 \subsection{B - Branch}
+\label{insn:B}
 
 Unconditionally branch to a PC-relative target.
 
@@ -62,6 +64,7 @@ condition).
 \end{notebox}
 
 \subsection{BL - Branch and link}
+\label{insn:BL}
 
 Unconditionally branch and link to a PC-relative target.
 
@@ -80,6 +83,7 @@ The branch range for the BL alias is PC +/-4MiB.
 \end{notebox}
 
 \subsection{CALL - Call a subroutine}
+\label{insn:CALL}
 
 Call a subroutine, with full 32-bit address range.
 
@@ -101,6 +105,7 @@ Expands to:
 \end{lstlisting}
 
 \subsection{LSL - Logic shift left}
+\label{insn:LSL}
 
 Shift integer to the left.
 
@@ -117,6 +122,7 @@ Expands to:
 \end{lstlisting}
 
 \subsection{LSR - Logic shift right}
+\label{insn:LSR}
 
 Shift unsigned integer to the right.
 
@@ -133,6 +139,7 @@ Expands to:
 \end{lstlisting}
 
 \subsection{MOV - Move}
+\label{insn:MOV}
 
 Move value to register.
 
@@ -155,6 +162,7 @@ is more suitable since it has a wider immediate range.
 \end{notebox}
 
 \subsection{NOP - No operation}
+\label{insn:NOP}
 
 Perform no operation.
 
@@ -169,6 +177,7 @@ Expands to:
 \end{lstlisting}
 
 \subsection{RET - Return}
+\label{insn:RET}
 
 Retrun from a subroutine (jump to the address pointed to by LR).
 
@@ -183,6 +192,7 @@ Expands to:
 \end{lstlisting}
 
 \subsection{TAIL - Tail call}
+\label{insn:TAIL}
 
 Make a tail call to a sibling routine, with full 32-bit address range.
 
