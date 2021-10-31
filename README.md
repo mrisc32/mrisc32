@@ -10,6 +10,7 @@ This is an open and free 32-bit RISC/Vector instruction set architecture ([ISA](
 * [Vector design](doc/VectorDesign.md)
 * [Packed operations](doc/PackedOperations.md)
 * [Common constructs](doc/CommonConstructs.md)
+* [Assembler syntax](doc/AssemblerSyntax.md)
 
 # Features
 
