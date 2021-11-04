@@ -403,7 +403,7 @@ instructions:
       <<: *type3
       name: Make bit field
       descr: >
-        Extract a bit field from the first source operand, zero-extend it,
+        Extract a bit field from the lower bits of the first source operand,
         shift it to the left, and store it in the destination operand.
 
         The bit field (offset, width) is defined by the second source operand.
@@ -435,6 +435,39 @@ instructions:
           w = bits
         a = (b & ones(w)) << o
       op: 21
+      immSyntax: "<offs:width>"
+
+    IBF:
+      <<: *type3
+      name: Insert bit field
+      descr: >
+        Extract a bit field from the lower bits of the first source operand,
+        shift it to the left, and insert it in the destination operand.
+
+        The bit field (offset, width) is defined by the second source operand.
+
+        In word mode, bits <12:8> of the second source operand describe the bit
+        field width, and bits <4:0> describe the bit field offset.
+
+        In half-word mode, bits <11:8> of the second source operand describe
+        the bit field width, and bits <3:0> describe the bit field offset.
+
+        In byte mode, bits <6:4> of the second source operand describe the bit
+        field width, and bits <2:0> describe the bit field offset.
+
+        If the value of the bit field width descriptor is zero (0), the width
+        is interpreted as being the full width of the chunk.
+      pseudo: |
+        o = uint(c & (bits-1))
+        if bits == 8 then
+          w = uint((c >> 4) & (bits-1))
+        else
+          w = uint((c >> 8) & (bits-1))
+        if w == 0 then
+          w = bits
+        a = (a & ~(ones(w) << o)) |
+            ((b & ones(w)) << o)
+      op: 47
       immSyntax: "<offs:width>"
 
     SEL:
