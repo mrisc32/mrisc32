@@ -107,6 +107,7 @@
       <keyword>ebf(\.(b|h))?(/f)?</keyword>
       <keyword>ebfu(\.(b|h))?(/f)?</keyword>
       <keyword>mkbf(\.(b|h))?(/f)?</keyword>
+      <keyword>ibf(\.(b|h))?(/f)?</keyword>
       <keyword>max(\.(b|h))?(/f)?</keyword>
       <keyword>maxu(\.(b|h))?(/f)?</keyword>
       <keyword>min(\.(b|h))?(/f)?</keyword>
