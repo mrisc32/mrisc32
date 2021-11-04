@@ -451,7 +451,7 @@ instructions:
           a = (a & b) | (c & ~b)
         else if T == 11 then
           a = (c & b) | (a & ~b)
-      op: 28
+      op: 46
       tMode: S  # SEL uses a special kind of interpretation of the T field.
 
   Integer arithmetic:
@@ -487,23 +487,23 @@ instructions:
         negated immediate operand).
 
     MUL:
-      <<: *type4
+      <<: *type3
       name: Multiply
       descr: >
         Compute the product of two integer operands.
       pseudo: |
         a = int(b) * int(c)
-      op: 52
+      op: 39
 
     MADD:
-      <<: *type4
+      <<: *type3
       name: Multiply and add
       descr: >
         Compute the product of two integer operands, and add the result to a
         third integer operand.
       pseudo: |
         a = int(a) + int(b) * int(c)
-      op: 57
+      op: 44
 
     MULHI:
       <<: *type4
@@ -512,7 +512,7 @@ instructions:
         Compute the upper part of the product of two signed integer operands.
       pseudo: |
         a = (int(b) * int(c)) >> bits
-      op: 53
+      op: 48
 
     MULHIU:
       <<: *type4
@@ -522,43 +522,43 @@ instructions:
         operands.
       pseudo: |
         a = (uint(b) * uint(c)) >> bits
-      op: 54
+      op: 49
 
     DIV:
-      <<: *type4
+      <<: *type3
       name: Signed divide
       descr: >
         Compute the quotient of two signed integer operands.
       pseudo: |
         a = int(b) / int(c)
-      op: 48
+      op: 40
 
     DIVU:
-      <<: *type4
+      <<: *type3
       name: Unsigned divide
       descr: >
         Compute the quotient of two unsigned integer operands.
       pseudo: |
         a = uint(b) / uint(c)
-      op: 49
+      op: 41
 
     REM:
-      <<: *type4
+      <<: *type3
       name: Signed remainder
       descr: >
         Compute the modulo of two signed integer operands.
       pseudo: |
         a = int(b) % int(c)
-      op: 50
+      op: 42
 
     REMU:
-      <<: *type4
+      <<: *type3
       name: Unsigned remainder
       descr: >
         Compute the modulo of two unsigned integer operands.
       pseudo: |
         a = uint(b) % uint(c)
-      op: 51
+      op: 43
 
     MIN:
       <<: *type3
@@ -633,7 +633,7 @@ instructions:
           a = ones(bits)
         else
           a = zeros(bits)
-      op: 30
+      op: 28
 
     SNE:
       <<: *type3
@@ -647,7 +647,7 @@ instructions:
           a = ones(bits)
         else
           a = zeros(bits)
-      op: 31
+      op: 29
 
     SLT:
       <<: *type3
@@ -661,7 +661,7 @@ instructions:
           a = ones(bits)
         else
           a = zeros(bits)
-      op: 32
+      op: 30
 
     SLTU:
       <<: *type3
@@ -675,7 +675,7 @@ instructions:
           a = ones(bits)
         else
           a = zeros(bits)
-      op: 33
+      op: 31
 
     SLE:
       <<: *type3
@@ -689,7 +689,7 @@ instructions:
           a = ones(bits)
         else
           a = zeros(bits)
-      op: 34
+      op: 32
 
     SLEU:
       <<: *type3
@@ -703,7 +703,7 @@ instructions:
           a = ones(bits)
         else
           a = zeros(bits)
-      op: 35
+      op: 33
 
   Branch:
     BZ:
@@ -1195,7 +1195,7 @@ instructions:
       pseudo: |
         prod = int(b) * int(c)
         a = sat(prod >>s (bits-1), bits)
-      op: 55
+      op: 50
       requires: ["SM"]
 
     MULQR:
@@ -1207,7 +1207,7 @@ instructions:
       pseudo: |
         prod = int(b) * int(c) + 1<<(bits-2)
         a = sat(prod >>s (bits-1), bits)
-      op: 56
+      op: 51
       requires: ["SM"]
 
   Packing and unpacking:
@@ -1383,7 +1383,7 @@ instructions:
         and with 0x00ff00ff) and/or changing the byte order (e.g. for
         conversion between big and little endian formats or different RGBA
         color formats).
-      op: 29
+      op: 34
       tMode: N  # SHUF does not have any T mode
 
     REV:
