@@ -104,6 +104,23 @@ Expands to:
   jl       lr, #target@lo
 \end{lstlisting}
 
+\subsection{GETSR - Get system register}
+\label{insn:GETSR}
+
+Move the value of a system register to a general purpose register.
+
+Syntax:
+\begin{lstlisting}[style=assembler]
+  getsr  ra, #sr_reg_no  ; Immediate
+  getsr  ra, rc          ; Register
+\end{lstlisting}
+
+Expands to:
+\begin{lstlisting}[style=assembler]
+  xchgsr  ra, z, #sr_reg_no  ; Immediate
+  xchgsr  ra, z, rc          ; Register
+\end{lstlisting}
+
 \subsection{LSL - Logic shift left}
 \label{insn:LSL}
 
@@ -189,6 +206,23 @@ Syntax:
 Expands to:
 \begin{lstlisting}[style=assembler]
   j  lr, #0
+\end{lstlisting}
+
+\subsection{SETSR - Set system register}
+\label{insn:SETSR}
+
+Move the value of a general purpose register to a system register.
+
+Syntax:
+\begin{lstlisting}[style=assembler]
+  setsr  rb, #sr_reg_no  ; Immediate
+  setsr  rb, rc          ; Register
+\end{lstlisting}
+
+Expands to:
+\begin{lstlisting}[style=assembler]
+  xchgsr  z, rb, #sr_reg_no  ; Immediate
+  xchgsr  z, rb, rc          ; Register
 \end{lstlisting}
 
 \subsection{TAIL - Tail call}

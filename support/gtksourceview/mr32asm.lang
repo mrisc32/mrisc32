@@ -99,8 +99,13 @@
     </context>
 
     <context id="instruction" style-ref="instruction">
-      <!-- Integer arithemtic / logic -->
+      <!-- System registers -->
+      <keyword>xchgsr</keyword>
+      <keyword>getsr</keyword>
+      <keyword>setsr</keyword>
       <keyword>cpuid</keyword>
+
+      <!-- Integer arithemtic / logic -->
       <keyword>and(\.(pn|np|nn))?(/f)?</keyword>
       <keyword>or(\.(pn|np|nn))?(/f)?</keyword>
       <keyword>xor(\.(pn|np|nn))?(/f)?</keyword>

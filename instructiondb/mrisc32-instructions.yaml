@@ -1359,17 +1359,28 @@ instructions:
 
   # TODO(m): Find better categories for these instructions.
   Miscellaneous:
-    CPUID:
-      name: CPU identification
+    XCHGSR:
+      <<: *type2
+      name: Exchange system register
       descr: >
-        Query CPU properties.
-      todo: Define pseudocode.
-      op: 0
-      fmts: [A]
+        First move the value of the system register given by the third source
+        operand to the destination operand, unless the destination operand is
+        the Z register.
+
+        Then move the value of the second source operand to the system register
+        given by the third source operand, unless the first source operand is
+        the Z register.
+      todo: >
+        Define system registers.
+
+        Define pseudo code syntach for system registers.
+      pseudo: |
+        a = SR[c]
+        if Rb != 00000 then
+          SR[c] = b
+      op: 36
       tMode: N
-      vModes: [VVS, VVV]
-      fold: true
-      asmOperands: "{1}, {2}, {3}"
+      fold: false
 
     SHUF:
       <<: *type2
@@ -1456,3 +1467,16 @@ instructions:
             a = int(a) + 1
       op: 124
       fn: 2
+
+    CPUID:
+      name: CPU identification
+      descr: >
+        Query CPU properties.
+      op: 0
+      fmts: [A]
+      tMode: N
+      vModes: [VVS, VVV]
+      fold: true
+      asmOperands: "{1}, {2}, {3}"
+      note: >
+        This instruction is deprecated. It will be replaced by XCHGSR.
