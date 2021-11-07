@@ -2,7 +2,7 @@
 
 | Problem | Solution |
 |---|---|
-| No operation (NOP) | cpuid z, z, z |
+| No operation (NOP) | or z, z, z |
 | Load full 32-bit immediate | ldhi rd,#upper\_20\_bits<br>or rd,rd,#lower\_12\_bits |
 | Move register | or rd,z,ra |
 | Negate value | sub rd,z,ra |
