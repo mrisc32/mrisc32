@@ -80,10 +80,10 @@ abs_diff:
 
   ; Prepare the vector operation
   mov     r5, vl               ; Preserve VL
-  cpuid   r6, z, z             ; r6 is the max number of vector elements
+  getsr   vl, #0x10            ; vl is the max number of vector elements
 
 loop:
-  min     vl, r4, r6           ; vl = min(r4, r6)
+  min     vl, vl, r4           ; vl = min(vl, r4)
   sub     r4, r4, vl           ; Decrement the loop counter
 
   ldw     v1, [r2, #4]         ; v1 = a

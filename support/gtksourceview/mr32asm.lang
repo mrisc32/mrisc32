@@ -103,7 +103,6 @@
       <keyword>xchgsr</keyword>
       <keyword>getsr</keyword>
       <keyword>setsr</keyword>
-      <keyword>cpuid</keyword>
 
       <!-- Integer arithemtic / logic -->
       <keyword>and(\.(pn|np|nn))?(/f)?</keyword>

@@ -77,7 +77,7 @@ instruction set.
 
 saxpy:
     bz    r1, 2f          ; Nothing to do?
-    cpuid vl, z, z        ; Query the maximum vector length
+    getsr vl, #0x10       ; Query the maximum vector length
 1:
     minu  vl, vl, r1      ; Define the operation vector length
     sub   r1, r1, vl      ; Decrement loop counter
@@ -121,7 +121,7 @@ example of one-dimensional floating-point interpolation.
 lerp:
     bz    r1, 2f          ; Nothing to do?
 
-    cpuid vl, z, z        ; Query maximum vector length
+    getsr vl, #0x10       ; Query the maximum vector length
 
     add   r6, r4, #4      ; r6 = &x[1]
     itof  r7, vl, z
@@ -182,7 +182,7 @@ revbytes:
     add   r4, r1, #-4
     add   r3, r3, r4      ; r3 = &y[n-4]
     lsr   r1, r1, #2      ; r1 = number of words
-    cpuid vl, z, z        ; Query the maximum vector length
+    getsr vl, #0x10       ; Query the maximum vector length
     lsl   r4, vl, #2      ; r4 = 4 * max vector length
 1:
     minu  vl, vl, r1      ; Define the operation vector length

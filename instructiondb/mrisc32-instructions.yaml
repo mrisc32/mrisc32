@@ -1463,16 +1463,3 @@ instructions:
             a = int(a) + 1
       op: 124
       fn: 2
-
-    CPUID:
-      name: CPU identification
-      descr: >
-        Query CPU properties.
-      op: 0
-      fmts: [A]
-      tMode: N
-      vModes: [VVS, VVV]
-      fold: true
-      asmOperands: "{1}, {2}, {3}"
-      note: >
-        This instruction is deprecated. It will be replaced by XCHGSR.
