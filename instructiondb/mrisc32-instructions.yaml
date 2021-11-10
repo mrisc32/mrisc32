@@ -1370,10 +1370,6 @@ instructions:
         Then move the value of the second source operand to the system register
         given by the third source operand, unless the first source operand is
         the Z register.
-      todo: >
-        Define system registers.
-
-        Define pseudo code syntach for system registers.
       pseudo: |
         a = SR[c]
         if Rb != 00000 then

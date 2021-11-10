@@ -13,7 +13,13 @@ srcdir = ..
 docs = mrisc32-instruction-set-manual
 pdfs = $(addsuffix .pdf, $(docs))
 
-generated_tex = version.tex instruction-counts.tex instructions.tex instruction-list.tex opcode-list.tex
+generated_tex = gen-version.tex \
+                gen-instruction-counts.tex \
+				gen-instructions.tex \
+				gen-instruction-list.tex \
+				gen-opcode-list.tex \
+				gen-system-registers.tex \
+				gen-system-register-list.tex
 
 srcs = $(wildcard $(srcdir)/*.tex) $(generated_tex)
 bibs = $(srcdir)/mrisc32-instruction-set-manual.bib
@@ -21,7 +27,14 @@ figs = mrisc32-logo.pdf
 
 PDFLATEX := TEXINPUTS=$(srcdir): pdflatex -interaction=nonstopmode -halt-on-error
 BIBTEX := BIBINPUTS=$(srcdir): bibtex
-DBTOOL = $(srcdir)/../instructiondb/dbtool.py
+DBTOOL = $(srcdir)/../instructiondb/dbtool.py \
+
+insdb_files = $(DBTOOL) \
+              $(srcdir)/../instructiondb/instruction_db.py \
+              $(srcdir)/../instructiondb/mrisc32-instructions.yaml
+regdb_files = $(DBTOOL) \
+              $(srcdir)/../instructiondb/system_register_db.py \
+              $(srcdir)/../instructiondb/mrisc32-system-registers.yaml
 
 .PHONY: all clean
 
@@ -35,24 +48,29 @@ mrisc32-logo.pdf: $(srcdir)/../doc/mrisc32-logo.svg
 
 # Generate a version file based on the latest Git tag.
 .PHONY: .FORCE-VERSION.TEX
-version.tex: .FORCE-VERSION.TEX
+gen-version.tex: .FORCE-VERSION.TEX
 	$(srcdir)/get_version.sh $@
 
-instruction-counts.tex: $(srcdir)/../instructiondb/mrisc32-instructions.yaml $(DBTOOL)
+gen-instruction-counts.tex: $(insdb_files)
 	$(DBTOOL) --artifact instr-counts -o $@
 
-instructions.tex: $(srcdir)/../instructiondb/mrisc32-instructions.yaml $(DBTOOL)
+gen-instructions.tex: $(insdb_files)
 	$(DBTOOL) --artifact instr-full -o $@
 
-instruction-list.tex: $(srcdir)/../instructiondb/mrisc32-instructions.yaml $(DBTOOL)
+gen-instruction-list.tex: $(insdb_files)
 	$(DBTOOL) --artifact instr-list --sort -o $@
 
-opcode-list.tex: $(srcdir)/../instructiondb/mrisc32-instructions.yaml $(DBTOOL)
-	$(DBTOOL) --artifact opcode-list -o $@
+gen-opcode-list.tex: $(insdb_files)
+	$(DBTOOL) --artifact instr-opcodes -o $@
+
+gen-system-registers.tex: $(regdb_files)
+	$(DBTOOL) --artifact reg-full -o $@
+
+gen-system-register-list.tex: $(regdb_files)
+	$(DBTOOL) --artifact reg-list -o $@
 
 $(pdfs): %.pdf: $(srcdir)/%.tex $(srcs) $(figs) $(bibs)
 	$(PDFLATEX) $*
 	$(BIBTEX) $*
 	$(PDFLATEX) $*
 	$(PDFLATEX) $*
-

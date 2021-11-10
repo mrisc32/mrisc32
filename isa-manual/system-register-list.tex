@@ -1,6 +1,6 @@
 % -*- mode: latex; tab-width: 2; indent-tabs-mode: nil; -*-
 %------------------------------------------------------------------------------
-% MRISC32 ISA Manual - Instruction list.
+% MRISC32 ISA Manual - System register list.
 %
 % This work is licensed under the Creative Commons Attribution-ShareAlike 4.0
 % International License. To view a copy of this license, visit
@@ -11,18 +11,10 @@
 % We do the list in single column mode to better fit the table.
 \onecolumn
 
-\chapter{Alphabetical list of instructions}
+\chapter{Alphabetical list of system registers}
 
-This non-normative section lists all the instructions of the MRISC32 ISA.
+This non-normative section lists all the system registers of the MRISC32 ISA.
 
-Legend:
-\begin{bulletitems}
-  \item{\hyperref[module:Base]{Base} --- Part of the Base architecture}
-  \item{\hyperref[module:PM]{PM} --- Requires the Packed operation module}
-  \item{\hyperref[module:FM]{FM} --- Requires the Floating-point module}
-  \item{\hyperref[module:SM]{SM} --- Requires the Saturating and halving arithmetic module}
-\end{bulletitems}
-
-\input{build/gen-instruction-list}
+\input{build/gen-system-register-list}
 
 \twocolumn

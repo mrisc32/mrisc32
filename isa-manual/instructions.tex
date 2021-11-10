@@ -60,6 +60,7 @@ of an instruction:
 x<$k$> & Bit $k$ of bit vector x \\
 x<$k$:$l$> & Bits $k$ to $l$ of bit vector x \\
 MEM[x,N] & $N$ consecutive bytes in memory starting at address $x$, interpreted as an $8\times N$-bit vector with little endian storage \\
+SR[x] & System register number $x$ \\
 a & 1st instruction operand \\
 b & 2nd instruction operand \\
 c & 3rd instruction operand \\
@@ -105,4 +106,4 @@ isnan(x) & True if $x$ is not a number (NaN) \\
 
 \clearpage
 
-\input{build/instructions}
+\input{build/gen-instructions}

@@ -20,6 +20,7 @@
 # -------------------------------------------------------------------------------------------------
 
 import yaml
+from tex_helpers import text_to_tex
 
 
 class InstructionDB:
@@ -199,29 +200,6 @@ class InstructionDB:
         return result + "\\end{bytefield}\n\n"
 
     @staticmethod
-    def __escape_tex(s):
-        s = s.replace("\\", "\\textbackslash ")
-        s = s.replace("~", "\\textasciitilde ")
-        s = s.replace("^", "\\textasciicircum ")
-        s = s.replace("...", "\\ldots ")
-        for c in "&%$#_{}":
-            s = s.replace(c, f"\\{c}")
-        s = s.replace("+/-", "$\\pm$")
-        return s
-
-    @staticmethod
-    def __text_to_tex(s):
-        paragraphs = s.split("\n")
-        result = ""
-        for par in paragraphs:
-            par = InstructionDB.__escape_tex(par)
-            if par:
-                if result:
-                    result += "\n\n"
-                result += par
-        return result
-
-    @staticmethod
     def __requires_to_tex(meta):
         if not "requires" in meta:
             return ""
@@ -234,27 +212,19 @@ class InstructionDB:
     def __descr_to_tex(meta):
         if not "descr" in meta:
             return ""
-        return InstructionDB.__text_to_tex(meta["descr"]) + "\n\n"
+        return text_to_tex(meta["descr"]) + "\n\n"
 
     @staticmethod
     def __note_to_tex(meta):
         if not "note" in meta:
             return ""
-        return (
-            "\\begin{notebox}\n"
-            + InstructionDB.__text_to_tex(meta["note"])
-            + "\n\\end{notebox}\n\n"
-        )
+        return "\\begin{notebox}\n" + text_to_tex(meta["note"]) + "\n\\end{notebox}\n\n"
 
     @staticmethod
     def __todo_to_tex(meta):
         if not "todo" in meta:
             return ""
-        return (
-            "\\begin{todobox}\n"
-            + InstructionDB.__text_to_tex(meta["todo"])
-            + "\n\\end{todobox}\n\n"
-        )
+        return "\\begin{todobox}\n" + text_to_tex(meta["todo"]) + "\n\\end{todobox}\n\n"
 
     @staticmethod
     def __asm_to_tex(insn, meta):
