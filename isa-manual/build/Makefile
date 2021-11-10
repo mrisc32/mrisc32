@@ -39,16 +39,16 @@ version.tex: .FORCE-VERSION.TEX
 	$(srcdir)/get_version.sh $@
 
 instruction-counts.tex: $(srcdir)/../instructiondb/mrisc32-instructions.yaml $(DBTOOL)
-	$(DBTOOL) --artifact counts -o $@ $<
+	$(DBTOOL) --artifact instr-counts -o $@
 
 instructions.tex: $(srcdir)/../instructiondb/mrisc32-instructions.yaml $(DBTOOL)
-	$(DBTOOL) --artifact manual -o $@ $<
+	$(DBTOOL) --artifact instr-full -o $@
 
 instruction-list.tex: $(srcdir)/../instructiondb/mrisc32-instructions.yaml $(DBTOOL)
-	$(DBTOOL) --artifact list --sort -o $@ $<
+	$(DBTOOL) --artifact instr-list --sort -o $@
 
 opcode-list.tex: $(srcdir)/../instructiondb/mrisc32-instructions.yaml $(DBTOOL)
-	$(DBTOOL) --artifact opcodes -o $@ $<
+	$(DBTOOL) --artifact opcode-list -o $@
 
 $(pdfs): %.pdf: $(srcdir)/%.tex $(srcs) $(figs) $(bibs)
 	$(PDFLATEX) $*
