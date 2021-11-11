@@ -49,7 +49,7 @@ void abs_diff(float* c, const float* a, const float* b, const int n) {
 }
 ```
 
-Assuming that the arguments (c, a, b, n) are in registers R1, R2, R3 and R4 (according to the [calling convention](Registers.md)), this can be implemented using scalar operations as:
+Assuming that the arguments (c, a, b, n) are in registers R1, R2, R3 and R4 (according to the calling convention), this can be implemented using scalar operations as:
 
 ```
 abs_diff:
