@@ -22,7 +22,7 @@
 # -----------------------------------------------------------------------------
 
 ---
-registers:
+Identification:
   CPU_FEATURES_0:
       num: 0x0000
       name: CPU feature flags register 0
@@ -33,13 +33,13 @@ registers:
           width: 1
           name: VM
           descr: >
-            Vector operatoin module
+            Vector operation module
         P:
           offs: 1
           width: 1
           name: PM
           descr: >
-            Packed operatoin module
+            Packed operation module
         F:
           offs: 2
           width: 1

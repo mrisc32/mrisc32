@@ -30,7 +30,25 @@ class SystemRegisterDBError(Exception):
 class SystemRegisterDB:
     def __init__(self, file_name):
         with open(file_name, "r", encoding="utf8") as f:
-            self.__db = yaml.load(f, Loader=yaml.FullLoader)["registers"]
+            self.__db = yaml.load(f, Loader=yaml.FullLoader)
+
+    @staticmethod
+    def __regprops_to_tex(meta):
+        tick_yes = "\\checkmark"
+        tick_no = " "
+
+        result = ""
+        result += "\\begin{tabular}{|l|l|l|p{150pt}|}\n"
+        result += "\\hline\n"
+        result += "\\textbf{Number} & \\textbf{R} & \\textbf{W} & \\textbf{Name} \\\\\n"
+        result += "\\hline\n"
+        result += f"{meta['num']:#06x} & "
+        result += f"{tick_yes if 'R' in meta['rw'] else tick_no} & "
+        result += f"{tick_yes if 'W' in meta['rw'] else tick_no} & "
+        result += f"{meta['name']} \\\\\n"
+        result += "\\hline\n"
+        result += "\\end{tabular}\n\n"
+        return result
 
     @staticmethod
     def __fields_to_tex(meta):
@@ -66,10 +84,24 @@ class SystemRegisterDB:
                 result += f"  \\bitboxes*{{1}}{{{'0' * pad}}} &\n"
             result += f"  \\bitbox{{{width}}}{{{escape_tex(name)}}} &\n"
             pos = offs
+        result += "\\end{bytefield}\n\n"
 
         # TODO(m): Pad down to the LSB.
 
-        return result + "\\end{bytefield}\n\n"
+        # Describe each field.
+        for short_name in meta["fields"]:
+            field = meta["fields"][short_name]
+            name = field['name'] if "name" in field else short_name
+            first_bit = field["offs"]
+            last_bit = first_bit + field["width"] - 1
+            if first_bit == last_bit:
+                bit_range = f"bit {first_bit}"
+            else:
+                bit_range = f"bits <{last_bit}:{first_bit}>"
+            result += f"\\paragraph{{{escape_tex(name)} ({bit_range})}}\n\n"
+            result += text_to_tex(field["descr"]) + "\n\n"
+
+        return result
 
     @staticmethod
     def __descr_to_tex(meta):
@@ -93,44 +125,46 @@ class SystemRegisterDB:
     def __reg_to_tex(reg, meta):
         reg_escaped = escape_tex(reg)
 
-        tick_yes = "\\checkmark"
-        tick_no = " "
-
         result = ""
-        result += f"\\subsection{{{reg_escaped}}}\n\n"
+        result += f"\\subsection{{{reg_escaped}}}\n"
+        result += f"\\label{{reg:{reg}}}\n\n"
 
-        result += "\\begin{tabular}{|l|l|l|p{150pt}|}\n"
-        result += "\\hline\n"
-        result += "\\textbf{Number} & \\textbf{R} & \\textbf{W} & \\textbf{Name} \\\\\n"
-        result += "\\hline\n"
-        result += f"{meta['num']:#06x} & "
-        result += f"{tick_yes if 'R' in meta['rw'] else tick_no} & "
-        result += f"{tick_yes if 'W' in meta['rw'] else tick_no} & "
-        result += f"{meta['name']} \\\\\n"
-        result += "\\hline\n"
-        result += "\\end{tabular}\n\n"
+        result += SystemRegisterDB.__regprops_to_tex(meta)
 
-        result += SystemRegisterDB.__fields_to_tex(meta)
+        result += "\\subsubsection{Description}\n\n"
         result += SystemRegisterDB.__descr_to_tex(meta)
+
+        result += "\\subsubsection{Fields}\n\n"
+        result += SystemRegisterDB.__fields_to_tex(meta)
+
         result += SystemRegisterDB.__todo_to_tex(meta)
         result += SystemRegisterDB.__note_to_tex(meta)
 
         return result
 
-    def to_tex_manual(self, sort_alphabetically):
-        reg_list = sorted(self.__db) if sort_alphabetically else list(self.__db)
-
+    @staticmethod
+    def __regs_to_tex(regs, sort_alphabetically):
         result = ""
-        result += f"\\section{{Registers}}\n\n"
+        reg_list = sorted(insns) if sort_alphabetically else list(regs)
         for reg in reg_list:
-            meta = self.__db[reg]
+            meta = regs[reg]
             result += SystemRegisterDB.__reg_to_tex(reg, meta)
-            result += f"\\label{{reg:{reg}}}\n\n"
+        return result
 
+    def to_tex_manual(self, sort_alphabetically):
+        result = ""
+        for category, regs in self.__db.items():
+            result += f"\\section{{{category}}}\n\n"
+            result += SystemRegisterDB.__regs_to_tex(regs, sort_alphabetically)
+            result += "\\clearpage\n\n"
         return result
 
     def to_tex_list(self, sort_alphabetically):
-        reg_list = sorted(self.__db) if sort_alphabetically else list(self.__db)
+        # Merge all registers into a single dictionary.
+        all_regs = {}
+        for _, regs in self.__db.items():
+            all_regs = {**all_regs, **regs}
+        reg_list = sorted(all_regs) if sort_alphabetically else list(all_regs)
 
         # Generate the list.
         result = ""
@@ -156,7 +190,7 @@ class SystemRegisterDB:
         tick_yes = "\\checkmark"
         tick_no = " "
         for reg in reg_list:
-            meta = self.__db[reg]
+            meta = all_regs[reg]
             reg_escaped = escape_tex(reg)
             result += f"\\hyperref[reg:{reg}]{{{reg_escaped}}} & "
             result += f"{meta['num']:#06x} & "
