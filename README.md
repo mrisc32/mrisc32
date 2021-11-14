@@ -1,14 +1,19 @@
-![MRISC32](doc/mrisc32-logo.png)
+![MRISC32](media/mrisc32-logo.png)
 
 This is an open and free 32-bit RISC/Vector instruction set architecture ([ISA](https://en.wikipedia.org/wiki/Instruction_set_architecture)), primarily inspired by the [Cray-1](https://en.wikipedia.org/wiki/Cray-1) and [MIPS](https://en.wikipedia.org/wiki/MIPS_architecture) architectures. The focus is to create a clean, modern ISA that is equally attractive to software, hardware and compiler developers.
 
+This repository contains LaTeX documentation and databases of architectural information (e.g. instructions and system registers).
+
 # Documentation
 
-* The latest [MRISC32 Instruction Set Manual](https://github.com/mrisc32/mrisc32/releases/latest) (PDF)
-* [Vector design](doc/VectorDesign.md)
-* [Packed operations](doc/PackedOperations.md)
-* [Addressing modes](doc/AddressingModes.md)
-* [Assembler syntax](doc/AssemblerSyntax.md)
+The latest [MRISC32 Instruction Set Manual](https://github.com/mrisc32/mrisc32/releases/latest) (PDF) describes the MRISC32 ISA in detail.
+
+Overview documents:
+
+* [Vector design](markdown/VectorDesign.md)
+* [Packed operations](markdown/PackedOperations.md)
+* [Addressing modes](markdown/AddressingModes.md)
+* [Assembler syntax](markdown/AssemblerSyntax.md)
 
 # Features
 

@@ -27,14 +27,14 @@ figs = mrisc32-logo.pdf
 
 PDFLATEX := TEXINPUTS=$(srcdir): pdflatex -interaction=nonstopmode -halt-on-error
 BIBTEX := BIBINPUTS=$(srcdir): bibtex
-DBTOOL = $(srcdir)/../instructiondb/dbtool.py \
+DBTOOL = $(srcdir)/../arch-db/dbtool.py \
 
 insdb_files = $(DBTOOL) \
-              $(srcdir)/../instructiondb/instruction_db.py \
-              $(srcdir)/../instructiondb/mrisc32-instructions.yaml
+              $(srcdir)/../arch-db/instruction_db.py \
+              $(srcdir)/../arch-db/mrisc32-instructions.yaml
 regdb_files = $(DBTOOL) \
-              $(srcdir)/../instructiondb/system_register_db.py \
-              $(srcdir)/../instructiondb/mrisc32-system-registers.yaml
+              $(srcdir)/../arch-db/system_register_db.py \
+              $(srcdir)/../arch-db/mrisc32-system-registers.yaml
 
 .PHONY: all clean
 
@@ -43,7 +43,7 @@ all: $(pdfs)
 clean:
 	rm -rf $(pdfs) *.aux *.log *.bbl *.blg *.toc *.out *.pdf *.tex *~ \#*
 
-mrisc32-logo.pdf: $(srcdir)/../doc/mrisc32-logo.svg
+mrisc32-logo.pdf: $(srcdir)/../media/mrisc32-logo.svg
 	cairosvg $< -o $@
 
 # Generate a version file based on the latest Git tag.
