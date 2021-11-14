@@ -43,7 +43,60 @@ interfaces (ABIs). It is not a complete ABI specification.
   \hline
 \end{tabular}
 
-\todo{Describe each register role.}
+\subsubsection{Function arguments / results}
+
+The first arguments to a function are passed in registers R1 to R8. How many
+registers are used depends on the number of arguments and the types of the
+arguments. For more information, see \ref{sec:abi_function_arguments}.
+
+Likewise function results are returned in R1 to R8. For more information, see
+\ref{sec:abi_function_results}.
+
+These registers may also be used as temporary registers.
+
+\subsubsection{Temporary registers}
+
+Temporary registers are not guaranteed to be preserved across function call
+boundaries, and thus need not be preserved by the callee.
+
+\subsubsection{Callee-saved registers}
+
+The contents of callee-saved registers must be preserved by a function. This is
+normally done by the function prologue and epilogue by storing and restoring
+the registers to and from the stack.
+
+\subsubsection{Intra-procedure call scratch register}
+
+The intra-procedure call scratch register may be used for call target address
+calculations. It may also be used as a temporary register.
+
+\subsubsection{Thread pointer}
+
+The thread pointer may be used by systems that need to provide fast access to
+thread local data. Otherwise it may be used as a general purpose register.
+
+The thread pointer is a callee-saved register.
+
+\subsubsection{Frame pointer}
+
+\tbd
+
+\subsubsection{Stack pointer}
+
+Upon function entry, the stack pointer contains the address of the top of the
+stack. For more information, see \ref{sec:abi_stack}.
+
+The stack pointer is a callee-saved register.
+
+\subsubsection{Link register}
+
+The link register contains the return address to the caller.
+
+The link register is a callee-saved register.
+
+\subsubsection{Vector length}
+
+The vector length is a callee-saved register.
 
 \subsection{Vector registers}
 
@@ -57,17 +110,24 @@ interfaces (ABIs). It is not a complete ABI specification.
   \hline
   V9-V15 & & Temporary registers \\
   \hline
-  V16 - V31 & & Callee-saved registers \\
+  V16-V31 & & Callee-saved registers \\
   \hline
 \end{tabular}
 
 \todo{Do we really need that many callee-saved vector registers?}
 
+\subsection{Stack}
+\label{sec:abi_stack}
+
+\tbd
+
 \subsection{Function arguments}
+\label{sec:abi_function_arguments}
 
 \tbd
 
 \subsection{Function results}
+\label{sec:abi_function_results}
 
 \tbd
 
