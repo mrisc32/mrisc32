@@ -296,13 +296,13 @@ interpret the second operand - i.e. the base address - as a scalar):
   \hline
   \textbf{V} & \textbf{Default} & \textbf{Load/store} \\
   \hline
-  00 & S,S[,S] & S,S,S \\
+  $00_{2}$ & S,S[,S] & S,S,S \\
   \hline
-  10 & V,V[,S] & V,S,S \\
+  $10_{2}$ & V,V[,S] & V,S,S \\
   \hline
-  11 & V,V,V & V,S,V \\
+  $11_{2}$ & V,V,V & V,S,V \\
   \hline
-  01 & V,V,fold(V) & (reserved) \\
+  $01_{2}$ & V,V,fold(V) & (reserved) \\
   \hline
 \end{tabular}
 
@@ -323,13 +323,13 @@ operand):
   \hline
   \textbf{T} & \textbf{Default} & \textbf{Load/store} \\
   \hline
-  00 & One 32-bit word & *1 \\
+  $00_{2}$ & One 32-bit word & *1 \\
   \hline
-  01 & Four 8-bit bytes & *2 \\
+  $01_{2}$ & Four 8-bit bytes & *2 \\
   \hline
-  10 & Two 16-bit half-words & *4 \\
+  $10_{2}$ & Two 16-bit half-words & *4 \\
   \hline
-  11 & (reserved) & *8 \\
+  $11_{2}$ & (reserved) & *8 \\
   \hline
 \end{tabular}
 

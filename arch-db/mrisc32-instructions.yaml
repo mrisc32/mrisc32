@@ -101,7 +101,7 @@ instructions:
       descr: >
         Load and sign extend a byte (8 bits).
       pseudo: |
-        if V == 10 then
+        if V == 10_2 then
           adr = int(b) + int(c) * i * scale
         else
           adr = int(b) + int(c) * scale
@@ -114,7 +114,7 @@ instructions:
       descr: >
         Load and sign extend a half-word (16 bits).
       pseudo: |
-        if V == 10 then
+        if V == 10_2 then
           adr = int(b) + int(c) * i * scale
         else
           adr = int(b) + int(c) * scale
@@ -127,7 +127,7 @@ instructions:
       descr: >
         Load a word (32 bits).
       pseudo: |
-        if V == 10 then
+        if V == 10_2 then
           adr = int(b) + int(c) * i * scale
         else
           adr = int(b) + int(c) * scale
@@ -151,7 +151,7 @@ instructions:
       descr: >
         Load and zero extend a byte (8 bits).
       pseudo: |
-        if V == 10 then
+        if V == 10_2 then
           adr = int(b) + int(c) * i * scale
         else
           adr = int(b) + int(c) * scale
@@ -164,7 +164,7 @@ instructions:
       descr: >
         Load and zero extend a half-word (16 bits).
       pseudo: |
-        if V == 10 then
+        if V == 10_2 then
           adr = int(b) + int(c) * i * scale
         else
           adr = int(b) + int(c) * scale
@@ -177,7 +177,7 @@ instructions:
       descr: >
         Load effective address.
       pseudo: |
-        if V == 10 then
+        if V == 10_2 then
           a = int(b) + int(c) * i * scale
         else
           a = int(b) + int(c) * scale
@@ -193,7 +193,7 @@ instructions:
       descr: >
         Store a byte (8 bits).
       pseudo: |
-        if V == 10 then
+        if V == 10_2 then
           adr = int(b) + int(c) * i * scale
         else
           adr = int(b) + int(c) * scale
@@ -206,7 +206,7 @@ instructions:
       descr: >
         Store a half-word (16 bits).
       pseudo: |
-        if V == 10 then
+        if V == 10_2 then
           adr = int(b) + int(c) * i * scale
         else
           adr = int(b) + int(c) * scale
@@ -219,7 +219,7 @@ instructions:
       descr: >
         Store a word (32 bits).
       pseudo: |
-        if V == 10 then
+        if V == 10_2 then
           adr = int(b) + int(c) * i * scale
         else
           adr = int(b) + int(c) * scale
@@ -273,13 +273,13 @@ instructions:
         Compute the bitwise and of two integer operands, with optional negation
         of the source operands.
       pseudo: |
-        if T == 00 then
+        if T == 00_2 then
           a = b & c
-        else if T == 01 then
+        else if T == 01_2 then
           a = b & ~c
-        else if T == 10 then
+        else if T == 10_2 then
           a = ~b & c
-        else if T == 11 then
+        else if T == 11_2 then
           a = ~b & ~c
       op: 16
 
@@ -290,13 +290,13 @@ instructions:
         Compute the bitwise or of two integer operands, with optional negation
         of the source operands.
       pseudo: |
-        if T == 00 then
+        if T == 00_2 then
           a = b | c
-        else if T == 01 then
+        else if T == 01_2 then
           a = b | ~c
-        else if T == 10 then
+        else if T == 10_2 then
           a = ~b | c
-        else if T == 11 then
+        else if T == 11_2 then
           a = ~b | ~c
       op: 17
 
@@ -307,13 +307,13 @@ instructions:
         Compute the bitwise exclusive or of two integer operands, with optional
         negation of the source operands.
       pseudo: |
-        if T == 00 then
+        if T == 00_2 then
           a = b ^ c
-        else if T == 01 then
+        else if T == 01_2 then
           a = b ^ ~c
-        else if T == 10 then
+        else if T == 10_2 then
           a = ~b ^ c
-        else if T == 11 then
+        else if T == 11_2 then
           a = ~b ^ ~c
       op: 18
 
@@ -476,13 +476,13 @@ instructions:
       descr: >
         Bitwise select.
       pseudo: |
-        if T == 00 then
+        if T == 00_2 then
           a = (b & a) | (c & ~a)
-        else if T == 01 then
+        else if T == 01_2 then
           a = (c & a) | (b & ~a)
-        else if T == 10 then
+        else if T == 10_2 then
           a = (a & b) | (c & ~b)
-        else if T == 11 then
+        else if T == 11_2 then
           a = (c & b) | (a & ~b)
       op: 46
       tMode: S  # SEL uses a special kind of interpretation of the T field.
@@ -1372,7 +1372,7 @@ instructions:
         the Z register.
       pseudo: |
         a = SR[c]
-        if Rb != 00000 then
+        if Rb != 00000_2 then
           SR[c] = b
       op: 36
       tMode: N

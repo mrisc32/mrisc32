@@ -97,23 +97,23 @@ class InstructionDB:
 
         def get_v_bits(vec, fold):
             if vec in ["VVV", "VSV"]:
-                return "01" if fold else "11"
+                return "$01_{2}$" if fold else "$11_{2}$"
             elif vec in ["VVS", "VV", "VSS"]:
-                return "10"
+                return "$10_{2}$"
             else:
-                return "00"
+                return "$00_{2}$"
 
         def get_t_bits(pack, scale, bit_mode, sel_mode):
             if pack == ".B" or scale == "*2" or bit_mode == ".PN" or sel_mode == ".132":
-                return "01"
+                return "$01_{2}$"
             elif (
                 pack == ".H" or scale == "*4" or bit_mode == ".NP" or sel_mode == ".213"
             ):
-                return "10"
+                return "$10_{2}$"
             elif scale == "*8" or bit_mode == ".NN" or sel_mode == ".231":
-                return "11"
+                return "$11_{2}$"
             else:
-                return "00"
+                return "$00_{2}$"
 
         def get_imm_syntax(meta):
             return meta.get("immSyntax", "imm")
@@ -290,7 +290,7 @@ class InstructionDB:
             result += InstructionDB.__encoding_to_tex(meta)
             result += InstructionDB.__pseudo_to_tex(meta)
 
-            result += "\\subsubsection{Flavors}\n\n"
+            result += "\\subsubsection{Variants}\n\n"
             result += InstructionDB.__asm_to_tex(name, meta)
             result += InstructionDB.__note_to_tex(meta)
         return result

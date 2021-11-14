@@ -72,11 +72,19 @@ instruction is a vector register.
 
 \section{Vector length}
 
-\begin{todobox}
-  Describe how VL affects vector operations.
+The vector length is the number of vector elements to process in a vector
+operation.
 
-  Describe how to obtain the maximum vector length for an implementation.
+All vector operations use the vector length that is given by the value of the
+VL register at the time of instruction invocation.
+
+\begin{todobox}
+  The vector length should be defined by the yet to be specified vector
+  register length (per vector register tag).
 \end{todobox}
+
+To obtain the maximum vector length for the implementation, read the
+\hyperref[reg:MAX_VL]{MAX\_VL} system register.
 
 \section{Folding}
 

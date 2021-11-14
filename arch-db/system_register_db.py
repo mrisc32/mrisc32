@@ -42,7 +42,7 @@ class SystemRegisterDB:
         result += "\\hline\n"
         result += "\\textbf{Number} & \\textbf{R} & \\textbf{W} & \\textbf{Name} \\\\\n"
         result += "\\hline\n"
-        result += f"{meta['num']:#06x} & "
+        result += f"${meta['num']:04x}_{{16}}$ & "
         result += f"{tick_yes if 'R' in meta['rw'] else tick_no} & "
         result += f"{tick_yes if 'W' in meta['rw'] else tick_no} & "
         result += f"{meta['name']} \\\\\n"
@@ -195,7 +195,7 @@ class SystemRegisterDB:
             meta = all_regs[reg]
             reg_escaped = escape_tex(reg)
             result += f"\\hyperref[reg:{reg}]{{{reg_escaped}}} & "
-            result += f"{meta['num']:#06x} & "
+            result += f"${meta['num']:04x}_{{16}}$ & "
             result += f"{tick_yes if 'R' in meta['rw'] else tick_no} & "
             result += f"{tick_yes if 'W' in meta['rw'] else tick_no} & "
             result += f"{meta['name']} \\\\\n"
