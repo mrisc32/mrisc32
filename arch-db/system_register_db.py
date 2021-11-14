@@ -23,10 +23,53 @@ import yaml
 from tex_helpers import escape_tex, text_to_tex
 
 
+class SystemRegisterDBError(Exception):
+    pass
+
+
 class SystemRegisterDB:
     def __init__(self, file_name):
         with open(file_name, "r", encoding="utf8") as f:
             self.__db = yaml.load(f, Loader=yaml.FullLoader)["registers"]
+
+    @staticmethod
+    def __fields_to_tex(meta):
+        result = "\\begin{bytefield}{32}\n"
+
+        # Define the bytefield header.
+        field_limits = set([0, 31])
+        for short_name in meta["fields"]:
+            field = meta["fields"][short_name]
+            offs = field["offs"]
+            width = field["width"]
+            field_limits.update({offs, min(offs + width, 31)})
+        bitheader = ",".join([str(x) for x in field_limits])
+        result += f"  \\bitheader{{{bitheader}}} \\\\\n"
+
+        # Extract all fields, and sort them in decreasing order.
+        sorted_fields = []
+        for short_name in meta["fields"]:
+            field = meta["fields"][short_name]
+            sorted_fields.append({"name": short_name, "offs": field["offs"], "width": field["width"]})
+        sorted_fields = sorted(sorted_fields, reverse=True, key=lambda x: x["offs"])
+
+        # Emit the LaTeX bytefield fields.
+        pos = 32
+        for field in sorted_fields:
+            name = field["name"]
+            offs = field["offs"]
+            width = field["width"]
+            pad = pos - (offs + width)
+            if pad < 0:
+                raise SystemRegisterDBError("Invalid bit field specification")
+            if pad > 0:
+                result += f"  \\bitboxes*{{1}}{{{'0' * pad}}} &\n"
+            result += f"  \\bitbox{{{width}}}{{{escape_tex(name)}}} &\n"
+            pos = offs
+
+        # TODO(m): Pad down to the LSB.
+
+        return result + "\\end{bytefield}\n\n"
 
     @staticmethod
     def __descr_to_tex(meta):
@@ -50,19 +93,24 @@ class SystemRegisterDB:
     def __reg_to_tex(reg, meta):
         reg_escaped = escape_tex(reg)
 
+        tick_yes = "\\checkmark"
+        tick_no = " "
+
         result = ""
         result += f"\\subsection{{{reg_escaped}}}\n\n"
 
-        result += "\\begin{tabular}{|l|p{150pt}|}\n"
+        result += "\\begin{tabular}{|l|l|l|p{150pt}|}\n"
         result += "\\hline\n"
-        result += "\\textbf{Number} & \\textbf{Name} \\\\\n"
+        result += "\\textbf{Number} & \\textbf{R} & \\textbf{W} & \\textbf{Name} \\\\\n"
         result += "\\hline\n"
-        result += f"{meta['num']:#06x} & {meta['name']} \\\\\n"
+        result += f"{meta['num']:#06x} & "
+        result += f"{tick_yes if 'R' in meta['rw'] else tick_no} & "
+        result += f"{tick_yes if 'W' in meta['rw'] else tick_no} & "
+        result += f"{meta['name']} \\\\\n"
         result += "\\hline\n"
         result += "\\end{tabular}\n\n"
 
-        result += f"Read/write: {meta['rw']}\n\n"
-
+        result += SystemRegisterDB.__fields_to_tex(meta)
         result += SystemRegisterDB.__descr_to_tex(meta)
         result += SystemRegisterDB.__todo_to_tex(meta)
         result += SystemRegisterDB.__note_to_tex(meta)

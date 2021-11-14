@@ -27,21 +27,45 @@ registers:
       num: 0x0000
       name: CPU feature flags register 0
       rw: "R"
+      fields:
+        V:
+          offs: 0
+          width: 1
+          name: VM
+          descr: >
+            Vector operatoin module
+        P:
+          offs: 1
+          width: 1
+          name: PM
+          descr: >
+            Packed operatoin module
+        F:
+          offs: 2
+          width: 1
+          name: FM
+          descr: >
+            Floating-point module
+        S:
+          offs: 3
+          width: 1
+          name: SM
+          descr: >
+            Saturating and halving arithmetic module
       descr: >
-        Bit 0: VM (Vector operatoin module)
-
-        Bit 1: PM (Packed operation module)
-
-        Bit 2: FM (Floating-point module)
-
-        Bit 3: SM (Saturating and halving arithmetic module)
-
-        Bits 4-31: Reserved (0)
+        When a flag is set in this register, it indicates that the
+        corresponding functionality is implemented.
 
   MAX_VL:
       num: 0x0010
       name: Maximum vector length
       rw: "R"
+      fields:
+        MAX_VL:
+          offs: 0
+          width: 32
+          descr: >
+            Maximum vector length
       descr: >
         The maximum vector length for vector operations.
 
