@@ -285,8 +285,12 @@ class InstructionDB:
             result += InstructionDB.__requires_to_tex(meta)
             result += InstructionDB.__descr_to_tex(meta)
             result += InstructionDB.__todo_to_tex(meta)
+
+            result += "\\subsubsection{Encoding and operation}\n\n"
             result += InstructionDB.__encoding_to_tex(meta)
             result += InstructionDB.__pseudo_to_tex(meta)
+
+            result += "\\subsubsection{Flavors}\n\n"
             result += InstructionDB.__asm_to_tex(name, meta)
             result += InstructionDB.__note_to_tex(meta)
         return result

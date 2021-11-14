@@ -82,11 +82,13 @@ class SystemRegisterDB:
                 raise SystemRegisterDBError("Invalid bit field specification")
             if pad > 0:
                 result += f"  \\bitboxes*{{1}}{{{'0' * pad}}} &\n"
-            result += f"  \\bitbox{{{width}}}{{{escape_tex(name)}}} &\n"
+            bit_tex = "\\tiny " if width <= 2 else ""
+            bit_tex += escape_tex(name)
+            result += f"  \\bitbox{{{width}}}{{{bit_tex}}} &\n"
             pos = offs
+        if pos > 0:
+            result += f"  \\bitboxes*{{1}}{{{'0' * pos}}}\n"
         result += "\\end{bytefield}\n\n"
-
-        # TODO(m): Pad down to the LSB.
 
         # Describe each field.
         for short_name in meta["fields"]:

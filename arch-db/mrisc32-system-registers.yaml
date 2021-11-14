@@ -27,51 +27,62 @@ Identification:
       num: 0x0000
       name: CPU feature flags register 0
       rw: "R"
-      fields:
-        V:
-          offs: 0
-          width: 1
-          name: VM
-          descr: >
-            Vector operation module
-        P:
-          offs: 1
-          width: 1
-          name: PM
-          descr: >
-            Packed operation module
-        F:
-          offs: 2
-          width: 1
-          name: FM
-          descr: >
-            Floating-point module
-        S:
-          offs: 3
-          width: 1
-          name: SM
-          descr: >
-            Saturating and halving arithmetic module
       descr: >
         When a flag is set in this register, it indicates that the
         corresponding functionality is implemented.
+      fields:
+        VM:
+          offs: 0
+          width: 1
+          descr: >
+            Vector operation module implementation bit.
+
+            0: The Vector operation module is not implemented.
+
+            1: The Vector operation module is implemented.
+        PM:
+          offs: 1
+          width: 1
+          descr: >
+            Packed operation module implementation bit.
+
+            0: The Packed operation module is not implemented.
+
+            1: The Packed operation module is implemented.
+        FM:
+          offs: 2
+          width: 1
+          descr: >
+            Floating-point module implementation bit.
+
+            0: The Floating-point module is not implemented.
+
+            1: The Floating-point module is implemented.
+        SM:
+          offs: 3
+          width: 1
+          descr: >
+            Saturating and halving arithmetic module implementation bit.
+
+            0: The Saturating and halving arithmetic module is not implemented.
+
+            1: The Saturating and halving arithmetic module is implemented.
 
   MAX_VL:
       num: 0x0010
       name: Maximum vector length
       rw: "R"
+      descr: >
+        The maximum vector length for vector operations.
       fields:
         MAX_VL:
           offs: 0
           width: 32
           descr: >
-            Maximum vector length
-      descr: >
-        The maximum vector length for vector operations.
+            Maximum vector length (number of elements in each vector register).
 
-        For implementations that advertise support for the Vector operation
-        module (VM), the value of this register shall be a power of two, and
-        at least 16.
+            For implementations that advertise support for the Vector operation
+            module (VM), this value shall be a power of two, and at least 16.
 
-        For implementations that do not support vector operations, the value
-        of this register shall be zero (0).
+            For implementations that do not support vector operations, this
+            value shall be zero (0).
