@@ -6,7 +6,7 @@ This repository contains LaTeX documentation and databases of architectural info
 
 # Documentation
 
-The latest [MRISC32 Instruction Set Manual](https://github.com/mrisc32/mrisc32/releases/latest) (PDF) describes the MRISC32 ISA in detail.
+The latest [MRISC32 Instruction Set Manual](https://github.com/mrisc32/mrisc32/releases/latest/download/mrisc32-instruction-set-manual.pdf) (PDF) describes the MRISC32 ISA in detail.
 
 Overview documents:
 
