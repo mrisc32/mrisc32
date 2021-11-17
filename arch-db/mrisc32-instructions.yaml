@@ -265,228 +265,6 @@ instructions:
       op: 6
       immEnc: I21HL
 
-  Bitwise logic:
-    AND:
-      <<: *type2
-      name: Bitwise and
-      descr: >
-        Compute the bitwise and of two integer operands, with optional negation
-        of the source operands.
-      pseudo: |
-        if T == 00_2 then
-          a = b & c
-        else if T == 01_2 then
-          a = b & ~c
-        else if T == 10_2 then
-          a = ~b & c
-        else if T == 11_2 then
-          a = ~b & ~c
-      op: 16
-
-    OR:
-      <<: *type2
-      name: Bitwise or
-      descr: >
-        Compute the bitwise or of two integer operands, with optional negation
-        of the source operands.
-      pseudo: |
-        if T == 00_2 then
-          a = b | c
-        else if T == 01_2 then
-          a = b | ~c
-        else if T == 10_2 then
-          a = ~b | c
-        else if T == 11_2 then
-          a = ~b | ~c
-      op: 17
-
-    XOR:
-      <<: *type2
-      name: Bitwise exclusive or
-      descr: >
-        Compute the bitwise exclusive or of two integer operands, with optional
-        negation of the source operands.
-      pseudo: |
-        if T == 00_2 then
-          a = b ^ c
-        else if T == 01_2 then
-          a = b ^ ~c
-        else if T == 10_2 then
-          a = ~b ^ c
-        else if T == 11_2 then
-          a = ~b ^ ~c
-      op: 18
-
-    EBF:
-      <<: *type3
-      name: Extract bit field
-      descr: >
-        Extract a bit field from the first source operand, sign-extend it, and
-        store it in the destination operand. The bit field (offset, width) is
-        defined by the second source operand.
-
-        In word mode, bits <12:8> of the second source operand describe the bit
-        field width, and bits <4:0> describe the bit field offset.
-
-        In half-word mode, bits <11:8> of the second source operand describe
-        the bit field width, and bits <3:0> describe the bit field offset.
-
-        In byte mode, bits <6:4> of the second source operand describe the bit
-        field width, and bits <2:0> describe the bit field offset.
-
-        If the value of the bit field width descriptor is zero (0), the width
-        is interpreted as being the full width of the chunk.
-
-        The first source operand is sign extended up to the number of bits
-        required by the bit field.
-      note: >
-        When the bit field width descriptor is all zeros (specifying the full
-        width of the chunk), this instruction operates as an arithmetic shift
-        right instruction.
-
-        ASR is a valid assembler alias for EBF.
-      pseudo: |
-        o = uint(c & (bits-1))
-        if bits == 8 then
-          w = uint((c >> 4) & (bits-1))
-        else
-          w = uint((c >> 8) & (bits-1))
-        if w == 0 then
-          w = bits
-        // Note: b is sign-extended up to o+w
-        // bits if o+w > bits.
-        a = int(b<o+w-1:o>)
-      op: 19
-      immSyntax: "<offs:width>"
-
-    EBFU:
-      <<: *type3
-      name: Extract bit field unsigned
-      descr: >
-        Extract a bit field from the first source operand, zero-extend it, and
-        store it in the destination operand. The bit field (offset, width) is
-        defined by the second source operand.
-
-        In word mode, bits <12:8> of the second source operand describe the bit
-        field width, and bits <4:0> describe the bit field offset.
-
-        In half-word mode, bits <11:8> of the second source operand describe
-        the bit field width, and bits <3:0> describe the bit field offset.
-
-        In byte mode, bits <6:4> of the second source operand describe the bit
-        field width, and bits <2:0> describe the bit field offset.
-
-        If the value of the bit field width descriptor is zero (0), the width
-        is interpreted as being the full width of the chunk.
-
-        The first source operand is zero extended up to the number of bits
-        required by the bit field.
-      note: >
-        When the bit field width descriptor is all zeros (specifying the full
-        width of the chunk), this instruction operates as a logic shift right
-        instruction.
-
-        LSR is a valid assembler alias for EBFU.
-      pseudo: |
-        o = uint(c & (bits-1))
-        if bits == 8 then
-          w = uint((c >> 4) & (bits-1))
-        else
-          w = uint((c >> 8) & (bits-1))
-        if w == 0 then
-          w = bits
-        a = (b >> o) & ones(w)
-      op: 20
-      immSyntax: "<offs:width>"
-
-    MKBF:
-      <<: *type3
-      name: Make bit field
-      descr: >
-        Extract a bit field from the lower bits of the first source operand,
-        shift it to the left, and store it in the destination operand.
-
-        The bit field (offset, width) is defined by the second source operand.
-
-        In word mode, bits <12:8> of the second source operand describe the bit
-        field width, and bits <4:0> describe the bit field offset.
-
-        In half-word mode, bits <11:8> of the second source operand describe
-        the bit field width, and bits <3:0> describe the bit field offset.
-
-        In byte mode, bits <6:4> of the second source operand describe the bit
-        field width, and bits <2:0> describe the bit field offset.
-
-        If the value of the bit field width descriptor is zero (0), the width
-        is interpreted as being the full width of the chunk.
-      note: >
-        When the bit field width descriptor is all zeros (specifying the full
-        width of the chunk), this instruction operates as a logic shift left
-        instruction.
-
-        LSL is a valid assembler alias for MKBF.
-      pseudo: |
-        o = uint(c & (bits-1))
-        if bits == 8 then
-          w = uint((c >> 4) & (bits-1))
-        else
-          w = uint((c >> 8) & (bits-1))
-        if w == 0 then
-          w = bits
-        a = (b & ones(w)) << o
-      op: 21
-      immSyntax: "<offs:width>"
-
-    IBF:
-      <<: *type3
-      name: Insert bit field
-      descr: >
-        Extract a bit field from the lower bits of the first source operand,
-        shift it to the left, and insert it in the destination operand.
-
-        The bit field (offset, width) is defined by the second source operand.
-
-        In word mode, bits <12:8> of the second source operand describe the bit
-        field width, and bits <4:0> describe the bit field offset.
-
-        In half-word mode, bits <11:8> of the second source operand describe
-        the bit field width, and bits <3:0> describe the bit field offset.
-
-        In byte mode, bits <6:4> of the second source operand describe the bit
-        field width, and bits <2:0> describe the bit field offset.
-
-        If the value of the bit field width descriptor is zero (0), the width
-        is interpreted as being the full width of the chunk.
-      pseudo: |
-        o = uint(c & (bits-1))
-        if bits == 8 then
-          w = uint((c >> 4) & (bits-1))
-        else
-          w = uint((c >> 8) & (bits-1))
-        if w == 0 then
-          w = bits
-        a = (a & ~(ones(w) << o)) |
-            ((b & ones(w)) << o)
-      op: 47
-      immSyntax: "<offs:width>"
-
-    SEL:
-      <<: *type3
-      name: Bitwise select
-      descr: >
-        Bitwise select.
-      pseudo: |
-        if T == 00_2 then
-          a = (b & a) | (c & ~a)
-        else if T == 01_2 then
-          a = (c & a) | (b & ~a)
-        else if T == 10_2 then
-          a = (a & b) | (c & ~b)
-        else if T == 11_2 then
-          a = (c & b) | (a & ~b)
-      op: 46
-      tMode: S  # SEL uses a special kind of interpretation of the T field.
-
   Integer arithmetic:
     ADD:
       <<: *type3
@@ -653,6 +431,229 @@ instructions:
       op: 5
       immSyntax: "target@pchi"
       immEnc: I21H
+
+  Bitwise logic:
+    AND:
+      <<: *type2
+      name: Bitwise and
+      descr: >
+        Compute the bitwise and of two integer operands, with optional negation
+        of the source operands.
+      pseudo: |
+        if T == 00_2 then
+          a = b & c
+        else if T == 01_2 then
+          a = b & ~c
+        else if T == 10_2 then
+          a = ~b & c
+        else if T == 11_2 then
+          a = ~b & ~c
+      op: 16
+
+    OR:
+      <<: *type2
+      name: Bitwise or
+      descr: >
+        Compute the bitwise or of two integer operands, with optional negation
+        of the source operands.
+      pseudo: |
+        if T == 00_2 then
+          a = b | c
+        else if T == 01_2 then
+          a = b | ~c
+        else if T == 10_2 then
+          a = ~b | c
+        else if T == 11_2 then
+          a = ~b | ~c
+      op: 17
+
+    XOR:
+      <<: *type2
+      name: Bitwise exclusive or
+      descr: >
+        Compute the bitwise exclusive or of two integer operands, with optional
+        negation of the source operands.
+      pseudo: |
+        if T == 00_2 then
+          a = b ^ c
+        else if T == 01_2 then
+          a = b ^ ~c
+        else if T == 10_2 then
+          a = ~b ^ c
+        else if T == 11_2 then
+          a = ~b ^ ~c
+      op: 18
+
+    SEL:
+      <<: *type3
+      name: Bitwise select
+      descr: >
+        Bitwise select.
+      pseudo: |
+        if T == 00_2 then
+          a = (b & a) | (c & ~a)
+        else if T == 01_2 then
+          a = (c & a) | (b & ~a)
+        else if T == 10_2 then
+          a = (a & b) | (c & ~b)
+        else if T == 11_2 then
+          a = (c & b) | (a & ~b)
+      op: 46
+      tMode: S  # SEL uses a special kind of interpretation of the T field.
+
+  Bit field manipulation:
+    EBF:
+      <<: *type3
+      name: Extract bit field
+      descr: >
+        Extract a bit field from the first source operand, sign-extend it, and
+        store it in the destination operand. The bit field (offset, width) is
+        defined by the second source operand.
+
+        In word mode, bits <12:8> of the second source operand describe the bit
+        field width, and bits <4:0> describe the bit field offset.
+
+        In half-word mode, bits <11:8> of the second source operand describe
+        the bit field width, and bits <3:0> describe the bit field offset.
+
+        In byte mode, bits <6:4> of the second source operand describe the bit
+        field width, and bits <2:0> describe the bit field offset.
+
+        If the value of the bit field width descriptor is zero (0), the width
+        is interpreted as being the full width of the chunk.
+
+        The first source operand is sign extended up to the number of bits
+        required by the bit field.
+      note: >
+        When the bit field width descriptor is all zeros (specifying the full
+        width of the chunk), this instruction operates as an arithmetic shift
+        right instruction.
+
+        ASR is a valid assembler alias for EBF.
+      pseudo: |
+        o = uint(c & (bits-1))
+        if bits == 8 then
+          w = uint((c >> 4) & (bits-1))
+        else
+          w = uint((c >> 8) & (bits-1))
+        if w == 0 then
+          w = bits
+        // Note: b is sign-extended up to o+w
+        // bits if o+w > bits.
+        a = int(b<o+w-1:o>)
+      op: 19
+      immSyntax: "<offs:width>"
+
+    EBFU:
+      <<: *type3
+      name: Extract bit field unsigned
+      descr: >
+        Extract a bit field from the first source operand, zero-extend it, and
+        store it in the destination operand. The bit field (offset, width) is
+        defined by the second source operand.
+
+        In word mode, bits <12:8> of the second source operand describe the bit
+        field width, and bits <4:0> describe the bit field offset.
+
+        In half-word mode, bits <11:8> of the second source operand describe
+        the bit field width, and bits <3:0> describe the bit field offset.
+
+        In byte mode, bits <6:4> of the second source operand describe the bit
+        field width, and bits <2:0> describe the bit field offset.
+
+        If the value of the bit field width descriptor is zero (0), the width
+        is interpreted as being the full width of the chunk.
+
+        The first source operand is zero extended up to the number of bits
+        required by the bit field.
+      note: >
+        When the bit field width descriptor is all zeros (specifying the full
+        width of the chunk), this instruction operates as a logic shift right
+        instruction.
+
+        LSR is a valid assembler alias for EBFU.
+      pseudo: |
+        o = uint(c & (bits-1))
+        if bits == 8 then
+          w = uint((c >> 4) & (bits-1))
+        else
+          w = uint((c >> 8) & (bits-1))
+        if w == 0 then
+          w = bits
+        a = (b >> o) & ones(w)
+      op: 20
+      immSyntax: "<offs:width>"
+
+    MKBF:
+      <<: *type3
+      name: Make bit field
+      descr: >
+        Extract a bit field from the lower bits of the first source operand,
+        shift it to the left, and store it in the destination operand.
+
+        The bit field (offset, width) is defined by the second source operand.
+
+        In word mode, bits <12:8> of the second source operand describe the bit
+        field width, and bits <4:0> describe the bit field offset.
+
+        In half-word mode, bits <11:8> of the second source operand describe
+        the bit field width, and bits <3:0> describe the bit field offset.
+
+        In byte mode, bits <6:4> of the second source operand describe the bit
+        field width, and bits <2:0> describe the bit field offset.
+
+        If the value of the bit field width descriptor is zero (0), the width
+        is interpreted as being the full width of the chunk.
+      note: >
+        When the bit field width descriptor is all zeros (specifying the full
+        width of the chunk), this instruction operates as a logic shift left
+        instruction.
+
+        LSL is a valid assembler alias for MKBF.
+      pseudo: |
+        o = uint(c & (bits-1))
+        if bits == 8 then
+          w = uint((c >> 4) & (bits-1))
+        else
+          w = uint((c >> 8) & (bits-1))
+        if w == 0 then
+          w = bits
+        a = (b & ones(w)) << o
+      op: 21
+      immSyntax: "<offs:width>"
+
+    IBF:
+      <<: *type3
+      name: Insert bit field
+      descr: >
+        Extract a bit field from the lower bits of the first source operand,
+        shift it to the left, and insert it in the destination operand.
+
+        The bit field (offset, width) is defined by the second source operand.
+
+        In word mode, bits <12:8> of the second source operand describe the bit
+        field width, and bits <4:0> describe the bit field offset.
+
+        In half-word mode, bits <11:8> of the second source operand describe
+        the bit field width, and bits <3:0> describe the bit field offset.
+
+        In byte mode, bits <6:4> of the second source operand describe the bit
+        field width, and bits <2:0> describe the bit field offset.
+
+        If the value of the bit field width descriptor is zero (0), the width
+        is interpreted as being the full width of the chunk.
+      pseudo: |
+        o = uint(c & (bits-1))
+        if bits == 8 then
+          w = uint((c >> 4) & (bits-1))
+        else
+          w = uint((c >> 8) & (bits-1))
+        if w == 0 then
+          w = bits
+        a = (a & ~(ones(w) << o)) |
+            ((b & ones(w)) << o)
+      op: 47
+      immSyntax: "<offs:width>"
 
   Integer comparison:
     SEQ:
