@@ -139,9 +139,9 @@ instructions:
       name: Load word PC-relative
       descr: >
         Load a word (32 bits) from the address that is formed by adding the
-        21-bit signed immediate, multiplied by four, to the current PC.
+        immediate value to the current PC.
       pseudo: |
-        adr = PC + int(b) * 4
+        adr = int(PC) + int(b)
         a = int(MEM[adr,4])
       op: 2
 
@@ -231,9 +231,9 @@ instructions:
       name: Store word PC-relative
       descr: >
         Store a word (32 bits) to the address that is formed by adding the
-        21-bit signed immediate, multiplied by four, to the current PC.
+        immediate value to the current PC.
       pseudo: |
-        adr = PC + int(b) * 4
+        adr = int(PC) + int(b)
         MEM[adr,4] = a
       op: 3
 
@@ -241,7 +241,7 @@ instructions:
       <<: *type6
       name: Load immediate
       descr: >
-        Load immediate value (low or high bits).
+        Load immediate value.
       pseudo: |
         a = b
       note: >
