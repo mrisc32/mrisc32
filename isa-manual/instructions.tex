@@ -78,32 +78,21 @@ bits & Chunk size, in bits \\
 scale & Scale factor according to the T field (1 for format C instructions) \\
 i & Vector element number \\
 $\leftarrow$ & Assignment \\
-+ & Addition \\
-- & Subtraction \\
-$\times$ & Multiplication \\
-/ & Division \\
++, - & Addition, Subtraction \\
+$\times$, / & Multiplication, Division \\
 \% & Remainder of integer division \\
-$=$ & Equal \\
-$\neq$ & Not equal \\
-$\leq$ & Less than or equal \\
-$\geq$ & Greater than or equal \\
-$\neg$ & Logical not \\
-$\wedge$ & Logical or \\
-$\vee$ & Logical and \\
-\textasciitilde & Bitwise not \\
-$|$ & Bitwise or \\
-\& & Bitwise and \\
-\textasciicircum & Bitwise xor \\
-$>>$ & Zero-fill right-shift \\
-$<<$ & Zero-fill left-shift \\
-$>>_{s}$ & Sticky right-shift (fill with MSB) \\
-$<<_{s}$ & Sticky left-shift (fill with LSB) \\
+$=$, $\neq$ & Equal, Not equal \\
+$<$, $>$ & Less than, Greater than \\
+$\leq$, $\geq$ & Less than or equal, Greater than or equal \\
+$\neg$, $\vee$, $\wedge$ & Logical NOT, OR, AND \\
+\textasciitilde, $|$, \&, \textasciicircum & Bitwise NOT, OR, AND, XOR \\
+$<<$, $>>$ & Zero-fill left-shift, right-shift \\
+$<<_{s}$, $>>_{s}$ & Sticky left-shift (fill with LSB), right-shift (fill with MSB) \\
 ones(N) & Bit vector of $N$ 1-bits \\
 zeros(N) & Bit vector of $N$ 0-bits \\
 int(x) & Interpret bit vector $x$ as a two's complement signed integer \\
 uint(x) & Interpret bit vector $x$ as an unsigned integer \\
 float(x) & Interpret bit vector $x$ as a floating-point number \\
-log$_{2}$(x) & Binary logarithm of $x$ \\
 max(x,y) & Maximum value of $x$ and $y$ \\
 min(x,y) & Minimum value of $x$ and $y$ \\
 sat(x,N) & Saturate integer $x$ to the range $[-2^{N-1},2^{N-1})$ \\

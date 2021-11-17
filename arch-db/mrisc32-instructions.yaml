@@ -442,11 +442,11 @@ instructions:
       pseudo: |
         if T == 00_2 then
           a = b & c
-        else if T == 01_2 then
+        else if T == 01_2 then  // .PN
           a = b & ~c
-        else if T == 10_2 then
+        else if T == 10_2 then  // .NP
           a = ~b & c
-        else if T == 11_2 then
+        else if T == 11_2 then  // .NN
           a = ~b & ~c
       op: 16
 
@@ -459,11 +459,11 @@ instructions:
       pseudo: |
         if T == 00_2 then
           a = b | c
-        else if T == 01_2 then
+        else if T == 01_2 then  // .PN
           a = b | ~c
-        else if T == 10_2 then
+        else if T == 10_2 then  // .NP
           a = ~b | c
-        else if T == 11_2 then
+        else if T == 11_2 then  // .NN
           a = ~b | ~c
       op: 17
 
@@ -476,11 +476,11 @@ instructions:
       pseudo: |
         if T == 00_2 then
           a = b ^ c
-        else if T == 01_2 then
+        else if T == 01_2 then  // .PN
           a = b ^ ~c
-        else if T == 10_2 then
+        else if T == 10_2 then  // .NP
           a = ~b ^ c
-        else if T == 11_2 then
+        else if T == 11_2 then  // .NN
           a = ~b ^ ~c
       op: 18
 
@@ -488,15 +488,33 @@ instructions:
       <<: *type3
       name: Bitwise select
       descr: >
-        Bitwise select.
+        Select bits from two different source operands based on the bit values
+        in a third operand, and store the result in the destination operand.
+      note: >
+        The operation involves four operands (three source operands and one
+        destination operand). However, since the instruction encoding format
+        only allows for three operands in total, one of the source operands
+        (a) is also the destination operand.
+
+        For increased flexibility, there are several variants of this
+        instruction that use different permutations of the source operands,
+        which makes it possible to select which of the source registers to
+        clobber.
+
+        The numbers in the permutation suffix (.132, .213 or .231) idicate the
+        operand position of the selector operand (first number), the if-one
+        operand (second number), and the if-zero operand (third number). When
+        no suffix is given, the operand position order is 123.
+
+        For instance, SEL.231 R6,R7,R8 implements R6 = (R8 & R7) | (R6 & ~R7).
       pseudo: |
         if T == 00_2 then
           a = (b & a) | (c & ~a)
-        else if T == 01_2 then
+        else if T == 01_2 then     // .132
           a = (c & a) | (b & ~a)
-        else if T == 10_2 then
+        else if T == 10_2 then     // .213
           a = (a & b) | (c & ~b)
-        else if T == 11_2 then
+        else if T == 11_2 then     // .231
           a = (c & b) | (a & ~b)
       op: 46
       tMode: S  # SEL uses a special kind of interpretation of the T field.
@@ -538,8 +556,7 @@ instructions:
           w = uint((c >> 8) & (bits-1))
         if w == 0 then
           w = bits
-        // Note: b is sign-extended up to o+w
-        // bits if o+w > bits.
+        // Note: b is sign-extended up to o+w bits if o+w > bits.
         a = int(b<o+w-1:o>)
       op: 19
       immSyntax: "<offs:width>"
@@ -650,8 +667,7 @@ instructions:
           w = uint((c >> 8) & (bits-1))
         if w == 0 then
           w = bits
-        a = (a & ~(ones(w) << o)) |
-            ((b & ones(w)) << o)
+        a = (a & ~(ones(w) << o)) | ((b & ones(w)) << o)
       op: 47
       immSyntax: "<offs:width>"
 
