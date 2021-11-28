@@ -855,7 +855,11 @@ instructions:
         (PC), which is encoded as register number 31. This also means that the
         VL register can not be used as the register operand.
       pseudo: |
-        PC = int(a) + int(b)
+        if Ra == 11111_2 then
+          base = PC
+        else
+          base = a
+        PC = int(base) + int(b)
       note: >
         If the register operand is PC, a PC-relative branch with an effective
         range of +/-4MiB is performed. To extend the range to the full address
@@ -883,9 +887,12 @@ instructions:
         (PC), which is encoded as register number 31. This also means that the
         VL register can not be used as the register operand.
       pseudo: |
-        adr = int(a) + int(b)
+        if Ra == 11111_2 then
+          base = PC
+        else
+          base = a
         LR = int(PC) + 4
-        PC = adr
+        PC = int(base) + int(b)
       note: >
         If the register operand is PC, a PC-relative branch with an effective
         range of +/-4MiB is performed. To extend the range to the full address
@@ -1267,8 +1274,7 @@ instructions:
       descr: >
         Pack the lower parts of two integer operands.
       pseudo: |
-        a = (b << (bits/2)) |
-            (c & ones(bits/2))
+        a = (b << (bits/2)) | (c & ones(bits/2))
       op: 58
       requires: ["PM"]
 
@@ -1278,8 +1284,7 @@ instructions:
       descr: >
         Pack the higher parts of two integer operands.
       pseudo: |
-        a = (b & ~ones(bits/2)) |
-            (c >> (bits/2))
+        a = (b & ~ones(bits/2)) | (c >> (bits/2))
       op: 61
       requires: ["PM"]
 
@@ -1315,8 +1320,7 @@ instructions:
       pseudo: |
         hi = sat(int(b) + 1<<(bits/2-1), bits)
         lo = sat(int(c) + 1<<(bits/2-1), bits)
-        a = (hi & ~ones(bits/2)) |
-            (lo >> (bits/2))
+        a = (hi & ~ones(bits/2)) | (lo >> (bits/2))
       op: 62
       requires: ["SM", "PM"]
 
@@ -1328,8 +1332,7 @@ instructions:
       pseudo: |
         hi = satu(uint(b) + 1<<(bits/2-1), bits)
         lo = satu(uint(c) + 1<<(bits/2-1), bits)
-        a = (hi & ~ones(bits/2)) |
-            (lo >> (bits/2))
+        a = (hi & ~ones(bits/2)) | (lo >> (bits/2))
       op: 63
       requires: ["SM", "PM"]
 
@@ -1380,15 +1383,16 @@ instructions:
       <<: *type2
       name: Exchange system register
       descr: >
-        First move the value of the system register given by the third source
+        First move the value of the system register given by the second source
         operand to the destination operand, unless the destination operand is
         the Z register.
 
-        Then move the value of the second source operand to the system register
-        given by the third source operand, unless the first source operand is
+        Then move the value of the first source operand to the system register
+        given by the second source operand, unless the first source operand is
         the Z register.
       pseudo: |
-        a = SR[c]
+        if Ra != 00000_2 then
+          a = SR[c]
         if Rb != 00000_2 then
           SR[c] = b
       op: 36
