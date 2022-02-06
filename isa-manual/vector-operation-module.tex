@@ -66,11 +66,7 @@ VZ register has no effect.
 A vector operation is performed when a source or destination operand of an
 instruction is a vector register.
 
-\begin{todobox}
-  Describe how vector operations process elements of vector registers.
-\end{todobox}
-
-\section{Vector length}
+\subsection{Vector length}
 
 The vector length is the number of vector elements to process in a vector
 operation.
@@ -78,15 +74,24 @@ operation.
 All vector operations use the vector length that is given by the value of the
 VL register at the time of instruction invocation.
 
-\begin{todobox}
-  The vector length should be defined by the yet to be specified vector
-  register length (per vector register tag).
-\end{todobox}
+When the vector length is $M$, vector elements $[0, M)$ are processed.
 
 To obtain the maximum vector length for the implementation, read the
 \hyperref[reg:MAX_VL]{MAX\_VL} system register.
 
-\section{Folding}
+\begin{notebox}
+  The maximum vector length, as advertised by the MAX\_VL system register,
+  reflects the implementation dependent vector register size. By respecting the
+  value of MAX\_VL, software can be executed on implementations with different
+  vector register sizes without modification.
+\end{notebox}
+
+\begin{todobox}
+  The vector length should be defined by the TBD vector register length (per
+  vector register tag).
+\end{todobox}
+
+\subsection{Folding}
 
 Horizontal vector operations (e.g. sum and min/max) are supported by repeated
 folding, where the upper half of one vector source operand is combined with the
@@ -96,8 +101,73 @@ lower half of another vector source operand.
   Describe how folding works.
 \end{todobox}
 
-\section{Masking}
+\subsection{Masking}
 
 \begin{todobox}
   Define and describe masked vector operations.
 \end{todobox}
+
+\subsection{Operation}
+
+A vector operation is performed as if all vector elements are processed as a
+series of scalar operations, in order from the lowest vector element index to
+the highest vector element index of the operation.
+
+\begin{notebox}
+  An implementation may process several vector elements concurrently in order
+  to increase the operation throughput, but it is not a requirement.
+\end{notebox}
+
+The following sections describe how a vector operation is executed for different
+operand configurations. In each description the following applies:
+
+\begin{bulletitems}
+  \item \texttt{VL} is the vector length of the operation
+  \item \texttt{operation} is the operation to perform, as described by the instruction
+  \item \texttt{Va, Vb, Vc} are vector register operands
+  \item \texttt{Rb, Rc} are scalar register operands
+  \item \texttt{IMM} is a scalar immediate operand
+  \item \texttt{scale} is the optional index scale operand for load/store (1, 2, 4 or 8)
+\end{bulletitems}
+
+\subsubsection{Vector, Vector, Vector}
+
+\begin{lstlisting}[style=pseudocode]
+for i in 0 to VL-1 do
+  operation(Va[i], Vb[i], Vc[i])
+\end{lstlisting}
+
+\subsubsection{Vector, Vector, Scalar register}
+
+\begin{lstlisting}[style=pseudocode]
+for i in 0 to VL-1 do
+  operation(Va[i], Vb[i], Rc)
+\end{lstlisting}
+
+\subsubsection{Vector, Vector, Scalar immediate}
+
+\begin{lstlisting}[style=pseudocode]
+for i in 0 to VL-1 do
+  operation(Va[i], Vb[i], #IMM)
+\end{lstlisting}
+
+\subsubsection{Vector, Scalar, Scalar register (load/store)}
+
+\begin{lstlisting}[style=pseudocode]
+for i in 0 to VL-1 do
+  operation(Va[i], Rb, i * Rc * scale)
+\end{lstlisting}
+
+\subsubsection{Vector, Scalar, Scalar immediate (load/store)}
+
+\begin{lstlisting}[style=pseudocode]
+for i in 0 to VL-1 do
+  operation(Va[i], Rb, i * IMM)
+\end{lstlisting}
+
+\subsubsection{Vector, Vector, Vector - Folding}
+
+\begin{lstlisting}[style=pseudocode]
+for i in 0 to VL-1 do
+  operation(Va[i], Vb[VL+i], Vc[i])
+\end{lstlisting}
