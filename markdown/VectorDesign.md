@@ -10,17 +10,17 @@ The MRISC32 approach to Single Instruction Multiple Data (SIMD) operation is ver
 * Vector loads and stores can either be stride-based or gather-scatter (see [addressing modes](AddressingModes.md) for more details).
 * Folding operations are provided for doing horizontal vector operations (e.g. sum, min/max).
 
-Planned (not yet implemented):
-* Each vector register has a Register Length (RL) state.
-  - Writing to a register updates the Register Length to the operation Vector Length.
-  - Elements with an index >= RL are zero.
-  - Clearing all Register Lengths to zero reduces stack overhead.
-* Each vector register has a Register Mask (RM) state.
-  - The Register Mask can have three possible values:
-    - 0 (zero): All elements are zero (`0x00000000`).
-    - -1 (set): All elements are minus one (`0xffffffff`).
-    - +1: At least one element is non-zero and at least one element is non-minus-one.
-  - The Register Mask is suitable as a branch condition, e.g. in combination with `S[cc]` instructions with vector operands.
+### Planned (not yet implemented)
+
+Add a Register Length (RL) tag to each vector register.
+
+* Writing to a vector register updates its Register Length to the operation Vector Length.
+* In most instructions the Register Length of the first soruce vector operand defines the operation Vector Length.
+* The VL register defines the operation Vector Length for certain "register initialization" instructions, e.g:
+  - Stride based memory loads (LDW, LDUB etc) and load effective address (LDEA).
+  - Operations using the VZ register as the first operand (e.g. `OR V2, VZ, R7`).
+* Elements with an index >= RL are read as zero.
+* Clearing a vector register to RL=0 marks the register as "unused", which can reduce context switch overhead.
 
 ## Motivation
 
@@ -28,14 +28,13 @@ The dominating SIMD solution today (SSE, AVX, NEON) is based on an ISA that is l
 * All SIMD instructions operate on fixed width registers (you have to use all elements or nothing).
 * A completely separate instruction set and separate execution units are used for operating on the SIMD registers.
 * Each register is split into different number of elements depending on the type (i.e. the data is packed in the registers).
-* It is hard to write software that utilizes the SIMD hardware efficiently, partially because compilers have a hard time to map traditional software constructs to the SIMD ISA, so you often have to hand-write code at a very low level.
+* It is hard to write software that utilizes the SIMD hardware efficiently, partially because compilers have a hard time to map traditional software constructs to the SIMD ISA, so you often have to hand-write code at a low level.
 * In order to exploit more parallelism in new hardware generations, new instruction sets and registers have to be added (e.g. MMX vs SSE vs AVX vs ...), leading to a very complex software model.
 
 In comparison, the MRISC32 vector model is easier to implement in hardware and easier to use in software. For instance:
 * The same execution units can be used for both vector operations and scalar operations, meaning less hardware.
 * The software model maps better to traditional software patterns, and it should be easier for compilers to auto-vectorize code.
 * The same ISA can be used for many different levels of hardware parallelism. In other words, the vector model scales well from very simple, scalar architectures, all the way up to highly parallel superscalar architectures.
-
 
 ## Examples
 
@@ -106,12 +105,12 @@ done:
 Notice that:
 * The same instructions are used in both cases, only with vector operands for the vector version.
 * It is easy to mix scalar and vector operands for vector operations.
-* The loop overhead is actually lower in the vector version, since fewer loop iterations are required:
-  * Scalar version: 3 instructions / array element.
-  * Vector version: 6/16 = 0.375 instructions / array element (for a machine with 16 elements per vector register).
+* The loop *overhead* is actually lower in the vector version, since fewer loop iterations are required:
+  - Scalar version: 3 instructions / array element.
+  - Vector version: 6/16 = 0.375 instructions / array element (for a machine with 16 elements per vector register).
 * Any data dependency latencies in the scalar version (e.g. due to memory loads and the FPU pipeline) have vanished in the vector version.
-  * Each vector instruction will iterate over several cycles, allowing the first vector elements to be produced before the next instruction starts executing.
-  * Typically, an `M` elements wide, `N` stages long pipeline machine will have at least `M * N` elements per vector register.
+  - Each vector instruction will iterate over several cycles, allowing the first vector elements to be produced before the next instruction starts executing.
+  - Typically, an `M` elements wide, `N` stages long pipeline machine will have at least `M * N` elements per vector register.
 
 ## Implementations
 
@@ -125,11 +124,6 @@ Even in this implementation, the vectorized operation will be faster than a corr
 * Less overhead from loop branches, counters and memory index calculation.
 * Improved throughput thanks to reduced number of data dependency stalls (vector operations effectively hide data dependencies).
 
-Low-hanging fruits:
-* Deep pipelining:
-  - Long pipelines (e.g. for division instructions) can be blocking/stalling in scalar mode, but fully pipelined in vector mode, without breaking the promise of in-order instruction retirement.
-* Improved cache performance:
-  - With relatively little effort, accurate (non-speculative) data cache prefetching can be implemented in hardware for vector loads and stores.
 
 ### Scalar CPU with parallel loops
 
@@ -141,7 +135,7 @@ This requires slightly more hardware logic:
 * Duplicated vector loop logic.
 * Duplicated register fetch and instruction issue logic.
 * More register read ports (with some restrictions it may be possible to rely entirely on operand forwarding though).
-* Logic for determning if two vector operations can run in parallel, and how.
+* Logic for determining if two vector operations can run in parallel, and how.
 * Possibly more execution units, in order to maximize parallelism.
 
 One advantage of this implementation is that the instruction fetch pipeline can be kept simple, and the logic for running multiple instructions in parallel is simpler than that of a traditional [superscalar architecture](https://en.wikipedia.org/wiki/Superscalar_processor).
@@ -154,7 +148,7 @@ Instead of processing one element at a time, each vector loop iteration can proc
 
 This is essentially the same principle as for SIMD ISAs such as SSE or NEON.
 
-It puts some more requirements on the hardware logic to be able to issue multiple elements per vector operation. In particular the hardware needs:
+Some additional hardware logic is required to be able to issue multiple elements per vector operation. In particular the hardware needs:
 * A sufficient number of execution units.
 * Wider read/write ports for the vector registers and the data cache(s).
 * More advanced data cache interface (e.g. for wide gather-scatter operations).
