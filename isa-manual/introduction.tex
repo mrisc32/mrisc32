@@ -203,17 +203,17 @@ instruction operands.
   \bitheader{0,2,7,9,14,15,16,18,21,26,29,31} \\
   \begin{rightwordgroup}{A}
     \bitboxes*{1}{000000} &
-    \bitbox{5}{Ra} &
-    \bitbox{5}{Rb} &
+    \bitbox{5}{REG a} &
+    \bitbox{5}{REG b} &
     \bitbox{2}{V} &
-    \bitbox{5}{Rc} &
+    \bitbox{5}{REG c} &
     \bitbox{2}{T} &
     \bitbox{7}{OP}
   \end{rightwordgroup} \\
   \begin{rightwordgroup}{B}
     \bitboxes*{1}{000000} &
-    \bitbox{5}{Ra} &
-    \bitbox{5}{Rb} &
+    \bitbox{5}{REG a} &
+    \bitbox{5}{REG b} &
     \bitbox{1}{V} &
     \bitbox{6}{FN} &
     \bitbox{2}{T} &
@@ -222,20 +222,20 @@ instruction operands.
   \end{rightwordgroup} \\
   \begin{rightwordgroup}{C}
     \bitbox{6}{OP} &
-    \bitbox{5}{Ra} &
-    \bitbox{5}{Rb} &
+    \bitbox{5}{REG a} &
+    \bitbox{5}{REG b} &
     \bitbox{1}{V} &
     \bitbox{15}{IM}
   \end{rightwordgroup} \\
   \begin{rightwordgroup}{D}
     \bitboxes*{1}{110} &
     \bitbox{3}{OP} &
-    \bitbox{5}{Ra} &
+    \bitbox{5}{REG a} &
     \bitbox{21}{IM}
   \end{rightwordgroup} \\
   \begin{rightwordgroup}{E}
     \bitboxes*{1}{110111} &
-    \bitbox{5}{Ra} &
+    \bitbox{5}{REG a} &
     \bitbox{3}{OP}
     \bitbox{18}{IM}
   \end{rightwordgroup}
@@ -267,11 +267,11 @@ in the table below:
   \hline
   T  & Type \\
   \hline
-  Ra & Destination/source register number (0-31) \\
+  REG a & Destination/source register number (0-31) \\
   \hline
-  Rb & Source register number (0-31) \\
+  REG b & Source register number (0-31) \\
   \hline
-  Rc & Source register number (0-31) \\
+  REG c & Source register number (0-31) \\
   \hline
   IM & Immediate value \\
   \hline
@@ -306,13 +306,13 @@ interpret the second operand - i.e. the base address - as a scalar):
   \hline
 \end{tabular}
 
-The register fields Ra, Rb and Rc refer to one scalar or vector register each,
-according to the OP and V fields. For instance if a register operand refers to
-a vector register, and the corresponding R-field has the value $21_{10}$, then
-the register operand is V21.
+The register fields REG a, REG b and REG c refer to one scalar or vector
+register each, according to the OP and V fields. For instance if a register
+operand refers to a vector register, and the corresponding REG-field has the
+value $21_{10}$, then the register operand is V21.
 
-The first register operand, Ra, can be a source or a destination register
-depending on the instruction, while Rb and Rc are always source registers.
+The first register operand, REG a, can be a source or a destination register
+depending on the instruction, while REG b and REG c are always source registers.
 
 The T field further defines the instruction. For most instructions it defines
 the packed data type that is to be used. For load/store instructions it
