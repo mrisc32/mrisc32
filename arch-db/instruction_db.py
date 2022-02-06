@@ -167,33 +167,33 @@ class InstructionDB:
             result += f" \\begin{{rightwordgroup}}{{{fmt}}}\n"
             if fmt == "A":
                 result += "  \\bitboxes*{1}{000000} &\n"
-                result += "  \\bitbox{5}{Ra} &\n"
-                result += "  \\bitbox{5}{Rb} &\n"
+                result += "  \\bitbox{5}{REG a} &\n"
+                result += "  \\bitbox{5}{REG b} &\n"
                 result += "  \\bitbox{2}{V} &\n"
-                result += "  \\bitbox{5}{Rc} &\n"
+                result += "  \\bitbox{5}{REG c} &\n"
                 result += "  \\bitbox{2}{T} &\n"
                 result += f"  \\bitboxes*{{1}}{{{meta['op']:07b}}}\n"
             elif fmt == "B":
                 result += "  \\bitboxes*{1}{000000} &\n"
-                result += "  \\bitbox{5}{Ra} &\n"
-                result += "  \\bitbox{5}{Rb} &\n"
+                result += "  \\bitbox{5}{REG a} &\n"
+                result += "  \\bitbox{5}{REG b} &\n"
                 result += "  \\bitbox{1}{V} &\n"
                 result += f"  \\bitboxes*{{1}}{{{meta['fn']:06b}}}\n"
                 result += "  \\bitbox{2}{T} &\n"
                 result += f"  \\bitboxes*{{1}}{{{meta['op']:07b}}}\n"
             elif fmt == "C":
                 result += f"  \\bitboxes*{{1}}{{{meta['op']:06b}}} &\n"
-                result += "  \\bitbox{5}{Ra} &\n"
-                result += "  \\bitbox{5}{Rb} &\n"
+                result += "  \\bitbox{5}{REG a} &\n"
+                result += "  \\bitbox{5}{REG b} &\n"
                 result += "  \\bitbox{1}{V} &\n"
                 result += f"  \\bitbox{{15}}{{IM [{imm_enc}]}}\n"
             elif fmt == "D":
                 result += f"  \\bitboxes*{{1}}{{110{(meta['op']):03b}}}\n"
-                result += "  \\bitbox{5}{Ra} &\n"
+                result += "  \\bitbox{5}{REG a} &\n"
                 result += f"  \\bitbox{{21}}{{IM [{imm_enc}]}}\n"
             elif fmt == "E":
                 result += "  \\bitboxes*{1}{110111}\n"
-                result += "  \\bitbox{5}{Ra} &\n"
+                result += "  \\bitbox{5}{REG a} &\n"
                 result += f"  \\bitboxes*{{1}}{{{(meta['op']):03b}}}\n"
                 result += f"  \\bitbox{{18}}{{IM [{imm_enc}]}}\n"
             result += f" \\end{{rightwordgroup}} \\\\\n"
@@ -286,9 +286,11 @@ class InstructionDB:
             result += InstructionDB.__descr_to_tex(meta)
             result += InstructionDB.__todo_to_tex(meta)
 
-            result += "\\subsubsection{Encoding and operation}\n\n"
-            result += InstructionDB.__encoding_to_tex(meta)
+            result += "\\subsubsection{Operation}\n\n"
             result += InstructionDB.__pseudo_to_tex(meta)
+
+            result += "\\subsubsection{Encoding}\n\n"
+            result += InstructionDB.__encoding_to_tex(meta)
 
             result += "\\subsubsection{Variants}\n\n"
             result += InstructionDB.__asm_to_tex(name, meta)
