@@ -855,7 +855,7 @@ instructions:
         (PC), which is encoded as register number 31. This also means that the
         VL register can not be used as the register operand.
       pseudo: |
-        if Ra == 11111_2 then
+        if REGa == 11111_2 then
           base = PC
         else
           base = a
@@ -887,7 +887,7 @@ instructions:
         (PC), which is encoded as register number 31. This also means that the
         VL register can not be used as the register operand.
       pseudo: |
-        if Ra == 11111_2 then
+        if REGa == 11111_2 then
           base = PC
         else
           base = a
@@ -1063,7 +1063,8 @@ instructions:
         of the resulting floating-point value is subtracted by the integer
         offset provided by the second source operand before storing the final
         floating-point value in the destination operand.
-      todo: Define pseudocode.
+      pseudo: |
+        a = int2real(int(b)) * pow(2.0, -int(c))
       op: 72
       requires: ["FM"]
 
@@ -1075,7 +1076,8 @@ instructions:
         exponent of the resulting floating-point value is subtracted by the
         integer offset provided by the second source operand before storing the
         final floating-point value in the destination operand.
-      todo: Define pseudocode.
+      pseudo: |
+        a = int2real(uint(b)) * pow(2.0, -int(c))
       op: 73
       requires: ["FM"]
 
@@ -1086,7 +1088,8 @@ instructions:
         Convert a floating-point value to a signed integer value, without
         rounding. The integer offset provided by the second source operand is
         added to the floating-point exponent before the conversion.
-      todo: Define pseudocode.
+      pseudo: |
+        a = sat(trunc(float(b) * pow(2.0, int(c))), bits)
       op: 74
       requires: ["FM"]
 
@@ -1097,7 +1100,8 @@ instructions:
         Convert a floating-point value to an unsigned integer value, without
         rounding. The integer offset provided by the second source operand is
         added to the floating-point exponent before the conversion.
-      todo: Define pseudocode.
+      pseudo: |
+        a = satu(trunc(float(b) * pow(2.0, int(c))), bits)
       op: 75
       requires: ["FM"]
 
@@ -1108,7 +1112,8 @@ instructions:
         Convert a floating-point value to a signed integer value, with
         rounding. The integer offset provided by the second source operand is
         added to the floating-point exponent before the conversion.
-      todo: Define pseudocode.
+      pseudo: |
+        a = sat(round(float(b) * pow(2.0, int(c))), bits)
       op: 76
       requires: ["FM"]
 
@@ -1119,7 +1124,8 @@ instructions:
         Convert a floating-point value to an unsigned integer value, with
         rounding. The integer offset provided by the second source operand is
         added to the floating-point exponent before the conversion.
-      todo: Define pseudocode.
+      pseudo: |
+        a = satu(round(float(b) * pow(2.0, int(c))), bits)
       op: 77
       requires: ["FM"]
 
@@ -1391,9 +1397,9 @@ instructions:
         given by the second source operand, unless the first source operand is
         the Z register.
       pseudo: |
-        if Ra != 00000_2 then
+        if REGa != 00000_2 then
           a = SR[c]
-        if Rb != 00000_2 then
+        if REGb != 00000_2 then
           SR[c] = b
       op: 36
       tMode: N

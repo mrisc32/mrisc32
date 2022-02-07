@@ -26,7 +26,7 @@ architecture module (or modules) is indicated in the instruction documentation.
 The encoding format used for immediate operands is documented per instruction
 (the IM field, if any, references the immediate encoding format).
 
-\section{Pseudocode syntax}
+\section{Pseudocode}
 
 The operation that an instruction performs is described using pseudocode.
 
@@ -43,12 +43,57 @@ operation.
 The number of chunks and the size of each chunk is dictated by the packed
 operation mode.
 
-\begin{todobox}
-Describe different types that are used in the pseudocode, such as
-"bit vector", "integer", "unsigned integer" and "float"?
+\todo{Add a diagram that visualizes how chunks are processed.}
 
-Come up with a better name than "chunk"?
-\end{todobox}
+\subsection{Types}
+
+\subsubsection{bit vector}
+
+A vector of bits of a given size, without any particular interpretation of the
+meaning of the bits.
+
+Instruction source and destination operands are treated as bit vectors. To
+perform arithmetic operations, a bit vector must first be interpreted as an
+integer or real value.
+
+Example of an 8-bit bit vector: $00101101_2$.
+
+\subsubsection{integer}
+
+An integer value in the range $(-\infty, +\infty)$.
+
+Integers support integer arithmetic operations.
+
+Example: $-12345$.
+
+\subsubsection{real}
+
+A real value in the range $(-\infty, +\infty)$, with infinite precision.
+
+Real values support real arithmetic operations.
+
+Example: $-123.45$.
+
+\subsection{Type conversions}
+
+Type conversions can either be explicit or implicit.
+
+Explicit conversions are typically used for interpreting a bit vector as an
+integer or real value, e.g. in order to perform arithmetic opertaions. This can
+be done with pseudocode functions such as uint($x$) and float($x$).
+
+Implicit conversions are used when interpreting an integer or real value as a
+bit vector, e.g. for assignment of the destination operand (which is always a
+bit vector) or when performing bitwise or shift operations on an integer value.
+
+An implicit conversion to a bit vector is done as follows:
+
+\begin{bulletitems}
+  \item Integer values are converted to a two's complement form bit vector of
+        infinite width, which is then truncated to the target width.
+  \item Real values are converted to an IEEE 754 binary bit vector
+        representation of the target width.
+\end{bulletitems}
 
 \subsection{Numeric constants}
 
@@ -57,26 +102,29 @@ integers.
 
 Integers in other bases are given as $N_{base}$ (e.g. $101_{2}$).
 
+Real values are given in base 10 (e.g. $10.2$).
+
 \subsection{Notation}
 
 The following notation is used in the pseudocode that describes the operation
 of an instruction:
 
-\begin{tabular}{lp{400pt}}
+\begin{tabular}{lp{340pt}}
 \textbf{Notation} & \textbf{Meaning} \\
-x<$k$> & Bit $k$ of bit vector x \\
-x<$k$:$l$> & Bits $k$ to $l$ of bit vector x \\
-MEM[x,N] & $N$ consecutive bytes in memory starting at address $x$, interpreted as an $8\times N$-bit vector with little endian storage \\
-SR[x] & System register number $x$ \\
-a & 1st instruction operand \\
-b & 2nd instruction operand \\
-c & 3rd instruction operand \\
+REGa, REGb, REGc & Register number fields of the instruction word \\
 IM & IM field of the instruction word \\
 T & T field of the instruction word \\
 V & Vector mode (two bits) \\
+a, b, c & 1st, 2nd and 3rd operation operand (chunk bit vectors) \\
 bits & Chunk size, in bits \\
 scale & Scale factor according to the T field (1 for format C instructions) \\
 i & Vector element number \\
+$x$<$k$> & Bit $k$ of bit vector $x$ \\
+$x$<$k$:$l$> & Bits $k$ to $l$ of bit vector $x$ \\
+MEM[$x$,$N$] & $N$ consecutive bytes in memory starting at address $x$,
+               interpreted as an $8\times N$-bit vector with little endian
+               storage \\
+SR[$x$] & System register number $x$ \\
 $\leftarrow$ & Assignment \\
 +, - & Addition, Subtraction \\
 $\times$, / & Multiplication, Division \\
@@ -88,16 +136,26 @@ $\neg$, $\vee$, $\wedge$ & Logical NOT, OR, AND \\
 \textasciitilde, $|$, \&, \textasciicircum & Bitwise NOT, OR, AND, XOR \\
 $<<$, $>>$ & Zero-fill left-shift, right-shift \\
 $<<_{s}$, $>>_{s}$ & Sticky left-shift (fill with LSB), right-shift (fill with MSB) \\
-ones(N) & Bit vector of $N$ 1-bits \\
-zeros(N) & Bit vector of $N$ 0-bits \\
-int(x) & Interpret bit vector $x$ as a two's complement signed integer \\
-uint(x) & Interpret bit vector $x$ as an unsigned integer \\
-float(x) & Interpret bit vector $x$ as a floating-point number \\
-max(x,y) & Maximum value of $x$ and $y$ \\
-min(x,y) & Minimum value of $x$ and $y$ \\
-sat(x,N) & Saturate integer $x$ to the range $[-2^{N-1},2^{N-1})$ \\
-satu(x,N) & Saturate integer $x$ to the range $[0,2^{N})$ \\
-isnan(x) & True if $x$ is not a number (NaN) \\
+ones($N$) & Bit vector of $N$ 1-bits \\
+zeros($N$) & Bit vector of $N$ 0-bits \\
+int($x$) & Interpret bit vector $x$ as a two's complement signed integer.
+           Returns an integer. \\
+uint($x$) & Interpret bit vector $x$ as an unsigned integer. Returns an
+            integer. \\
+float($x$) & Interpret bit vector $x$ as a floating-point number. Returns a real
+             value. \\
+max($x$,$y$) & Maximum value of $x$ and $y$ \\
+min($x$,$y$) & Minimum value of $x$ and $y$ \\
+sat($x$,$N$) & Saturate integer $x$ to the range $[-2^{N-1},2^{N-1})$ \\
+satu($x$,$N$) & Saturate integer $x$ to the range $[0,2^{N})$ \\
+isnan($x$) & True if bit vector $x$ represents an IEEE 754 NaN value (not a
+             number) \\
+int2real($x$) & Convert integer value to a real value \\
+trunc($x$) & Convert real value to an integer value, rounding towards zero (i.e.
+             truncate) \\
+round($x$) & Convert real value to an integer value, rounding towards the
+             nearest value (halfway cases are rounded away from zero) \\
+pow($x$, $y$) & Compute the value of $x$ raised to the power $y$, i.e. $x^{y}$
 \end{tabular}
 
 \clearpage
