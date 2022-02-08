@@ -23,9 +23,9 @@ types.
 
 Many instructions are extended with the ability to operate on several
 individual sub-parts of the source and destination elements. These sub-parts
-are referred to as chunks.
+are referred to as slices.
 
-A single 32-bit element may be split up into one, two or four chunks, as
+A single 32-bit element may be split up into one, two or four slices, as
 follows:
 
 \begin{bytefield}{32}
@@ -45,18 +45,18 @@ follows:
   \end{rightwordgroup}
 \end{bytefield}
 
-When a packed operation is performed, all chunks within a 32-bit word are
+When a packed operation is performed, all slices within a 32-bit word are
 processed in parallel. It is not possible to process only a subset of the
-chunks.
+slices.
 
 \subsection{Word mode}
 
 In word mode, which is the default, each element is processed as a single
-32-bit chunk.
+32-bit slice.
 
 \subsection{Half-word mode}
 
-In half-word mode each element is processed as two individual 16-bit chunks in
+In half-word mode each element is processed as two individual 16-bit slices in
 parallel.
 
 In assembly language, half-word mode is indicated by appending the suffix .H
@@ -64,7 +64,7 @@ to the instruction mnemonic.
 
 \subsection{Byte mode}
 
-In byte mode each element is processed as four individual 8-bit chunks in
+In byte mode each element is processed as four individual 8-bit slices in
 parallel.
 
 In assembly language, byte mode is indicated by appending the suffix .B to the

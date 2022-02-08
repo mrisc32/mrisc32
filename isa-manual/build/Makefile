@@ -23,7 +23,8 @@ generated_tex = gen-version.tex \
 
 srcs = $(wildcard $(srcdir)/*.tex) $(generated_tex)
 bibs = $(srcdir)/mrisc32-instruction-set-manual.bib
-figs = mrisc32-logo.pdf
+figs = mrisc32-logo.pdf \
+       operation-diagram.pdf
 
 PDFLATEX := TEXINPUTS=$(srcdir): pdflatex -interaction=nonstopmode -halt-on-error
 BIBTEX := BIBINPUTS=$(srcdir): bibtex
@@ -44,6 +45,9 @@ clean:
 	rm -rf $(pdfs) *.aux *.log *.bbl *.blg *.toc *.out *.pdf *.tex *~ \#*
 
 mrisc32-logo.pdf: $(srcdir)/../media/mrisc32-logo.svg
+	cairosvg $< -o $@
+
+operation-diagram.pdf: $(srcdir)/operation-diagram.svg
 	cairosvg $< -o $@
 
 # Generate a version file based on the latest Git tag.

@@ -538,13 +538,13 @@ instructions:
         field width, and bits <2:0> describe the bit field offset.
 
         If the value of the bit field width descriptor is zero (0), the width
-        is interpreted as being the full width of the chunk.
+        is interpreted as being the full width of the slice.
 
         The first source operand is sign extended up to the number of bits
         required by the bit field.
       note: >
         When the bit field width descriptor is all zeros (specifying the full
-        width of the chunk), this instruction operates as an arithmetic shift
+        width of the slice), this instruction operates as an arithmetic shift
         right instruction.
 
         ASR is a valid assembler alias for EBF.
@@ -579,13 +579,13 @@ instructions:
         field width, and bits <2:0> describe the bit field offset.
 
         If the value of the bit field width descriptor is zero (0), the width
-        is interpreted as being the full width of the chunk.
+        is interpreted as being the full width of the slice.
 
         The first source operand is zero extended up to the number of bits
         required by the bit field.
       note: >
         When the bit field width descriptor is all zeros (specifying the full
-        width of the chunk), this instruction operates as a logic shift right
+        width of the slice), this instruction operates as a logic shift right
         instruction.
 
         LSR is a valid assembler alias for EBFU.
@@ -620,10 +620,10 @@ instructions:
         field width, and bits <2:0> describe the bit field offset.
 
         If the value of the bit field width descriptor is zero (0), the width
-        is interpreted as being the full width of the chunk.
+        is interpreted as being the full width of the slice.
       note: >
         When the bit field width descriptor is all zeros (specifying the full
-        width of the chunk), this instruction operates as a logic shift left
+        width of the slice), this instruction operates as a logic shift left
         instruction.
 
         LSL is a valid assembler alias for MKBF.
@@ -658,7 +658,7 @@ instructions:
         field width, and bits <2:0> describe the bit field offset.
 
         If the value of the bit field width descriptor is zero (0), the width
-        is interpreted as being the full width of the chunk.
+        is interpreted as being the full width of the slice.
       pseudo: |
         o = uint(c & (bits-1))
         if bits == 8 then

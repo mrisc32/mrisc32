@@ -33,17 +33,25 @@ The operation that an instruction performs is described using pseudocode.
 \subsection{Pseudocode scope}
 
 The pseudocode for each instruction shall be regarded as a function that is
-executed for each chunk of each element of the operation.
+executed for \textit{each slice} of each element of the operation.
 
 For a scalar operation, there is only a single element.
 
 For a vector operation, the number of elements is dictated by the vector
 operation.
 
-The number of chunks and the size of each chunk is dictated by the packed
+The number of slices and the size of each slice is dictated by the packed
 operation mode.
 
-\todo{Add a diagram that visualizes how chunks are processed.}
+As an example, consider a byte mode instruction operating on a vector. In this
+case the pseudocode function is performed for each 8-bit slice of each 32-bit
+vector element, as shown in figure \ref{fig:operation-diagram}.
+
+\begin{figure}[h]
+  \includegraphics[width=1.0\linewidth,center]{operation-diagram.pdf}
+  \caption{Example of an 8-bit slice within a vector element.}
+  \label{fig:operation-diagram}
+\end{figure}
 
 \subsection{Types}
 
@@ -115,8 +123,8 @@ REGa, REGb, REGc & Register number fields of the instruction word \\
 IM & IM field of the instruction word \\
 T & T field of the instruction word \\
 V & Vector mode (two bits) \\
-a, b, c & 1st, 2nd and 3rd operation operand (chunk bit vectors) \\
-bits & Chunk size, in bits \\
+a, b, c & 1st, 2nd and 3rd operation operand (slice bit vectors) \\
+bits & Slice size, in bits \\
 scale & Scale factor according to the T field (1 for format C instructions) \\
 i & Vector element number \\
 $x$<$k$> & Bit $k$ of bit vector $x$ \\
