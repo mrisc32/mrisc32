@@ -6,7 +6,7 @@ The MRISC32 approach to Single Instruction Multiple Data (SIMD) operation is ver
 * There are 32 vector registers, V0-V31, with *at least* 16 elements in each register.
 * All vector elements are the same size (32 bits), regardless if they represent bytes, half-words, words or floats.
 * A Vector Length (VL) register controls the length of the vector operation.
-* There are vector,vector and vector,scalar versions of most integer and floating point operations.
+* There are vector,vector and vector,scalar versions of most integer and floating-point operations.
 * Vector loads and stores can either be stride-based or gather-scatter (see [addressing modes](AddressingModes.md) for more details).
 * Folding operations are provided for doing horizontal vector operations (e.g. sum, min/max).
 
@@ -144,7 +144,7 @@ Another advantage, compared to implementing a wider pipeline (see below), is tha
 
 ### Multiple elements per cycle
 
-Instead of processing one element at a time, each vector loop iteration can process multiple elements at a time. For instance, if there are four identical floating point units, four elements can be read from a vector register and processed in parallel per clock cycle.
+Instead of processing one element at a time, each vector loop iteration can process multiple elements at a time. For instance, if there are four identical floating-point units, four elements can be read from a vector register and processed in parallel per clock cycle.
 
 This is essentially the same principle as for SIMD ISAs such as SSE or NEON.
 

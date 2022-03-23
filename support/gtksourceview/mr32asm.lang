@@ -73,7 +73,7 @@
       </match>
     </context>
 
-    <!-- Decimal with optional floating point -->
+    <!-- Decimal with optional floating-point -->
     <context id="decimal" style-ref="constant">
       <match extended="true">
         (?&lt;![\w\.])
