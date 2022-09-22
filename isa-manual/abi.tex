@@ -109,13 +109,23 @@ The vector length is a callee-saved register.
   \hline
   V1-V8 & & Function arguments / results \\
   \hline
-  V9-V15 & & Temporary registers \\
-  \hline
-  V16-V31 & & Callee-saved registers \\
+  V9-V31 & & Temporary registers \\
   \hline
 \end{tabular}
 
-\todo{Do we really need that many callee-saved vector registers?}
+\subsubsection{Function arguments / results}
+
+The first vector arguments to a function are passed in registers V1 to V8. How
+many registers are used depends on the number of arguments.
+
+Likewise function vector results are returned in V1 to V8.
+
+These registers may also be used as temporary registers.
+
+\subsubsection{Temporary registers}
+
+All vector registers are temporary registers, and thus need not be preserved
+by the callee.
 
 \subsection{Stack}
 \label{sec:abi_stack}
