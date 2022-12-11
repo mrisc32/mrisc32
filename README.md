@@ -13,7 +13,6 @@ Overview documents:
 * [Vector design](markdown/VectorDesign.md)
 * [Packed operations](markdown/PackedOperations.md)
 * [Addressing modes](markdown/AddressingModes.md)
-* [Assembler syntax](markdown/AssemblerSyntax.md)
 
 # Features
 
