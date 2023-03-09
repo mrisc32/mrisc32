@@ -1383,6 +1383,62 @@ instructions:
       fn: 1
       requires: ["FM", "PM"]
 
+  Execution and memory control:
+    SYNC:
+      name: Synchronize
+      descr: >
+        Ensure that all instructions preceding the SYNC instruction appear to
+        have completed before the SYNC instruction completes, and that no
+        subsequent instructions are initiated by the processor until after the
+        SYNC instruction completes. When the SYNC instruction completes, all
+        external accesses caused by instructions preceding the SYNC instruction
+        will have been performed with respect to all other mechanisms that
+        access memory.
+      note: >
+        The register fields are implicitly set to register Z.
+      op: 126
+      fn: 0
+      fmts: [B]
+      tMode: N
+      vModes: []
+      fold: false
+      asmOperands: ""
+
+    CCTRL:
+      name: Cache control
+      descr: >
+        Perform cache control. The cache control operation is specified by
+        source operand B. If the cache control operation requires an
+        additional operand (e.g. a memory address) it is passed in operand A.
+        The instruction always generates a result that is written to the
+        destination register specified by Ra.
+      pseudo: |
+        if b == 00000000_16 then
+          Invalidate entire instruction cache
+        else if b == 00000001_16 then
+          Invalidate entire data cache
+        else if b == 00000002_16 then
+          Invalidate entire branch predictor
+        else if b == 00000100_16 then
+          Invalidate instruction cache line containing address a
+        else if b == 00000101_16 then
+          Invalidate data cache line containing address a
+        else if b == 00000201_16 then
+          Flush entire data cache
+        else if b == 00000301_16 then
+          Flush data cache line containing address a
+        a = a
+      note: >
+        For many cache control operations it is suitable to pass register Z as
+        operand A.
+      op: 126
+      fn: 1
+      fmts: [B]
+      tMode: N
+      vModes: []
+      fold: false
+      asmOperands: "{1}, {2}"
+
   # TODO(m): Find better categories for these instructions.
   Miscellaneous:
     XCHGSR:

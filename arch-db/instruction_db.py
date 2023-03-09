@@ -286,8 +286,9 @@ class InstructionDB:
             result += InstructionDB.__descr_to_tex(meta)
             result += InstructionDB.__todo_to_tex(meta)
 
-            result += "\\subsubsection{Operation}\n\n"
-            result += InstructionDB.__pseudo_to_tex(meta)
+            if "pseudo" in meta:
+                result += "\\subsubsection{Operation}\n\n"
+                result += InstructionDB.__pseudo_to_tex(meta)
 
             result += "\\subsubsection{Encoding}\n\n"
             result += InstructionDB.__encoding_to_tex(meta)
