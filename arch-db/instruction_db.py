@@ -61,7 +61,8 @@ class InstructionDB:
                 vecs.extend(meta["vModes"])
             elif fmt == "C":
                 vecs = ["SSS"]
-                vecs.append(meta["vModes"][0])
+                if meta["vModes"]:
+                    vecs.append(meta["vModes"][0])
             elif fmt in ["D", "E"]:
                 vecs = ["SS"]
             return vecs
@@ -164,28 +165,63 @@ class InstructionDB:
         result += f" \\bitheader{{{bitheader}}} \\\\\n"
 
         for fmt in meta["fmts"]:
+            # Determine reserved fields.
+            reserved_v = fmt in ["A", "B", "C"] and len(meta["vModes"]) == 0
+            reserved_t = fmt in ["A", "B"] and meta["tMode"] == "N"
+            reserved_regs = len(meta["asmOperands"]) == 0
+
             result += f" \\begin{{rightwordgroup}}{{{fmt}}}\n"
             if fmt == "A":
                 result += "  \\bitboxes*{1}{000000} &\n"
-                result += "  \\bitbox{5}{REGa} &\n"
-                result += "  \\bitbox{5}{REGb} &\n"
-                result += "  \\bitbox{2}{V} &\n"
-                result += "  \\bitbox{5}{REGc} &\n"
-                result += "  \\bitbox{2}{T} &\n"
+                if reserved_regs:
+                    result += "  \\bitboxes*{1}[bgcolor=lightgray]{00000} &\n"
+                    result += "  \\bitboxes*{1}[bgcolor=lightgray]{00000} &\n"
+                else:
+                    result += "  \\bitbox{5}{REGa} &\n"
+                    result += "  \\bitbox{5}{REGb} &\n"
+                if reserved_v:
+                    result += "  \\bitboxes*{1}[bgcolor=lightgray]{00} &\n"
+                else:
+                    result += "  \\bitbox{2}{V} &\n"
+                if reserved_regs:
+                    result += "  \\bitboxes*{1}[bgcolor=lightgray]{00000} &\n"
+                else:
+                    result += "  \\bitbox{5}{REGc} &\n"
+                if reserved_t:
+                    result += "  \\bitboxes*{1}[bgcolor=lightgray]{00} &\n"
+                else:
+                    result += "  \\bitbox{2}{T} &\n"
                 result += f"  \\bitboxes*{{1}}{{{meta['op']:07b}}}\n"
             elif fmt == "B":
                 result += "  \\bitboxes*{1}{000000} &\n"
-                result += "  \\bitbox{5}{REGa} &\n"
-                result += "  \\bitbox{5}{REGb} &\n"
-                result += "  \\bitbox{1}{V} &\n"
+                if reserved_regs:
+                    result += "  \\bitboxes*{1}[bgcolor=lightgray]{00000} &\n"
+                    result += "  \\bitboxes*{1}[bgcolor=lightgray]{00000} &\n"
+                else:
+                    result += "  \\bitbox{5}{REGa} &\n"
+                    result += "  \\bitbox{5}{REGb} &\n"
+                if reserved_v:
+                    result += "  \\bitbox{1}[bgcolor=lightgray]{0} &\n"
+                else:
+                    result += "  \\bitbox{1}{V} &\n"
                 result += f"  \\bitboxes*{{1}}{{{meta['fn']:06b}}}\n"
-                result += "  \\bitbox{2}{T} &\n"
+                if reserved_t:
+                    result += "  \\bitboxes*{1}[bgcolor=lightgray]{00} &\n"
+                else:
+                    result += "  \\bitbox{2}{T} &\n"
                 result += f"  \\bitboxes*{{1}}{{{meta['op']:07b}}}\n"
             elif fmt == "C":
                 result += f"  \\bitboxes*{{1}}{{{meta['op']:06b}}} &\n"
-                result += "  \\bitbox{5}{REGa} &\n"
-                result += "  \\bitbox{5}{REGb} &\n"
-                result += "  \\bitbox{1}{V} &\n"
+                if reserved_regs:
+                    result += "  \\bitboxes*{1}[bgcolor=lightgray]{00000} &\n"
+                    result += "  \\bitboxes*{1}[bgcolor=lightgray]{00000} &\n"
+                else:
+                    result += "  \\bitbox{5}{REGa} &\n"
+                    result += "  \\bitbox{5}{REGb} &\n"
+                if reserved_v:
+                    result += "  \\bitbox{1}[bgcolor=lightgray]{0} &\n"
+                else:
+                    result += "  \\bitbox{1}{V} &\n"
                 result += f"  \\bitbox{{15}}{{IM [{imm_enc}]}}\n"
             elif fmt == "D":
                 result += f"  \\bitboxes*{{1}}{{110{(meta['op']):03b}}}\n"
