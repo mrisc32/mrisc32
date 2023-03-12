@@ -1459,6 +1459,7 @@ instructions:
           SR[c] = b
       op: 36
       tMode: N
+      vModes: []
       fold: false
 
     SHUF:
