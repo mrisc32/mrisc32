@@ -432,245 +432,6 @@ instructions:
       immSyntax: "target@pchi"
       immEnc: I21H
 
-  Bitwise logic:
-    AND:
-      <<: *type2
-      name: Bitwise and
-      descr: >
-        Compute the bitwise and of two integer operands, with optional negation
-        of the source operands.
-      pseudo: |
-        if T == 00_2 then
-          a = b & c
-        else if T == 01_2 then  // .PN
-          a = b & ~c
-        else if T == 10_2 then  // .NP
-          a = ~b & c
-        else if T == 11_2 then  // .NN
-          a = ~b & ~c
-      op: 16
-
-    OR:
-      <<: *type2
-      name: Bitwise or
-      descr: >
-        Compute the bitwise or of two integer operands, with optional negation
-        of the source operands.
-      pseudo: |
-        if T == 00_2 then
-          a = b | c
-        else if T == 01_2 then  // .PN
-          a = b | ~c
-        else if T == 10_2 then  // .NP
-          a = ~b | c
-        else if T == 11_2 then  // .NN
-          a = ~b | ~c
-      op: 17
-
-    XOR:
-      <<: *type2
-      name: Bitwise exclusive or
-      descr: >
-        Compute the bitwise exclusive or of two integer operands, with optional
-        negation of the source operands.
-      pseudo: |
-        if T == 00_2 then
-          a = b ^ c
-        else if T == 01_2 then  // .PN
-          a = b ^ ~c
-        else if T == 10_2 then  // .NP
-          a = ~b ^ c
-        else if T == 11_2 then  // .NN
-          a = ~b ^ ~c
-      op: 18
-
-    SEL:
-      <<: *type3
-      name: Bitwise select
-      descr: >
-        Select bits from two different source operands based on the bit values
-        in a third operand, and store the result in the destination operand.
-      note: >
-        The operation involves four operands (three source operands and one
-        destination operand). However, since the instruction encoding format
-        only allows for three operands in total, one of the source operands
-        (a) is also the destination operand.
-
-        For increased flexibility, there are several variants of this
-        instruction that use different permutations of the source operands,
-        which makes it possible to select which of the source registers to
-        clobber.
-
-        The numbers in the permutation suffix (.132, .213 or .231) idicate the
-        operand position of the selector operand (first number), the if-one
-        operand (second number), and the if-zero operand (third number). When
-        no suffix is given, the operand position order is 123.
-
-        For instance, SEL.231 R6,R7,R8 implements R6 = (R8 & R7) | (R6 & ~R7).
-      pseudo: |
-        if T == 00_2 then
-          a = (b & a) | (c & ~a)
-        else if T == 01_2 then     // .132
-          a = (c & a) | (b & ~a)
-        else if T == 10_2 then     // .213
-          a = (a & b) | (c & ~b)
-        else if T == 11_2 then     // .231
-          a = (c & b) | (a & ~b)
-      op: 46
-      tMode: S  # SEL uses a special kind of interpretation of the T field.
-
-  Bit field manipulation:
-    EBF:
-      <<: *type3
-      name: Extract bit field
-      descr: >
-        Extract a bit field from the first source operand, sign-extend it, and
-        store it in the destination operand. The bit field (offset, width) is
-        defined by the second source operand.
-
-        In word mode, bits <12:8> of the second source operand describe the bit
-        field width, and bits <4:0> describe the bit field offset.
-
-        In half-word mode, bits <11:8> of the second source operand describe
-        the bit field width, and bits <3:0> describe the bit field offset.
-
-        In byte mode, bits <6:4> of the second source operand describe the bit
-        field width, and bits <2:0> describe the bit field offset.
-
-        If the value of the bit field width descriptor is zero (0), the width
-        is interpreted as being the full width of the slice.
-
-        The first source operand is sign extended up to the number of bits
-        required by the bit field.
-      note: >
-        When the bit field width descriptor is all zeros (specifying the full
-        width of the slice), this instruction operates as an arithmetic shift
-        right instruction.
-
-        ASR is a valid assembler alias for EBF.
-      pseudo: |
-        o = uint(c & (bits-1))
-        if bits == 8 then
-          w = uint((c >> 4) & (bits-1))
-        else
-          w = uint((c >> 8) & (bits-1))
-        if w == 0 then
-          w = bits
-        // Note: b is sign-extended up to o+w bits if o+w > bits.
-        a = int(b<o+w-1:o>)
-      op: 19
-      immSyntax: "<offs:width>"
-
-    EBFU:
-      <<: *type3
-      name: Extract bit field unsigned
-      descr: >
-        Extract a bit field from the first source operand, zero-extend it, and
-        store it in the destination operand. The bit field (offset, width) is
-        defined by the second source operand.
-
-        In word mode, bits <12:8> of the second source operand describe the bit
-        field width, and bits <4:0> describe the bit field offset.
-
-        In half-word mode, bits <11:8> of the second source operand describe
-        the bit field width, and bits <3:0> describe the bit field offset.
-
-        In byte mode, bits <6:4> of the second source operand describe the bit
-        field width, and bits <2:0> describe the bit field offset.
-
-        If the value of the bit field width descriptor is zero (0), the width
-        is interpreted as being the full width of the slice.
-
-        The first source operand is zero extended up to the number of bits
-        required by the bit field.
-      note: >
-        When the bit field width descriptor is all zeros (specifying the full
-        width of the slice), this instruction operates as a logic shift right
-        instruction.
-
-        LSR is a valid assembler alias for EBFU.
-      pseudo: |
-        o = uint(c & (bits-1))
-        if bits == 8 then
-          w = uint((c >> 4) & (bits-1))
-        else
-          w = uint((c >> 8) & (bits-1))
-        if w == 0 then
-          w = bits
-        a = (b >> o) & ones(w)
-      op: 20
-      immSyntax: "<offs:width>"
-
-    MKBF:
-      <<: *type3
-      name: Make bit field
-      descr: >
-        Extract a bit field from the lower bits of the first source operand,
-        shift it to the left, and store it in the destination operand.
-
-        The bit field (offset, width) is defined by the second source operand.
-
-        In word mode, bits <12:8> of the second source operand describe the bit
-        field width, and bits <4:0> describe the bit field offset.
-
-        In half-word mode, bits <11:8> of the second source operand describe
-        the bit field width, and bits <3:0> describe the bit field offset.
-
-        In byte mode, bits <6:4> of the second source operand describe the bit
-        field width, and bits <2:0> describe the bit field offset.
-
-        If the value of the bit field width descriptor is zero (0), the width
-        is interpreted as being the full width of the slice.
-      note: >
-        When the bit field width descriptor is all zeros (specifying the full
-        width of the slice), this instruction operates as a logic shift left
-        instruction.
-
-        LSL is a valid assembler alias for MKBF.
-      pseudo: |
-        o = uint(c & (bits-1))
-        if bits == 8 then
-          w = uint((c >> 4) & (bits-1))
-        else
-          w = uint((c >> 8) & (bits-1))
-        if w == 0 then
-          w = bits
-        a = (b & ones(w)) << o
-      op: 21
-      immSyntax: "<offs:width>"
-
-    IBF:
-      <<: *type3
-      name: Insert bit field
-      descr: >
-        Extract a bit field from the lower bits of the first source operand,
-        shift it to the left, and insert it in the destination operand.
-
-        The bit field (offset, width) is defined by the second source operand.
-
-        In word mode, bits <12:8> of the second source operand describe the bit
-        field width, and bits <4:0> describe the bit field offset.
-
-        In half-word mode, bits <11:8> of the second source operand describe
-        the bit field width, and bits <3:0> describe the bit field offset.
-
-        In byte mode, bits <6:4> of the second source operand describe the bit
-        field width, and bits <2:0> describe the bit field offset.
-
-        If the value of the bit field width descriptor is zero (0), the width
-        is interpreted as being the full width of the slice.
-      pseudo: |
-        o = uint(c & (bits-1))
-        if bits == 8 then
-          w = uint((c >> 4) & (bits-1))
-        else
-          w = uint((c >> 8) & (bits-1))
-        if w == 0 then
-          w = bits
-        a = (a & ~(ones(w) << o)) | ((b & ones(w)) << o)
-      op: 47
-      immSyntax: "<offs:width>"
-
   Integer comparison:
     SEQ:
       <<: *type3
@@ -904,6 +665,352 @@ instructions:
         in combination with a preceding LDI.
       op: 1
 
+  Bitwise logic:
+    AND:
+      <<: *type2
+      name: Bitwise and
+      descr: >
+        Compute the bitwise and of two integer operands, with optional negation
+        of the source operands.
+      pseudo: |
+        if T == 00_2 then
+          a = b & c
+        else if T == 01_2 then  // .PN
+          a = b & ~c
+        else if T == 10_2 then  // .NP
+          a = ~b & c
+        else if T == 11_2 then  // .NN
+          a = ~b & ~c
+      op: 16
+
+    OR:
+      <<: *type2
+      name: Bitwise or
+      descr: >
+        Compute the bitwise or of two integer operands, with optional negation
+        of the source operands.
+      pseudo: |
+        if T == 00_2 then
+          a = b | c
+        else if T == 01_2 then  // .PN
+          a = b | ~c
+        else if T == 10_2 then  // .NP
+          a = ~b | c
+        else if T == 11_2 then  // .NN
+          a = ~b | ~c
+      op: 17
+
+    XOR:
+      <<: *type2
+      name: Bitwise exclusive or
+      descr: >
+        Compute the bitwise exclusive or of two integer operands, with optional
+        negation of the source operands.
+      pseudo: |
+        if T == 00_2 then
+          a = b ^ c
+        else if T == 01_2 then  // .PN
+          a = b ^ ~c
+        else if T == 10_2 then  // .NP
+          a = ~b ^ c
+        else if T == 11_2 then  // .NN
+          a = ~b ^ ~c
+      op: 18
+
+    SEL:
+      <<: *type3
+      name: Bitwise select
+      descr: >
+        Select bits from two different source operands based on the bit values
+        in a third operand, and store the result in the destination operand.
+      note: >
+        The operation involves four operands (three source operands and one
+        destination operand). However, since the instruction encoding format
+        only allows for three operands in total, one of the source operands
+        (a) is also the destination operand.
+
+        For increased flexibility, there are several variants of this
+        instruction that use different permutations of the source operands,
+        which makes it possible to select which of the source registers to
+        clobber.
+
+        The numbers in the permutation suffix (.132, .213 or .231) idicate the
+        operand position of the selector operand (first number), the if-one
+        operand (second number), and the if-zero operand (third number). When
+        no suffix is given, the operand position order is 123.
+
+        For instance, SEL.231 R6,R7,R8 implements R6 = (R8 & R7) | (R6 & ~R7).
+      pseudo: |
+        if T == 00_2 then
+          a = (b & a) | (c & ~a)
+        else if T == 01_2 then     // .132
+          a = (c & a) | (b & ~a)
+        else if T == 10_2 then     // .213
+          a = (a & b) | (c & ~b)
+        else if T == 11_2 then     // .231
+          a = (c & b) | (a & ~b)
+      op: 46
+      tMode: S  # SEL uses a special kind of interpretation of the T field.
+
+  Bit manipulation:
+    EBF:
+      <<: *type3
+      name: Extract bit field
+      descr: >
+        Extract a bit field from the first source operand, sign-extend it, and
+        store it in the destination operand. The bit field (offset, width) is
+        defined by the second source operand.
+
+        In word mode, bits <12:8> of the second source operand describe the bit
+        field width, and bits <4:0> describe the bit field offset.
+
+        In half-word mode, bits <11:8> of the second source operand describe
+        the bit field width, and bits <3:0> describe the bit field offset.
+
+        In byte mode, bits <6:4> of the second source operand describe the bit
+        field width, and bits <2:0> describe the bit field offset.
+
+        If the value of the bit field width descriptor is zero (0), the width
+        is interpreted as being the full width of the slice.
+
+        The first source operand is sign extended up to the number of bits
+        required by the bit field.
+      note: >
+        When the bit field width descriptor is all zeros (specifying the full
+        width of the slice), this instruction operates as an arithmetic shift
+        right instruction.
+
+        ASR is a valid assembler alias for EBF.
+      pseudo: |
+        o = uint(c & (bits-1))
+        if bits == 8 then
+          w = uint((c >> 4) & (bits-1))
+        else
+          w = uint((c >> 8) & (bits-1))
+        if w == 0 then
+          w = bits
+        // Note: b is sign-extended up to o+w bits if o+w > bits.
+        a = int(b<o+w-1:o>)
+      op: 19
+      immSyntax: "<offs:width>"
+
+    EBFU:
+      <<: *type3
+      name: Extract bit field unsigned
+      descr: >
+        Extract a bit field from the first source operand, zero-extend it, and
+        store it in the destination operand. The bit field (offset, width) is
+        defined by the second source operand.
+
+        In word mode, bits <12:8> of the second source operand describe the bit
+        field width, and bits <4:0> describe the bit field offset.
+
+        In half-word mode, bits <11:8> of the second source operand describe
+        the bit field width, and bits <3:0> describe the bit field offset.
+
+        In byte mode, bits <6:4> of the second source operand describe the bit
+        field width, and bits <2:0> describe the bit field offset.
+
+        If the value of the bit field width descriptor is zero (0), the width
+        is interpreted as being the full width of the slice.
+
+        The first source operand is zero extended up to the number of bits
+        required by the bit field.
+      note: >
+        When the bit field width descriptor is all zeros (specifying the full
+        width of the slice), this instruction operates as a logic shift right
+        instruction.
+
+        LSR is a valid assembler alias for EBFU.
+      pseudo: |
+        o = uint(c & (bits-1))
+        if bits == 8 then
+          w = uint((c >> 4) & (bits-1))
+        else
+          w = uint((c >> 8) & (bits-1))
+        if w == 0 then
+          w = bits
+        a = (b >> o) & ones(w)
+      op: 20
+      immSyntax: "<offs:width>"
+
+    MKBF:
+      <<: *type3
+      name: Make bit field
+      descr: >
+        Extract a bit field from the lower bits of the first source operand,
+        shift it to the left, and store it in the destination operand.
+
+        The bit field (offset, width) is defined by the second source operand.
+
+        In word mode, bits <12:8> of the second source operand describe the bit
+        field width, and bits <4:0> describe the bit field offset.
+
+        In half-word mode, bits <11:8> of the second source operand describe
+        the bit field width, and bits <3:0> describe the bit field offset.
+
+        In byte mode, bits <6:4> of the second source operand describe the bit
+        field width, and bits <2:0> describe the bit field offset.
+
+        If the value of the bit field width descriptor is zero (0), the width
+        is interpreted as being the full width of the slice.
+      note: >
+        When the bit field width descriptor is all zeros (specifying the full
+        width of the slice), this instruction operates as a logic shift left
+        instruction.
+
+        LSL is a valid assembler alias for MKBF.
+      pseudo: |
+        o = uint(c & (bits-1))
+        if bits == 8 then
+          w = uint((c >> 4) & (bits-1))
+        else
+          w = uint((c >> 8) & (bits-1))
+        if w == 0 then
+          w = bits
+        a = (b & ones(w)) << o
+      op: 21
+      immSyntax: "<offs:width>"
+
+    IBF:
+      <<: *type3
+      name: Insert bit field
+      descr: >
+        Extract a bit field from the lower bits of the first source operand,
+        shift it to the left, and insert it in the destination operand.
+
+        The bit field (offset, width) is defined by the second source operand.
+
+        In word mode, bits <12:8> of the second source operand describe the bit
+        field width, and bits <4:0> describe the bit field offset.
+
+        In half-word mode, bits <11:8> of the second source operand describe
+        the bit field width, and bits <3:0> describe the bit field offset.
+
+        In byte mode, bits <6:4> of the second source operand describe the bit
+        field width, and bits <2:0> describe the bit field offset.
+
+        If the value of the bit field width descriptor is zero (0), the width
+        is interpreted as being the full width of the slice.
+      pseudo: |
+        o = uint(c & (bits-1))
+        if bits == 8 then
+          w = uint((c >> 4) & (bits-1))
+        else
+          w = uint((c >> 8) & (bits-1))
+        if w == 0 then
+          w = bits
+        a = (a & ~(ones(w) << o)) | ((b & ones(w)) << o)
+      op: 47
+      immSyntax: "<offs:width>"
+
+    SHUF:
+      <<: *type2
+      name: Shuffle bytes
+      descr: >
+        Shuffle bytes with optional zero- or sign-extension.
+
+        The bytes of the second operand are shuffled according to the 13-bit
+        control word in the third operand, and the result is stored in the
+        the first operand.
+
+        Bit 12 of the control word determines the sign mode: 1 = sign fill,
+        0 = zero fill.
+
+        Bits 0-1 give the source byte index for destination byte 0, and
+        bit 2 gives the fill mode (0 = verbatim copy, 1 = fill).
+
+        Likewise, bits 3-5 define destination byte 1, bits 6-8 define
+        destination byte 2 and bits 9-11 define destination byte 3.
+
+        When the fill mode is 0, the source byte is copied to the destination
+        byte. When the fill mode is 1, the destination byte is filled with the
+        most significant bit of the source byte if the sign mode is 1, or zeros
+        if the sign mode is 0.
+
+        Note: Byte 0 is the least significant byte (bits 0-7) and byte 3 is the
+        most significant byte (bits 24-31).
+      pseudo: |
+        sign = c<12>
+        for k in 0 to 3
+          fill = c<k*3+2>
+          idx = uint(c<k*3+1:k*3>)
+          byte = b<8*idx+7:8*idx>
+          if fill == 1 then
+            if sign & byte<7> == 1 then
+              byte = ones(8)
+            else
+              byte = zeros(8)
+          a<8*k+7:8*k> = byte
+      note: >
+        The instruction can be used for several different common tasks, such as
+        zero- and sign-extension of integer bytes and half-words, unpacking of
+        byte-aligend fields within a word, applying byte masks (e.g. bitwise
+        and with 0x00ff00ff) and/or changing the byte order (e.g. for
+        conversion between big and little endian formats or different RGBA
+        color formats).
+      op: 34
+      tMode: N  # SHUF does not have any T mode
+
+    REV:
+      <<: *type5
+      name: Reverse bits
+      descr: >
+        Reverse the bits of the source operand.
+      pseudo: |
+        for k in 0 to bits-1
+          a<bits-1-k> = b<k>
+      op: 124
+      fn: 0
+
+    CLZ:
+      <<: *type5
+      name: Count leading zeros
+      descr: >
+        Count the number of leading zero bits in the source operand.
+      pseudo: |
+        a = 0
+        for k in bits-1 downto 0
+          if b<k> == 1 then
+            break
+          a = int(a) + 1
+      op: 124
+      fn: 1
+
+    POPCNT:
+      <<: *type5
+      name: Population count
+      descr: >
+        Count the number of non-zero bits in the source operand.
+      pseudo: |
+        a = 0
+        for k in 0 to bits-1
+          if b<k> == 1 then
+            a = int(a) + 1
+      op: 124
+      fn: 2
+
+  Checksum:
+    CRC32C:
+      <<: *type5
+      name: Calculate CRC32-C checksum
+      descr: >
+        Calculate one step of a CRC32-C checksum.
+      pseudo: |
+        if T == 00_2 then          // .8
+          a = crc32c(a, b)
+        else if T == 01_2 then     // .16
+          a = crc32c(a, b)
+          a = crc32c(a, b >> 8)
+        else if T == 10_2 then     // .32
+          a = crc32c(a, b)
+          a = crc32c(a, b >> 8)
+          a = crc32c(a, b >> 16)
+          a = crc32c(a, b >> 24)
+      op: 126
+      fn: 2
+      tMode: W  # CRC32C uses a special kind of interpretation of the T field.
+
   Floating-point arithmetic:
     FADD:
       <<: *type4
@@ -1129,6 +1236,116 @@ instructions:
       op: 77
       requires: ["FM"]
 
+  Packing and unpacking:
+    PACK:
+      <<: *type4
+      name: Pack
+      descr: >
+        Pack the lower parts of two integer operands.
+      pseudo: |
+        a = (b << (bits/2)) | (c & ones(bits/2))
+      op: 58
+      requires: ["PM"]
+
+    PACKHI:
+      <<: *type4
+      name: Pack high
+      descr: >
+        Pack the higher parts of two integer operands.
+      pseudo: |
+        a = (b & ~ones(bits/2)) | (c >> (bits/2))
+      op: 61
+      requires: ["PM"]
+
+    PACKS:
+      <<: *type4
+      name: Signed pack with saturation
+      descr: >
+        Saturate and pack the lower parts of two signed integer operands.
+      pseudo: |
+        hi = sat(int(b), bits/2) & ones(bits/2)
+        lo = sat(int(c), bits/2) & ones(bits/2)
+        a = (hi << (bits/2)) | lo
+      op: 59
+      requires: ["SM", "PM"]
+
+    PACKSU:
+      <<: *type4
+      name: Unsigned pack with saturation
+      descr: >
+        Saturate and pack the lower parts of two unsigned integer operands.
+      pseudo: |
+        hi = satu(uint(b), bits/2)
+        lo = satu(uint(c), bits/2)
+        a = (hi << (bits/2)) | lo
+      op: 60
+      requires: ["SM", "PM"]
+
+    PACKHIR:
+      <<: *type4
+      name: Signed pack high with rounding
+      descr: >
+        Round and pack the higher parts of two signed integer operands.
+      pseudo: |
+        hi = sat(int(b) + 1<<(bits/2-1), bits)
+        lo = sat(int(c) + 1<<(bits/2-1), bits)
+        a = (hi & ~ones(bits/2)) | (lo >> (bits/2))
+      op: 62
+      requires: ["SM", "PM"]
+
+    PACKHIUR:
+      <<: *type4
+      name: Unsigned pack high with rounding
+      descr: >
+        Round and pack the higher parts of two unsigned integer operands.
+      pseudo: |
+        hi = satu(uint(b) + 1<<(bits/2-1), bits)
+        lo = satu(uint(c) + 1<<(bits/2-1), bits)
+        a = (hi & ~ones(bits/2)) | (lo >> (bits/2))
+      op: 63
+      requires: ["SM", "PM"]
+
+    FPACK:
+      <<: *type4
+      name: Floating-point pack
+      descr: >
+        Convert and pack two floating-point operands into a single operand.
+
+        The precision of the two source operands are halved. The first source
+        operand is packed and stored in the upper half of the destination
+        operand, and the second source operand is packed and stored in the
+        lower half of the destination operand.
+      todo: Define pseudocode.
+      tMode: PH  # Only packed half-word is supported
+      op: 78
+      requires: ["FM", "PM"]
+
+    FUNPL:
+      <<: *type5
+      name: Floating-point unpack low
+      descr: >
+        Unpack the low half of a packed floating-point pair. The preicison of
+        the unpacked source floating-point value is doubled and stored in the
+        destination operand.
+      todo: Define pseudocode.
+      tMode: PH  # Only packed half-word is supported
+      op: 125
+      fn: 0
+      requires: ["FM", "PM"]
+
+    FUNPH:
+      <<: *type5
+      name: Floating-point unpack high
+      descr: >
+        Unpack the high half of a packed floating-point pair. The preicison of
+        the unpacked source floating-point value is doubled and stored in the
+        destination operand.
+      todo: Define pseudocode.
+      tMode: PH  # Only packed half-word is supported
+      op: 125
+      fn: 1
+      requires: ["FM", "PM"]
+
   Saturating and halving arithmetic:
     ADDS:
       <<: *type4
@@ -1273,117 +1490,28 @@ instructions:
       op: 51
       requires: ["SM"]
 
-  Packing and unpacking:
-    PACK:
-      <<: *type4
-      name: Pack
+  Processor control and status:
+    XCHGSR:
+      <<: *type2
+      name: Exchange system register
       descr: >
-        Pack the lower parts of two integer operands.
+        First move the value of the system register given by the second source
+        operand to the destination operand, unless the destination operand is
+        the Z register.
+
+        Then move the value of the first source operand to the system register
+        given by the second source operand, unless the first source operand is
+        the Z register.
       pseudo: |
-        a = (b << (bits/2)) | (c & ones(bits/2))
-      op: 58
-      requires: ["PM"]
+        if REGa != 00000_2 then
+          a = SR[c]
+        if REGb != 00000_2 then
+          SR[c] = b
+      op: 36
+      tMode: N
+      vModes: []
+      fold: false
 
-    PACKHI:
-      <<: *type4
-      name: Pack high
-      descr: >
-        Pack the higher parts of two integer operands.
-      pseudo: |
-        a = (b & ~ones(bits/2)) | (c >> (bits/2))
-      op: 61
-      requires: ["PM"]
-
-    PACKS:
-      <<: *type4
-      name: Signed pack with saturation
-      descr: >
-        Saturate and pack the lower parts of two signed integer operands.
-      pseudo: |
-        hi = sat(int(b), bits/2) & ones(bits/2)
-        lo = sat(int(c), bits/2) & ones(bits/2)
-        a = (hi << (bits/2)) | lo
-      op: 59
-      requires: ["SM", "PM"]
-
-    PACKSU:
-      <<: *type4
-      name: Unsigned pack with saturation
-      descr: >
-        Saturate and pack the lower parts of two unsigned integer operands.
-      pseudo: |
-        hi = satu(uint(b), bits/2)
-        lo = satu(uint(c), bits/2)
-        a = (hi << (bits/2)) | lo
-      op: 60
-      requires: ["SM", "PM"]
-
-    PACKHIR:
-      <<: *type4
-      name: Signed pack high with rounding
-      descr: >
-        Round and pack the higher parts of two signed integer operands.
-      pseudo: |
-        hi = sat(int(b) + 1<<(bits/2-1), bits)
-        lo = sat(int(c) + 1<<(bits/2-1), bits)
-        a = (hi & ~ones(bits/2)) | (lo >> (bits/2))
-      op: 62
-      requires: ["SM", "PM"]
-
-    PACKHIUR:
-      <<: *type4
-      name: Unsigned pack high with rounding
-      descr: >
-        Round and pack the higher parts of two unsigned integer operands.
-      pseudo: |
-        hi = satu(uint(b) + 1<<(bits/2-1), bits)
-        lo = satu(uint(c) + 1<<(bits/2-1), bits)
-        a = (hi & ~ones(bits/2)) | (lo >> (bits/2))
-      op: 63
-      requires: ["SM", "PM"]
-
-    FPACK:
-      <<: *type4
-      name: Floating-point pack
-      descr: >
-        Convert and pack two floating-point operands into a single operand.
-
-        The precision of the two source operands are halved. The first source
-        operand is packed and stored in the upper half of the destination
-        operand, and the second source operand is packed and stored in the
-        lower half of the destination operand.
-      todo: Define pseudocode.
-      tMode: PH  # Only packed half-word is supported
-      op: 78
-      requires: ["FM", "PM"]
-
-    FUNPL:
-      <<: *type5
-      name: Floating-point unpack low
-      descr: >
-        Unpack the low half of a packed floating-point pair. The preicison of
-        the unpacked source floating-point value is doubled and stored in the
-        destination operand.
-      todo: Define pseudocode.
-      tMode: PH  # Only packed half-word is supported
-      op: 125
-      fn: 0
-      requires: ["FM", "PM"]
-
-    FUNPH:
-      <<: *type5
-      name: Floating-point unpack high
-      descr: >
-        Unpack the high half of a packed floating-point pair. The preicison of
-        the unpacked source floating-point value is doubled and stored in the
-        destination operand.
-      todo: Define pseudocode.
-      tMode: PH  # Only packed half-word is supported
-      op: 125
-      fn: 1
-      requires: ["FM", "PM"]
-
-  Execution and memory control:
     SYNC:
       name: Synchronize
       descr: >
@@ -1438,132 +1566,3 @@ instructions:
       vModes: []
       fold: false
       asmOperands: "{1}, {2}"
-
-  # TODO(m): Find better categories for these instructions.
-  Miscellaneous:
-    XCHGSR:
-      <<: *type2
-      name: Exchange system register
-      descr: >
-        First move the value of the system register given by the second source
-        operand to the destination operand, unless the destination operand is
-        the Z register.
-
-        Then move the value of the first source operand to the system register
-        given by the second source operand, unless the first source operand is
-        the Z register.
-      pseudo: |
-        if REGa != 00000_2 then
-          a = SR[c]
-        if REGb != 00000_2 then
-          SR[c] = b
-      op: 36
-      tMode: N
-      vModes: []
-      fold: false
-
-    SHUF:
-      <<: *type2
-      name: Shuffle bytes
-      descr: >
-        Shuffle bytes with optional zero- or sign-extension.
-
-        The bytes of the second operand are shuffled according to the 13-bit
-        control word in the third operand, and the result is stored in the
-        the first operand.
-
-        Bit 12 of the control word determines the sign mode: 1 = sign fill,
-        0 = zero fill.
-
-        Bits 0-1 give the source byte index for destination byte 0, and
-        bit 2 gives the fill mode (0 = verbatim copy, 1 = fill).
-
-        Likewise, bits 3-5 define destination byte 1, bits 6-8 define
-        destination byte 2 and bits 9-11 define destination byte 3.
-
-        When the fill mode is 0, the source byte is copied to the destination
-        byte. When the fill mode is 1, the destination byte is filled with the
-        most significant bit of the source byte if the sign mode is 1, or zeros
-        if the sign mode is 0.
-
-        Note: Byte 0 is the least significant byte (bits 0-7) and byte 3 is the
-        most significant byte (bits 24-31).
-      pseudo: |
-        sign = c<12>
-        for k in 0 to 3
-          fill = c<k*3+2>
-          idx = uint(c<k*3+1:k*3>)
-          byte = b<8*idx+7:8*idx>
-          if fill == 1 then
-            if sign & byte<7> == 1 then
-              byte = ones(8)
-            else
-              byte = zeros(8)
-          a<8*k+7:8*k> = byte
-      note: >
-        The instruction can be used for several different common tasks, such as
-        zero- and sign-extension of integer bytes and half-words, unpacking of
-        byte-aligend fields within a word, applying byte masks (e.g. bitwise
-        and with 0x00ff00ff) and/or changing the byte order (e.g. for
-        conversion between big and little endian formats or different RGBA
-        color formats).
-      op: 34
-      tMode: N  # SHUF does not have any T mode
-
-    REV:
-      <<: *type5
-      name: Reverse bits
-      descr: >
-        Reverse the bits of the source operand.
-      pseudo: |
-        for k in 0 to bits-1
-          a<bits-1-k> = b<k>
-      op: 124
-      fn: 0
-
-    CLZ:
-      <<: *type5
-      name: Count leading zeros
-      descr: >
-        Count the number of leading zero bits in the source operand.
-      pseudo: |
-        a = 0
-        for k in bits-1 downto 0
-          if b<k> == 1 then
-            break
-          a = int(a) + 1
-      op: 124
-      fn: 1
-
-    POPCNT:
-      <<: *type5
-      name: Population count
-      descr: >
-        Count the number of non-zero bits in the source operand.
-      pseudo: |
-        a = 0
-        for k in 0 to bits-1
-          if b<k> == 1 then
-            a = int(a) + 1
-      op: 124
-      fn: 2
-
-    CRC32C:
-      <<: *type5
-      name: Calculate CRC32-C checksum
-      descr: >
-        Calculate one step of a CRC32-C checksum.
-      pseudo: |
-        if T == 00_2 then          // .8
-          a = crc32c(a, b)
-        else if T == 01_2 then     // .16
-          a = crc32c(a, b)
-          a = crc32c(a, b >> 8)
-        else if T == 10_2 then     // .32
-          a = crc32c(a, b)
-          a = crc32c(a, b >> 8)
-          a = crc32c(a, b >> 16)
-          a = crc32c(a, b >> 24)
-      op: 126
-      fn: 2
-      tMode: W  # CRC32C uses a special kind of interpretation of the T field.

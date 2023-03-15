@@ -170,62 +170,65 @@ class InstructionDB:
         bitheader = ",".join([str(x) for x in field_limits])
         result += f" \\bitheader{{{bitheader}}} \\\\\n"
 
+        has_reserved_fields = False
         for fmt in meta["fmts"]:
             # Determine reserved fields.
             reserved_v = fmt in ["A", "B", "C"] and len(meta["vModes"]) == 0
             reserved_t = fmt in ["A", "B"] and meta["tMode"] == "N"
             reserved_regs = len(meta["asmOperands"]) == 0
+            if reserved_v or reserved_t or reserved_regs:
+                has_reserved_fields = True
 
             result += f" \\begin{{rightwordgroup}}{{{fmt}}}\n"
             if fmt == "A":
                 result += "  \\bitboxes*{1}{000000} &\n"
                 if reserved_regs:
-                    result += "  \\bitboxes*{1}[bgcolor=lightgray]{00000} &\n"
-                    result += "  \\bitboxes*{1}[bgcolor=lightgray]{00000} &\n"
+                    result += "  \\bitboxes*{1}[bgcolor=reserved]{00000} &\n"
+                    result += "  \\bitboxes*{1}[bgcolor=reserved]{00000} &\n"
                 else:
                     result += "  \\bitbox{5}{REGa} &\n"
                     result += "  \\bitbox{5}{REGb} &\n"
                 if reserved_v:
-                    result += "  \\bitboxes*{1}[bgcolor=lightgray]{00} &\n"
+                    result += "  \\bitboxes*{1}[bgcolor=reserved]{00} &\n"
                 else:
                     result += "  \\bitbox{2}{V} &\n"
                 if reserved_regs:
-                    result += "  \\bitboxes*{1}[bgcolor=lightgray]{00000} &\n"
+                    result += "  \\bitboxes*{1}[bgcolor=reserved]{00000} &\n"
                 else:
                     result += "  \\bitbox{5}{REGc} &\n"
                 if reserved_t:
-                    result += "  \\bitboxes*{1}[bgcolor=lightgray]{00} &\n"
+                    result += "  \\bitboxes*{1}[bgcolor=reserved]{00} &\n"
                 else:
                     result += "  \\bitbox{2}{T} &\n"
                 result += f"  \\bitboxes*{{1}}{{{meta['op']:07b}}}\n"
             elif fmt == "B":
                 result += "  \\bitboxes*{1}{000000} &\n"
                 if reserved_regs:
-                    result += "  \\bitboxes*{1}[bgcolor=lightgray]{00000} &\n"
-                    result += "  \\bitboxes*{1}[bgcolor=lightgray]{00000} &\n"
+                    result += "  \\bitboxes*{1}[bgcolor=reserved]{00000} &\n"
+                    result += "  \\bitboxes*{1}[bgcolor=reserved]{00000} &\n"
                 else:
                     result += "  \\bitbox{5}{REGa} &\n"
                     result += "  \\bitbox{5}{REGb} &\n"
                 if reserved_v:
-                    result += "  \\bitbox{1}[bgcolor=lightgray]{0} &\n"
+                    result += "  \\bitbox{1}[bgcolor=reserved]{0} &\n"
                 else:
                     result += "  \\bitbox{1}{V} &\n"
                 result += f"  \\bitboxes*{{1}}{{{meta['fn']:06b}}}\n"
                 if reserved_t:
-                    result += "  \\bitboxes*{1}[bgcolor=lightgray]{00} &\n"
+                    result += "  \\bitboxes*{1}[bgcolor=reserved]{00} &\n"
                 else:
                     result += "  \\bitbox{2}{T} &\n"
                 result += f"  \\bitboxes*{{1}}{{{meta['op']:07b}}}\n"
             elif fmt == "C":
                 result += f"  \\bitboxes*{{1}}{{{meta['op']:06b}}} &\n"
                 if reserved_regs:
-                    result += "  \\bitboxes*{1}[bgcolor=lightgray]{00000} &\n"
-                    result += "  \\bitboxes*{1}[bgcolor=lightgray]{00000} &\n"
+                    result += "  \\bitboxes*{1}[bgcolor=reserved]{00000} &\n"
+                    result += "  \\bitboxes*{1}[bgcolor=reserved]{00000} &\n"
                 else:
                     result += "  \\bitbox{5}{REGa} &\n"
                     result += "  \\bitbox{5}{REGb} &\n"
                 if reserved_v:
-                    result += "  \\bitbox{1}[bgcolor=lightgray]{0} &\n"
+                    result += "  \\bitbox{1}[bgcolor=reserved]{0} &\n"
                 else:
                     result += "  \\bitbox{1}{V} &\n"
                 result += f"  \\bitbox{{15}}{{IM [{imm_enc}]}}\n"
@@ -239,7 +242,14 @@ class InstructionDB:
                 result += f"  \\bitboxes*{{1}}{{{(meta['op']):03b}}}\n"
                 result += f"  \\bitbox{{18}}{{IM [{imm_enc}]}}\n"
             result += f" \\end{{rightwordgroup}} \\\\\n"
-        return result + "\\end{bytefield}\n\n"
+        result += "\\end{bytefield}\n"
+
+        # Prepend a note about reserved fields if they are present in any of the encodings.
+        if has_reserved_fields:
+            result = "{\\smallskip \\hfill \\footnotesize \\fcolorbox{black}{reserved}{0} Reserved}\n\n" + result
+
+        return result
+
 
     @staticmethod
     def __requires_to_tex(meta):
