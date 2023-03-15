@@ -52,6 +52,11 @@ class InstructionDB:
                 return ["", ".132", ".213", ".231"]
             return [""]
 
+        def get_width_modes(meta, fmt):
+            if fmt in ["A", "B"] and meta["tMode"] == "W":
+                return [".8", ".16", ".32"]
+            return [""]
+
         def get_vecs(meta, fmt):
             if fmt == "A":
                 vecs = ["SSS"]
@@ -104,11 +109,11 @@ class InstructionDB:
             else:
                 return "$00_{2}$"
 
-        def get_t_bits(pack, scale, bit_mode, sel_mode):
-            if pack == ".B" or scale == "*2" or bit_mode == ".PN" or sel_mode == ".132":
+        def get_t_bits(pack, scale, bit_mode, sel_mode, width_mode):
+            if pack == ".B" or scale == "*2" or bit_mode == ".PN" or sel_mode == ".132" or width_mode == ".16":
                 return "$01_{2}$"
             elif (
-                pack == ".H" or scale == "*4" or bit_mode == ".NP" or sel_mode == ".213"
+                pack == ".H" or scale == "*4" or bit_mode == ".NP" or sel_mode == ".213" or width_mode == ".32"
             ):
                 return "$10_{2}$"
             elif scale == "*8" or bit_mode == ".NN" or sel_mode == ".231":
@@ -129,13 +134,14 @@ class InstructionDB:
                         for scale in get_scales(meta, fmt):
                             for bit_mode in get_bit_modes(meta, fmt):
                                 for sel_mode in get_sel_modes(meta, fmt):
-                                    t = get_t_bits(pack, scale, bit_mode, sel_mode)
-                                    s = f"{name}{pack}{bit_mode}{sel_mode}{fold} "
-                                    s += " " * max(0, (8 - len(s)))
-                                    s += format_args(meta, args, scale)
-                                    result.append(
-                                        {"fmt": fmt, "v": v, "t": t, "asm": s}
-                                    )
+                                    for width_mode in get_width_modes(meta, fmt):
+                                        t = get_t_bits(pack, scale, bit_mode, sel_mode, width_mode)
+                                        s = f"{name}{pack}{bit_mode}{sel_mode}{width_mode}{fold} "
+                                        s += " " * max(0, (8 - len(s)))
+                                        s += format_args(meta, args, scale)
+                                        result.append(
+                                            {"fmt": fmt, "v": v, "t": t, "asm": s}
+                                        )
         return result
 
     @staticmethod

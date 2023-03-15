@@ -1547,3 +1547,23 @@ instructions:
             a = int(a) + 1
       op: 124
       fn: 2
+
+    CRC32C:
+      <<: *type5
+      name: Calculate CRC32-C checksum
+      descr: >
+        Calculate one step of a CRC32-C checksum.
+      pseudo: |
+        if T == 00_2 then          // .8
+          a = crc32c(a, b)
+        else if T == 01_2 then     // .16
+          a = crc32c(a, b)
+          a = crc32c(a, b >> 8)
+        else if T == 10_2 then     // .32
+          a = crc32c(a, b)
+          a = crc32c(a, b >> 8)
+          a = crc32c(a, b >> 16)
+          a = crc32c(a, b >> 24)
+      op: 126
+      fn: 2
+      tMode: W  # CRC32C uses a special kind of interpretation of the T field.

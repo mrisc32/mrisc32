@@ -166,7 +166,10 @@ trunc($x$) & Convert real value to an integer value, rounding towards zero (i.e.
              truncate) \\
 round($x$) & Convert real value to an integer value, rounding towards the
              nearest value (halfway cases are rounded away from zero) \\
-pow($x$, $y$) & Compute the value of $x$ raised to the power $y$, i.e. $x^{y}$
+pow($x$, $y$) & Compute the value of $x$ raised to the power $y$, i.e. $x^{y}$ \\
+crc32c($crc$, $b$) & Starting with the initial value in $crc$, accumulate a CRC32-C
+                     value for the 8-bit integer in $b$ (only the eight least
+                     significant bits of $b$ are used).
 \end{tabular}
 
 \clearpage
