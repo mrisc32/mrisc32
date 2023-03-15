@@ -993,9 +993,10 @@ instructions:
   Checksum:
     CRC32C:
       <<: *type5
-      name: Calculate CRC32-C checksum
+      name: Calculate CRC-32C checksum
       descr: >
-        Calculate one step of a CRC32-C checksum.
+        Calculate one step of a CRC-32C checksum (polynomial 0x1edc6f41,
+        Castagnoli).
       pseudo: |
         if T == 00_2 then          // .8
           a = crc32c(a, b)
@@ -1010,6 +1011,26 @@ instructions:
       op: 126
       fn: 2
       tMode: W  # CRC32C uses a special kind of interpretation of the T field.
+
+    CRC32:
+      <<: *type5
+      name: Calculate CRC-32 checksum
+      descr: >
+        Calculate one step of a CRC-32 checksum (polynomial 0x04c11db7).
+      pseudo: |
+        if T == 00_2 then          // .8
+          a = crc32(a, b)
+        else if T == 01_2 then     // .16
+          a = crc32(a, b)
+          a = crc32(a, b >> 8)
+        else if T == 10_2 then     // .32
+          a = crc32(a, b)
+          a = crc32(a, b >> 8)
+          a = crc32(a, b >> 16)
+          a = crc32(a, b >> 24)
+      op: 126
+      fn: 3
+      tMode: W  # CRC32 uses a special kind of interpretation of the T field.
 
   Floating-point arithmetic:
     FADD:
