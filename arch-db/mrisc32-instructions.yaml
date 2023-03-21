@@ -1009,7 +1009,7 @@ instructions:
           a = crc32c(a, b >> 16)
           a = crc32c(a, b >> 24)
       op: 126
-      fn: 2
+      fn: 8
       tMode: W  # CRC32C uses a special kind of interpretation of the T field.
 
     CRC32:
@@ -1029,7 +1029,7 @@ instructions:
           a = crc32(a, b >> 16)
           a = crc32(a, b >> 24)
       op: 126
-      fn: 3
+      fn: 9
       tMode: W  # CRC32 uses a special kind of interpretation of the T field.
 
   Floating-point arithmetic:
@@ -1533,6 +1533,21 @@ instructions:
       vModes: []
       fold: false
 
+    WAIT:
+      name: Enter standby mode
+      descr: >
+        Request that the pipeline is paused and placed in standby mode. The
+        operation is implementation dependent, and may involve entering a low
+        power mode. The pipeline is restarted when an external event, such as
+        an interrupt, occurrs.
+      op: 126
+      fn: 0
+      fmts: [B]
+      tMode: N
+      vModes: []
+      fold: false
+      asmOperands: ""
+
     SYNC:
       name: Synchronize
       descr: >
@@ -1544,9 +1559,9 @@ instructions:
         will have been performed with respect to all other mechanisms that
         access memory.
       note: >
-        The register fields are implicitly set to register Z.
+        The instruction may take considerable (but finite) time to complete.
       op: 126
-      fn: 0
+      fn: 1
       fmts: [B]
       tMode: N
       vModes: []
@@ -1560,7 +1575,7 @@ instructions:
         source operand B. If the cache control operation requires an
         additional operand (e.g. a memory address) it is passed in operand A.
         The instruction always generates a result that is written to the
-        destination register specified by Ra.
+        destination operand.
       pseudo: |
         if b == 00000000_16 then
           Invalidate entire instruction cache
@@ -1581,7 +1596,7 @@ instructions:
         For many cache control operations it is suitable to pass register Z as
         operand A.
       op: 126
-      fn: 1
+      fn: 2
       fmts: [B]
       tMode: N
       vModes: []
